@@ -418,55 +418,115 @@
           }
         }
       } else if (flowerIndex === 10) {
-        // Red spider lily: six recurved red petals and long outward stamens.
-        for (let petal = 0; petal < 6; petal += 1) {
-          const angle = petal / 6 * Math.PI * 2 + 0.12;
-          const radial = [Math.cos(angle), Math.sin(angle)];
-          const tangent = [-radial[1], radial[0]];
-          const point = (radius, side, y) => [x + radial[0] * radius + tangent[0] * side, y, z + radial[1] * radius + tangent[1] * side];
-          const root = point(0.012, 0, bloomY - 0.025);
-          const left = point(0.07, -0.021, bloomY + 0.022);
-          const right = point(0.07, 0.021, bloomY + 0.022);
-          const ridge = point(0.13, 0, bloomY + 0.048);
-          const outerLeft = point(0.19, -0.012, bloomY + 0.008);
-          const outerRight = point(0.19, 0.012, bloomY + 0.008);
-          const curledTip = point(0.145, 0, bloomY - 0.052);
-          const color = petal % 3 === 0 ? headColor.map((channel) => Math.min(1, channel * 1.12)) : petal % 3 === 1 ? headColor.map((channel) => channel * 0.9) : headColor;
-          addTriangle(positions, colors, root, left, ridge, color.map((channel) => channel * 0.92));
-          addTriangle(positions, colors, root, ridge, right, color);
-          addTriangle(positions, colors, ridge, outerLeft, curledTip, color);
-          addTriangle(positions, colors, ridge, curledTip, outerRight, color.map((channel) => channel * 0.94));
-        }
-        // Long, threadlike stamens sweep outward beyond the petals, then gently arc down.
-        // Each filament is a narrow segmented ribbon so it reads as a fine stalk, not a broad triangle.
-        const filamentCount = 10;
-        for (let filament = 0; filament < filamentCount; filament += 1) {
-          const angle = filament / filamentCount * Math.PI * 2 + 0.19;
-          const radial = [Math.cos(angle), Math.sin(angle)];
-          const tangent = [-radial[1], radial[0]];
-          // Shape the filament like an upward-opening parabola in radial profile:
-          // it dips near the middle, then rises toward the outward-facing anther.
-          const path = [
-            { radius: 0.018, height: 0.032 + (filament % 2) * 0.004 },
-            { radius: 0.075 + (filament % 3) * 0.004, height: 0.014 + (filament % 2) * 0.003 },
-            { radius: 0.16 + (filament % 2) * 0.008, height: 0.043 + (filament % 3) * 0.004 },
-            { radius: 0.235 + (filament % 3) * 0.008, height: 0.105 + (filament % 2) * 0.008 },
+        // Red spider lily: six five-petal florets arranged at the face centers
+        // of a vertex-up regular dodecahedron. Their normals are the vertices
+        // of the dual icosahedron after one triangular face is rotated upward.
+        // The six mid-height faces are exactly 60 degrees apart in azimuth;
+        // their slight height changes come from the geometry, not a manual offset.
+        const faceNormals = [
+          [0.974418, 0.187592, 0.123767],
+          [0.380023, -0.187592, 0.905755],
+          [-0.594395, 0.187592, 0.781987],
+          [-0.974418, -0.187592, -0.123767],
+          [-0.380023, 0.187592, -0.905755],
+          [0.594395, -0.187592, -0.781987],
+        ];
+        const clusterRadius = 0.16;
+        const petalScale = 0.62;
+        const filamentScale = 0.72;
+
+        for (let bloom = 0; bloom < faceNormals.length; bloom += 1) {
+          const normal = faceNormals[bloom];
+          const reference = Math.abs(normal[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0];
+          const cross = (a, b) => [
+            a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0],
           ];
-          const stalkColor = filament % 3 === 0 ? [0.98, 0.62, 0.58] : [0.91, 0.35, 0.43];
-          for (let segment = 0; segment < path.length - 1; segment += 1) {
-            const start = path[segment], end = path[segment + 1];
-            const widthStart = 0.0038 * (1 - segment * 0.12);
-            const widthEnd = widthStart * 0.78;
-            const a = [x + radial[0] * start.radius + tangent[0] * widthStart, bloomY + start.height, z + radial[1] * start.radius + tangent[1] * widthStart];
-            const b = [x + radial[0] * start.radius - tangent[0] * widthStart, bloomY + start.height, z + radial[1] * start.radius - tangent[1] * widthStart];
-            const d = [x + radial[0] * end.radius + tangent[0] * widthEnd, bloomY + end.height, z + radial[1] * end.radius + tangent[1] * widthEnd];
-            const e = [x + radial[0] * end.radius - tangent[0] * widthEnd, bloomY + end.height, z + radial[1] * end.radius - tangent[1] * widthEnd];
-            addTriangle(positions, colors, a, d, e, stalkColor);
-            addTriangle(positions, colors, a, e, b, stalkColor.map((channel) => channel * 0.88));
+          const normalize = (v) => {
+            const length = Math.hypot(v[0], v[1], v[2]) || 1;
+            return v.map((component) => component / length);
+          };
+          const right = normalize(cross(reference, normal));
+          const forward = normalize(cross(normal, right));
+          // The flower center is the selected face center; do not offset it.
+          const cx = x + normal[0] * clusterRadius;
+          const cy = bloomY + normal[1] * clusterRadius;
+          const cz = z + normal[2] * clusterRadius;
+          const localPoint = (lx, ly, lz) => [
+            cx + right[0] * lx + normal[0] * ly + forward[0] * lz,
+            cy + right[1] * lx + normal[1] * ly + forward[1] * lz,
+            cz + right[2] * lx + normal[2] * ly + forward[2] * lz,
+          ];
+          const petalPoint = (radius, side, axial, angle) => {
+            const tangentX = -Math.sin(angle);
+            const tangentZ = Math.cos(angle);
+            const localX = (Math.cos(angle) * radius + tangentX * side) * petalScale;
+            const localZ = (Math.sin(angle) * radius + tangentZ * side) * petalScale;
+            return localPoint(localX, axial * petalScale, localZ);
+          };
+          const bloomColor = bloom % 3 === 0
+            ? headColor.map((channel) => Math.min(1, channel * 1.1))
+            : bloom % 3 === 1 ? headColor.map((channel) => channel * 0.92) : headColor;
+
+          // Five narrow petals per small flower, each with a curled-back tip.
+          for (let petal = 0; petal < 5; petal += 1) {
+            const angle = petal / 5 * Math.PI * 2 + bloom * 0.17;
+            const root = petalPoint(0.006, 0, -0.012, angle);
+            const left = petalPoint(0.04, -0.014, 0.006, angle);
+            const rightEdge = petalPoint(0.04, 0.014, 0.006, angle);
+            const ridge = petalPoint(0.073, 0, 0.026, angle);
+            const outerLeft = petalPoint(0.105, -0.008, 0.008, angle);
+            const outerRight = petalPoint(0.105, 0.008, 0.008, angle);
+            const curledTip = petalPoint(0.079, 0, -0.026, angle);
+            addTriangle(positions, colors, root, left, ridge, bloomColor.map((channel) => channel * 0.92));
+            addTriangle(positions, colors, root, ridge, rightEdge, bloomColor);
+            addTriangle(positions, colors, ridge, outerLeft, curledTip, bloomColor);
+            addTriangle(positions, colors, ridge, curledTip, outerRight, bloomColor.map((channel) => channel * 0.94));
           }
-          const tip = [x + radial[0] * path[3].radius, bloomY + path[3].height, z + radial[1] * path[3].radius];
-          // Small golden anthers make the ends of the fine stamens legible at garden scale.
-          addOctahedron(positions, colors, tip[0], tip[1], tip[2], 0.007, 0.006, 0.007, [0.99, 0.76, 0.32]);
+          addOctahedron(positions, colors, cx, cy, cz, 0.009, 0.009, 0.009, bloomColor);
+
+          // Three stamens per small flower: 120-degree azimuth spacing plus
+          // distinct local elevations give each group a true 3D radial spread.
+          for (let filament = 0; filament < 3; filament += 1) {
+            const angle = filament / 3 * Math.PI * 2 + bloom * 0.23 + 0.11;
+            const tangentX = -Math.sin(angle);
+            const tangentZ = Math.cos(angle);
+            const radialX = Math.cos(angle);
+            const radialZ = Math.sin(angle);
+            const path = [
+              { radius: 0.012, height: 0.022 + filament * 0.003 },
+              { radius: 0.047, height: 0.007 + ((filament + 1) % 3) * 0.004 },
+              { radius: 0.087, height: 0.032 + filament * 0.004 },
+              { radius: 0.145, height: 0.076 + filament * 0.007 },
+            ];
+            const stalkColor = filament === 1 ? [0.98, 0.62, 0.58] : [0.91, 0.35, 0.43];
+            for (let segment = 0; segment < path.length - 1; segment += 1) {
+              const from = path[segment];
+              const to = path[segment + 1];
+              const widthStart = 0.003 * (1 - segment * 0.12);
+              const widthEnd = widthStart * 0.78;
+              const pointAt = (node, sideWidth) => localPoint(
+                (radialX * node.radius + tangentX * sideWidth) * filamentScale,
+                node.height * filamentScale,
+                (radialZ * node.radius + tangentZ * sideWidth) * filamentScale,
+              );
+              const a = pointAt(from, widthStart);
+              const b = pointAt(from, -widthStart);
+              const d = pointAt(to, widthEnd);
+              const e = pointAt(to, -widthEnd);
+              addTriangle(positions, colors, a, d, e, stalkColor);
+              addTriangle(positions, colors, a, e, b, stalkColor.map((channel) => channel * 0.88));
+            }
+            const tipPath = path[path.length - 1];
+            const tip = localPoint(
+              radialX * tipPath.radius * filamentScale,
+              tipPath.height * filamentScale,
+              radialZ * tipPath.radius * filamentScale,
+            );
+            // Small golden anthers remain visible at the tips of all 18 filaments.
+            addOctahedron(positions, colors, tip[0], tip[1], tip[2], 0.0055, 0.0055, 0.0055, [0.99, 0.76, 0.32]);
+          }
         }
       } else {
         // Peony: broad guard petals enclose rounded inner petaloids.
