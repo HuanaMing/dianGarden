@@ -21,7 +21,7 @@
 - `src/game.js`：`2f06f1f7485597f3b0d04ca4a884be8879bb1eac`
 - `src/sky-world.js`：`cc711ac2422dd82f4f65a6086d6db9784ee8de19`、`8975d4ae7dbef2bc5738ad428a7303b6788965be`
 - `README.md`：`0c279a3bf4cd83295735061c678981d7918bbc61`
-- `docs/architecture.md`：`e0daee516eca1d24a96d5701eafeb71d9f89c6a5`
+- `docs/architecture.md`：`e0daee516eca1d24a96d5701eafeb71d9f89c6a5`、`05881ccc0f7b3071dcfaf1e67e849eeb526b50ef`（同步修正文檔的動態價格與收合規則）
 
 ## 狀態
 程式修改完成，待遊戲與舊存檔相容性驗收。
