@@ -23,6 +23,10 @@
           </header>
           <button class="hud-toggle" id="hud-toggle" type="button" aria-controls="world-topbar drone-jobs plot-selector world-instructions" aria-expanded="true">收合介面</button>
           <button class="camera-mode" id="camera-mode" type="button" aria-pressed="false">2D模式</button>
+          <div class="mobile-zoom-controls" role="group" aria-label="場景縮放">
+            <button id="zoom-in" type="button" aria-label="放大場景">＋</button>
+            <button id="zoom-out" type="button" aria-label="縮小場景">−</button>
+          </div>
           <a class="encyclopedia-link" href="encyclopedia.html">花卉圖鑑</a>
           <button class="reset-progress-button" id="reset-progress" type="button">重置進度</button>
           <aside class="drone-jobs" id="drone-jobs" aria-label="無人機工作佇列"><strong id="job-status" role="status" aria-live="polite">無人機待命</strong><button class="auto-mode" id="auto-mode" type="button" aria-pressed="false">自動模式：關</button><button class="buy-drone" id="buy-drone" type="button">購買無人機 · 150 🪙 (1/8)</button><div class="drone-fleet" id="drone-fleet" aria-label="無人機部署管理"></div><ol id="job-queue"></ol></aside>
