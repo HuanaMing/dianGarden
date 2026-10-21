@@ -466,7 +466,7 @@
     expandButton?.setAttribute('aria-label', expansionPending ? '農地擴建中，請稍後' : `擴建空中土地，花費 ${LAND_COST} 枚金幣`);
     expandButton?.setAttribute('title', expansionPending ? '農地擴建中，請稍後' : '擴建空中土地');
     const waitingForCharge = jobQueue.length > 0 && game.drones.every((drone, index) => drone.deployed === false || activeJobs.has(index) || drone.battery < estimateJobBattery(jobQueue[0], index));
-    jobStatus.textContent = activeJobs.size ? `無人機工作中` : waitingForCharge ? '電量不足，工作排隊等待充電' : '無人機待命';
+    jobStatus.textContent = activeJobs.size ? `工作中` : waitingForCharge ? '電量不足，工作排隊等待充電' : '無人機待命';
     renderDroneFleet();
     updateHudCollapse();
     jobQueueDisplay.replaceChildren();
