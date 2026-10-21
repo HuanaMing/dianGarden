@@ -1,9 +1,9 @@
 {
-  "name": "任務 147 重做：彼岸花向外伸展花絲",
+  "name": "任務 148：手機拖曳防誤選文字與圖鑑維持網頁 App 模式",
   "status": "awaiting_manual_validation",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "在遊戲中觀察彼岸花成熟模型，確認 10 根細長弧形花絲向外超出花瓣、末端金黃色花藥清晰且不與花瓣混成一團；同時回歸確認原有花種與舊存檔。",
-  "result": "已重做彼岸花花絲幾何：10 根分段逐漸變細的弧形窄帶，向外伸展後微幅下垂，末端帶金黃色花藥。靜態檢查通過，尚未做瀏覽器視覺驗收。"
+  "nextAction": "以手機實際驗收長按拖曳不會選取文字、輸入欄位仍可編輯，並確認從主畫面獨立 App 開啟花卉圖鑑後不會跳出網址列。",
+  "result": "已在 CSS 停用頁面文字選取與長按系統選單，並在花園及圖鑑頁加入 mobile-web-app-capable 與 apple-mobile-web-app-capable 標記；尚待 iOS／Android 實機驗收。"
 }
