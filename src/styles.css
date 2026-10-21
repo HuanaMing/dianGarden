@@ -240,3 +240,13 @@ body{background:#d9f0f7}
   .encyclopedia-link{top:162px}
   .drone-panel-toggle{width:34px;height:34px;min-height:34px;flex:0 0 34px;padding:0}
 }
+
+/* 手機橫直向皆使用分列的場景操作入口。 */
+@media(max-width:700px){
+  .hud-toggle{top:72px;right:8px;min-height:36px}
+  .reset-progress-button{top:72px;right:calc(8px + 108px);padding:7px 8px;font-size:9px}
+  .camera-mode,.encyclopedia-link{left:8px;min-height:38px;padding:8px 11px}
+  .camera-mode{top:117px}
+  .encyclopedia-link{top:162px}
+  .drone-panel-toggle{width:34px;height:34px;min-height:34px;flex:0 0 34px;padding:0}
+}
