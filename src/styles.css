@@ -210,7 +210,7 @@ body{background:#d9f0f7}
   .drone-jobs{top:116px;right:8px;width:min(250px,calc(100% - 16px));max-height:42vh}
 }
 @media(max-width:760px){
-  .encyclopedia-layout{grid-template-rows:auto auto}
+  .encyclopedia-layout{grid-template-rows:auto minmax(0,1fr)}
   .encyclopedia-preview-column{grid-template-rows:auto auto auto;align-content:start}
   .encyclopedia-world{width:min(42vh,100%);height:auto;aspect-ratio:1/1;flex:none;justify-self:center}
   .encyclopedia-world .world-frame{width:100%;height:100%;aspect-ratio:1/1;min-height:0}
