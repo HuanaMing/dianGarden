@@ -664,6 +664,34 @@
     }
   }
 
+  function addSoilTexture(positions, colors, x, z, bed, y, wet) {
+    const marks = [
+      [-0.17, -0.13, 0.065, -0.35, 0.008, 0],
+      [0.08, -0.16, 0.052, 0.62, 0.007, 1],
+      [0.17, -0.035, 0.07, -0.18, 0.009, 0],
+      [-0.1, 0.035, 0.058, 0.82, 0.008, 1],
+      [0.035, 0.14, 0.068, -0.52, 0.007, 0],
+      [-0.19, 0.17, 0.045, 0.22, 0.006, 1],
+      [0.19, 0.18, 0.038, -0.7, 0.006, 0],
+    ];
+    const palette = wet
+      ? [[0.32, 0.22, 0.17], [0.47, 0.32, 0.24]]
+      : [[0.49, 0.32, 0.22], [0.73, 0.51, 0.37]];
+    const limit = bed * 0.5 - 0.025;
+    for (const [offsetX, offsetZ, length, angle, width, shade] of marks) {
+      const cx = x + Math.max(-limit, Math.min(limit, offsetX));
+      const cz = z + Math.max(-limit, Math.min(limit, offsetZ));
+      const dx = Math.cos(angle) * length * 0.5, dz = Math.sin(angle) * length * 0.5;
+      const px = -Math.sin(angle) * width * 0.5, pz = Math.cos(angle) * width * 0.5;
+      const a = [cx - dx + px, y, cz - dz + pz];
+      const b = [cx + dx + px, y, cz + dz + pz];
+      const d = [cx - dx - px, y, cz - dz - pz];
+      const e = [cx + dx - px, y, cz + dz - pz];
+      addTriangle(positions, colors, a, b, e, palette[shade]);
+      addTriangle(positions, colors, a, e, d, palette[shade]);
+    }
+  }
+
   function getPlotPosition(index, count = landCount) {
     if (dragPreview?.index === index) return [dragPreview.x, dragPreview.z];
     const position = plotPositions[index];
@@ -1092,6 +1120,7 @@
         top: [0.66, 0.45, 0.31], front: [0.57, 0.38, 0.28], right: [0.53, 0.35, 0.27],
         back: [0.6, 0.4, 0.29], left: [0.56, 0.37, 0.27], bottom: [0.5, 0.34, 0.26],
       });
+      if (!plot?.grassOnly) addSoilTexture(positions, colors, x, z, bed, plotY + 0.057, wet);
       if (i === selectedPlotIndex) {
         const edge = 0.035;
         const frameHalf = half + 0.08;
