@@ -1,9 +1,9 @@
 {
   "name": "任務 135：手機介面精簡與花卉圖鑑版面修正",
-  "status": "complete",
+  "status": "awaiting_manual_validation",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "在手機與桌面瀏覽器驗收任務 135 的版面及無人機面板互動",
-  "result": "已修改手機直式介面、無人機面板 5 秒閒置收合、圖鑑模型正方形及變種編輯區寬度。GitHub 檔案內容已重新檢查；尚未完成實際瀏覽器視覺與觸控驗收。"
+  "nextAction": "在手機直式與桌面瀏覽器驗收任務 135：操作提示隱藏、無人機面板閒置收合、圖鑑正方形模型區及變種編輯器對齊。",
+  "result": "程式修改已提交；GitHub Actions 的 GitHub Pages 部署工作已成功。已檢查 DOM、事件計時器與響應式 CSS；尚未進行實際手機瀏覽器視覺與觸控驗收。"
 }
