@@ -84,6 +84,21 @@
   let targetZ = 0;
   let cameraMode = '3d';
   let savedCameraPose = null;
+  const touchPoints = new Map();
+  let pinchActive = false;
+  let suppressTouchTap = false;
+  let pinchStartDistance = 0;
+  let pinchStartZoom = 0;
+  function currentZoom() { return cameraMode === '2d' ? topDownHeight : distance; }
+  function applyZoom(value) {
+    if (cameraMode === '2d') topDownHeight = Math.max(5, Math.min(30, value));
+    else distance = Math.max(3, Math.min(12, value));
+  }
+  function zoomBy(direction) {
+    applyZoom(currentZoom() + direction * (cameraMode === '2d' ? -1.4 : -0.65));
+  }
+  document.querySelector('#zoom-in')?.addEventListener('click', () => zoomBy(-1));
+  document.querySelector('#zoom-out')?.addEventListener('click', () => zoomBy(1));
   const cameraModeButton = document.querySelector('#camera-mode');
   cameraModeButton?.addEventListener('click', () => {
     if (cameraMode === '3d') {
@@ -1363,6 +1378,34 @@
   }
 
   canvas.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'touch') {
+      touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (touchPoints.size === 2) {
+        pinchActive = true;
+        suppressTouchTap = true;
+        const points = [...touchPoints.values()];
+        pinchStartDistance = Math.max(1, Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y));
+        pinchStartZoom = currentZoom();
+        clearTimeout(plotPressTimer);
+        clearTimeout(dockPressTimer);
+        dragging = false;
+        dragPlotIndex = null;
+        dragPreview = null;
+        dragDock = false;
+        dockHitAtPointer = null;
+        heightDrag = null;
+        plotPressIndex = null;
+        pointerPlotIndex = null;
+        dockPreview = null;
+        uploadWorld();
+        canvas.setPointerCapture(event.pointerId);
+        return;
+      }
+      if (suppressTouchTap) {
+        canvas.setPointerCapture(event.pointerId);
+        return;
+      }
+    }
     clearTimeout(plotPressTimer);
     dragging = true;
     pointerMoved = false;
@@ -1417,6 +1460,16 @@
     canvas.setPointerCapture(event.pointerId);
   });
   canvas.addEventListener('pointermove', (event) => {
+    if (event.pointerType === 'touch' && touchPoints.has(event.pointerId)) {
+      touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (pinchActive && touchPoints.size >= 2) {
+        const points = [...touchPoints.values()];
+        const span = Math.max(1, Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y));
+        applyZoom(pinchStartZoom * pinchStartDistance / span);
+        return;
+      }
+      if (suppressTouchTap) return;
+    }
     if (!dragging) return;
     if (!pointerMoved && Math.hypot(event.clientX - pointerStartX, event.clientY - pointerStartY) < 5) return;
     pointerMoved = true;
@@ -1478,6 +1531,26 @@
     lastPointerY = event.clientY;
   });
   canvas.addEventListener('pointerup', (event) => {
+    if (event.pointerType === 'touch') touchPoints.delete(event.pointerId);
+    if (suppressTouchTap) {
+      pinchActive = false;
+      dragging = false;
+      clearTimeout(plotPressTimer);
+      clearTimeout(dockPressTimer);
+      dragPlotIndex = null;
+      dragPreview = null;
+      dragDock = false;
+      dockHitAtPointer = null;
+      dockPreview = null;
+      pointerPlotIndex = null;
+      plotPressIndex = null;
+      plotPressReady = false;
+      dockPressReady = false;
+      heightDrag = null;
+      if (touchPoints.size === 0) suppressTouchTap = false;
+      uploadWorld();
+      return;
+    }
     dragging = false;
     clearTimeout(plotPressTimer);
     clearTimeout(dockPressTimer);
@@ -1546,7 +1619,7 @@
     dragPreview = null;
     uploadWorld();
   });
-  canvas.addEventListener('pointercancel', () => { clearTimeout(plotPressTimer); clearTimeout(dockPressTimer); dragging = false; dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null; dockPreview = null; pointerPlotIndex = null; plotPressIndex = null; plotPressReady = false; dockPressReady = false; uploadWorld(); });
+  canvas.addEventListener('pointercancel', (event) => { if (event.pointerType === 'touch') touchPoints.delete(event.pointerId); if (touchPoints.size === 0) { pinchActive = false; suppressTouchTap = false; } clearTimeout(plotPressTimer); clearTimeout(dockPressTimer); dragging = false; dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null; dockPreview = null; pointerPlotIndex = null; plotPressIndex = null; plotPressReady = false; dockPressReady = false; uploadWorld(); });
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     if (cameraMode === '2d') topDownHeight = Math.max(5, Math.min(30, topDownHeight + event.deltaY * 0.02));
