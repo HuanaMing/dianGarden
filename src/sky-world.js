@@ -494,7 +494,7 @@
           const horizontalLength = Math.hypot(normal[0], normal[2]) || 1;
           const radialWorldX = normal[0] / horizontalLength;
           const radialWorldZ = normal[2] / horizontalLength;
-          const filamentAngles = [-10, 0, 10].map((degrees) => degrees * Math.PI / 180);
+          const filamentAngles = [-20, 0, 20].map((degrees) => degrees * Math.PI / 180);
           for (let filament = 0; filament < 3; filament += 1) {
             const angle = filamentAngles[filament];
             const directionX = radialWorldX * Math.cos(angle) + radialWorldZ * Math.sin(angle);
