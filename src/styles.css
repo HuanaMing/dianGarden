@@ -221,3 +221,22 @@ body{background:#d9f0f7}
   .encyclopedia-world #sky-canvas{width:100%;height:100%;aspect-ratio:1/1}
   .variant-editor{width:min(42vh,100%);max-width:100%;box-sizing:border-box;justify-self:center;margin-left:auto;margin-right:auto}
 }
+
+
+/* 任務 139：分離頂部 HUD 與場景操作按鈕，並讓無人機入口維持正方形。 */
+@media(min-width:701px){
+  .hud-toggle{top:76px;right:16px}
+  .reset-progress-button{top:76px;right:calc(16px + 112px)}
+  .camera-mode{top:76px}
+  .encyclopedia-link{top:119px}
+}
+.drone-panel-toggle{width:34px;height:34px;min-height:34px;aspect-ratio:1;padding:0;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;font-size:0;line-height:1}
+.drone-panel-toggle::before{content:'🚁';font-size:17px;line-height:1}
+@media(max-width:700px) and (orientation:portrait){
+  .hud-toggle{top:72px;right:8px;min-height:36px}
+  .reset-progress-button{top:72px;right:calc(8px + 108px);padding:7px 8px;font-size:9px}
+  .camera-mode,.encyclopedia-link{left:8px;min-height:38px;padding:8px 11px}
+  .camera-mode{top:117px}
+  .encyclopedia-link{top:162px}
+  .drone-panel-toggle{width:34px;height:34px;min-height:34px;flex:0 0 34px;padding:0}
+}
