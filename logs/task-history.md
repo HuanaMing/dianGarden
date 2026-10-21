@@ -813,3 +813,9 @@
 - 結果：隱藏圖鑑兩行標題；將「返回花園」移入 3D 模型視窗左上角；縮小已儲存變種預覽按鈕、花色標記及刪除按鈕。
 - 檢查：靜態檢查 HTML 節點位置及 CSS 規則；未執行實際瀏覽器視覺或互動驗收。
 - 檔案：`src/encyclopedia.html`、`src/styles.css`、`tasks/done/137-encyclopedia-ui-refinement.md`、`state/current-task.json`、`logs/task-history.md`。
+
+
+## 2026-10-21 — 任務 138：移除花卉變種控制項外框
+
+- 修改 `src/styles.css`：移除已儲存變種項目外層容器的邊框、底色、圓角與內距，保留預覽及刪除按鈕功能。
+- 靜態檢查完成；待手機與桌面瀏覽器驗收。
