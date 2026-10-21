@@ -10,14 +10,14 @@
   const AUTO_CROP_KEY = 'sky-garden-auto-crops-v1';
   const FLOWER_VARIANTS_KEY = 'sky-garden-flower-variants-v1';
   const MAX_FLOWER_VARIANTS = 30;
-  const CROP_CATALOG_VERSION = 3;
+  const CROP_CATALOG_VERSION = 4;
   const WATER_DURATION = 30_000;
   const WATER_GROWTH_RATE = 1.2;
   const MAX_OFFLINE_SIMULATION = 24 * 60 * 60 * 1000;
   const crops = (window.flowerCatalog || []).map((flower) => ({
     ...flower, icon: flower.emoji, seedIcon: '🌱', meaning: flower.meaning,
   }));
-  if (crops.length !== 10) throw new Error('花卉目錄載入失敗');
+  if (crops.length !== 11) throw new Error('花卉目錄載入失敗');
   let persistenceAvailable = true;
   let persistenceWarning = '';
   function getNextPlotPosition(plots, blockedDocks = []) {
