@@ -902,6 +902,6 @@
 ## 2026-10-22：任務 149 微調彼岸花三瓣花冠與共面拋物線花絲
 
 - 修改 src/sky-world.js：保留六朵小花的原有位置與朝向，將每朵花瓣由五片減為三片，總計 18 片花瓣。
-- 花絲：每朵三支花絲的中心線改為同一局部垂直平面內的開口向上二次曲線，三支之間只做小幅平移；保留末端金黃色花藥。
+- 花絲：每朵三支花絲的中心線改為由小花水平向外方向與世界垂直軸定義的同一垂直平面內的開口向上二次曲線，三支之間只做小幅平移；保留末端金黃色花藥。
 - 文件：同步更新 docs/architecture.md、docs/desicions.md、tasks/active/149-spider-lily-three-petals-coplanar-stamens.md 及 state/current-task.json。
 - 驗證：GitHub 寫入成功；JavaScript 語法檢查及瀏覽器視覺驗收尚未執行。
