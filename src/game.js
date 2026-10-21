@@ -443,7 +443,7 @@
     const waterPending = hasPendingJob('water', index);
     const wateredLabel = plot.waterSource === 'rain' ? '雨水濕潤' : plot.waterSource === 'drone' ? '無人機已澆水' : '已澆水';
     const waterAction = !ready ? `<button class="action-button water dialog-primary" type="button" data-dialog-water ${isRaining || plot.watered || waterPending ? 'disabled' : ''}>${isRaining ? '陰雨中自然濕潤' : plot.watered ? wateredLabel : waterPending ? '等待澆水' : isDroneExcluded(plot) ? '手動澆水（30 秒，1.2 倍生長）' : '請無人機澆水（30 秒，1.2 倍生長）'}</button>` : '';
-    const rainStatus = isRaining ? '<p class="water-status rain-status">陰雨期間全株自然濕潤，不消耗這株的單次澆水機會。</p>' : '';
+    const rainStatus = '';
     const boostStatus = plot.watered ? `<p class="water-status">${plot.waterSource === 'rain' ? '雨水已補足澆水狀態' : Number.isFinite(plot.waterUntil) && plot.waterUntil > Date.now() ? `澆水加速中，還有 ${Math.ceil((plot.waterUntil - Date.now()) / 1000)} 秒` : '這株花已完成澆水加速'}</p>` : '';
     const deleteAction = game.plots.length > 1 ? `<button class="dialog-delete-plot" type="button" data-delete-plot ${hasDroneJobs() ? 'disabled' : ''}>${hasDroneJobs() ? '無人機工作時無法刪除' : '刪除這塊地'}</button>` : '';
     dialogContent.innerHTML = `${plotModeSettingMarkup(plot, index)}<div class="dialog-crop"><span>${ready ? crop.icon : crop.seedIcon}</span><div><strong>${crop.name}${ready ? ' 已成熟' : ' 正在生長'}</strong><p>${ready ? `預計收成可獲得 ${crop.harvestReward} 枚金幣。` : `預計還需 ${remaining} 秒成熟。`}</p></div></div><div class="dialog-progress"><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div><small>${progress}%</small></div>${ready ? '<button class="action-button harvest dialog-primary" type="button" data-dialog-harvest>收成並領取金幣</button>' : waterAction}${rainStatus}${boostStatus}${deleteAction}`;
@@ -657,7 +657,7 @@
     }
     if (job.kind === 'water') {
       const plot = game.plots[job.index];
-      if (window.skyEnvironment.getState(game).isRaining) return notify('陰雨期間全株自然濕潤，澆水任務已略過。');
+      if (window.skyEnvironment.getState(game).isRaining) return;
       if (!plot || isDroneExcluded(plot) || plot.crop === null || plot.watered || growthElapsed(plot) >= (crops[plot.crop] || crops[0]).growTime) return notify('澆水條件已改變，工作已略過。');
       plot.watered = true; plot.waterSource = 'drone'; plot.waterStartedAt = Date.now(); plot.waterUntil = plot.waterStartedAt + WATER_DURATION; save(); render(); if (!job.automatic) notify('澆水完成！這株花接下來 30 秒會以 1.2 倍速度生長。'); return;
     }
@@ -759,7 +759,7 @@
   }
   function water(index) {
     const plot = game.plots[index];
-    if (window.skyEnvironment.getState(game).isRaining) return notify('陰雨期間全株自然濕潤，不需額外澆水。');
+    if (window.skyEnvironment.getState(game).isRaining) return;
     if (!plot || plot.crop === null || plot.watered) return;
     const crop = crops[plot.crop] || crops[0];
     if (growthElapsed(plot) >= crop.growTime) return notify('花已成熟，可以直接收成。');
