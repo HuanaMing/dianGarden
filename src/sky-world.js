@@ -502,7 +502,7 @@
             // Place the lowest point at 60% of the filament's radial length,
             // then sweep upward toward the anther.
             const radii = [0.012, 0.040, 0.075, 0.092, 0.115, 0.145];
-            const heights = [0.006, 0.001, -0.009, -0.016, -0.005, 0.007];
+            const heights = [-0.005, -0.005, -0.012, -0.012, -0.1, 0.007];
             const path = radii.map((radius, index) => ({
               radius,
               height: heights[index],
