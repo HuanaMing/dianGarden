@@ -245,8 +245,9 @@ body{background:#d9f0f7}
 @media(max-width:700px){
   .hud-toggle{top:72px;right:8px;min-height:36px}
   .reset-progress-button{top:72px;right:calc(8px + 108px);padding:7px 8px;font-size:9px}
+  /* 與收合介面按鈕共用上緣基準；圖鑑按鈕接續排列。 */
   .camera-mode,.encyclopedia-link{left:8px;min-height:38px;padding:8px 11px}
-  .camera-mode{top:117px}
-  .encyclopedia-link{top:162px}
+  .camera-mode{top:72px}
+  .encyclopedia-link{top:117px}
   .drone-panel-toggle{width:34px;height:34px;min-height:34px;flex:0 0 34px;padding:0}
 }
