@@ -124,15 +124,19 @@ body{background:#d9f0f7}
   .encyclopedia-header{grid-template-columns:auto 1fr;gap:8px}
   .encyclopedia-header h1{font-size:clamp(19px,5vw,26px);text-align:left}
   .encyclopedia-header .eyebrow{text-align:left}
-  .encyclopedia-hint{display:none}
-  .encyclopedia-layout{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(220px,45vh) minmax(0,1fr);gap:8px}
+  .encyclopedia-hint,.selected-flower-status{display:none}
+  .encyclopedia-layout{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(190px,38vh) minmax(0,1fr);gap:8px}
   .encyclopedia-preview-column{gap:6px}
-  .encyclopedia-world{width:min(42vh,100%);justify-self:center;border-radius:16px}
-  .variant-editor{width:min(42vh,100%);grid-template-columns:auto minmax(0,1fr) auto;justify-self:center;gap:6px;padding:7px 9px}
-  .variant-editor .variant-name-label{grid-column:1/3;grid-row:2}
-  .variant-editor #save-variant{grid-column:3;grid-row:2}
+  .encyclopedia-world{width:min(32vh,100%);justify-self:center;border-radius:16px}
+  .variant-editor{width:min(32vh,100%);grid-template-columns:48px minmax(0,1fr) auto;align-items:end;justify-self:center;gap:5px;padding:6px 7px}
+  .variant-editor label{min-width:0;gap:3px;font-size:9px}
+  .variant-editor .variant-color-label{grid-column:1;grid-row:1}
+  .variant-editor .variant-name-label{grid-column:2;grid-row:1}
+  .variant-editor #save-variant{grid-column:3;grid-row:1;min-height:32px;padding:6px 9px;white-space:nowrap}
+  .variant-editor .variant-color-label input{width:32px;height:28px}
+  .variant-editor .variant-name-label input{min-width:0;width:100%;height:28px;padding:4px 6px;font-size:10px}
   .variant-editor>p,.variant-editor #saved-variants{grid-column:1/-1}
-  .variant-editor #saved-variants{max-height:42px}
+  .variant-editor #saved-variants{max-height:36px}
   .flower-picker-panel{border-radius:14px}
   .flower-picker-heading{padding:8px 11px 6px;font-size:14px}
   .flower-picker-scroll{padding:0 7px 7px}
