@@ -451,7 +451,7 @@
           };
           const right = normalize(cross(reference, normal));
           const forward = normalize(cross(normal, right));
-          // The flower center is the selected face center; do not offset it.
+          // Pull each center inward from its face-center direction toward the main stem.
           const cx = x + normal[0] * clusterRadius;
           const cy = bloomY + normal[1] * clusterRadius;
           const cz = z + normal[2] * clusterRadius;
