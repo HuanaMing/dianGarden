@@ -512,9 +512,9 @@
               const widthStart = 0.003 * (1 - segment * 0.12);
               const widthEnd = widthStart * 0.78;
               const pointAt = (node, sideWidth) => [
-                cx + (directionX * node.radius) * filamentScale,
+                cx + (directionX * node.radius - directionZ * sideWidth) * filamentScale,
                 cy + node.height * filamentScale,
-                cz + (directionZ * node.radius) * filamentScale,
+                cz + (directionZ * node.radius + directionX * sideWidth) * filamentScale,
               ];
               const a = pointAt(from, widthStart);
               const b = pointAt(from, -widthStart);
