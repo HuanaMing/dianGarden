@@ -183,6 +183,7 @@
   }
   const game = loadGame();
   function getLandCost() { return Math.min(Number.MAX_SAFE_INTEGER, Math.round(LAND_COST * (2 ** Math.max(0, game.plots.length - 3)))); }
+  function getDroneCost() { return Math.min(Number.MAX_SAFE_INTEGER, DRONE_COST * (8 ** game.droneCount)); }
   try {
     const savedSelection = JSON.parse(localStorage.getItem(AUTO_CROP_KEY) || 'null');
     if (Array.isArray(savedSelection) && savedSelection.every((index) => Number.isInteger(index) && index >= 0 && index < crops.length)
@@ -525,9 +526,10 @@
   }
   function updateBuyDroneButton() {
     if (!buyDroneButton) return;
-    buyDroneButton.textContent = game.droneCount >= MAX_DRONES ? `無人機 ${game.droneCount}/${MAX_DRONES} 台` : `購買無人機 · ${DRONE_COST} 🪙 (${game.droneCount}/${MAX_DRONES})`;
-    buyDroneButton.disabled = game.droneCount >= MAX_DRONES || game.coins < DRONE_COST;
-    buyDroneButton.setAttribute('aria-label', game.droneCount >= MAX_DRONES ? `已達無人機上限 ${MAX_DRONES} 台` : `花費 ${DRONE_COST} 金幣購買一台無人機`);
+    const cost = getDroneCost();
+    buyDroneButton.textContent = game.droneCount >= MAX_DRONES ? `無人機 ${game.droneCount}/${MAX_DRONES} 台` : `購買無人機 · ${cost} 🪙 (${game.droneCount}/${MAX_DRONES})`;
+    buyDroneButton.disabled = game.droneCount >= MAX_DRONES || game.coins < cost;
+    buyDroneButton.setAttribute('aria-label', game.droneCount >= MAX_DRONES ? `已達無人機上限 ${MAX_DRONES} 台` : `花費 ${cost} 金幣購買一台無人機`);
   }
   function setDronePanelOpen(open) {
     if (!droneJobsPanel || !dronePanelToggle) return;
@@ -826,8 +828,9 @@
   }
   function buyDrone() {
     if (game.droneCount >= MAX_DRONES) return notify(`最多只能擁有 ${MAX_DRONES} 台無人機。`);
-    if (game.coins < DRONE_COST) return notify(`購買無人機需要 ${DRONE_COST} 枚金幣。`);
-    game.coins -= DRONE_COST;
+    const cost = getDroneCost();
+    if (game.coins < cost) return notify(`購買下一台無人機需要 ${cost} 枚金幣。`);
+    game.coins -= cost;
     game.droneCount += 1;
     game.deploymentSequence += 1;
     game.drones.push({ dockPosition: findDroneDock(game.plots, game.drones.map((drone) => drone.dockPosition)), deployed: true, deploymentOrder: game.deploymentSequence, battery: 100, batteryUpdatedAt: Date.now() });
