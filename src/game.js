@@ -229,6 +229,8 @@
   const autoModeButton = document.querySelector('#auto-mode');
   const buyDroneButton = document.querySelector('#buy-drone');
   const droneFleetDisplay = document.querySelector('#drone-fleet');
+  const dronePanelToggle = document.querySelector('#drone-panel-toggle');
+  const droneJobsPanel = document.querySelector('#drone-jobs');
   const hudToggle = document.querySelector('#hud-toggle');
   const hudCollapsedSummary = document.querySelector('#hud-collapsed-summary');
   const environmentStatus = document.querySelector('#environment-status');
@@ -242,6 +244,7 @@
   const dialogTitle = document.querySelector('#farm-dialog-title');
   const dialogContent = document.querySelector('#farm-dialog-content');
   let toastTimeout;
+  let dronePanelTimeout = null;
   let dialogContext = null;
   let activePlotIndex = -1;
   let dockIsSelected = false;
@@ -523,6 +526,19 @@
     buyDroneButton.textContent = game.droneCount >= MAX_DRONES ? `無人機 ${game.droneCount}/${MAX_DRONES} 台` : `購買無人機 · ${DRONE_COST} 🪙 (${game.droneCount}/${MAX_DRONES})`;
     buyDroneButton.disabled = game.droneCount >= MAX_DRONES || game.coins < DRONE_COST;
     buyDroneButton.setAttribute('aria-label', game.droneCount >= MAX_DRONES ? `已達無人機上限 ${MAX_DRONES} 台` : `花費 ${DRONE_COST} 金幣購買一台無人機`);
+  }
+  function setDronePanelOpen(open) {
+    if (!droneJobsPanel || !dronePanelToggle) return;
+    window.clearTimeout(dronePanelTimeout);
+    dronePanelTimeout = null;
+    droneJobsPanel.classList.toggle('is-open', open);
+    document.querySelector('.world-frame')?.classList.toggle('is-drone-panel-open', open);
+    dronePanelToggle.setAttribute('aria-expanded', String(open));
+    dronePanelToggle.textContent = open ? '🚁 收合無人機' : '🚁 無人機';
+    if (open) dronePanelTimeout = window.setTimeout(() => setDronePanelOpen(false), 5000);
+  }
+  function refreshDronePanelTimeout() {
+    if (droneJobsPanel?.classList.contains('is-open')) setDronePanelOpen(true);
   }
   function updateHudCollapse() {
     document.querySelector('.world-frame')?.classList.toggle('is-hud-collapsed', game.hudCollapsed);
@@ -821,6 +837,12 @@
     openExpansionDialog();
   });
   buyDroneButton?.addEventListener('click', buyDrone);
+  dronePanelToggle?.addEventListener('click', () => {
+    setDronePanelOpen(!droneJobsPanel?.classList.contains('is-open'));
+  });
+  ['pointerdown', 'click', 'keydown', 'input', 'change', 'focusin'].forEach((eventName) => {
+    droneJobsPanel?.addEventListener(eventName, refreshDronePanelTimeout);
+  });
   hudToggle?.addEventListener('click', () => { game.hudCollapsed = !game.hudCollapsed; save(); updateHudCollapse(); });
   gardenNameDisplay?.addEventListener('click', () => { gardenNameInput.value = game.gardenName; gardenNameDisplay.hidden = true; gardenNameEditor.hidden = false; gardenNameInput.focus(); gardenNameInput.select(); });
   gardenNameEditor?.addEventListener('submit', (event) => {
