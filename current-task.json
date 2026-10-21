@@ -1,0 +1,9 @@
+﻿{
+    "name":  "任務 134：2D 相機與地塊鍵盤操作",
+    "status":  "complete",
+    "pendingApprovals":  [
+                             "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
+                         ],
+    "nextAction":  "重新載入頁面以使用 2D 相機及地塊 WASD 操作",
+    "result":  "2D 模式加入滾輪縮放與 WASD 平移；地塊移動模式使用 WASD 逐格移動，高度模式以 W/S 調整半單位高度。"
+}
