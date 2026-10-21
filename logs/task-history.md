@@ -897,3 +897,11 @@
 - 結果：依使用者回饋保留六朵小花造型，將中心排列半徑由 0.16 降至 0.115、花瓣倍率由 0.62 提高至 0.80、花絲倍率由 0.72 提高至 0.82，讓花朵更靠近主莖並增加密集感。
 - 驗證：程式碼已更新；仍需在瀏覽器中確認花瓣與花絲沒有過度重疊，尚未完成視覺驗收。
 - 涉及：`src/sky-world.js`、`tasks/active/147-red-spider-lily-redesign.md`、`state/current-task.json`。
+
+
+## 2026-10-22：任務 149 微調彼岸花三瓣花冠與共面拋物線花絲
+
+- 修改 src/sky-world.js：保留六朵小花的原有位置與朝向，將每朵花瓣由五片減為三片，總計 18 片花瓣。
+- 花絲：每朵三支花絲的中心線改為同一局部垂直平面內的開口向上二次曲線，三支之間只做小幅平移；保留末端金黃色花藥。
+- 文件：同步更新 docs/architecture.md、docs/desicions.md、tasks/active/149-spider-lily-three-petals-coplanar-stamens.md 及 state/current-task.json。
+- 驗證：GitHub 寫入成功；JavaScript 語法檢查及瀏覽器視覺驗收尚未執行。
