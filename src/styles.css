@@ -193,3 +193,27 @@ body{background:#d9f0f7}
   .world-plot-button{flex-basis:62px;min-height:62px}
   .world-help{font-size:9px}
 }
+
+
+/* Drone management is opt-in so the garden remains visible by default. */
+.drone-jobs{display:none}
+.world-topbar{right:125px}
+.drone-panel-toggle{flex:none;min-height:34px;padding:7px 10px;border:1px solid #d7e9df;border-radius:11px;background:#f4faef;color:#527866;font-size:10px;font-weight:900;white-space:nowrap;cursor:pointer}
+.drone-panel-toggle[aria-expanded="true"]{background:#547f65;color:#fff}
+.drone-panel-toggle:focus-visible{outline:3px solid #547f65;outline-offset:2px}
+.world-frame.is-drone-panel-open:not(.is-hud-collapsed) .drone-jobs.is-open{display:block}
+@media(max-width:700px) and (orientation:portrait){
+  .world-help,.world-plots{display:none!important}
+  .world-topbar{right:8px}
+  .world-topbar .world-status{flex:1;min-width:0}
+  .drone-panel-toggle{min-height:34px;padding:6px 8px;font-size:9px}
+  .drone-jobs{top:116px;right:8px;width:min(250px,calc(100% - 16px));max-height:42vh}
+}
+@media(max-width:760px){
+  .encyclopedia-layout{grid-template-rows:auto auto}
+  .encyclopedia-preview-column{grid-template-rows:auto auto auto;align-content:start}
+  .encyclopedia-world{width:min(42vh,100%);height:auto;aspect-ratio:1/1;flex:none;justify-self:center}
+  .encyclopedia-world .world-frame{width:100%;height:100%;aspect-ratio:1/1;min-height:0}
+  .encyclopedia-world #sky-canvas{width:100%;height:100%;aspect-ratio:1/1}
+  .variant-editor{width:min(42vh,100%);max-width:100%;box-sizing:border-box;justify-self:center;margin-left:auto;margin-right:auto}
+}
