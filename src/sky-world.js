@@ -472,8 +472,8 @@
             : bloom % 3 === 1 ? headColor.map((channel) => channel * 0.92) : headColor;
 
           // Five narrow petals per small flower, each with a curled-back tip.
-          for (let petal = 0; petal < 3; petal += 1) {
-            const angle = petal / 3 * Math.PI * 2 + bloom * 0.17;
+          for (let petal = 0; petal < 6; petal += 1) {
+            const angle = petal / 6 * Math.PI * 2 + bloom * 0.17;
             const root = petalPoint(0.006, 0, -0.012, angle);
             const left = petalPoint(0.04, -0.014, 0.006, angle);
             const rightEdge = petalPoint(0.04, 0.014, 0.006, angle);
