@@ -1,9 +1,9 @@
 {
-  "name": "任務 140：修正手機垂直平移方向與按鈕對齊",
+  "name": "任務 140（重做）：修正手機版按鈕對齊",
   "status": "awaiting_manual_validation",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "在手機瀏覽器確認 2D 與 3D 模式上下滑動方向正確，且 2D 模式按鈕與收合介面上緣對齊、花卉圖鑑按鈕不重疊。",
-  "result": "已修改 src/sky-world.js 與 src/styles.css 並提交至 main；等待手機瀏覽器驗收。"
+  "nextAction": "在手機直向與橫向確認 2D 模式按鈕上緣與收合介面按鈕對齊、花卉圖鑑按鈕位於其下方且無重疊，並確認桌面版不受影響。",
+  "result": "已修正 src/styles.css 最後一組手機媒體查詢的覆蓋值：2D 模式 top:72px、花卉圖鑑 top:117px；新增重做任務紀錄並提交至 main。等待實機驗收。"
 }
