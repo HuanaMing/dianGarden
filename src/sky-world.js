@@ -434,7 +434,7 @@
         // Pull the six floret centers closer to the main stem and enlarge
         // each bloom so the head reads as a dense, connected cluster.
         const clusterRadius = 0.080;
-        const petalScale = 1.05;
+        const petalScale = 0.8;
         const filamentScale = 0.90;
 
         for (let bloom = 0; bloom < faceNormals.length; bloom += 1) {
