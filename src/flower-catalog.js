@@ -10,5 +10,6 @@
     { name: '繡球花', meaning: '感謝、圓滿、團聚、永恆的愛', growTime: 135000, height: 0.68, color: '#7096e0', emoji: '🪻', seedCost: 32, harvestReward: 76 },
     { name: '薰衣草', meaning: '期待、守護、寬恕', growTime: 90000, height: 0.65, color: '#916bbf', emoji: '🪻', seedCost: 17, harvestReward: 43 },
     { name: '牡丹', meaning: '富貴、吉祥、圓滿、幸福', growTime: 117000, height: 0.62, color: '#d4618c', emoji: '🌺', seedCost: 28, harvestReward: 66 },
+    { name: '彼岸花', meaning: '思念、離別、重逢', growTime: 108000, height: 0.58, color: '#d9364f', emoji: '🌺', seedCost: 30, harvestReward: 70 },
   ];
 })();
