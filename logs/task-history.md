@@ -800,3 +800,9 @@
 - 結果：手機直式隱藏操作提示及農地快捷列；新增無人機資訊面板按鈕與 5 秒閒置自動收合；調整圖鑑模型正方形尺寸及變種編輯區寬度。
 - 檢查：重新讀取 GitHub 檔案並確認主要 DOM、計時器與響應式 CSS 規則存在。未執行實際手機瀏覽器視覺或觸控驗收。
 - 檔案：`src/index.html`、`src/game.js`、`src/styles.css`、`docs/architecture.md`、`tasks/done/135-mobile-ui-and-encyclopedia.md`。
+
+## 2026-10-21 — 任務 136：花卉圖鑑手機版編輯區精簡
+
+- 結果：將「儲存為變種」簡化為「儲存」；手機版的預覽花色、變種名稱與儲存控制項改為同一行，縮短名稱輸入區並隱藏「目前展示：向日葵」提示。調整手機版預覽區高度，將剩餘垂直空間交給花種資訊卡。
+- 檔案：`src/encyclopedia.html`、`src/styles.css`、`tasks/done/136-mobile-flower-variant-editor.md`、`state/current-task.json`
+- 限制與驗收：已檢查更新後的 HTML/CSS；尚未執行實際手機與桌面瀏覽器視覺及互動驗收。
