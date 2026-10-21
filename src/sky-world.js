@@ -417,6 +417,36 @@
               [cx - radial[0] * 0.03, cy - 0.036, cz - radial[1] * 0.03], bract);
           }
         }
+      } else if (flowerIndex === 10) {
+        // Red spider lily: six recurved red petals and long outward stamens.
+        for (let petal = 0; petal < 6; petal += 1) {
+          const angle = petal / 6 * Math.PI * 2 + 0.12;
+          const radial = [Math.cos(angle), Math.sin(angle)];
+          const tangent = [-radial[1], radial[0]];
+          const point = (radius, side, y) => [x + radial[0] * radius + tangent[0] * side, y, z + radial[1] * radius + tangent[1] * side];
+          const root = point(0.012, 0, bloomY - 0.025);
+          const left = point(0.07, -0.021, bloomY + 0.022);
+          const right = point(0.07, 0.021, bloomY + 0.022);
+          const ridge = point(0.13, 0, bloomY + 0.048);
+          const outerLeft = point(0.19, -0.012, bloomY + 0.008);
+          const outerRight = point(0.19, 0.012, bloomY + 0.008);
+          const curledTip = point(0.145, 0, bloomY - 0.052);
+          const color = petal % 3 === 0 ? headColor.map((channel) => Math.min(1, channel * 1.12)) : petal % 3 === 1 ? headColor.map((channel) => channel * 0.9) : headColor;
+          addTriangle(positions, colors, root, left, ridge, color.map((channel) => channel * 0.92));
+          addTriangle(positions, colors, root, ridge, right, color);
+          addTriangle(positions, colors, ridge, outerLeft, curledTip, color);
+          addTriangle(positions, colors, ridge, curledTip, outerRight, color.map((channel) => channel * 0.94));
+        }
+        for (let filament = 0; filament < 7; filament += 1) {
+          const angle = filament / 7 * Math.PI * 2 + 0.27;
+          const radial = [Math.cos(angle), Math.sin(angle)];
+          const tangent = [-radial[1], radial[0]];
+          const root = [x + radial[0] * 0.018, bloomY + 0.012, z + radial[1] * 0.018];
+          const mid = [x + radial[0] * 0.095 + tangent[0] * 0.006, bloomY + 0.085, z + radial[1] * 0.095 + tangent[1] * 0.006];
+          const tip = [x + radial[0] * 0.17, bloomY + 0.072 + (filament % 3) * 0.009, z + radial[1] * 0.17];
+          addTriangle(positions, colors, root, mid, tip, filament % 2 ? [0.94, 0.43, 0.48] : [0.98, 0.58, 0.48]);
+          addOctahedron(positions, colors, tip[0], tip[1], tip[2], 0.009, 0.009, 0.009, [0.98, 0.72, 0.38]);
+        }
       } else {
         // Peony: broad guard petals enclose rounded inner petaloids.
         const petalRows = [
