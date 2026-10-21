@@ -431,9 +431,11 @@
           [-0.380023, 0.187592, -0.905755],
           [0.594395, -0.187592, -0.781987],
         ];
-        const clusterRadius = 0.16;
-        const petalScale = 0.62;
-        const filamentScale = 0.72;
+        // Pull the six floret centers closer to the main stem and enlarge
+        // each bloom so the head reads as a dense, connected cluster.
+        const clusterRadius = 0.115;
+        const petalScale = 0.80;
+        const filamentScale = 0.82;
 
         for (let bloom = 0; bloom < faceNormals.length; bloom += 1) {
           const normal = faceNormals[bloom];
