@@ -418,7 +418,7 @@
           }
         }
       } else if (flowerIndex === 10) {
-        // Red spider lily: six five-petal florets arranged at the face centers
+        // Red spider lily: six three-petal florets arranged at the face centers
         // of a vertex-up regular dodecahedron. Their normals are the vertices
         // of the dual icosahedron after one triangular face is rotated upward.
         // The six mid-height faces are exactly 60 degrees apart in azimuth;
@@ -472,8 +472,8 @@
             : bloom % 3 === 1 ? headColor.map((channel) => channel * 0.92) : headColor;
 
           // Five narrow petals per small flower, each with a curled-back tip.
-          for (let petal = 0; petal < 5; petal += 1) {
-            const angle = petal / 5 * Math.PI * 2 + bloom * 0.17;
+          for (let petal = 0; petal < 3; petal += 1) {
+            const angle = petal / 3 * Math.PI * 2 + bloom * 0.17;
             const root = petalPoint(0.006, 0, -0.012, angle);
             const left = petalPoint(0.04, -0.014, 0.006, angle);
             const rightEdge = petalPoint(0.04, 0.014, 0.006, angle);
@@ -488,20 +488,16 @@
           }
           addOctahedron(positions, colors, cx, cy, cz, 0.009, 0.009, 0.009, bloomColor);
 
-          // Three stamens per small flower: 120-degree azimuth spacing plus
-          // distinct local elevations give each group a true 3D radial spread.
+          // Three stamens share one local vertical plane. Their centerlines follow
+          // y = a*x^2: an upward-opening parabola with a low inner start and
+          // steadily rising outer tip. Small in-plane offsets keep each strand distinct.
           for (let filament = 0; filament < 3; filament += 1) {
-            const angle = filament / 3 * Math.PI * 2 + bloom * 0.23 + 0.11;
-            const tangentX = -Math.sin(angle);
-            const tangentZ = Math.cos(angle);
-            const radialX = Math.cos(angle);
-            const radialZ = Math.sin(angle);
-            const path = [
-              { radius: 0.012, height: 0.022 + filament * 0.003 },
-              { radius: 0.047, height: 0.007 + ((filament + 1) % 3) * 0.004 },
-              { radius: 0.087, height: 0.032 + filament * 0.004 },
-              { radius: 0.145, height: 0.076 + filament * 0.007 },
-            ];
+            const planeOffset = (filament - 1) * 0.012;
+            const radii = [0.012, 0.047, 0.087, 0.145];
+            const path = radii.map((radius) => ({
+              radius,
+              height: 0.012 + 3.2 * (radius - 0.012) ** 2,
+            }));
             const stalkColor = filament === 1 ? [0.98, 0.62, 0.58] : [0.91, 0.35, 0.43];
             for (let segment = 0; segment < path.length - 1; segment += 1) {
               const from = path[segment];
@@ -509,9 +505,9 @@
               const widthStart = 0.003 * (1 - segment * 0.12);
               const widthEnd = widthStart * 0.78;
               const pointAt = (node, sideWidth) => localPoint(
-                (radialX * node.radius + tangentX * sideWidth) * filamentScale,
+                (planeOffset + node.radius) * filamentScale,
                 node.height * filamentScale,
-                (radialZ * node.radius + tangentZ * sideWidth) * filamentScale,
+                sideWidth * filamentScale,
               );
               const a = pointAt(from, widthStart);
               const b = pointAt(from, -widthStart);
@@ -522,9 +518,9 @@
             }
             const tipPath = path[path.length - 1];
             const tip = localPoint(
-              radialX * tipPath.radius * filamentScale,
+              (planeOffset + tipPath.radius) * filamentScale,
               tipPath.height * filamentScale,
-              radialZ * tipPath.radius * filamentScale,
+              0,
             );
             // Small golden anthers remain visible at the tips of all 18 filaments.
             addOctahedron(positions, colors, tip[0], tip[1], tip[2], 0.0055, 0.0055, 0.0055, [0.99, 0.76, 0.32]);
