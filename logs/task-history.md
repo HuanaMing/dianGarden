@@ -806,3 +806,10 @@
 - 結果：將「儲存為變種」簡化為「儲存」；手機版的預覽花色、變種名稱與儲存控制項改為同一行，縮短名稱輸入區並隱藏「目前展示：向日葵」提示。調整手機版預覽區高度，將剩餘垂直空間交給花種資訊卡。
 - 檔案：`src/encyclopedia.html`、`src/styles.css`、`tasks/done/136-mobile-flower-variant-editor.md`、`state/current-task.json`
 - 限制與驗收：已檢查更新後的 HTML/CSS；尚未執行實際手機與桌面瀏覽器視覺及互動驗收。
+
+
+## 2026-10-21 — 任務 137：花卉圖鑑介面精簡與模型操作區調整
+
+- 結果：隱藏圖鑑兩行標題；將「返回花園」移入 3D 模型視窗左上角；縮小已儲存變種預覽按鈕、花色標記及刪除按鈕。
+- 檢查：靜態檢查 HTML 節點位置及 CSS 規則；未執行實際瀏覽器視覺或互動驗收。
+- 檔案：`src/encyclopedia.html`、`src/styles.css`、`tasks/done/137-encyclopedia-ui-refinement.md`、`state/current-task.json`、`logs/task-history.md`。
