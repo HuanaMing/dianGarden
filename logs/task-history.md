@@ -890,3 +890,10 @@
 - 驗證：整份 `src/sky-world.js` JavaScript 語法檢查通過；六個方向向量長度與方位角間隔檢查通過。尚未執行瀏覽器視覺驗收。
 - 涉及：`src/sky-world.js`、`docs/architecture.md`、`docs/desicions.md`、`tasks/active/147-red-spider-lily-redesign.md`、`state/current-task.json`。
 - 後續：在花園及圖鑑中從多個視角驗收；若六朵小花視覺上仍無法連續成簇，再評估七朵方案。
+
+
+## 2026-10-22：任務 147 彼岸花花冠放大與收緊
+
+- 結果：依使用者回饋保留六朵小花造型，將中心排列半徑由 0.16 降至 0.115、花瓣倍率由 0.62 提高至 0.80、花絲倍率由 0.72 提高至 0.82，讓花朵更靠近主莖並增加密集感。
+- 驗證：程式碼已更新；仍需在瀏覽器中確認花瓣與花絲沒有過度重疊，尚未完成視覺驗收。
+- 涉及：`src/sky-world.js`、`tasks/active/147-red-spider-lily-redesign.md`、`state/current-task.json`。
