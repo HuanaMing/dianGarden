@@ -1410,7 +1410,7 @@
     }
     clearTimeout(plotPressTimer);
     rotateTouchGesture = event.pointerType === 'touch'
-      && window.matchMedia?.('(max-width: 700px) and (orientation: portrait)').matches === true
+      && window.matchMedia?.('(max-width: 700px)').matches === true
       && Date.now() - lastEmptyTouchAt <= 500;
     dragging = true;
     pointerMoved = false;
@@ -1528,7 +1528,7 @@
       lastPointerY = event.clientY;
       return;
     }
-    if (event.pointerType === 'touch' && window.matchMedia?.('(max-width: 700px) and (orientation: portrait)').matches === true) {
+    if (event.pointerType === 'touch' && window.matchMedia?.('(max-width: 700px)').matches === true) {
       const deltaX = event.clientX - lastPointerX;
       const deltaY = event.clientY - lastPointerY;
       if (rotateTouchGesture) {
@@ -1627,7 +1627,7 @@
       heightEdit.mode = heightEdit.mode === 'height' ? 'move' : 'height';
       window.onSkyHeightEditMode?.('plot', plotPressIndex, heightEdit.mode);
     } else if (!pointerMoved) {
-      if (event.pointerType === 'touch' && window.matchMedia?.('(max-width: 700px) and (orientation: portrait)').matches === true
+      if (event.pointerType === 'touch' && window.matchMedia?.('(max-width: 700px)').matches === true
         && pointerPlotIndex === null && dockHitAtPointer === null) {
         lastEmptyTouchAt = Date.now();
       }
