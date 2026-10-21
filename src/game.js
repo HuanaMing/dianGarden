@@ -182,6 +182,7 @@
     return { ...saved, cropCatalogVersion: CROP_CATALOG_VERSION, gardenName: saved.gardenName || '花明摸魚花園', hudCollapsed: saved.hudCollapsed === true, autoMode: saved.autoMode === true, autoCropSelection: Array.isArray(saved.autoCropSelection) ? saved.autoCropSelection : [0], flowerVariants, worldTimeMs: Number.isFinite(saved.worldTimeMs) ? saved.worldTimeMs : 60_000, worldTimeAnchor: Number.isFinite(saved.worldTimeAnchor) ? saved.worldTimeAnchor : Date.now(), lastObservedRaining: typeof saved.lastObservedRaining === 'boolean' ? saved.lastObservedRaining : window.skyEnvironment.getState(saved).isRaining, droneCount: drones.length, deploymentSequence, drones, dockPosition, plots };
   }
   const game = loadGame();
+  function getLandCost() { return Math.min(Number.MAX_SAFE_INTEGER, Math.round(LAND_COST * (2 ** Math.max(0, game.plots.length - 3)))); }
   try {
     const savedSelection = JSON.parse(localStorage.getItem(AUTO_CROP_KEY) || 'null');
     if (Array.isArray(savedSelection) && savedSelection.every((index) => Number.isInteger(index) && index >= 0 && index < crops.length)
@@ -370,10 +371,11 @@
     if (!dialog.open || !dialogContext) return;
     dialog.classList.remove('has-variant-panel');
     if (dialogContext.type === 'expansion') {
+      const cost = getLandCost();
       dialogTitle.textContent = '擴建空中土地';
-      dialogContent.innerHTML = `<p class="seed-dialog-description">開墾新土地需要 ${LAND_COST} 枚金幣。你目前有 ${game.coins} 枚。</p><div class="dialog-actions"><button class="dialog-cancel" type="button" data-dialog-cancel>再想想</button><button class="action-button" type="button" data-confirm-expansion ${game.coins < LAND_COST ? 'disabled' : ''}>確認開墾　${LAND_COST} 🪙</button></div>`;
+      dialogContent.innerHTML = `<p class="seed-dialog-description">開墾新土地需要 ${cost} 枚金幣。你目前有 ${game.coins} 枚。</p><div class="dialog-actions"><button class="dialog-cancel" type="button" data-dialog-cancel>再想想</button><button class="action-button" type="button" data-confirm-expansion ${game.coins < cost ? 'disabled' : ''}>確認開墾　${cost} 🪙</button></div>`;
       dialogContent.querySelector('[data-dialog-cancel]').addEventListener('click', () => dialog.close());
-      dialogContent.querySelector('[data-confirm-expansion]').addEventListener('click', () => { if (game.coins >= LAND_COST) { dialog.close(); buyLand(); } });
+      dialogContent.querySelector('[data-confirm-expansion]').addEventListener('click', () => { if (game.coins >= getLandCost()) { dialog.close(); buyLand(); } });
       return;
     }
     const index = dialogContext.index;
@@ -465,7 +467,8 @@
     const expansionPending = [...activeJobs.values()].some((job) => job.kind === 'expand') || jobQueue.some((job) => job.kind === 'expand');
     expandButton?.setAttribute('aria-disabled', String(expansionPending));
     expandButton?.classList.toggle('is-blocked', expansionPending);
-    expandButton?.setAttribute('aria-label', expansionPending ? '農地擴建中，請稍後' : `擴建空中土地，花費 ${LAND_COST} 枚金幣`);
+    expandButton.textContent = `+ 🟩 ${getLandCost()} 🪙`;
+    expandButton?.setAttribute('aria-label', expansionPending ? '農地擴建中，請稍後' : `擴建空中土地，花費 ${getLandCost()} 枚金幣`);
     expandButton?.setAttribute('title', expansionPending ? '農地擴建中，請稍後' : '擴建空中土地');
     const waitingForCharge = jobQueue.length > 0 && game.drones.every((drone, index) => drone.deployed === false || activeJobs.has(index) || drone.battery < estimateJobBattery(jobQueue[0], index));
     jobStatus.textContent = activeJobs.size ? `工作中` : waitingForCharge ? '電量不足，工作排隊等待充電' : '無人機待命';
@@ -661,7 +664,8 @@
       if (!plot || isDroneExcluded(plot) || plot.crop === null || plot.watered || growthElapsed(plot) >= (crops[plot.crop] || crops[0]).growTime) return notify('澆水條件已改變，工作已略過。');
       plot.watered = true; plot.waterSource = 'drone'; plot.waterStartedAt = Date.now(); plot.waterUntil = plot.waterStartedAt + WATER_DURATION; save(); render(); if (!job.automatic) notify('澆水完成！這株花接下來 30 秒會以 1.2 倍速度生長。'); return;
     }
-    if (game.coins < LAND_COST) return notify('擴建任務執行時金幣不足，已略過。');
+    const expansionCost = getLandCost();
+    if (game.coins < expansionCost) return notify('擴建任務執行時金幣不足，已略過。');
     const position = job.position || (() => {
       const candidate = getNextPlotPosition(game.plots, game.drones.map((drone) => drone.dockPosition));
       return candidate ? { x: candidate[0], z: candidate[1] } : null;
@@ -671,7 +675,7 @@
       return notify('擴建位置已被占用，請移動坪台或農地後再試。');
     }
     const { x, z } = position;
-    game.coins -= LAND_COST; game.plots.push({ crop: null, plantedAt: null, manual: false, grassOnly: false, x, z, y: 0 }); save(); render(); notify('新島開墾完成！這片天空也是你的了 ☁️');
+    game.coins -= expansionCost; game.plots.push({ crop: null, plantedAt: null, manual: false, grassOnly: false, x, z, y: 0 }); save(); render(); notify('新島開墾完成！這片天空也是你的了 ☁️');
   }
   function processJobQueue() {
     updateBatteries();
@@ -814,7 +818,8 @@
     if (dialogContext?.type === 'plot' && game.plots[dialogContext.index]?.crop !== null) renderFarmDialog();
   }
   function buyLand() {
-    if (game.coins < LAND_COST) return notify('金幣不夠了！多種一些作物再來開墾吧。');
+    const cost = getLandCost();
+    if (game.coins < cost) return notify(`金幣不足，開墾下一塊地需要 ${cost} 枚金幣。`);
     const position = getNextPlotPosition(game.plots, game.drones.map((drone) => drone.dockPosition));
     if (!position) return notify('找不到不與坪台重疊的相鄰位置，請先移動坪台。');
     enqueueJob({ kind: 'expand', position: { x: position[0], z: position[1] } });
