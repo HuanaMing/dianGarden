@@ -444,11 +444,13 @@
           const angle = filament / filamentCount * Math.PI * 2 + 0.19;
           const radial = [Math.cos(angle), Math.sin(angle)];
           const tangent = [-radial[1], radial[0]];
+          // Shape the filament like an upward-opening parabola in radial profile:
+          // it dips near the middle, then rises toward the outward-facing anther.
           const path = [
-            { radius: 0.018, height: 0.015 },
-            { radius: 0.075 + (filament % 3) * 0.006, height: 0.095 + (filament % 2) * 0.009 },
-            { radius: 0.16 + (filament % 2) * 0.012, height: 0.105 - (filament % 3) * 0.006 },
-            { radius: 0.235 + (filament % 3) * 0.008, height: 0.035 + (filament % 2) * 0.008 },
+            { radius: 0.018, height: 0.032 + (filament % 2) * 0.004 },
+            { radius: 0.075 + (filament % 3) * 0.004, height: 0.014 + (filament % 2) * 0.003 },
+            { radius: 0.16 + (filament % 2) * 0.008, height: 0.043 + (filament % 3) * 0.004 },
+            { radius: 0.235 + (filament % 3) * 0.008, height: 0.105 + (filament % 2) * 0.008 },
           ];
           const stalkColor = filament % 3 === 0 ? [0.98, 0.62, 0.58] : [0.91, 0.35, 0.43];
           for (let segment = 0; segment < path.length - 1; segment += 1) {
