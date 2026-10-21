@@ -220,7 +220,6 @@
   const offlineReport = simulateOfflineProgress(game);
   const plotSelector = document.querySelector('#plot-selector');
   const coinsDisplay = document.querySelector('#coins');
-  const farmCount = document.querySelector('#farm-count');
   const toast = document.querySelector('#toast');
   const saveStatus = document.querySelector('#save-status');
   const jobStatus = document.querySelector('#job-status');
@@ -335,7 +334,7 @@
     });
   }
   function updateHud() {
-    coinsDisplay.textContent = game.coins; farmCount.textContent = game.plots.length; updateSaveStatus();
+    coinsDisplay.textContent = game.coins; updateSaveStatus();
     const environment = window.skyEnvironment.getState(game);
     updateEnvironmentDisplay(environment);
     window.skyWorld?.setPlotPositions(game.plots.map(({ x, z, y }) => ({ x, z, y })));
@@ -845,13 +844,22 @@
   });
   hudToggle?.addEventListener('click', () => { game.hudCollapsed = !game.hudCollapsed; save(); updateHudCollapse(); });
   gardenNameDisplay?.addEventListener('click', () => { gardenNameInput.value = game.gardenName; gardenNameDisplay.hidden = true; gardenNameEditor.hidden = false; gardenNameInput.focus(); gardenNameInput.select(); });
+  gardenNameInput?.addEventListener('input', () => {
+    const name = gardenNameInput.value.trim();
+    if (!name || name.length > 24 || name === game.gardenName) return;
+    game.gardenName = name;
+    save();
+    updateGardenName();
+  });
+  gardenNameInput?.addEventListener('blur', () => {
+    gardenNameInput.value = game.gardenName;
+    gardenNameEditor.hidden = true;
+    gardenNameDisplay.hidden = false;
+  });
   gardenNameEditor?.addEventListener('submit', (event) => {
     event.preventDefault();
-    const name = gardenNameInput.value.trim();
-    if (!name || name.length > 24) return notify('名稱請輸入 1 到 24 個字。');
-    game.gardenName = name; save(); updateGardenName(); gardenNameEditor.hidden = true; gardenNameDisplay.hidden = false;
+    gardenNameInput.blur();
   });
-  document.querySelector('#garden-name-cancel')?.addEventListener('click', () => { gardenNameEditor.hidden = true; gardenNameDisplay.hidden = false; });
   resetProgressButton?.addEventListener('click', () => resetDialog?.showModal());
   resetDialog?.querySelectorAll('[data-cancel-reset]').forEach((button) => button.addEventListener('click', () => resetDialog.close()));
   confirmResetButton?.addEventListener('click', () => {
