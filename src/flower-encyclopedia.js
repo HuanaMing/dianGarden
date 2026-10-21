@@ -1,0 +1,211 @@
+(() => {
+  const grid = document.querySelector('#flower-cards');
+  const colorInput = document.querySelector('#variant-color');
+  const nameInput = document.querySelector('#variant-name');
+  const saveButton = document.querySelector('#save-variant');
+  const message = document.querySelector('#variant-message');
+  const variantList = document.querySelector('#saved-variants');
+  const selectedFlowerStatus = document.querySelector('#selected-flower-status');
+  const variantsKey = 'sky-garden-flower-variants-v1';
+  const autoCropKey = 'sky-garden-auto-crops-v1';
+  const maxVariants = 30;
+  if (!grid || !Array.isArray(window.flowerCatalog)) return;
+
+  let selectedIndex = 0;
+  let variants = [];
+  let autoCropSelection = [];
+  let variantStorageUsable = true;
+  try {
+    variants = JSON.parse(localStorage.getItem(variantsKey) || '[]');
+    if (!Array.isArray(variants) || variants.length > maxVariants
+      || new Set(variants.map((variant) => variant?.id)).size !== variants.length
+      || variants.some((variant) => !variant || typeof variant.id !== 'string' || variant.id.length > 80
+        || typeof variant.name !== 'string' || !variant.name.trim() || variant.name.length > 20
+        || !Number.isInteger(variant.cropIndex) || variant.cropIndex < 0 || variant.cropIndex >= window.flowerCatalog.length
+        || !/^#[0-9a-f]{6}$/i.test(variant.color || ''))) throw new Error('資料格式不相容');
+  } catch (_) {
+    variants = [];
+    variantStorageUsable = false;
+    message.textContent = '無法讀取已儲存變種；原花卉資料仍可瀏覽。';
+  }
+
+  function setSelectedCard(index) {
+    selectedIndex = index;
+    for (const card of grid.querySelectorAll('.encyclopedia-card')) {
+      const selected = Number(card.dataset.flowerIndex) === index;
+      card.classList.toggle('is-selected', selected);
+      card.querySelector('.encyclopedia-card-select')?.setAttribute('aria-pressed', String(selected));
+    }
+  }
+  try {
+    const savedSelection = JSON.parse(localStorage.getItem(autoCropKey) || 'null');
+    if (Array.isArray(savedSelection) && savedSelection.every((index) => Number.isInteger(index) && index >= 0 && index < window.flowerCatalog.length)
+      && new Set(savedSelection).size === savedSelection.length) autoCropSelection = savedSelection;
+    else {
+      const gardenSave = JSON.parse(localStorage.getItem('sky-garden-save-v1') || 'null');
+      autoCropSelection = Array.isArray(gardenSave?.autoCropSelection) ? gardenSave.autoCropSelection : [0];
+      localStorage.setItem(autoCropKey, JSON.stringify(autoCropSelection));
+    }
+  } catch (_) { autoCropSelection = [0]; }
+  function updatePreview() {
+    const flower = window.flowerCatalog[selectedIndex];
+    const selected = window.skyWorld?.selectGalleryFlower(selectedIndex, colorInput.value);
+    if (selectedFlowerStatus) selectedFlowerStatus.textContent = `目前展示：${flower.name}`;
+    return selected;
+  }
+  function renderVariants() {
+    variantList.replaceChildren();
+    const matching = variants.filter((variant) => variant.cropIndex === selectedIndex);
+    for (const variant of matching) {
+      const item = document.createElement('div');
+      item.className = 'saved-variant-item';
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'saved-variant';
+      button.setAttribute('aria-label', `預覽變種：${variant.name}`);
+      button.innerHTML = '<span aria-hidden="true"></span>';
+      button.querySelector('span').style.backgroundColor = variant.color;
+      button.append(document.createTextNode(`${variant.name}`));
+      button.addEventListener('click', () => {
+        nameInput.value = variant.name;
+        colorInput.value = variant.color;
+        updatePreview();
+        message.textContent = `正在預覽「${window.flowerCatalog[selectedIndex].name}・${variant.name}」。`;
+      });
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.className = 'delete-variant';
+      deleteButton.textContent = '×';
+      deleteButton.setAttribute('aria-label', `刪除變種：${variant.name}`);
+      deleteButton.addEventListener('click', () => {
+        if (!window.confirm(`確定刪除「${window.flowerCatalog[selectedIndex].name}・${variant.name}」？已種植的花會保留此變種外觀。`)) return;
+        const previousVariants = variants;
+        const saveKey = 'sky-garden-save-v1';
+        let previousSave = null;
+        try {
+          previousSave = localStorage.getItem(saveKey);
+          if (previousSave) {
+            const save = JSON.parse(previousSave);
+            if (Array.isArray(save.plots)) {
+              for (const plot of save.plots) {
+                if (plot?.variantId !== variant.id) continue;
+                plot.variantName = variant.name;
+                plot.variantColor = variant.color;
+                delete plot.variantId;
+              }
+              localStorage.setItem(saveKey, JSON.stringify(save));
+            }
+          }
+          variants = variants.filter((item) => item.id !== variant.id);
+          localStorage.setItem(variantsKey, JSON.stringify(variants));
+          renderVariants();
+          message.textContent = `已刪除變種「${variant.name}」。已種植的花會保留原外觀。`;
+        } catch (_) {
+          variants = previousVariants;
+          try {
+            if (previousSave !== null) localStorage.setItem(saveKey, previousSave);
+          } catch (_) { /* Keep the original variant data if rollback is unavailable. */ }
+          message.textContent = '刪除未完成，瀏覽器無法更新變種或存檔。';
+        }
+      });
+      item.append(button, deleteButton);
+      variantList.append(item);
+    }
+    saveButton.disabled = !variantStorageUsable || variants.length >= maxVariants;
+    if (saveButton.disabled && variantStorageUsable) message.textContent = `已達 ${maxVariants} 個變種上限，無法再新增。`;
+  }
+
+  window.flowerCatalog.forEach((flower, index) => {
+    const card = document.createElement('article');
+    card.className = 'encyclopedia-card';
+    card.dataset.flowerIndex = String(index);
+    const selectButton = document.createElement('button');
+    selectButton.type = 'button';
+    selectButton.className = 'encyclopedia-card-select';
+    selectButton.setAttribute('aria-pressed', String(index === 0));
+    const name = document.createElement('span');
+    name.className = 'encyclopedia-card-title';
+    name.setAttribute('role', 'heading');
+    name.setAttribute('aria-level', '2');
+    name.textContent = `${flower.emoji} ${flower.name}`;
+    const meaning = document.createElement('span');
+    meaning.className = 'encyclopedia-meaning';
+    meaning.textContent = `花語意象：${flower.meaning}`;
+    const details = document.createElement('span');
+    details.className = 'encyclopedia-details';
+    details.textContent = `遊戲生長時間 ${flower.growTime / 1000} 秒 · 模型基準高度 ${flower.height.toFixed(2)} 土地單位`;
+    selectButton.append(name, meaning, details);
+    const autoLabel = document.createElement('label');
+    autoLabel.className = 'encyclopedia-auto-crop';
+    const autoCheckbox = document.createElement('input');
+    autoCheckbox.type = 'checkbox';
+    autoCheckbox.checked = autoCropSelection.includes(index);
+    autoCheckbox.setAttribute('aria-label', `自動播種${flower.name}`);
+    autoCheckbox.addEventListener('change', () => {
+      const previousSelection = autoCropSelection;
+      autoCropSelection = autoCheckbox.checked
+        ? [...autoCropSelection, index].sort((a, b) => a - b)
+        : autoCropSelection.filter((cropIndex) => cropIndex !== index);
+      try {
+        localStorage.setItem(autoCropKey, JSON.stringify(autoCropSelection));
+        message.textContent = autoCheckbox.checked ? `已將${flower.name}加入自動播種花種。` : `已從自動播種花種移除${flower.name}。`;
+      } catch (_) {
+        autoCheckbox.checked = !autoCheckbox.checked;
+        autoCropSelection = previousSelection;
+        message.textContent = '無法儲存自動播種設定，請檢查瀏覽器儲存權限。';
+      }
+    });
+    autoLabel.append(autoCheckbox, document.createTextNode('自動播種'));
+    card.append(selectButton, autoLabel);
+    grid.append(card);
+  });
+
+  grid.addEventListener('click', (event) => {
+    const selectButton = event.target.closest('.encyclopedia-card-select');
+    const card = selectButton?.closest('.encyclopedia-card[data-flower-index]');
+    if (!card || !grid.contains(card)) return;
+    const index = Number(card.dataset.flowerIndex);
+    const flower = window.flowerCatalog[index];
+    if (!flower) return;
+    setSelectedCard(index);
+    colorInput.value = flower.color;
+    nameInput.value = '';
+    updatePreview();
+    renderVariants();
+  });
+
+  setSelectedCard(0);
+  colorInput.value = window.flowerCatalog[0].color;
+  updatePreview();
+  renderVariants();
+  colorInput.addEventListener('input', updatePreview);
+  saveButton.addEventListener('click', () => {
+    const name = nameInput.value.trim();
+    if (!name || name.length > 20) {
+      message.textContent = '請輸入 1 到 20 個字的變種名稱。';
+      nameInput.focus();
+      return;
+    }
+    if (variants.length >= maxVariants) {
+      message.textContent = `最多可儲存 ${maxVariants} 個變種。`;
+      return;
+    }
+    const variant = {
+      id: `flower-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`,
+      name,
+      cropIndex: selectedIndex,
+      color: colorInput.value.toLowerCase(),
+    };
+    try {
+      variants.push(variant);
+      localStorage.setItem(variantsKey, JSON.stringify(variants));
+      renderVariants();
+      message.textContent = `已儲存「${window.flowerCatalog[selectedIndex].name}・${name}」，回到花園即可手動種植。`;
+    } catch (_) {
+      variants.pop();
+      variantStorageUsable = false;
+      renderVariants();
+      message.textContent = '無法儲存變種，請檢查瀏覽器儲存空間。';
+    }
+  });
+})();

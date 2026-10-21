@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#dff3ff" />
+    <title>花明摸魚花園</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <section class="world-section" aria-label="空中農場 3D 場景">
+        <div class="world-frame">
+          <canvas id="sky-canvas" aria-label="可用滑鼠與鍵盤探索並選取土地的空中農場 3D 場景"></canvas>
+          <header class="world-topbar" id="world-topbar">
+            <div class="world-brand"><span aria-hidden="true">🌼</span><h1><button class="garden-name-display" id="garden-name-display" type="button" aria-label="編輯花園名稱">花明摸魚花園</button></h1><form class="garden-name-editor" id="garden-name-editor" hidden><input id="garden-name-input" type="text" maxlength="24" aria-label="花園名稱" required><button type="submit">儲存</button><button type="button" id="garden-name-cancel">取消</button></form></div>
+            <div class="world-status">
+              <span class="world-wallet" aria-live="polite">🪙 <strong id="coins">120</strong><span>金幣</span></span>
+              <span class="world-land-count">🌱 <strong id="farm-count">3</strong> 塊農地</span>
+              <span class="environment-status" id="environment-status" aria-live="polite">晴朗 · 白天</span>
+              <span class="save-status" id="save-status" role="status" aria-live="polite"></span>
+            </div>
+          </header>
+          <button class="hud-toggle" id="hud-toggle" type="button" aria-controls="world-topbar drone-jobs plot-selector world-instructions" aria-expanded="true">收合介面</button>
+          <button class="camera-mode" id="camera-mode" type="button" aria-pressed="false">2D模式</button>
+          <a class="encyclopedia-link" href="encyclopedia.html">花卉圖鑑</a>
+          <button class="reset-progress-button" id="reset-progress" type="button">重置進度</button>
+          <aside class="drone-jobs" id="drone-jobs" aria-label="無人機工作佇列"><strong id="job-status" role="status" aria-live="polite">無人機待命</strong><button class="auto-mode" id="auto-mode" type="button" aria-pressed="false">自動模式：關</button><button class="buy-drone" id="buy-drone" type="button">購買無人機 · 150 🪙 (1/8)</button><div class="drone-fleet" id="drone-fleet" aria-label="無人機部署管理"></div><ol id="job-queue"></ol></aside>
+          <div class="hud-collapsed-summary" id="hud-collapsed-summary" role="status" aria-live="polite"></div>
+          <div class="world-message" id="world-message" role="status">正在載入空中島嶼…</div>
+          <nav class="world-plots" id="plot-selector" aria-label="空中農地" role="group"></nav>
+          <p class="world-help" id="world-instructions">點一下選取；選取後短按查看、長按拖曳拼接 <b>·</b> 拖曳天空旋轉視角 <b>·</b> WASD 移動 <b>·</b> 滾輪縮放</p>
+          <button class="world-expand" id="world-expand" type="button" aria-label="擴建空中土地，花費 75 枚金幣">+ 🟩 75 🪙</button>
+          <dialog class="seed-dialog" id="farm-dialog" aria-labelledby="farm-dialog-title">
+            <div class="seed-dialog-heading"><div><p class="eyebrow">YOUR SKY GARDEN</p><h2 id="farm-dialog-title">農地</h2></div><button class="dialog-close" type="button" aria-label="關閉操作視窗" data-close-farm-dialog>×</button></div>
+            <div class="farm-dialog-content" id="farm-dialog-content"></div>
+          </dialog>
+          <dialog class="seed-dialog reset-dialog" id="reset-dialog" aria-labelledby="reset-dialog-title">
+            <div class="seed-dialog-heading"><div><p class="eyebrow">START OVER</p><h2 id="reset-dialog-title">重置遊戲進度？</h2></div><button class="dialog-close" type="button" aria-label="關閉重置確認" data-cancel-reset>×</button></div>
+            <p class="reset-dialog-copy">這會清除金幣、花園名稱、土地與作物、無人機及所有設定，並恢復新遊戲狀態。此操作無法復原。</p>
+            <div class="dialog-actions"><button class="dialog-cancel" type="button" data-cancel-reset>保留目前進度</button><button class="reset-confirm-button" id="confirm-reset" type="button">清除並重新開始</button></div>
+          </dialog>
+          <div class="toast" id="toast" role="status" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+    <script src="flower-catalog.js"></script>
+    <script src="sky-environment.js"></script>
+    <script src="sky-world.js"></script>
+    <script src="game.js"></script>
+    </body>
+</html>
