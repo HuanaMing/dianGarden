@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#e8f6fb" />
+    <title>花卉圖鑑｜花明摸魚花園</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="encyclopedia-page">
+    <main class="encyclopedia-shell">
+      <header class="encyclopedia-header">
+        <a class="encyclopedia-back" href="index.html">← 返回花園</a>
+        <div><p class="eyebrow">FLOWER ENCYCLOPEDIA</p><h1>空中花園花卉圖鑑</h1></div>
+        <p class="encyclopedia-hint">拖曳場景旋轉花卉模型，滾輪縮放</p>
+      </header>
+      <div class="encyclopedia-layout">
+        <section class="encyclopedia-preview-column" aria-label="花卉模型與自訂花色">
+          <section class="encyclopedia-world" aria-label="可旋轉的十種花卉 3D 模型">
+            <div class="world-frame">
+              <canvas id="sky-canvas" data-mode="gallery" aria-label="可拖曳旋轉及縮放的花卉 3D 模型場景"></canvas>
+              <div class="world-message" id="world-message" role="status">正在載入花卉模型…</div>
+            </div>
+          </section>
+          <p class="selected-flower-status" id="selected-flower-status" role="status" aria-live="polite">目前展示：向日葵</p>
+          <section class="variant-editor" aria-label="花色自訂">
+            <label class="variant-color-label" for="variant-color">預覽花色 <input id="variant-color" type="color" value="#e9b93d" aria-label="選擇花朵顏色"></label>
+            <label class="variant-name-label" for="variant-name">變種名稱 <input id="variant-name" type="text" maxlength="20" placeholder="例如：晨光黃"></label>
+            <button id="save-variant" type="button">儲存為變種</button>
+            <p id="variant-message" role="status" aria-live="polite">選取花種後可預覽顏色或儲存變種。</p>
+            <div id="saved-variants" aria-label="已儲存變種"></div>
+          </section>
+        </section>
+        <aside class="flower-picker-panel" aria-label="選擇花種">
+          <h2 class="flower-picker-heading">選擇花種 <span>上下捲動瀏覽</span></h2>
+          <div class="flower-picker-scroll">
+            <section class="encyclopedia-grid" id="flower-cards" aria-label="花卉資料"></section>
+            <p class="encyclopedia-disclaimer">花語為文化脈絡中的例子與靈感，顏色、地區及來源不同時可能有其他解讀。模型高度以遊戲土地寬度為基準；每株植株高度會在基準的 ±10% 內浮動。</p>
+          </div>
+        </aside>
+      </div>
+    </main>
+    <script src="flower-catalog.js"></script>
+    <script src="sky-world.js"></script>
+    <script src="flower-encyclopedia.js"></script>
+  </body>
+</html>
