@@ -152,3 +152,44 @@ body{background:#d9f0f7}
 .encyclopedia-card-select:focus-visible{outline:3px solid #547f65;outline-offset:3px;border-radius:7px}
 .encyclopedia-auto-crop{display:flex;align-items:center;gap:6px;width:max-content;padding:5px 8px;border:1px solid #e1eadb;border-radius:999px;background:#f6f9ee;color:#63806e;font-size:10px;font-weight:800;cursor:pointer}
 .encyclopedia-auto-crop input{margin:0;accent-color:#63946d}
+
+
+/* Mobile portrait: full-screen garden, reachable zoom controls and touch gestures. */
+.mobile-zoom-controls{display:none}
+@media(max-width:700px) and (orientation:portrait){
+  html,body{width:100%;height:100%;min-height:100%;overflow:hidden}
+  .game-shell{width:100%;height:100%;margin:0}
+  .world-section{height:100%;padding:0}
+  .world-frame{height:100vh;height:100dvh;min-height:0;border:0;border-radius:0;box-shadow:none}
+  .world-frame canvas{touch-action:none}
+  .world-topbar{left:8px;right:8px;top:8px;min-height:54px;padding:8px 10px;gap:6px;background:#fffdf2e8;border:1px solid #ffffffb5;box-shadow:0 4px 15px #456f5118}
+  .world-topbar .world-brand{max-width:46%;min-width:0}
+  .world-brand h1{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .world-status{min-width:0;justify-content:flex-end;gap:3px 8px}
+  .world-topbar .save-status{max-width:145px}
+  .hud-toggle{top:69px;right:8px;min-height:36px;padding:8px 10px;border-radius:11px;font-size:10px;box-shadow:0 3px 10px #456f5118}
+  .reset-progress-button{top:72px;right:calc(8px + 100px);padding:7px 8px;font-size:9px}
+  .camera-mode,.encyclopedia-link{left:8px;min-height:40px;padding:9px 11px;border-radius:12px;font-size:11px;box-shadow:0 3px 10px #456f5118}
+  .camera-mode{top:69px}
+  .encyclopedia-link{top:116px}
+  .drone-jobs{top:165px;right:8px;width:min(210px,55vw);max-height:24vh;overflow:auto;padding:9px 10px;border-radius:14px;background:#fffdf2e8;box-shadow:0 4px 15px #456f5118}
+  .world-plots{left:8px;right:8px;bottom:76px;justify-content:flex-start;gap:7px;overflow-x:auto;overscroll-behavior-x:contain;padding:6px 4px 8px;scrollbar-width:none;background:linear-gradient(180deg,#ffffff00,#ffffffb5);border-radius:14px}
+  .world-plots::-webkit-scrollbar{display:none}
+  .world-plot-button{flex:0 0 68px;min-height:66px;padding:7px;border-radius:13px;background:#fffdf2ed;box-shadow:0 3px 10px #456f5118}
+  .world-help{left:8px;right:8px;bottom:148px;width:auto;max-width:none;padding:8px 10px;border-radius:12px;background:#fffdf2df;color:#648477;font-size:10px;line-height:1.55;text-align:center;box-shadow:0 3px 10px #456f5110}
+  .mobile-zoom-controls{position:absolute;z-index:5;left:10px;bottom:14px;display:flex;gap:8px}
+  .mobile-zoom-controls button{display:grid;place-items:center;width:48px;height:48px;border:1px solid #ffffffc7;border-radius:15px;background:#fffdf2ed;color:#4c826a;font-size:25px;font-weight:800;box-shadow:0 4px 14px #456f5122;touch-action:manipulation}
+  .mobile-zoom-controls button:active{transform:scale(.96);background:#eaf5e7}
+  .world-expand{right:10px;bottom:14px;min-height:48px;padding:10px 12px;border-radius:15px}
+  .world-frame .toast{bottom:155px;max-width:calc(100% - 32px);white-space:normal;text-align:center}
+  .seed-dialog{max-height:calc(100dvh - 28px);overflow-y:auto;padding:19px;border-radius:20px}
+}
+@media(max-width:390px) and (orientation:portrait){
+  .world-topbar{align-items:flex-start}
+  .world-topbar .world-brand{max-width:42%}
+  .world-status{font-size:8px}
+  .world-topbar .save-status{max-width:110px}
+  .reset-progress-button{right:calc(8px + 94px)}
+  .world-plot-button{flex-basis:62px;min-height:62px}
+  .world-help{font-size:9px}
+}
