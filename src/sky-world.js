@@ -437,15 +437,34 @@
           addTriangle(positions, colors, ridge, outerLeft, curledTip, color);
           addTriangle(positions, colors, ridge, curledTip, outerRight, color.map((channel) => channel * 0.94));
         }
-        for (let filament = 0; filament < 7; filament += 1) {
-          const angle = filament / 7 * Math.PI * 2 + 0.27;
+        // Long, threadlike stamens sweep outward beyond the petals, then gently arc down.
+        // Each filament is a narrow segmented ribbon so it reads as a fine stalk, not a broad triangle.
+        const filamentCount = 10;
+        for (let filament = 0; filament < filamentCount; filament += 1) {
+          const angle = filament / filamentCount * Math.PI * 2 + 0.19;
           const radial = [Math.cos(angle), Math.sin(angle)];
           const tangent = [-radial[1], radial[0]];
-          const root = [x + radial[0] * 0.018, bloomY + 0.012, z + radial[1] * 0.018];
-          const mid = [x + radial[0] * 0.095 + tangent[0] * 0.006, bloomY + 0.085, z + radial[1] * 0.095 + tangent[1] * 0.006];
-          const tip = [x + radial[0] * 0.17, bloomY + 0.072 + (filament % 3) * 0.009, z + radial[1] * 0.17];
-          addTriangle(positions, colors, root, mid, tip, filament % 2 ? [0.94, 0.43, 0.48] : [0.98, 0.58, 0.48]);
-          addOctahedron(positions, colors, tip[0], tip[1], tip[2], 0.009, 0.009, 0.009, [0.98, 0.72, 0.38]);
+          const path = [
+            { radius: 0.018, height: 0.015 },
+            { radius: 0.075 + (filament % 3) * 0.006, height: 0.095 + (filament % 2) * 0.009 },
+            { radius: 0.16 + (filament % 2) * 0.012, height: 0.105 - (filament % 3) * 0.006 },
+            { radius: 0.235 + (filament % 3) * 0.008, height: 0.035 + (filament % 2) * 0.008 },
+          ];
+          const stalkColor = filament % 3 === 0 ? [0.98, 0.62, 0.58] : [0.91, 0.35, 0.43];
+          for (let segment = 0; segment < path.length - 1; segment += 1) {
+            const start = path[segment], end = path[segment + 1];
+            const widthStart = 0.0038 * (1 - segment * 0.12);
+            const widthEnd = widthStart * 0.78;
+            const a = [x + radial[0] * start.radius + tangent[0] * widthStart, bloomY + start.height, z + radial[1] * start.radius + tangent[1] * widthStart];
+            const b = [x + radial[0] * start.radius - tangent[0] * widthStart, bloomY + start.height, z + radial[1] * start.radius - tangent[1] * widthStart];
+            const d = [x + radial[0] * end.radius + tangent[0] * widthEnd, bloomY + end.height, z + radial[1] * end.radius + tangent[1] * widthEnd];
+            const e = [x + radial[0] * end.radius - tangent[0] * widthEnd, bloomY + end.height, z + radial[1] * end.radius - tangent[1] * widthEnd];
+            addTriangle(positions, colors, a, d, e, stalkColor);
+            addTriangle(positions, colors, a, e, b, stalkColor.map((channel) => channel * 0.88));
+          }
+          const tip = [x + radial[0] * path[3].radius, bloomY + path[3].height, z + radial[1] * path[3].radius];
+          // Small golden anthers make the ends of the fine stamens legible at garden scale.
+          addOctahedron(positions, colors, tip[0], tip[1], tip[2], 0.007, 0.006, 0.007, [0.99, 0.76, 0.32]);
         }
       } else {
         // Peony: broad guard petals enclose rounded inner petaloids.
