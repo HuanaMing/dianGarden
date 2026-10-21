@@ -1539,15 +1539,15 @@
       } else if (cameraMode === '2d') {
         const panScale = topDownHeight / 12 * 0.012;
         targetX -= deltaX * panScale;
-        targetZ -= deltaY * panScale;
+        targetZ += deltaY * panScale;
       } else {
         const forwardX = -Math.sin(yaw);
         const forwardZ = -Math.cos(yaw);
         const rightX = Math.cos(yaw);
         const rightZ = -Math.sin(yaw);
         const panScale = 0.008;
-        targetX -= rightX * deltaX * panScale + forwardX * deltaY * panScale;
-        targetZ -= rightZ * deltaX * panScale + forwardZ * deltaY * panScale;
+        targetX -= rightX * deltaX * panScale - forwardX * deltaY * panScale;
+        targetZ -= rightZ * deltaX * panScale - forwardZ * deltaY * panScale;
       }
     } else if (cameraMode !== '2d') {
       yaw -= (event.clientX - lastPointerX) * 0.008;
