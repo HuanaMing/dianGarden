@@ -97,8 +97,8 @@
   function zoomBy(direction) {
     applyZoom(currentZoom() + direction * (cameraMode === '2d' ? -1.4 : -0.65));
   }
-  document.querySelector('#zoom-in')?.addEventListener('click', () => zoomBy(-1));
-  document.querySelector('#zoom-out')?.addEventListener('click', () => zoomBy(1));
+  document.querySelector('#zoom-in')?.addEventListener('click', () => zoomBy(1));
+  document.querySelector('#zoom-out')?.addEventListener('click', () => zoomBy(-1));
   const cameraModeButton = document.querySelector('#camera-mode');
   cameraModeButton?.addEventListener('click', () => {
     if (cameraMode === '3d') {
