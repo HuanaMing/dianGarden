@@ -251,3 +251,17 @@ body{background:#d9f0f7}
   .encyclopedia-link{top:117px}
   .drone-panel-toggle{width:34px;height:34px;min-height:34px;flex:0 0 34px;padding:0}
 }
+
+
+/* 手機拖曳操作時避免長按觸發文字選取或系統文字操作選單。 */
+body, body *{
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+/* 輸入欄位仍允許選取、複製及編輯文字。 */
+input, textarea, [contenteditable="true"]{
+  -webkit-user-select:text;
+  user-select:text;
+  -webkit-touch-callout:default;
+}
