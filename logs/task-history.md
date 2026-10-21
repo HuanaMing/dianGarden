@@ -905,3 +905,9 @@
 - 花絲：每朵三支花絲的中心線改為由小花水平向外方向與世界垂直軸定義的同一垂直平面內的開口向上二次曲線，三支之間只做小幅平移；保留末端金黃色花藥。
 - 文件：同步更新 docs/architecture.md、docs/desicions.md、tasks/active/149-spider-lily-three-petals-coplanar-stamens.md 及 state/current-task.json。
 - 驗證：GitHub 寫入成功；JavaScript 語法檢查及瀏覽器視覺驗收尚未執行。
+
+
+## 2026-10-22：調整彼岸花花瓣數量為六片
+
+- 更新 src/sky-world.js：每朵小花花瓣數設為 6，角度依 6 等分排列，六朵小花的位置與共面拋物線花絲保持不變。
+- 成熟模型共 36 片花瓣、18 支花絲；語法與瀏覽器視覺檢查待確認。
