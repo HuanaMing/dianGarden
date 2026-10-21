@@ -87,6 +87,8 @@
   const touchPoints = new Map();
   let pinchActive = false;
   let suppressTouchTap = false;
+  let lastEmptyTouchAt = 0;
+  let rotateTouchGesture = false;
   let pinchStartDistance = 0;
   let pinchStartZoom = 0;
   function currentZoom() { return cameraMode === '2d' ? topDownHeight : distance; }
@@ -1407,6 +1409,9 @@
       }
     }
     clearTimeout(plotPressTimer);
+    rotateTouchGesture = event.pointerType === 'touch'
+      && window.matchMedia?.('(max-width: 700px) and (orientation: portrait)').matches === true
+      && Date.now() - lastEmptyTouchAt <= 500;
     dragging = true;
     pointerMoved = false;
     dragPreview = null;
@@ -1523,7 +1528,28 @@
       lastPointerY = event.clientY;
       return;
     }
-    if (cameraMode !== '2d') {
+    if (event.pointerType === 'touch' && window.matchMedia?.('(max-width: 700px) and (orientation: portrait)').matches === true) {
+      const deltaX = event.clientX - lastPointerX;
+      const deltaY = event.clientY - lastPointerY;
+      if (rotateTouchGesture) {
+        if (cameraMode !== '2d') {
+          yaw -= deltaX * 0.008;
+          pitch = Math.max(0.18, Math.min(1.28, pitch + deltaY * 0.006));
+        }
+      } else if (cameraMode === '2d') {
+        const panScale = topDownHeight / 12 * 0.012;
+        targetX -= deltaX * panScale;
+        targetZ -= deltaY * panScale;
+      } else {
+        const forwardX = -Math.sin(yaw);
+        const forwardZ = -Math.cos(yaw);
+        const rightX = Math.cos(yaw);
+        const rightZ = -Math.sin(yaw);
+        const panScale = 0.008;
+        targetX -= rightX * deltaX * panScale + forwardX * deltaY * panScale;
+        targetZ -= rightZ * deltaX * panScale + forwardZ * deltaY * panScale;
+      }
+    } else if (cameraMode !== '2d') {
       yaw -= (event.clientX - lastPointerX) * 0.008;
       pitch = Math.max(0.18, Math.min(1.28, pitch + (event.clientY - lastPointerY) * 0.006));
     }
@@ -1601,6 +1627,10 @@
       heightEdit.mode = heightEdit.mode === 'height' ? 'move' : 'height';
       window.onSkyHeightEditMode?.('plot', plotPressIndex, heightEdit.mode);
     } else if (!pointerMoved) {
+      if (event.pointerType === 'touch' && window.matchMedia?.('(max-width: 700px) and (orientation: portrait)').matches === true
+        && pointerPlotIndex === null && dockHitAtPointer === null) {
+        lastEmptyTouchAt = Date.now();
+      }
       if (heightEdit) window.onSkyHeightEditMode?.('exit');
       heightEdit = null;
       dockSelected = false;
