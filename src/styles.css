@@ -125,10 +125,10 @@ body{background:#d9f0f7}
   .encyclopedia-header h1{font-size:clamp(19px,5vw,26px);text-align:left}
   .encyclopedia-header .eyebrow{text-align:left}
   .encyclopedia-hint,.selected-flower-status{display:none}
-  .encyclopedia-layout{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(190px,38vh) minmax(0,1fr);gap:8px}
+  .encyclopedia-layout{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:8px}
   .encyclopedia-preview-column{gap:6px}
-  .encyclopedia-world{width:min(32vh,100%);justify-self:center;border-radius:16px}
-  .variant-editor{width:min(32vh,100%);grid-template-columns:48px minmax(0,1fr) auto;align-items:end;justify-self:center;gap:5px;padding:6px 7px}
+  .encyclopedia-world{width:min(30vh,100%);justify-self:center;border-radius:16px}
+  .variant-editor{width:min(30vh,100%);grid-template-columns:48px minmax(0,1fr) auto;align-items:end;justify-self:center;gap:5px;padding:6px 7px}
   .variant-editor label{min-width:0;gap:3px;font-size:9px}
   .variant-editor .variant-color-label{grid-column:1;grid-row:1}
   .variant-editor .variant-name-label{grid-column:2;grid-row:1}
