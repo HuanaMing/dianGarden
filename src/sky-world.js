@@ -488,9 +488,14 @@
           }
           addOctahedron(positions, colors, cx, cy, cz, 0.009, 0.009, 0.009, bloomColor);
 
-          // Three stamens share one local vertical plane. Their centerlines follow
-          // y = a*x^2: an upward-opening parabola with a low inner start and
-          // steadily rising outer tip. Small in-plane offsets keep each strand distinct.
+          // Three stamens share a vertical plane defined by the floret's
+          // horizontal outward direction and world-up. Their centerlines follow
+          // y = a*x^2, so each curve opens upward regardless of floret tilt.
+          const horizontalLength = Math.hypot(normal[0], normal[2]) || 1;
+          const radialWorldX = normal[0] / horizontalLength;
+          const radialWorldZ = normal[2] / horizontalLength;
+          const tangentWorldX = -radialWorldZ;
+          const tangentWorldZ = radialWorldX;
           for (let filament = 0; filament < 3; filament += 1) {
             const planeOffset = (filament - 1) * 0.012;
             const radii = [0.012, 0.047, 0.087, 0.145];
@@ -504,11 +509,11 @@
               const to = path[segment + 1];
               const widthStart = 0.003 * (1 - segment * 0.12);
               const widthEnd = widthStart * 0.78;
-              const pointAt = (node, sideWidth) => localPoint(
-                (planeOffset + node.radius) * filamentScale,
-                node.height * filamentScale,
-                sideWidth * filamentScale,
-              );
+              const pointAt = (node, sideWidth) => [
+                cx + (radialWorldX * (planeOffset + node.radius) + tangentWorldX * sideWidth) * filamentScale,
+                cy + node.height * filamentScale,
+                cz + (radialWorldZ * (planeOffset + node.radius) + tangentWorldZ * sideWidth) * filamentScale,
+              ];
               const a = pointAt(from, widthStart);
               const b = pointAt(from, -widthStart);
               const d = pointAt(to, widthEnd);
@@ -517,11 +522,11 @@
               addTriangle(positions, colors, a, e, b, stalkColor.map((channel) => channel * 0.88));
             }
             const tipPath = path[path.length - 1];
-            const tip = localPoint(
-              (planeOffset + tipPath.radius) * filamentScale,
-              tipPath.height * filamentScale,
-              0,
-            );
+            const tip = [
+              cx + radialWorldX * (planeOffset + tipPath.radius) * filamentScale,
+              cy + tipPath.height * filamentScale,
+              cz + radialWorldZ * (planeOffset + tipPath.radius) * filamentScale,
+            ];
             // Small golden anthers remain visible at the tips of all 18 filaments.
             addOctahedron(positions, colors, tip[0], tip[1], tip[2], 0.0055, 0.0055, 0.0055, [0.99, 0.76, 0.32]);
           }
