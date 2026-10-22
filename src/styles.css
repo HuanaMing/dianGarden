@@ -356,3 +356,8 @@ input, textarea, [contenteditable="true"]{
 
 /* 任務173：收合時保留頂部控制列，讓同一按鈕可再次展開介面。 */
 .world-frame.is-hud-collapsed .hud-toggle{z-index:8}
+
+/* 任務173：手動與自動地塊使用獨立購買入口。 */
+.land-purchase-actions{position:absolute;z-index:3;right:16px;bottom:16px;display:flex;flex-direction:column;align-items:stretch;gap:7px}.land-purchase-actions .world-expand,.world-buy-manual-plot{position:static;min-height:38px;justify-content:center;padding:8px 12px;border:1px solid #ffffffb5;border-radius:11px;background:#fffdf2e8;color:#4c826a;font-size:11px;font-weight:900;box-shadow:0 5px 16px #456f5120;cursor:pointer}.world-buy-manual-plot{border-color:#e4d7b2;background:#fff7dc;color:#8a6c35}.world-buy-manual-plot:hover,.land-purchase-actions .world-expand:hover{transform:translateY(-1px)}
+@media(max-width:700px){.land-purchase-actions{right:9px;bottom:9px;gap:5px}.land-purchase-actions .world-expand,.world-buy-manual-plot{min-height:32px;padding:7px 9px;font-size:9px}}
+.world-frame.is-hud-collapsed .land-purchase-actions{display:none!important}
