@@ -1158,16 +1158,15 @@
       // 經典酒杯型玫瑰：花瓣先向外展開，再平滑向上收起，最後 1% 才外翻；
       // 同層花瓣沿圓周逐步升高，層與層的高度銜接成連續螺旋。
       const roseCupLayers = [
-        { count: 7, inner: 0.038, outer: 0.076, base: -0.032, rim: 0.071, crown: 0.016, edge: 0.012, halfAngle: 0.48, phase: 0.10, curl: -0.018, spiralStep: 0.018 },
-        { count: 7, inner: 0.033, outer: 0.068, base: -0.030, rim: 0.073, crown: 0.022, edge: 0.014, halfAngle: 0.43, phase: 0.48, curl: -0.006, spiralStep: 0.018 },
-        { count: 6, inner: 0.028, outer: 0.060, base: -0.028, rim: 0.071, crown: 0.020, edge: 0.011, halfAngle: 0.38, phase: 0.22, curl: 0.009, spiralStep: 0.018 },
-        { count: 5, inner: 0.023, outer: 0.052, base: -0.026, rim: 0.069, crown: 0.014, edge: 0.008, halfAngle: 0.32, phase: 0.80, curl: 0.012, spiralStep: 0.018 }
+        { count: 7, inner: 0.038, outer: 0.076, base: -0.032, rim: 0.071, crown: 0.016, edge: 0.012, halfAngle: 0.48, phase: 0.10, curl: -0.018 },
+        { count: 7, inner: 0.033, outer: 0.051, base: -0.030, rim: 0.073, crown: 0.022, edge: 0.014, halfAngle: 0.43, phase: 0.48, curl: -0.006 },
+        { count: 6, inner: 0.028, outer: 0.026, base: -0.028, rim: 0.071, crown: 0.020, edge: 0.011, halfAngle: 0.38, phase: 0.22, curl: 0.009 },
+        { count: 5, inner: 0.023, outer: 0.001, base: -0.026, rim: 0.069, crown: 0.014, edge: 0.008, halfAngle: 0.32, phase: 0.80, curl: 0.012 }
       ];
       for (let layer = 0; layer < roseCupLayers.length; layer += 1) {
         const shape = roseCupLayers[layer];
         for (let petal = 0; petal < shape.count; petal += 1) {
           const centerAngle = petal / shape.count * Math.PI * 2 + shape.phase;
-          const spiralOffset = (petal / shape.count) * shape.spiralStep;
           const tSamples = [0, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.98, 0.99, 1];
           const radialSteps = tSamples.length - 1, acrossSteps = 8;
           const grid = [];
@@ -1190,7 +1189,7 @@
               const radius = shape.inner + (shape.outer - shape.inner) * radiusProfile
                 + 0.006 * u * u * Math.sin(t * Math.PI);
               const riseT = 0.02 + 0.93 * smoothstep((t - 0.30) / 0.69) + 0.05 * outwardTip;
-              const rise = shape.base + (shape.rim - shape.base) * Math.min(1, riseT) + spiralOffset;
+              const rise = shape.base + (shape.rim - shape.base) * Math.min(1, riseT);
               const bowl = shape.crown * Math.sin(t * Math.PI);
               const edgeRoll = shape.edge * Math.pow(Math.abs(u), 1.55) * Math.sin(Math.PI * (0.16 + 0.70 * t));
               const lipCurl = shape.curl * Math.pow(t, 3);
