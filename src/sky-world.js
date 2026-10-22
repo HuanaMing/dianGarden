@@ -338,22 +338,44 @@
         ridge[1] + 0.04,
         ridge[2],
       ];
+      // 以 root 為固定旋轉中心，繞葉片切線軸旋轉 8 度，讓葉片上段稍微朝植株中心收攏。
+      // 徑向位移與高度一起旋轉；切線方向位移保持不變，因此整片葉子的形狀與寬度一致保留。
+      const inwardFold = 8 * Math.PI / 180;
+      const foldLeafPoint = (point) => {
+        const dx = point[0] - root[0];
+        const dz = point[2] - root[2];
+        const radialOffset = dx * radial[0] + dz * radial[1];
+        const tangentOffset = dx * tangent[0] + dz * tangent[1];
+        const verticalOffset = point[1] - root[1];
+        const foldedRadial = radialOffset * Math.cos(inwardFold) - verticalOffset * Math.sin(inwardFold);
+        const foldedVertical = radialOffset * Math.sin(inwardFold) + verticalOffset * Math.cos(inwardFold);
+        return [
+          root[0] + radial[0] * foldedRadial + tangent[0] * tangentOffset,
+          root[1] + foldedVertical,
+          root[2] + radial[1] * foldedRadial + tangent[1] * tangentOffset,
+        ];
+      };
+      const foldedLeft = foldLeafPoint(left);
+      const foldedRight = foldLeafPoint(right);
+      const foldedRidge = foldLeafPoint(ridge);
+      const foldedLowerRidge = foldLeafPoint(lowerRidge);
+      const foldedTip = foldLeafPoint(tip);
       const color = leafColors[leaf % leafColors.length];
-      addTriangle(positions, colors, root, left, lowerRidge, color);
-      addTriangle(positions, colors, lowerRidge, left, ridge, color.map((channel) => Math.min(1, channel * 1.03)));
-      addTriangle(positions, colors, ridge, left, tip, color.map((channel) => Math.min(1, channel * 1.05)));
-      addTriangle(positions, colors, root, lowerRidge, right, color.map((channel) => channel * 0.9));
-      addTriangle(positions, colors, lowerRidge, ridge, right, color.map((channel) => channel * 0.94));
-      addTriangle(positions, colors, ridge, tip, right, color);
+      addTriangle(positions, colors, root, foldedLeft, foldedLowerRidge, color);
+      addTriangle(positions, colors, foldedLowerRidge, foldedLeft, foldedRidge, color.map((channel) => Math.min(1, channel * 1.03)));
+      addTriangle(positions, colors, foldedRidge, foldedLeft, foldedTip, color.map((channel) => Math.min(1, channel * 1.05)));
+      addTriangle(positions, colors, root, foldedLowerRidge, foldedRight, color.map((channel) => channel * 0.9));
+      addTriangle(positions, colors, foldedLowerRidge, foldedRidge, foldedRight, color.map((channel) => channel * 0.94));
+      addTriangle(positions, colors, foldedRidge, foldedTip, foldedRight, color);
       // A narrow central spine keeps the strap-like leaf readable without a tall ridge.
-      addTriangle(positions, colors, root, lowerRidge, tip, color.map((channel) => Math.min(1, channel * 1.08)));
+      addTriangle(positions, colors, root, foldedLowerRidge, foldedTip, color.map((channel) => Math.min(1, channel * 1.08)));
     }
 
     if (stage === 1) return;
 
     // One sturdy, leafless flower stalk rises from the center of the rosette.
     const stalkTop = baseY + height * 0.82;
-    const stalkBottom = baseY + 0.07;
+    const stalkBottom = baseY; // 主莖底端直接落在土壤表面，避免與地面留縫。
     const stalkRings = [
       { t: 0, radius: 0.012 },
       { t: 0.35, radius: 0.0105 },
