@@ -91,8 +91,6 @@
   let rotateTouchGesture = false;
   let pinchStartDistance = 0;
   let pinchStartZoom = 0;
-  let touchLongPressTimer = null;
-  let touchLongPress = false;
   function currentZoom() { return cameraMode === '2d' ? topDownHeight : distance; }
   function applyZoom(value) {
     if (cameraMode === '2d') topDownHeight = Math.max(3, Math.min(50, value));
@@ -1559,16 +1557,9 @@
   canvas.addEventListener('pointerdown', (event) => {
     if (event.pointerType === 'touch') {
       touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
-      if (touchPoints.size === 1) {
-        touchLongPress = false;
-        clearTimeout(touchLongPressTimer);
-        touchLongPressTimer = setTimeout(() => { touchLongPress = true; }, 500);
-      }
       if (touchPoints.size === 2) {
         pinchActive = true;
         suppressTouchTap = true;
-        clearTimeout(touchLongPressTimer);
-        touchLongPress = false;
         const points = [...touchPoints.values()];
         pinchStartDistance = Math.max(1, Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y));
         pinchStartZoom = currentZoom();
@@ -1613,7 +1604,7 @@
         const [x, z] = getDockPosition(pressedDock); const baseY = 1.36 + getDockHeight(pressedDock);
         const low = projectPoint([x, baseY, z]), high = projectPoint([x, baseY + 1, z]);
         heightDrag = { kind: 'dock', index: pressedDock, startY: event.clientY, original: getDockHeight(pressedDock), pixelStep: low && high ? Math.max(1, Math.abs(high.y - low.y)) : 48 };
-      } else if (event.pointerType !== 'touch') dockPressTimer = setTimeout(() => {
+      } else dockPressTimer = setTimeout(() => {
         if (!dragging || dockHitAtPointer !== pressedDock) return;
         dragDock = dockPressReady = true;
         const worldPoint = screenToGround(pointerStartX, pointerStartY);
@@ -1633,7 +1624,7 @@
         const [x, z] = getPlotPosition(pressedPlot); const baseY = getPlotHeight(pressedPlot) + 0.08;
         const low = projectPoint([x, baseY, z]), high = projectPoint([x, baseY + 0.5, z]);
         heightDrag = { kind: 'plot', index: pressedPlot, startY: event.clientY, original: getPlotHeight(pressedPlot), pixelStep: low && high ? Math.max(1, Math.abs(high.y - low.y)) : 48 };
-      } else if (event.pointerType !== 'touch') plotPressTimer = setTimeout(() => {
+      } else plotPressTimer = setTimeout(() => {
         if (!dragging || plotPressIndex !== pressedPlot) return;
         plotPressReady = true;
         dragPlotIndex = pressedPlot;
@@ -1661,7 +1652,6 @@
     }
     if (!dragging) return;
     if (!pointerMoved && Math.hypot(event.clientX - pointerStartX, event.clientY - pointerStartY) < 5) return;
-    if (event.pointerType === 'touch') clearTimeout(touchLongPressTimer);
     pointerMoved = true;
     if (heightDrag) {
       const stepCount = Math.round((heightDrag.startY - event.clientY) / heightDrag.pixelStep);
@@ -1742,21 +1732,7 @@
     lastPointerY = event.clientY;
   });
   canvas.addEventListener('pointerup', (event) => {
-    if (event.pointerType === 'touch') {
-      touchPoints.delete(event.pointerId);
-      clearTimeout(touchLongPressTimer);
-      if (touchLongPress) {
-        dragging = false;
-        clearTimeout(plotPressTimer);
-        clearTimeout(dockPressTimer);
-        dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null;
-        dockPreview = null; pointerPlotIndex = null; plotPressIndex = null;
-        plotPressReady = false; dockPressReady = false; heightDrag = null;
-        if (touchPoints.size === 0) { touchLongPress = false; suppressTouchTap = false; }
-        uploadWorld();
-        return;
-      }
-    }
+    if (event.pointerType === 'touch') touchPoints.delete(event.pointerId);
     if (suppressTouchTap) {
       pinchActive = false;
       dragging = false;
@@ -1848,7 +1824,7 @@
     dragPreview = null;
     uploadWorld();
   });
-  canvas.addEventListener('pointercancel', (event) => { if (event.pointerType === 'touch') touchPoints.delete(event.pointerId); clearTimeout(touchLongPressTimer); if (touchPoints.size === 0) { pinchActive = false; suppressTouchTap = false; touchLongPress = false; } clearTimeout(plotPressTimer); clearTimeout(dockPressTimer); dragging = false; dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null; dockPreview = null; pointerPlotIndex = null; plotPressIndex = null; plotPressReady = false; dockPressReady = false; uploadWorld(); });
+  canvas.addEventListener('pointercancel', (event) => { if (event.pointerType === 'touch') touchPoints.delete(event.pointerId); if (touchPoints.size === 0) { pinchActive = false; suppressTouchTap = false; } clearTimeout(plotPressTimer); clearTimeout(dockPressTimer); dragging = false; dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null; dockPreview = null; pointerPlotIndex = null; plotPressIndex = null; plotPressReady = false; dockPressReady = false; uploadWorld(); });
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     if (cameraMode === '2d') topDownHeight = Math.max(3, Math.min(50, topDownHeight + event.deltaY * 0.02));
