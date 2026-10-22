@@ -308,6 +308,9 @@
       const tangent = [-radial[1], radial[0]];
       const length = (stage === 1 ? 0.12 : 0.205) + (leaf % 2) * 0.012;
       const width = (stage === 1 ? 0.023 : 0.034) * 0.5;
+
+      // 風信子單片葉的頂點座標（皆為世界座標 [x, y, z]）。
+      // root：葉片基部；肩點 shoulder 是控制葉片外展的參考點，不直接作為三角形頂點。
       const root = [x + radial[0] * 0.012, baseY + 0.012, z + radial[1] * 0.012];
       const shoulder = [
         x + radial[0] * length * 0.52,
@@ -315,16 +318,21 @@
         z + radial[1] * length * 0.52,
       ];
       const originalHighestY = shoulder[1] + 0.018;
+
+      // left：左側葉肩頂點 = shoulder + 切線方向半葉寬，Y 高於 shoulder 0.008。
       const left = [shoulder[0] + tangent[0] * width, shoulder[1] + 0.008, shoulder[2] + tangent[1] * width];
+      // right：右側葉肩頂點 = shoulder - 切線方向半葉寬，Y 高於 shoulder 0.008。
       const right = [shoulder[0] - tangent[0] * width, shoulder[1] + 0.008, shoulder[2] - tangent[1] * width];
+
+      // ridge：葉片原最高脊線頂點；相對 shoulder 徑向內移 0.011，Y 高 0.018。
       const ridge = [shoulder[0] - radial[0] * 0.011, originalHighestY, shoulder[2] - radial[1] * 0.011];
-      // Move the highest ridge slightly inward; keep lowerRidge farther outward and 70% of its former height above the shoulder.
+      // lowerRidge：新增的較低脊線頂點；徑向內移 0.0045，Y 高於 shoulder 0.0063。
       const lowerRidge = [
         shoulder[0] - radial[0] * 0.0045,
         shoulder[1] + 0.009 * 0.7,
         shoulder[2] - radial[1] * 0.0045,
       ];
-      // Keep the tip's height unchanged; place its horizontal position midway between ridge and lowerRidge.
+      // tip：葉尖頂點；Y 位於 ridge 的高度再上方 0.02，水平座標是 ridge 與 lowerRidge 的中點。
       const tip = [
         (ridge[0] + lowerRidge[0]) / 2,
         originalHighestY + 0.02,
