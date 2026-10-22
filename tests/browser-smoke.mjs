@@ -68,6 +68,13 @@ try {
   if (await page.evaluate(() => window.__webglDrawCalls) <= drawCallsDuringPowerSave) throw new Error('關閉省電模式後 WebGL 繪圖未恢復');
   checks.push('收合／恢復、無人機圖示、設定面板及省電模式繪圖暫停／恢復通過');
 
+  if (!(await page.locator('#world-buy-manual-plot').isVisible())) throw new Error('手動地塊獨立購買入口未顯示');
+  if (!(await page.locator('#world-expand').isVisible())) throw new Error('自動地塊獨立購買入口未顯示');
+  await page.locator('#world-buy-manual-plot').click();
+  if (!(await page.locator('#farm-dialog').innerText()).includes('75')) throw new Error('手動地塊購買對話框未顯示固定 75 金幣價格');
+  await page.locator('[data-dialog-cancel]').click();
+  checks.push('手動／自動地塊購買入口分離，手動地塊固定 75 金幣');
+
   const worldMessage = await page.locator('#world-message').innerText().catch(() => '');
   if (worldMessage.includes('載入失敗') || worldMessage.includes('無法啟用 WebGL')) {
     throw new Error(`遊戲場景載入失敗：${worldMessage}`);
