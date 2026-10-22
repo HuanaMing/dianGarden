@@ -364,7 +364,7 @@
     const now = Date.now();
     if (game.lastObservedRaining !== true && environment.isRaining) rainStartedAt = now;
     if (game.lastObservedRaining === true && !environment.isRaining) {
-      const rainWetness = rainStartedAt === null ? 1 : Math.min(1, Math.max(0, (now - rainStartedAt) / WATER_DURATION));
+      const rainWetness = rainStartedAt === null ? 1 : Math.min(1, Math.max(0, (now - rainStartedAt) / 1680));
       applyRainMoisture(now, rainWetness);
       rainStartedAt = null;
       game.lastObservedRaining = false;
