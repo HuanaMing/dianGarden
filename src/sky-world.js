@@ -1060,8 +1060,9 @@
         }
         addOctahedron(positions, colors, x, bloomY + 0.035, z, 0.039, 0.044, 0.039, headColor);
       } else if (flowerIndex === 6) {
-        // 菊花：依照五個長度節點重建三層花瓣曲線。
-        // 每個節點為 [距離花心, 相對基準高度的高度差]，位置依 0%、30%、50%、70%、100% 定義。
+        // 菊花：三層花瓣曲線各細分為 10 個彎折節點。
+        // 原始控制點仍位於 0%、30%、50%、70%、100%；新增節點以平滑插值補齊。
+        // 每個節點為 [距離花心, 相對基準高度的高度差]。
         const rayLayers = [
           {
             count: 28, width: 0.014,
@@ -1076,8 +1077,24 @@
             profile: [[0.018, 0], [0.02, -0.005], [0.035, 0.035], [0.03, 0.04], [0.018, 0.04]],
           },
         ];
+        const baseKnots = [0, 0.3, 0.5, 0.7, 1];
+        const knots = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1];
+        const interpolateProfile = (profile, t) => {
+          let segment = 0;
+          while (segment < baseKnots.length - 2 && t > baseKnots[segment + 1]) segment += 1;
+          const span = baseKnots[segment + 1] - baseKnots[segment];
+          const local = Math.max(0, Math.min(1, (t - baseKnots[segment]) / span));
+          const eased = local * local * (3 - 2 * local);
+          return [
+            profile[segment][0] + (profile[segment + 1][0] - profile[segment][0]) * eased,
+            profile[segment][1] + (profile[segment + 1][1] - profile[segment][1]) * eased,
+          ];
+        };
+        // 將原始五個造型控制點補成十個節點，保留原曲線的整體輪廓。
+        for (const shape of rayLayers) {
+          shape.profile = knots.map((t) => interpolateProfile(shape.profile, t));
+        }
         const profileAt = (profile, t) => {
-          const knots = [0, 0.3, 0.5, 0.7, 1];
           let segment = 0;
           while (segment < knots.length - 2 && t > knots[segment + 1]) segment += 1;
           const span = knots[segment + 1] - knots[segment];
