@@ -1635,9 +1635,9 @@
       const roseCalyxY = bloomY - 0.034;
       const addRoseTriangle = (positions, colors, a, b, c, color) => {
         const transform = (point) => [
-          x + (point[0] - x) * roseScale,
+          x + 0.014 + (point[0] - x) * roseScale,
           roseCalyxY + (point[1] - roseBaseY) * roseScale,
-          z + (point[2] - z) * roseScale,
+          z + 0.008 + (point[2] - z) * roseScale,
         ];
         addTriangle(positions, colors, transform(a), transform(b), transform(c), color);
       };
