@@ -3104,7 +3104,7 @@
     dragDock = false;
     dockPressReady = false;
     dockPreview = null;
-    if (dockHitAtPointer !== null && !hasDroneAnimations()) {
+    if (dockHitAtPointer !== null) {
       const pressedDock = dockHitAtPointer;
       if (heightEdit?.kind === 'dock' && heightEdit.index === pressedDock && heightEdit.mode === 'height') {
         const [x, z] = getDockPosition(pressedDock); const baseY = 1.36 + getDockHeight(pressedDock);
@@ -3220,7 +3220,7 @@
       } else if (cameraMode === '2d') {
         const panScale = topDownHeight / 12 * 0.012;
         targetX -= deltaX * panScale;
-        targetZ += deltaY * panScale;
+        targetZ -= deltaY * panScale;
       } else {
         const forwardX = -Math.sin(yaw);
         const forwardZ = -Math.cos(yaw);
