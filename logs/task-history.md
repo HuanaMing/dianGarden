@@ -1266,3 +1266,10 @@
 - 結果：新增牡丹專屬花頭幾何，使用四層交錯花瓣、柔和皺褶邊緣與收束花心，保留原有莖葉及遊戲資料。
 - 驗證：JavaScript 語法檢查通過；尚未於瀏覽器實際視覺驗收，等待使用者確認。
 - 檔案：`src/sky-world.js`、`tasks/active/167-peony-stem-leaf-model.md`、`state/current-task.json`、`state/project.json`
+
+
+## 2026-10-22 — 任務 167：牡丹花頭輪廓再調整
+
+- 結果：降低牡丹內層花瓣及花心尖端高度，縮小各層高度差，讓整體輪廓更接近圓潤半球形而非金字塔。
+- 驗證：JavaScript 語法檢查通過並推送 main；尚未於瀏覽器實際視覺驗收，等待使用者確認。
+- 檔案：`src/sky-world.js`、`tasks/active/167-peony-stem-leaf-model.md`、`state/current-task.json`、`state/project.json`、`logs/task-history.md`
