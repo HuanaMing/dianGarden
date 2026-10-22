@@ -1303,3 +1303,11 @@
 - 任務142、143、145、151–156、159、162、169、170 已確認歸檔於 `tasks/done/`；清理 151–156、159 的過期 inbox 指標，避免重複排程。非牡丹花卉模型驗收依使用者確認結案。
 - 目前 `tasks/active/` 與 `tasks/inbox/` 僅保留 `.gitkeep`。`tasks/blocked/` 尚有任務109（等待 Xcode 環境與付費使用批准）及任務167（等待手工建模）。
 - 驗收連結：https://github.com/HuanaMing/dianGarden/actions/runs/39781764581 ；部署連結：https://github.com/HuanaMing/dianGarden/actions/runs/39781869799
+
+
+## 2026-10-22 — 任務佇列調整：任務171暫停、任務172規劃
+
+- 任務171「清理反覆修改遺留的無用程式碼」因使用者要求任務插隊，移至 `tasks/blocked/171-code-cleanup.md`，狀態標記為 Blocked，原因為「任務插隊」。恢復時先確認第3段 Playwright 驗收結果，再決定後續清理。
+- 建立任務172「介面整理、省電模式與花卉像素圖」，列入 `tasks/active/172-ui-power-save-flower-icons.md`。
+- 任務172規劃涵蓋：頂部資訊卡滿版、各平台控制按鈕重新配置、設定介面、停止 GPU 繪圖但持續遊戲邏輯的省電模式，以及將花卉 emoji 替換為 `assets/flowers/` 中的 32×32 像素圖。
+- 本次僅調整任務文件與專案狀態，尚未修改遊戲程式碼。
