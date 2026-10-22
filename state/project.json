@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "blocked",
   "activeTask": "109-personal-ios-app-lock-screen-flower-widget",
-  "nextAction": "任務 159 最新修改：風信子 lowerRidge 水平內移 0.0045，仍比最高點更靠外；葉尖高度維持，水平位置移至最高點與 lowerRidge 中點。待語法／靜態檢查與瀏覽器視覺驗收；任務 109 的付費雲端 Mac 批准仍待確認。",
+  "nextAction": "任務159：已微調風信子 lowerRidge 與葉尖水平位置；待語法檢查及瀏覽器視覺驗收。另有任務109環境批准事項尚待處理。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
