@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "170-garden-visual-polish",
-  "nextAction": "任務169已完成，十一種花卉的 Playwright 瀏覽器驗收成功並產生截圖產物。任務170已調整草地斑塊的明暗變化，並讓每塊農地的土壤紋理採用可重現的不同旋轉角度，等待瀏覽器驗收及截圖檢查。任務167牡丹因等待手工建模列為 blocked。任務109仍等待可用 Xcode 環境及付費使用確認。",
+  "activeTask": null,
+  "nextAction": "所有可執行的 active/inbox 任務均已逐項核對並結案；目前只剩兩項 blocked：任務109等待可用 Xcode 環境及雲端 Mac 付費使用批准，任務167牡丹等待手工建模。若要繼續開發，先解除其中一項阻塞，或新增明確的新任務。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
