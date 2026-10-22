@@ -404,11 +404,14 @@
   // 花梗中心線共用於莖幾何與花朵定位，確保每朵花確實接在不同高度的莖節上。
   function getLilyOfTheValleyStalkPoint(x, z, height, t) {
     const baseY = 0.055;
-    // 水平擺幅收窄，整體更直立；以小幅正弦回擺保留清楚但不誇張的 S 形。
+    // 鈴蘭花梗整體拉高至原本約 1.5 倍；下段先從植株中央直立生長，
+    // 到上段才因鐘形花序的重量逐漸向側面微彎，避免整根像要倒下。
+    const bendT = Math.max(0, (t - 0.58) / 0.42);
+    const bend = bendT * bendT;
     return [
-      x + 0.015 + 0.12 * t + 0.035 * Math.sin(Math.PI * 2 * t),
-      baseY + height * (1.28 * t - 0.52 * t * t),
-      z + 0.012 + 0.012 * t + 0.006 * Math.sin(Math.PI * 2 * t),
+      x + 0.006 * t + 0.075 * bend,
+      baseY + height * 1.5 * (1.28 * t - 0.52 * t * t),
+      z + 0.005 * t + 0.008 * bend,
     ];
   }
 
