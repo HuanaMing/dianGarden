@@ -1944,7 +1944,8 @@
         const pink = headColor.map((channel) => Math.min(1, channel * (bloom % 3 === 0 ? 1.04 : bloom % 3 === 1 ? 0.96 : 1)));
         // 加大橫向尺寸，讓相鄰八面體彼此貼合；略壓低高度以減少突兀尖峰。
         const rx = vertex.ring === "top" ? 0.062 : vertex.ring === "upper" ? 0.068 : 0.073;
-        const ry = vertex.ring === "top" ? 0.052 : 0.056;
+        // 將每顆八面體花瓣的垂直高度加倍，水平尺寸與排列維持不變。
+        const ry = vertex.ring === "top" ? 0.104 : 0.112;
         const rz = rx;
         addOctahedron(positions, colors, centerX, centerY, centerZ, rx, ry, rz, pink);
       }
