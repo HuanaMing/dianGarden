@@ -49,31 +49,33 @@ try {
   if (cardCount !== 11) throw new Error(`花卉圖鑑應有 11 種花卉，實際為 ${cardCount} 種`);
   checks.push('花卉圖鑑 11 種花卉資料均已載入');
 
-  await page.locator('.encyclopedia-card[data-flower-index="7"] .encyclopedia-card-select').click();
-  await page.waitForFunction(() => document.querySelector('#selected-flower-status')?.textContent?.includes('繡球花'));
-  await page.waitForTimeout(1800);
+  await page.setViewportSize({ width: 1440, height: 1000 });
   const galleryCanvas = page.locator('#sky-canvas');
   const galleryWebgl = await galleryCanvas.evaluate(canvas => Boolean(canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
   if (!galleryWebgl) throw new Error('花卉圖鑑的 WebGL 畫布未能建立');
-  await galleryCanvas.screenshot({ path: `${outputDir}/hydrangea-canvas.png` });
-  await page.screenshot({ path: `${outputDir}/hydrangea-gallery.png`, fullPage: true });
-  checks.push('繡球花 3D 圖鑑畫面已截圖');
 
-  await page.locator('.encyclopedia-card[data-flower-index="9"] .encyclopedia-card-select').click();
-  await page.waitForFunction(() => document.querySelector('#selected-flower-status')?.textContent?.includes('牡丹'));
-  await page.waitForTimeout(500);
-  await galleryCanvas.screenshot({ path: `${outputDir}/peony-canvas.png` });
-  await page.screenshot({ path: `${outputDir}/peony-gallery.png`, fullPage: true });
-  checks.push('牡丹 3D 圖鑑畫面已截圖，供核對頂端八面體花瓣');
+  const flowerNames = await page.evaluate(() => window.flowerCatalog.map(flower => flower.name));
+  for (let index = 0; index < flowerNames.length; index += 1) {
+    const flowerName = flowerNames[index];
+    const card = page.locator(`.encyclopedia-card[data-flower-index="${index}"]`);
+    await card.locator('.encyclopedia-card-select').click();
+    await page.waitForFunction(name => document.querySelector('#selected-flower-status')?.textContent?.includes(name), flowerName);
+    await page.waitForTimeout(350);
+
+    const prefix = `flower-${String(index).padStart(2, '0')}`;
+    await galleryCanvas.screenshot({ path: `${outputDir}/${prefix}-canvas.png` });
+    await page.screenshot({ path: `${outputDir}/${prefix}-gallery.png`, fullPage: true });
+    checks.push(`${flowerName}（索引 ${index}）可選取並產生模型截圖`);
+  }
 
   if (errors.length) throw new Error(`瀏覽器發現錯誤：\n${errors.join('\n')}`);
   console.log(JSON.stringify({ result: 'PASS', checks, screenshots: [
     `${outputDir}/garden-desktop.png`,
     `${outputDir}/garden-mobile.png`,
-    `${outputDir}/hydrangea-canvas.png`,
-    `${outputDir}/hydrangea-gallery.png`,
-    `${outputDir}/peony-canvas.png`,
-    `${outputDir}/peony-gallery.png`,
+    ...flowerNames.flatMap((_, index) => {
+      const prefix = `flower-${String(index).padStart(2, '0')}`;
+      return [`${outputDir}/${prefix}-canvas.png`, `${outputDir}/${prefix}-gallery.png`];
+    }),
   ], browserErrors: errors }, null, 2));
 } catch (error) {
   await page.screenshot({ path: `${outputDir}/failure-page.png`, fullPage: true }).catch(() => {});
