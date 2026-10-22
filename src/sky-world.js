@@ -2766,19 +2766,29 @@
       const soilPalette = Object.fromEntries(Object.keys(drySoil).map((face) => [face, drySoil[face].map((channel, channelIndex) => channel + (wetSoil[face][channelIndex] - channel) * wetness)]));
       if (!plot?.grassOnly) addBox(positions, colors, x - bed / 2, plotY + 0.001, z - bed / 2, x + bed / 2, plotY + 0.055, z + bed / 2, soilPalette);
       if (!plot?.grassOnly) addSoilTexture(positions, colors, x, z, bed, plotY + 0.057, wetness > 0.5);
-      // 手動農地以低對比的鼠尾草綠窄邊框標示，與草地和花卉保持協調。
+      // 手動農地改用低調木質四角標記與角落木牌，避免整圈邊框過於突兀。
       if (plot?.manual === true && !plot?.grassOnly) {
-        const rim = 0.024;
-        const rimY = plotY + 0.058;
-        const rimColors = {
-          top: [0.42, 0.53, 0.36], front: [0.34, 0.43, 0.3],
-          right: [0.31, 0.4, 0.28], back: [0.39, 0.49, 0.33],
-          left: [0.35, 0.44, 0.3], bottom: [0.29, 0.37, 0.26],
+        const cornerSize = 0.055;
+        const markerY = plotY + 0.058;
+        const wood = {
+          top: [0.48, 0.32, 0.2], front: [0.36, 0.23, 0.15],
+          right: [0.31, 0.2, 0.13], back: [0.42, 0.27, 0.17],
+          left: [0.39, 0.25, 0.16], bottom: [0.28, 0.18, 0.12],
         };
-        addBox(positions, colors, x - bed / 2 - rim, rimY, z - bed / 2 - rim, x + bed / 2 + rim, rimY + 0.018, z - bed / 2, rimColors);
-        addBox(positions, colors, x - bed / 2 - rim, rimY, z + bed / 2, x + bed / 2 + rim, rimY + 0.018, z + bed / 2 + rim, rimColors);
-        addBox(positions, colors, x - bed / 2 - rim, rimY, z - bed / 2, x - bed / 2, rimY + 0.018, z + bed / 2, rimColors);
-        addBox(positions, colors, x + bed / 2, rimY, z - bed / 2, x + bed / 2 + rim, rimY + 0.018, z + bed / 2, rimColors);
+        const xMin = x - bed / 2 - cornerSize * 0.35;
+        const xMax = x + bed / 2 + cornerSize * 0.35;
+        const zMin = z - bed / 2 - cornerSize * 0.35;
+        const zMax = z + bed / 2 + cornerSize * 0.35;
+        for (const [cornerX, cornerZ] of [[xMin, zMin], [xMax, zMin], [xMin, zMax], [xMax, zMax]]) {
+          addBox(positions, colors, cornerX - cornerSize / 2, markerY, cornerZ - cornerSize / 2, cornerX + cornerSize / 2, markerY + 0.018, cornerZ + cornerSize / 2, wood);
+        }
+        // 小型直立木牌設於地塊前角，尺寸控制在花株視覺焦點以下。
+        const stakeWidth = 0.026;
+        const stakeHeight = 0.105;
+        const stakeX = xMax - cornerSize * 0.18;
+        const stakeZ = zMax - cornerSize * 0.18;
+        addBox(positions, colors, stakeX - stakeWidth / 2, markerY + 0.018, stakeZ - stakeWidth / 2, stakeX + stakeWidth / 2, markerY + stakeHeight, stakeZ + stakeWidth / 2, wood);
+        addBox(positions, colors, stakeX - stakeWidth * 1.35, markerY + stakeHeight * 0.55, stakeZ - stakeWidth / 2 - 0.003, stakeX + stakeWidth * 1.35, markerY + stakeHeight * 0.78, stakeZ + stakeWidth / 2 + 0.003, wood);
       }
       if (i === selectedPlotIndex) {
         const edge = 0.035;
