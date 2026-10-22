@@ -2766,27 +2766,40 @@
       const soilPalette = Object.fromEntries(Object.keys(drySoil).map((face) => [face, drySoil[face].map((channel, channelIndex) => channel + (wetSoil[face][channelIndex] - channel) * wetness)]));
       if (!plot?.grassOnly) addBox(positions, colors, x - bed / 2, plotY + 0.001, z - bed / 2, x + bed / 2, plotY + 0.055, z + bed / 2, soilPalette);
       if (!plot?.grassOnly) addSoilTexture(positions, colors, x, z, bed, plotY + 0.057, wetness > 0.5);
-      // 手動農地以少量自然散落的小花瓣辨識，不再使用木樁或木牌。
+      // 手動農地以插在草地邊緣的空白告示牌辨識，避免干擾花株與耕作區。
       if (plot?.manual === true && !plot?.grassOnly) {
-        const petalY = plotY + 0.061;
-        const half = bed / 2;
-        const petals = [
-          [-0.34, -0.39, 0.020, 0.010, [0.96, 0.69, 0.76]],
-          [0.08, -0.43, 0.017, 0.009, [1.00, 0.83, 0.72]],
-          [0.39, -0.25, 0.019, 0.010, [0.91, 0.72, 0.83]],
-          [0.42, 0.20, 0.016, 0.009, [0.98, 0.76, 0.78]],
-          [0.19, 0.41, 0.020, 0.010, [1.00, 0.84, 0.74]],
-          [-0.27, 0.39, 0.017, 0.009, [0.93, 0.70, 0.80]],
-          [-0.42, 0.12, 0.019, 0.010, [1.00, 0.80, 0.82]],
-          [-0.39, -0.17, 0.015, 0.008, [0.96, 0.76, 0.69]],
-        ];
-        for (const [offsetX, offsetZ, radiusX, radiusZ, color] of petals) {
-          addOctahedron(
-            positions, colors,
-            x + offsetX * half, petalY, z + offsetZ * half,
-            radiusX, 0.0025, radiusZ, color,
-          );
-        }
+        const signX = x + half * 0.73;
+        const signZ = z + half * 0.72;
+        const groundY = plotY + 0.004;
+        const postWidth = 0.025;
+        const postHeight = 0.205;
+        const post = {
+          top: [0.48, 0.32, 0.2], front: [0.36, 0.23, 0.15],
+          right: [0.31, 0.2, 0.13], back: [0.42, 0.27, 0.17],
+          left: [0.39, 0.25, 0.16], bottom: [0.28, 0.18, 0.12],
+        };
+        const boardWidth = 0.19;
+        const boardHeight = 0.125;
+        const boardDepth = 0.022;
+        const boardBottom = groundY + postHeight * 0.48;
+        // 細木柱插入草地，牌面使用無文字的淺奶油色木板。
+        addBox(
+          positions, colors,
+          signX - postWidth / 2, groundY, signZ - postWidth / 2,
+          signX + postWidth / 2, groundY + postHeight, signZ + postWidth / 2,
+          post,
+        );
+        const board = {
+          top: [0.94, 0.84, 0.64], front: [0.91, 0.79, 0.57],
+          right: [0.77, 0.62, 0.42], back: [0.86, 0.73, 0.53],
+          left: [0.82, 0.67, 0.47], bottom: [0.72, 0.57, 0.39],
+        };
+        addBox(
+          positions, colors,
+          signX - boardWidth / 2, boardBottom, signZ - boardDepth / 2,
+          signX + boardWidth / 2, boardBottom + boardHeight, signZ + boardDepth / 2,
+          board,
+        );
       }
       if (i === selectedPlotIndex) {
         const edge = 0.035;
