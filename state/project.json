@@ -1,10 +1,10 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 173,
-  "nextAction": "任務173實作已進行至回歸驗收：先確認最新 Playwright 執行，再補足土壤、2D/3D拖曳與工作中移動平台測試。右上角按鈕排序待使用者提供完整順序。",
+  "activeTask": 174,
+  "nextAction": "任務173已由使用者驗收完成。任務174已建立於 tasks/inbox，下一步開始盤點地塊狀態、成熟植物保留與農地管理介面，再依序實作與瀏覽器驗收。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "updatedAt": "2026-10-22"
+  "updatedAt": "2026-10-23"
 }
