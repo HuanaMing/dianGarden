@@ -1133,18 +1133,22 @@
     const leafColors = [[0.29, 0.48, 0.25], [0.35, 0.55, 0.29], [0.31, 0.51, 0.26]];
     // 草本牡丹以基部成叢的多根莖為骨架，中央主莖承接既有花頭。
     const stems = [
-      { angle: -0.35, lean: 0.042, depth: 0.018, phase: 0.2, scale: 1.0 },
-      { angle: 2.15, lean: -0.052, depth: -0.035, phase: 1.4, scale: 0.76 },
-      { angle: 0.9, lean: 0.035, depth: 0.046, phase: 2.2, scale: 0.70 },
-      { angle: 3.45, lean: -0.034, depth: 0.012, phase: 2.8, scale: 0.64 },
+      // 主莖從花叢基部彎向中心，頂端精確接到牡丹花頭中心。
+      { angle: -0.35, lean: 0, depth: 0, phase: 0.2, scale: 1.0 },
+      // 其餘不承接花頭的側莖刻意降低，避免看起來像多根無花花莖。
+      { angle: 2.15, lean: -0.052, depth: -0.035, phase: 1.4, scale: 0.52 },
+      { angle: 0.9, lean: 0.035, depth: 0.046, phase: 2.2, scale: 0.46 },
+      { angle: 3.45, lean: -0.034, depth: 0.012, phase: 2.8, scale: 0.40 },
     ];
     const centerAt = (stem, t) => {
-      const curve = Math.sin(t * Math.PI * 1.15 + stem.phase) * 0.012 * t;
+      // 彎曲量在莖頂收斂為零，主莖末端因此落在花頭正中心。
+      const curve = Math.sin(t * Math.PI) * 0.012 * t * (stem.phase > 0.5 ? 1 : 0.75);
+      const baseOffset = 1 - t;
       return [
-        x + Math.cos(stem.angle) * 0.012 + stem.lean * t + curve,
+        x + Math.cos(stem.angle) * 0.012 * baseOffset + stem.lean * t + curve,
         baseY + height * stem.scale * t,
-        z + Math.sin(stem.angle) * 0.012 + stem.depth * t
-          + Math.sin(t * Math.PI + stem.phase) * 0.009 * t,
+        z + Math.sin(stem.angle) * 0.012 * baseOffset + stem.depth * t
+          + Math.sin(t * Math.PI) * 0.009 * t * (stem.phase > 0.5 ? 1 : 0.75),
       ];
     };
     const addLeaflet = (root, tip, widthDirection, width, color) => {
@@ -1239,7 +1243,7 @@
       [0.2, 0.39, 0.57].forEach((t, leafIndex) => {
         const root = centerAt(stem, t);
         const angle = stem.angle + (leafIndex % 2 ? Math.PI * 0.72 : -Math.PI * 0.22) + stemIndex * 0.38;
-        const length = height * (0.25 - leafIndex * 0.025) * (stemIndex === 0 ? 1 : 0.86);
+        const length = height * stem.scale * (0.25 - leafIndex * 0.025) * (stemIndex === 0 ? 1 : 0.86);
         addCompoundLeaf(root, angle, length, leafColors[(stemIndex + leafIndex) % leafColors.length], 3);
       });
     });
