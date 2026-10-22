@@ -1035,9 +1035,9 @@
         // 菊花花瓣以細長橢圓舌狀花瓣呈現：沿徑向分段漸寬、圓潤收尾，
         // 不使用尖端匯聚的四面體／金字塔形折面。
         const rayLayers = [
-          { count: 28, inner: 0.025, outer: 0.17, y: bloomY - 0.006, width: 0.0105, lift: 0.012 },
-          { count: 23, inner: 0.023, outer: 0.135, y: bloomY + 0.008, width: 0.0095, lift: 0.009 },
-          { count: 17, inner: 0.019, outer: 0.098, y: bloomY + 0.018, width: 0.0085, lift: 0.007 },
+          { count: 28, inner: 0.022, outer: 0.18, y: bloomY - 0.012, width: 0.0125, lift: 0.032, droop: 0.034 },
+          { count: 23, inner: 0.021, outer: 0.145, y: bloomY + 0.006, width: 0.0115, lift: 0.043, droop: 0.018 },
+          { count: 18, inner: 0.018, outer: 0.112, y: bloomY + 0.016, width: 0.0105, lift: 0.05, droop: 0.006 },
         ];
         for (let layer = 0; layer < rayLayers.length; layer += 1) {
           const shape = rayLayers[layer];
@@ -1045,17 +1045,19 @@
             const angle = ray / shape.count * Math.PI * 2 + layer * 0.105;
             const radial = [Math.cos(angle), Math.sin(angle)];
             const tangent = [-radial[1], radial[0]];
-            const petalLength = shape.outer - shape.inner;
-            const sections = 8;
+            // 把花瓣末端預留半個寬度做圓頭，避免所有網格收斂成針尖。
+            const capRadius = shape.width * 0.88;
+            const petalLength = shape.outer - shape.inner - capRadius;
+            const sections = 10;
             const centerline = [];
             const leftEdge = [];
             const rightEdge = [];
             for (let section = 0; section <= sections; section += 1) {
               const t = section / sections;
-              // 橢圓形寬度包絡：兩端收窄，中段飽滿，末端保留圓弧而非尖角。
-              const envelope = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.72);
+              // 橢圓舌狀輪廓：中段飽滿、根部收窄；圓頭由後續半圓網格封口。
+              const envelope = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.48);
               const radius = shape.inner + petalLength * t;
-              const centerY = shape.y + shape.lift * Math.sin(Math.PI * t);
+              const centerY = shape.y + shape.lift * Math.sin(Math.PI * t * 0.82) - shape.droop * t;
               const center = [x + radial[0] * radius, centerY, z + radial[1] * radius];
               const halfWidth = shape.width * envelope;
               centerline.push(center);
@@ -1063,6 +1065,21 @@
               rightEdge.push([center[0] - tangent[0] * halfWidth, centerY, center[2] - tangent[1] * halfWidth]);
             }
             const petalColor = ray % 5 === 0 ? headColor.map((channel) => Math.min(1, channel * 1.06)) : headColor;
+            // 在外端補上半圓形花瓣帽，形成鈍圓橢圓端，而非三角尖端。
+            const capCenterRadius = shape.outer - capRadius;
+            const capCenterY = shape.y - shape.droop;
+            const capCenter = [x + radial[0] * capCenterRadius, capCenterY, z + radial[1] * capCenterRadius];
+            const capSegments = 8;
+            const capPoints = Array.from({ length: capSegments + 1 }, (_, segment) => {
+              const capAngle = -Math.PI / 2 + Math.PI * segment / capSegments;
+              const radialOffset = Math.sin(capAngle) * capRadius;
+              const tangentOffset = Math.cos(capAngle) * capRadius;
+              return [
+                x + radial[0] * (capCenterRadius + radialOffset) + tangent[0] * tangentOffset,
+                capCenterY - shape.droop * 0.08 * Math.cos(capAngle),
+                z + radial[1] * (capCenterRadius + radialOffset) + tangent[1] * tangentOffset,
+              ];
+            });
             for (let section = 0; section < sections; section += 1) {
               const a = centerline[section], b = centerline[section + 1];
               const leftA = leftEdge[section], leftB = leftEdge[section + 1];
@@ -1072,6 +1089,10 @@
               addTriangle(positions, colors, a, leftB, b, petalColor);
               addTriangle(positions, colors, a, b, rightB, petalColor.map((channel) => channel * 0.94));
               addTriangle(positions, colors, a, rightB, rightA, petalColor.map((channel) => channel * 0.97));
+            }
+            for (let segment = 0; segment < capSegments; segment += 1) {
+              addTriangle(positions, colors, capCenter, capPoints[segment], capPoints[segment + 1],
+                petalColor.map((channel) => channel * (segment % 2 ? 0.97 : 1.02)));
             }
           }
         }
