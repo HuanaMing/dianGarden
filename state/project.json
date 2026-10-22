@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "blocked",
   "activeTask": "109-personal-ios-app-lock-screen-flower-widget",
-  "nextAction": "任務164菊花三層花瓣彎曲程度已加強，第一層向上彎、第二與第三層向下彎，待遊戲內視覺驗收。",
+  "nextAction": "任務164菊花三層花瓣已改為向上拱起、末端內扣包覆花心，待遊戲內視覺驗收。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
