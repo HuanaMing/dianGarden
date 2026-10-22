@@ -1058,7 +1058,7 @@
         const pz = plantZ + Math.sin(angle) * radius;
         const py = plantY + 0.16 + (particle % 3) * 0.075;
         const size = 0.022;
-        const cycle = (time * 0.00035 + particle * 0.21 + index * 0.13) * Math.PI * 2;
+        const cycle = (time * 0.0001166666666667 + particle * 0.21 + index * 0.13) * Math.PI * 2;
         const opacity = 0.08 + (0.92 * (1 - Math.cos(cycle)) * 0.5);
         const firstVertex = effectPositions.length / 3;
         addOctahedron(effectPositions, effectColors, px, py, pz, size, size * 1.6, size, [0.47, 0.78, 0.72]);
