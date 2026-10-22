@@ -1060,86 +1060,85 @@
         }
         addOctahedron(positions, colors, x, bloomY + 0.035, z, 0.039, 0.044, 0.039, headColor);
       } else if (flowerIndex === 6) {
-        // 菊花花瓣以細長橢圓舌狀花瓣呈現：沿徑向分段漸寬、圓潤收尾，
-        // 不使用尖端匯聚的四面體／金字塔形折面。
+        // 菊花：依照五個長度節點重建三層花瓣曲線。
+        // 每個節點為 [距離花心, 相對基準高度的高度差]，位置依 0%、30%、50%、70%、100% 定義。
         const rayLayers = [
-          // 三層花瓣都由側向伸展後向上拱起，末端略微回收，形成包覆花心的杯狀輪廓。
-          { count: 28, inner: 0.022, outer: 0.18, y: bloomY - 0.01, width: 0.0125, lift: 0.072, inward: 0.12, tipLift: 0.012 },
-          { count: 23, inner: 0.021, outer: 0.145, y: bloomY, width: 0.0115, lift: 0.061, inward: 0.14, tipLift: 0.01 },
-          { count: 18, inner: 0.018, outer: 0.112, y: bloomY + 0.01, width: 0.0105, lift: 0.05, inward: 0.16, tipLift: 0.008 },
+          {
+            count: 28, width: 0.014,
+            profile: [[0.022, 0], [0.05, -0.005], [0.07, 0.01], [0.09, 0.03], [0.08, 0.05]],
+          },
+          {
+            count: 23, width: 0.012,
+            profile: [[0.021, 0], [0.04, -0.005], [0.07, 0.07], [0.06, 0.11], [0.05, 0.14]],
+          },
+          {
+            count: 18, width: 0.0095,
+            profile: [[0.018, 0], [0.02, -0.005], [0.035, 0.035], [0.03, 0.06], [0.018, 0.07]],
+          },
         ];
+        const profileAt = (profile, t) => {
+          const knots = [0, 0.3, 0.5, 0.7, 1];
+          let segment = 0;
+          while (segment < knots.length - 2 && t > knots[segment + 1]) segment += 1;
+          const span = knots[segment + 1] - knots[segment];
+          const local = Math.max(0, Math.min(1, (t - knots[segment]) / span));
+          const eased = local * local * (3 - 2 * local);
+          return [
+            profile[segment][0] + (profile[segment + 1][0] - profile[segment][0]) * eased,
+            profile[segment][1] + (profile[segment + 1][1] - profile[segment][1]) * eased,
+          ];
+        };
         for (let layer = 0; layer < rayLayers.length; layer += 1) {
           const shape = rayLayers[layer];
           for (let ray = 0; ray < shape.count; ray += 1) {
-            const angle = ray / shape.count * Math.PI * 2 + layer * 0.105;
+            const angle = ray / shape.count * Math.PI * 2 + layer * 0.11;
             const radial = [Math.cos(angle), Math.sin(angle)];
             const tangent = [-radial[1], radial[0]];
-            // 把花瓣末端預留半個寬度做圓頭，避免所有網格收斂成針尖。
-            const capRadius = shape.width * 0.88;
-            const petalLength = shape.outer - shape.inner - capRadius;
-            const sections = 10;
+            const sections = 20;
             const centerline = [];
             const leftEdge = [];
             const rightEdge = [];
             for (let section = 0; section <= sections; section += 1) {
               const t = section / sections;
-              // 橢圓舌狀輪廓：中段飽滿、根部收窄；圓頭由後續半圓網格封口。
-              // 尾端寬度維持為花瓣半寬的 88%，直接與半圓封口兩側銜接；
-              // 不讓主花瓣先收成尖點，再把圓帽接在尖端外面。
-              const envelope = Math.max(
-                Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.48),
-                0.88 * t
-              );
-              const curlT = Math.max(0, Math.min(1, (t - 0.68) / 0.32));
-              const curlEase = curlT * curlT * (3 - 2 * curlT);
-              // 前段朝側向伸展，中段抬升；末段沿徑向稍微回收，讓花瓣朝中央花心內扣。
-              const radius = shape.inner + petalLength * (t - shape.inward * curlEase);
-              const centerY = shape.y + shape.lift * Math.sin(Math.PI * t * 0.78) + shape.tipLift * curlEase;
-              const center = [x + radial[0] * radius, centerY, z + radial[1] * radius];
-              const halfWidth = shape.width * envelope;
+              const [radius, heightOffset] = profileAt(shape.profile, t);
+              // 花瓣根部窄、中央飽滿，末端收窄但不收成尖刺。
+              const widthEnvelope = t < 0.3
+                ? 0.22 + 0.78 * (t / 0.3)
+                : t < 0.7
+                  ? 1
+                  : 1 - 0.68 * ((t - 0.7) / 0.3);
+              const halfWidth = shape.width * widthEnvelope * 0.5;
+              const center = [x + radial[0] * radius, bloomY + heightOffset, z + radial[1] * radius];
               centerline.push(center);
-              leftEdge.push([center[0] + tangent[0] * halfWidth, centerY, center[2] + tangent[1] * halfWidth]);
-              rightEdge.push([center[0] - tangent[0] * halfWidth, centerY, center[2] - tangent[1] * halfWidth]);
+              leftEdge.push([center[0] + tangent[0] * halfWidth, center[1], center[2] + tangent[1] * halfWidth]);
+              rightEdge.push([center[0] - tangent[0] * halfWidth, center[1], center[2] - tangent[1] * halfWidth]);
             }
-            const petalColor = ray % 5 === 0 ? headColor.map((channel) => Math.min(1, channel * 1.06)) : headColor;
-            // 在外端補上半圓形花瓣帽，形成鈍圓橢圓端，而非三角尖端。
-            const capCenterRadius = shape.outer - capRadius;
-            const capCenterY = centerline[centerline.length - 1][1];
-            const capCenter = centerline[centerline.length - 1];
-            const capSegments = 8;
-            const capPoints = Array.from({ length: capSegments + 1 }, (_, segment) => {
-              const capAngle = -Math.PI / 2 + Math.PI * segment / capSegments;
-              const radialOffset = Math.cos(capAngle) * capRadius;
-              const tangentOffset = Math.sin(capAngle) * capRadius;
-              return [
-                x + radial[0] * (capCenterRadius + radialOffset) + tangent[0] * tangentOffset,
-                capCenterY,
-                z + radial[1] * (capCenterRadius + radialOffset) + tangent[1] * tangentOffset,
-              ];
-            });
+            const petalColor = ray % 5 === 0
+              ? headColor.map((channel) => Math.min(1, channel * 1.06))
+              : ray % 3 === 1 ? headColor.map((channel) => channel * 0.96) : headColor;
             for (let section = 0; section < sections; section += 1) {
               const a = centerline[section], b = centerline[section + 1];
               const leftA = leftEdge[section], leftB = leftEdge[section + 1];
               const rightA = rightEdge[section], rightB = rightEdge[section + 1];
-              const shade = section % 2 === 0 ? 1.025 : 0.97;
-              addTriangle(positions, colors, a, leftA, leftB, petalColor.map((channel) => Math.min(1, channel * shade)));
+              const shade = section % 4 === 0 ? 1.035 : section % 4 === 2 ? 0.97 : 1;
+              addTriangle(positions, colors, a, leftA, leftB,
+                petalColor.map((channel) => Math.min(1, channel * shade)));
               addTriangle(positions, colors, a, leftB, b, petalColor);
-              addTriangle(positions, colors, a, b, rightB, petalColor.map((channel) => channel * 0.94));
-              addTriangle(positions, colors, a, rightB, rightA, petalColor.map((channel) => channel * 0.97));
-            }
-            for (let segment = 0; segment < capSegments; segment += 1) {
-              addTriangle(positions, colors, capCenter, capPoints[segment], capPoints[segment + 1],
-                petalColor.map((channel) => channel * (segment % 2 ? 0.97 : 1.02)));
+              addTriangle(positions, colors, a, b, rightB,
+                petalColor.map((channel) => channel * 0.95));
+              addTriangle(positions, colors, a, rightB, rightA,
+                petalColor.map((channel) => channel * 0.98));
             }
           }
         }
+        // 保留緊密、細小的金黃色管狀花心，避免花瓣根部露空。
         const diskCount = 32;
         const goldenAngle = Math.PI * (3 - Math.sqrt(5));
         for (let floret = 0; floret < diskCount; floret += 1) {
-          const radius = 0.048 * Math.sqrt((floret + 0.5) / diskCount);
+          const radius = 0.042 * Math.sqrt((floret + 0.5) / diskCount);
           const angle = floret * goldenAngle;
           addOctahedron(positions, colors, x + Math.cos(angle) * radius, bloomY + 0.012, z + Math.sin(angle) * radius,
-            0.009, 0.009, 0.009, floret % 3 ? [0.77, 0.48, 0.17] : [0.9, 0.65, 0.23]);
+            0.008, 0.008, 0.008, floret % 3 ? [0.77, 0.48, 0.17] : [0.9, 0.65, 0.23]);
         }
       } else if (flowerIndex === 7) {
         // Hydrangea: a rounded mophead built from four-sepal florets.
