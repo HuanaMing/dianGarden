@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 172,
-  "nextAction": "追蹤任務172的 GitHub Actions Playwright 驗收結果；若失敗，先修正頂部資訊列、設定面板、省電模式或花卉像素圖問題，再完成桌面與手機橫向驗收。任務171因任務插隊暫停於 tasks/blocked/，恢復時先確認第3段驗收。",
+  "activeTask": 173,
+  "nextAction": "執行任務173：先盤點收合、土壤濕潤、2D 拖曳、無人機平台及土地類型邏輯；右上角功能按鈕順序待使用者補充。任務172暫停於 blocked，恢復時需確認資產路徑修正後的最新瀏覽器驗收。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
