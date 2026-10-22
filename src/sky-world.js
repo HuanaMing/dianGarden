@@ -2254,7 +2254,7 @@
       const centerZ = z + (random(patch, 2) * 2 - 1) * half * 0.94;
       const radiusX = 0.035 + random(patch, 3) * 0.038;
       const radiusZ = 0.025 + random(patch, 4) * 0.032;
-      const colorScale = 1.025 + random(patch, 5) * 0.085;
+      const colorScale = 0.94 + random(patch, 5) * 0.19;
       const color = baseColor.map((channel) => Math.min(1, channel * colorScale));
       const points = [];
       for (let edge = 0; edge < 6; edge += 1) {
@@ -2285,11 +2285,18 @@
       ? [[0.32, 0.22, 0.17], [0.47, 0.32, 0.24]]
       : [[0.49, 0.32, 0.22], [0.73, 0.51, 0.37]];
     const limit = bed * 0.5 - 0.025;
+    // Rotate the deterministic soil-mark pattern per tile to avoid identical repeated rows.
+    const seed = Math.sin(x * 127.1 + z * 311.7) * 43758.5453;
+    const rotation = (seed - Math.floor(seed)) * Math.PI * 2;
+    const cosRotation = Math.cos(rotation), sinRotation = Math.sin(rotation);
     for (const [offsetX, offsetZ, length, angle, width, shade] of marks) {
-      const cx = x + Math.max(-limit, Math.min(limit, offsetX));
-      const cz = z + Math.max(-limit, Math.min(limit, offsetZ));
-      const dx = Math.cos(angle) * length * 0.5, dz = Math.sin(angle) * length * 0.5;
-      const px = -Math.sin(angle) * width * 0.5, pz = Math.cos(angle) * width * 0.5;
+      const variedX = offsetX * cosRotation - offsetZ * sinRotation;
+      const variedZ = offsetX * sinRotation + offsetZ * cosRotation;
+      const cx = x + Math.max(-limit, Math.min(limit, variedX));
+      const cz = z + Math.max(-limit, Math.min(limit, variedZ));
+      const variedAngle = angle + rotation;
+      const dx = Math.cos(variedAngle) * length * 0.5, dz = Math.sin(variedAngle) * length * 0.5;
+      const px = -Math.sin(variedAngle) * width * 0.5, pz = Math.cos(variedAngle) * width * 0.5;
       const a = [cx - dx + px, y, cz - dz + pz];
       const b = [cx + dx + px, y, cz + dz + pz];
       const d = [cx - dx - px, y, cz - dz - pz];
