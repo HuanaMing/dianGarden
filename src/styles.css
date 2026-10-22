@@ -265,3 +265,14 @@ input, textarea, [contenteditable="true"]{
   user-select:text;
   -webkit-touch-callout:default;
 }
+
+/* Prevent iOS Safari from zooming the page when mobile form controls receive focus. */
+@media (max-width: 700px) {
+  input,
+  textarea,
+  select,
+  .garden-name-editor input,
+  .variant-editor input {
+    font-size: 16px;
+  }
+}
