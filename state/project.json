@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "167-peony-stem-leaf-model",
-  "nextAction": "任務166薰衣草重做版已由使用者驗收成功。任務167牡丹莖葉已依回報重做：主莖頂端接到花頭中心，無花側莖縮短；語法檢查通過，等待遊戲內視覺驗收。任務109仍等待可用 Xcode 環境及付費使用確認。",
+  "activeTask": "167-peony-flower-head-model",
+  "nextAction": "任務167牡丹花頭模型已重做並推送，語法檢查通過，等待使用者於遊戲中驗收；任務109仍等待可用 Xcode 環境及付費使用確認。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
