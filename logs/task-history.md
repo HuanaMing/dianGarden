@@ -1174,3 +1174,9 @@
 - 依回饋修正花瓣尾端：主網格寬度不再在封口前收斂成尖點，尾端半寬以 88% 的花瓣寬度銜接半圓封口，避免半圓像額外零件長在尖端前方。
 - 三層基準高度改為 `bloomY - 0.01`、`bloomY`、`bloomY + 0.01`，總高差 0.02 世界單位；弧度與下垂幅度同步微幅收斂。
 - JavaScript 語法編譯檢查通過；尚待遊戲內視覺驗收。
+
+## 2026-10-22 — 任務 164：加強菊花花瓣彎曲
+
+- 結果：依使用者回饋加大三層菊花舌狀花瓣的彎曲程度；第一層改為向上彎，第二、三層改為向下彎，維持既有基準高度差與圓鈍花瓣端部。
+- 驗證：`src/sky-world.js` JavaScript 語法編譯檢查通過；尚待使用者在遊戲內確認視覺效果。
+- 檔案：`src/sky-world.js`、`tasks/active/164-chrysanthemum-stem-leaf-model.md`、`docs/architecture.md`、`state/current-task.json`、`state/project.json`。
