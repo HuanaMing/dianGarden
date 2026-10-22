@@ -1155,56 +1155,67 @@
 
     const bloomY = 0.055 + height;
     if (flowerIndex === 3) {
-      // 經典紅玫瑰酒杯型：外層花瓣向外舒展，中層沿杯壁上揚，內層直立收口；
-      // 不採用英式玫瑰那種矮圓、密集、全平面的玫瑰花心。
+      // 經典酒杯型玫瑰：每片花瓣先向外展開，沿中段向上收起，
+      // 到杯口再向外翻；花瓣加寬，明暗沿花瓣內外層交疊而非放射排列。
       const roseCupLayers = [
-        { count: 7, inner: 0.026, outer: 0.139, base: -0.045, rim: 0.036, crown: 0.018, edge: 0.010, halfAngle: 0.39, phase: 0.10, curl: -0.020 },
-        { count: 7, inner: 0.018, outer: 0.112, base: -0.012, rim: 0.082, crown: 0.024, edge: 0.012, halfAngle: 0.35, phase: 0.48, curl: -0.006 },
-        { count: 6, inner: 0.009, outer: 0.084, base: 0.015, rim: 0.119, crown: 0.022, edge: 0.009, halfAngle: 0.31, phase: 0.22, curl: 0.010 },
-        { count: 5, inner: 0.003, outer: 0.055, base: 0.039, rim: 0.136, crown: 0.014, edge: 0.006, halfAngle: 0.27, phase: 0.80, curl: 0.014 },
+        { count: 7, inner: 0.022, outer: 0.151, base: -0.046, rim: 0.034, crown: 0.016, edge: 0.012, halfAngle: 0.48, phase: 0.10, curl: -0.022 },
+        { count: 7, inner: 0.016, outer: 0.124, base: -0.010, rim: 0.086, crown: 0.024, edge: 0.014, halfAngle: 0.43, phase: 0.48, curl: -0.008 },
+        { count: 6, inner: 0.008, outer: 0.092, base: 0.015, rim: 0.122, crown: 0.021, edge: 0.011, halfAngle: 0.38, phase: 0.22, curl: 0.012 },
+        { count: 5, inner: 0.003, outer: 0.060, base: 0.040, rim: 0.139, crown: 0.014, edge: 0.008, halfAngle: 0.32, phase: 0.80, curl: 0.015 },
       ];
       for (let layer = 0; layer < roseCupLayers.length; layer += 1) {
         const shape = roseCupLayers[layer];
         for (let petal = 0; petal < shape.count; petal += 1) {
           const centerAngle = petal / shape.count * Math.PI * 2 + shape.phase;
-          const shade = [0.88, 0.96, 1.04, 0.92, 1.08][(petal + layer * 2) % 5];
-          const petalColor = headColor.map((channel) => Math.min(1, channel * shade));
-          const underside = petalColor.map((channel) => channel * 0.70);
-          const radialSteps = 7, acrossSteps = 6;
+          const radialSteps = 9, acrossSteps = 8;
           const grid = [];
           for (let radialStep = 0; radialStep <= radialSteps; radialStep += 1) {
             const t = radialStep / radialSteps;
             const row = [];
             for (let acrossStep = 0; acrossStep <= acrossSteps; acrossStep += 1) {
               const u = acrossStep / acrossSteps * 2 - 1;
-              const angle = centerAngle + u * shape.halfAngle * (0.68 + 0.32 * t);
-              const radius = shape.inner + (shape.outer - shape.inner) * t
-                + 0.005 * u * u * Math.sin(t * Math.PI);
-              // 從花托向杯口連續上揚；外瓣向下翻，中間與內層則更直立。
-              const rise = shape.base + (shape.rim - shape.base) * Math.pow(t, 0.82);
+              const angle = centerAngle + u * shape.halfAngle * (0.64 + 0.36 * t);
+              // 半徑曲線分三段：先外展、中央段稍收並升高、杯口再外翻。
+              const outwardStart = Math.min(1, t / 0.34);
+              const inwardMiddle = Math.max(0, Math.min(1, (t - 0.34) / 0.38));
+              const outwardLip = Math.max(0, Math.min(1, (t - 0.72) / 0.28));
+              const radiusProfile = 0.34 * outwardStart - 0.11 * inwardMiddle + 0.77 * outwardLip;
+              const radius = shape.inner + (shape.outer - shape.inner) * radiusProfile
+                + 0.006 * u * u * Math.sin(t * Math.PI);
+              const riseT = t < 0.34
+                ? 0.12 * (t / 0.34)
+                : t < 0.72
+                  ? 0.12 + 0.62 * ((t - 0.34) / 0.38)
+                  : 0.74 + 0.26 * ((t - 0.72) / 0.28);
+              const rise = shape.base + (shape.rim - shape.base) * riseT;
               const bowl = shape.crown * Math.sin(t * Math.PI);
-              const edgeRoll = shape.edge * Math.pow(Math.abs(u), 1.7) * Math.sin(Math.PI * (0.18 + 0.68 * t));
+              const edgeRoll = shape.edge * Math.pow(Math.abs(u), 1.55) * Math.sin(Math.PI * (0.16 + 0.70 * t));
               const lipCurl = shape.curl * Math.pow(t, 3);
-              const sideFold = -0.009 * u * u * Math.sin(t * Math.PI);
+              const sideFold = -0.010 * u * u * Math.sin(t * Math.PI);
               const y = bloomY + rise + bowl + edgeRoll + lipCurl + sideFold;
               row.push([x + Math.cos(angle) * radius, y, z + Math.sin(angle) * radius]);
             }
             grid.push(row);
           }
           for (let radialStep = 0; radialStep < radialSteps; radialStep += 1) {
+            const t = (radialStep + 0.5) / radialSteps;
+            // 陰影沿花瓣根部、交疊內緣與杯口背面形成層次，不以花心向外放射。
+            const rootShade = 0.76 + 0.22 * Math.min(1, t / 0.42);
+            const lipShade = t > 0.78 ? 0.94 + 0.06 * (1 - (t - 0.78) / 0.22) : 1;
+            const acrossShade = (acrossStep) => 1;
             for (let acrossStep = 0; acrossStep < acrossSteps; acrossStep += 1) {
               const a = grid[radialStep][acrossStep];
               const b = grid[radialStep + 1][acrossStep];
               const c = grid[radialStep + 1][acrossStep + 1];
               const d = grid[radialStep][acrossStep + 1];
-              const faceColor = (acrossStep === 0 || acrossStep === acrossSteps - 1) ? underside : petalColor;
-              addTriangle(positions, colors, a, b, c, faceColor);
-              addTriangle(positions, colors, a, c, d, faceColor.map((channel) => Math.min(1, channel * 1.025)));
+              const faceColor = headColor.map((channel) => channel * rootShade * lipShade);
+              const edgeColor = faceColor.map((channel) => channel * (acrossStep === 0 || acrossStep === acrossSteps - 1 ? 0.88 : 1.025));
+              addTriangle(positions, colors, a, b, c, edgeColor);
+              addTriangle(positions, colors, a, c, d, faceColor);
             }
           }
         }
       }
-
       // 深綠萼片包住花托，從側面也能看見花瓣向上展開的杯狀基部。
       for (let sepal = 0; sepal < 5; sepal += 1) {
         const angle = sepal / 5 * Math.PI * 2 + 0.18;
