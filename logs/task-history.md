@@ -1281,3 +1281,16 @@
 - 任務排程：依使用者要求暫緩牡丹花頭工作，任務167已從 `tasks/active/` 移回 `tasks/inbox/`，未標記完成。
 - 驗證：程式碼已推送 main，等待 GitHub Actions 自動驗收及使用者遊戲內視覺確認。
 - 檔案：`src/sky-world.js`、`tasks/active/168-higanbana-stem-leaf-model.md`、`tasks/inbox/167-peony-stem-leaf-model.md`、`state/current-task.json`、`state/project.json`、`logs/task-history.md`
+
+
+## 2026-10-22 — 任務 169：全花種模型總驗收自動化
+
+- 結果：擴充 Playwright 驗收，逐一選取十一種花卉並保存每種模型畫布及圖鑑截圖，保留桌面／手機首頁檢查、WebGL 檢查及瀏覽器錯誤偵測。
+- 驗證：GitHub Actions 瀏覽器驗收成功，工作與截圖產物上傳均通過；截圖供人工視覺檢查，自動化不判定模型美感。
+- 檔案：`tests/browser-smoke.mjs`、`tasks/done/169-all-flower-model-acceptance.md`。
+
+## 2026-10-22 — 任務 170：花園整體視覺層次升級（第一輪）
+
+- 結果：土壤紋理依地塊座標採用穩定旋轉，降低不同地塊重複圖案的感覺；草地色斑加入適度明暗變化，增加地表層次。
+- 驗證：已推送程式碼，等待瀏覽器自動驗收及修改後截圖檢視。
+- 檔案：`src/sky-world.js`、`tasks/active/170-garden-visual-polish.md`。
