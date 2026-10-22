@@ -1913,7 +1913,11 @@
     animateHarvest(index, onDeparture, onComplete, shouldReturn, droneIndex = 0) {
       if (!Number.isInteger(index) || index < 0 || index >= landCount) return false;
       const [targetX, targetZ] = getPlotPosition(index);
-      return startDroneAnimation(droneIndex, 'harvest', [targetX, targetZ], { hoverDuration: 500, targetPlotIndex: index, workY: DRONE_WORK_Y + getPlotHeight(index), onDeparture, onComplete, shouldReturn });
+      const plot = plotStates[index];
+      const flowerHeight = window.flowerCatalog?.[plot?.crop]?.height || 0.5;
+      const plantHeight = Number.isFinite(plot?.plantHeight) ? plot.plantHeight : 1;
+      const harvestY = getPlotHeight(index) + flowerHeight * plantHeight + 0.12;
+      return startDroneAnimation(droneIndex, 'harvest', [targetX, targetZ], { hoverDuration: 500, targetPlotIndex: index, workY: harvestY, onDeparture, onComplete, shouldReturn });
     },
     animateWater(index, onDeparture, onComplete, shouldReturn, droneIndex = 0) {
       if (!Number.isInteger(index) || index < 0 || index >= landCount) return false;
