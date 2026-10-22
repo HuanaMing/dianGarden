@@ -2771,6 +2771,10 @@
         const signX = x + half * 0.73;
         const signZ = z + half * 0.72;
         const groundY = plotY + 0.004;
+        const signGeometryStart = positions.length;
+        const signAngle = Math.PI / 6;
+        const signCos = Math.cos(signAngle);
+        const signSin = Math.sin(signAngle);
         const postWidth = 0.025;
         const postHeight = 0.205;
         const post = {
@@ -2800,6 +2804,13 @@
           signX + boardWidth / 2, boardBottom + boardHeight, signZ + boardDepth / 2,
           board,
         );
+        // 將整塊告示牌（木柱與牌面）繞垂直軸旋轉 30 度。
+        for (let vertex = signGeometryStart; vertex < positions.length; vertex += 3) {
+          const dx = positions[vertex] - signX;
+          const dz = positions[vertex + 2] - signZ;
+          positions[vertex] = signX + dx * signCos + dz * signSin;
+          positions[vertex + 2] = signZ - dx * signSin + dz * signCos;
+        }
       }
       if (i === selectedPlotIndex) {
         const edge = 0.035;
