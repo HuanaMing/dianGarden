@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": "166-lavender-stem-leaf-model",
-  "nextAction": "任務166薰衣草三花莖第一版已推送，等待遊戲畫面驗收；任務165已由使用者驗收並歸檔。任務109仍等待可用 Xcode 環境及付費使用確認。",
+  "nextAction": "任務166薰衣草重做版已推送：三根花莖高低有別、XZ 雙向彎曲並移除舊版通用側葉，等待使用者視覺驗收；任務165已由使用者驗收並歸檔。任務109仍等待可用 Xcode 環境及付費使用確認。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
