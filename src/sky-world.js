@@ -314,7 +314,7 @@
       const root = [x + radial[0] * 0.012, baseY + 0.012, z + radial[1] * 0.012];
       const shoulder = [
         x + radial[0] * length * 0.52,
-        baseY + (stage === 1 ? 0.085 : 0.145) * 0.8,
+        baseY + (stage === 1 ? 0.085 : 0.145),
         z + radial[1] * length * 0.52,
       ];
       const originalHighestY = shoulder[1] + 0.018;
@@ -329,7 +329,7 @@
       // lowerRidge：新增的較低脊線頂點；徑向內移 0.0045，Y 高於 shoulder 0.0063。
       const lowerRidge = [
         shoulder[0] - radial[0] * 0.0045,
-        shoulder[1] + 0.009 * 0.7,
+        shoulder[1] - 0.018,
         shoulder[2] - radial[1] * 0.0045,
       ];
       // tip：葉尖頂點；Y 位於 ridge 的高度再上方 0.02，水平座標是 ridge 與 lowerRidge 的中點。
