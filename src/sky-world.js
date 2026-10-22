@@ -1893,6 +1893,79 @@
     }
 
     const bloomY = 0.055 + height;
+    if (flowerIndex === 9) {
+      // 牡丹花頭：多層寬大、微皺且彼此交錯的花瓣，形成飽滿的半球冠。
+      const peonyBaseY = bloomY - 0.018;
+      const layers = [
+        { count: 13, radius: 0.142, width: 0.050, baseY: -0.012, lift: 0.062, phase: 0.12, shade: 0.91, curl: 0.018 },
+        { count: 12, radius: 0.119, width: 0.046, baseY: 0.018, lift: 0.087, phase: 0.36, shade: 1.00, curl: 0.014 },
+        { count: 10, radius: 0.088, width: 0.039, baseY: 0.046, lift: 0.105, phase: 0.08, shade: 1.06, curl: 0.010 },
+        { count: 8, radius: 0.057, width: 0.030, baseY: 0.068, lift: 0.105, phase: 0.42, shade: 0.98, curl: 0.006 },
+      ];
+      const smoothPeony = (a, b, value) => {
+        const t = Math.max(0, Math.min(1, (value - a) / (b - a)));
+        return t * t * (3 - 2 * t);
+      };
+      layers.forEach((layer, layerIndex) => {
+        for (let petal = 0; petal < layer.count; petal += 1) {
+          const angle = petal / layer.count * Math.PI * 2 + layer.phase;
+          const halfWidth = layer.width * (0.82 + (petal % 3) * 0.09);
+          const rows = 7, columns = 6;
+          const grid = [];
+          for (let row = 0; row <= rows; row += 1) {
+            const t = row / rows;
+            const rowPoints = [];
+            for (let col = 0; col <= columns; col += 1) {
+              const u = col / columns * 2 - 1;
+              const edgeWave = Math.cos(u * Math.PI * 2.1 + petal * 0.72 + layerIndex) * 0.006;
+              const outerFold = smoothPeony(0.64, 1, t);
+              const side = u * halfWidth * Math.sin(Math.PI * (0.12 + t * 0.88));
+              const radial = layer.radius * (0.16 + t * 0.84) + layer.curl * t * t
+                + edgeWave * (0.25 + 0.75 * outerFold);
+              const petalAngle = angle + side / Math.max(0.035, radial) * 0.58
+                + (t - 0.5) * 0.16 + Math.sin(u * Math.PI) * 0.035;
+              const crown = Math.sin(t * Math.PI * 0.82) * 0.028 * (1 - u * u);
+              const rim = outerFold * (0.009 + 0.008 * Math.cos(u * Math.PI * 3 + petal));
+              const y = peonyBaseY + layer.baseY + t * layer.lift + crown + rim - 0.012 * u * u;
+              rowPoints.push([
+                x + Math.cos(petalAngle) * radial,
+                y,
+                z + Math.sin(petalAngle) * radial,
+              ]);
+            }
+            grid.push(rowPoints);
+          }
+          const variation = petal % 4 === 0 ? 1.06 : petal % 4 === 1 ? 0.97 : petal % 4 === 2 ? 1.015 : 0.93;
+          for (let row = 0; row < rows; row += 1) {
+            const t = (row + 0.5) / rows;
+            for (let col = 0; col < columns; col += 1) {
+              const u = col / columns * 2 - 1;
+              const shade = layer.shade * variation * (0.84 + 0.16 * smoothPeony(0, 0.9, t))
+                * (Math.abs(u) > 0.65 ? 0.91 : 1.0);
+              const color = headColor.map((channel) => Math.min(1, channel * shade));
+              const a = grid[row][col], b = grid[row + 1][col];
+              const c = grid[row + 1][col + 1], d = grid[row][col + 1];
+              addTriangle(positions, colors, a, b, c, color);
+              addTriangle(positions, colors, a, c, d, color.map((channel) => Math.min(1, channel * 1.015)));
+            }
+          }
+        }
+      });
+      // 花心以較小、偏深的花瓣收束，避免中心看起來像單一幾何球。
+      for (let petal = 0; petal < 7; petal += 1) {
+        const angle = petal / 7 * Math.PI * 2 + 0.2;
+        const root = [x + Math.cos(angle) * 0.012, peonyBaseY + 0.078, z + Math.sin(angle) * 0.012];
+        const tip = [x + Math.cos(angle + 0.28) * 0.041, peonyBaseY + 0.118 + (petal % 2) * 0.008,
+          z + Math.sin(angle + 0.28) * 0.041];
+        const left = [x + Math.cos(angle - 0.32) * 0.029, peonyBaseY + 0.104, z + Math.sin(angle - 0.32) * 0.029];
+        const right = [x + Math.cos(angle + 0.68) * 0.029, peonyBaseY + 0.102, z + Math.sin(angle + 0.68) * 0.029];
+        const innerColor = headColor.map((channel) => Math.min(1, channel * (petal % 2 ? 0.88 : 1.08)));
+        addTriangle(positions, colors, root, left, tip, innerColor);
+        addTriangle(positions, colors, root, tip, right, innerColor.map((channel) => channel * 0.94));
+      }
+      return;
+    }
+
     if (flowerIndex === 3) {
       // 將玫瑰花頭縮至原尺寸一半，並把底部下移至花萼頂端。
       const roseScale = 0.5;
