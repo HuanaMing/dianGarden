@@ -457,3 +457,11 @@ input, textarea, [contenteditable="true"]{
   .drone-jobs{top:48px!important;right:8px!important}
   .world-frame.is-hud-collapsed .topbar-actions{left:8px!important;padding:6px 7px 7px;gap:4px}
 }
+
+/* Align popup panels to the actual bottom edge of the responsive top bar. */
+@media(min-width:701px){
+  .farm-management-panel,.settings-panel,.drone-jobs{top:68px!important}
+}
+@media(max-width:700px){
+  .farm-management-panel,.settings-panel,.drone-jobs{top:56px!important}
+}
