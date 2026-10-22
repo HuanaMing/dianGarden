@@ -3501,9 +3501,7 @@
         else {
           animation.idlePosition = { x: dock.x, z: dock.z };
           if (animation.returning) {
-            const current = droneStates[index].location || animation.target;
-            animation.returnRoute = findDroneRoute(current, [dock.x, dock.z], index);
-            animation.returnStart = animation.elapsed;
+            animation.returnRoute = findDroneRoute(animation.target, [dock.x, dock.z], index);
           }
         }
       });
