@@ -575,7 +575,7 @@
       }
     }
     for (const job of activeJobs.values()) {
-      if (job.kind === 'water' && !job.committed) {
+      if (job.kind === 'water' && !job.committed && !job.cancelled) {
         const plot = game.plots[job.index];
         const crop = plot && plot.crop !== null ? crops[plot.crop] || crops[0] : null;
         if (crop && growthElapsed(plot) >= crop.growTime) {
