@@ -1897,10 +1897,11 @@
       // 牡丹花頭：多層寬大、微皺且彼此交錯的花瓣，形成飽滿的半球冠。
       const peonyBaseY = bloomY - 0.018;
       const layers = [
-        { count: 13, radius: 0.142, width: 0.050, baseY: -0.012, lift: 0.062, phase: 0.12, shade: 0.91, curl: 0.018 },
-        { count: 12, radius: 0.119, width: 0.046, baseY: 0.018, lift: 0.087, phase: 0.36, shade: 1.00, curl: 0.014 },
-        { count: 10, radius: 0.088, width: 0.039, baseY: 0.046, lift: 0.105, phase: 0.08, shade: 1.06, curl: 0.010 },
-        { count: 8, radius: 0.057, width: 0.030, baseY: 0.068, lift: 0.105, phase: 0.42, shade: 0.98, curl: 0.006 },
+        // 外圈花瓣較低、內圈逐步抬高，但高度差收斂，避免堆成尖頂／金字塔。
+        { count: 13, radius: 0.142, width: 0.050, baseY: -0.012, lift: 0.046, phase: 0.12, shade: 0.91, curl: 0.018 },
+        { count: 12, radius: 0.119, width: 0.046, baseY: 0.004, lift: 0.057, phase: 0.36, shade: 1.00, curl: 0.014 },
+        { count: 10, radius: 0.088, width: 0.039, baseY: 0.016, lift: 0.064, phase: 0.08, shade: 1.06, curl: 0.010 },
+        { count: 8, radius: 0.057, width: 0.030, baseY: 0.025, lift: 0.067, phase: 0.42, shade: 0.98, curl: 0.006 },
       ];
       const smoothPeony = (a, b, value) => {
         const t = Math.max(0, Math.min(1, (value - a) / (b - a)));
@@ -1954,11 +1955,11 @@
       // 花心以較小、偏深的花瓣收束，避免中心看起來像單一幾何球。
       for (let petal = 0; petal < 7; petal += 1) {
         const angle = petal / 7 * Math.PI * 2 + 0.2;
-        const root = [x + Math.cos(angle) * 0.012, peonyBaseY + 0.078, z + Math.sin(angle) * 0.012];
-        const tip = [x + Math.cos(angle + 0.28) * 0.041, peonyBaseY + 0.118 + (petal % 2) * 0.008,
+        const root = [x + Math.cos(angle) * 0.012, peonyBaseY + 0.071, z + Math.sin(angle) * 0.012];
+        const tip = [x + Math.cos(angle + 0.28) * 0.041, peonyBaseY + 0.091 + (petal % 2) * 0.004,
           z + Math.sin(angle + 0.28) * 0.041];
-        const left = [x + Math.cos(angle - 0.32) * 0.029, peonyBaseY + 0.104, z + Math.sin(angle - 0.32) * 0.029];
-        const right = [x + Math.cos(angle + 0.68) * 0.029, peonyBaseY + 0.102, z + Math.sin(angle + 0.68) * 0.029];
+        const left = [x + Math.cos(angle - 0.32) * 0.029, peonyBaseY + 0.083, z + Math.sin(angle - 0.32) * 0.029];
+        const right = [x + Math.cos(angle + 0.68) * 0.029, peonyBaseY + 0.082, z + Math.sin(angle + 0.68) * 0.029];
         const innerColor = headColor.map((channel) => Math.min(1, channel * (petal % 2 ? 0.88 : 1.08)));
         addTriangle(positions, colors, root, left, tip, innerColor);
         addTriangle(positions, colors, root, tip, right, innerColor.map((channel) => channel * 0.94));
