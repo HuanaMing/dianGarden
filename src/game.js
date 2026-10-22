@@ -186,6 +186,7 @@
     return { ...saved, cropCatalogVersion: CROP_CATALOG_VERSION, gardenName: saved.gardenName || '花明摸魚花園', hudCollapsed: saved.hudCollapsed === true, autoMode: saved.autoMode === true, autoCropSelection: Array.isArray(saved.autoCropSelection) ? saved.autoCropSelection : [0], flowerVariants, worldTimeMs: Number.isFinite(saved.worldTimeMs) ? saved.worldTimeMs : 60_000, worldTimeAnchor: Number.isFinite(saved.worldTimeAnchor) ? saved.worldTimeAnchor : Date.now(), lastObservedRaining: typeof saved.lastObservedRaining === 'boolean' ? saved.lastObservedRaining : window.skyEnvironment.getState(saved).isRaining, droneCount: drones.length, deploymentSequence, drones, dockPosition, plots };
   }
   const game = loadGame();
+  let rainStartedAt = game.lastObservedRaining ? Date.now() : null;
   function getLandCost() { return Math.min(Number.MAX_SAFE_INTEGER, Math.round(LAND_COST * (2 ** Math.max(0, game.plots.length - 3)))); }
   function getDroneCost() { return Math.min(Number.MAX_SAFE_INTEGER, DRONE_COST * (8 ** game.droneCount)); }
   try {
@@ -331,7 +332,7 @@
     });
     if (changed) save();
   }
-  function applyRainMoisture(now = Date.now()) {
+  function applyRainMoisture(now = Date.now(), wetnessStart = 1) {
     game.plots.forEach((plot) => {
       if (plot.crop === null) return;
       if (Number.isFinite(plot.waterStartedAt) && Number.isFinite(plot.waterUntil)) {
@@ -340,6 +341,7 @@
       }
       plot.watered = true;
       plot.waterSource = 'rain';
+      plot.waterWetnessStart = Math.max(0, Math.min(1, wetnessStart));
       plot.waterStartedAt = now;
       plot.waterUntil = now + WATER_DURATION;
     });
@@ -358,8 +360,12 @@
     window.skyWorld?.setPlots(game.plots.map((plot) => ({ ...plot, customColor: plot.crop === null ? null : getPlantedCrop(plot).customColor, elapsed: growthElapsed(plot, now), growTime: crops[plot.crop]?.growTime ?? crops[0].growTime })));
   }
   function updateEnvironmentDisplay(environment = window.skyEnvironment.getState(game)) {
+    const now = Date.now();
+    if (game.lastObservedRaining !== true && environment.isRaining) rainStartedAt = now;
     if (game.lastObservedRaining === true && !environment.isRaining) {
-      applyRainMoisture();
+      const rainWetness = rainStartedAt === null ? 1 : Math.min(1, Math.max(0, (now - rainStartedAt) / WATER_DURATION));
+      applyRainMoisture(now, rainWetness);
+      rainStartedAt = null;
       game.lastObservedRaining = false;
       save();
     } else game.lastObservedRaining = environment.isRaining;
@@ -701,7 +707,7 @@
       const plot = game.plots[job.index];
       if (window.skyEnvironment.getState(game).isRaining) return;
       if (!plot || isDroneExcluded(plot) || plot.crop === null || plot.watered || growthElapsed(plot) >= (crops[plot.crop] || crops[0]).growTime) return;
-      plot.watered = true; plot.waterSource = 'drone'; plot.waterStartedAt = Date.now(); plot.waterUntil = plot.waterStartedAt + WATER_DURATION; save(); render(); if (!job.automatic) notify('澆水完成！這株花接下來 30 秒會以 1.2 倍速度生長。'); return;
+      plot.watered = true; plot.waterSource = 'drone'; plot.waterWetnessStart = 1; plot.waterStartedAt = Date.now(); plot.waterUntil = plot.waterStartedAt + WATER_DURATION; save(); render(); if (!job.automatic) notify('澆水完成！這株花接下來 30 秒會以 1.2 倍速度生長。'); return;
     }
     const expansionCost = getLandCost();
     if (game.coins < expansionCost) return notify('擴建任務執行時金幣不足，已略過。');
@@ -754,6 +760,10 @@
       returningDrones.delete(droneIndex);
       updateBatteries();
       activeJobs.set(droneIndex, job);
+      if (job.kind === 'water' && game.plots[job.index]) {
+        game.plots[job.index].waterVisualStartedAt = Date.now();
+        updateHud();
+      }
       nextDroneIndex = (droneIndex + 1) % game.drones.length;
       let finished = false;
       const commit = () => {
@@ -764,6 +774,8 @@
       const finish = () => {
         if (finished || activeJobs.get(droneIndex) !== job) return;
         finished = true;
+        const workingPlot = job.kind === 'water' ? game.plots[job.index] : null;
+        if (workingPlot) delete workingPlot.waterVisualStartedAt;
         commit();
         updateBatteries();
         activeJobs.delete(droneIndex);
@@ -825,7 +837,7 @@
     const crop = crops[plot.crop] || crops[0];
     if (growthElapsed(plot) >= crop.growTime) return notify('花已成熟，可以直接收成。');
     if (hasPendingJob('water', index)) return;
-    if (isDroneExcluded(plot)) { plot.watered = true; plot.waterSource = 'manual'; plot.waterStartedAt = Date.now(); plot.waterUntil = plot.waterStartedAt + WATER_DURATION; save(); render(); notify('手動澆水完成！這株花接下來 30 秒會以 1.2 倍速度生長。'); return; }
+    if (isDroneExcluded(plot)) { plot.watered = true; plot.waterSource = 'manual'; plot.waterWetnessStart = 1; plot.waterStartedAt = Date.now(); plot.waterUntil = plot.waterStartedAt + WATER_DURATION; save(); render(); notify('手動澆水完成！這株花接下來 30 秒會以 1.2 倍速度生長。'); return; }
     enqueueJob({ kind: 'water', index });
   }
   function deletePlot(index) {
