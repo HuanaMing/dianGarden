@@ -331,3 +331,11 @@ input, textarea, [contenteditable="true"]{
 .world-frame.is-hud-collapsed .drone-panel-toggle{display:none!important}
 .world-frame.is-hud-collapsed .hud-collapsed-summary{display:none!important}
 .world-frame.is-hud-collapsed .topbar-actions{margin-left:auto}
+
+
+.settings-panel .power-save-toggle{display:block;width:100%;min-height:36px;margin:0 0 8px;padding:8px 10px;border:1px solid #dce8d5;border-radius:9px;background:#edf4e8;color:#527866;font-size:11px;font-weight:900;cursor:pointer}
+.settings-panel .power-save-toggle[aria-pressed="true"]{background:#547f65;color:#fff}
+.settings-panel .save-status{display:block;max-width:none;margin:5px 0 0;text-align:left;font-size:10px;white-space:normal}
+.settings-panel .save-status:before{margin-right:5px}
+.settings-save-status{margin-bottom:0}
+@media(max-width:700px){.settings-panel .save-status{display:block;max-width:none}}
