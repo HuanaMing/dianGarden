@@ -1231,7 +1231,8 @@
       return;
     }
 
-    addLeaf(positions, colors, x, 0.22, z, [-0.82, 0.38, -0.12], 0.22, [0.31, 0.58, 0.3]);
+    if (!dedicatedStemLeafModel) {
+      addLeaf(positions, colors, x, 0.22, z, [-0.82, 0.38, -0.12], 0.22, [0.31, 0.58, 0.3]);
       addLeaf(positions, colors, x, 0.32, z, [0.74, 0.34, 0.16], 0.21, [0.37, 0.64, 0.33]);
     }
     for (let petal = 0; petal < 5; petal += 1) {
