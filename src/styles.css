@@ -339,3 +339,10 @@ input, textarea, [contenteditable="true"]{
 .settings-panel .save-status:before{margin-right:5px}
 .settings-save-status{margin-bottom:0}
 @media(max-width:700px){.settings-panel .save-status{display:block;max-width:none}}
+
+/* 任務172階段三：花卉資產以原生 32×32 像素尺寸呈現。 */
+.flower-pixel-icon{display:inline-block;width:32px;height:32px;object-fit:contain;image-rendering:pixelated;vertical-align:middle;flex:0 0 32px}
+.seed-option-icon .flower-pixel-icon{width:32px;height:32px}
+.plot-pixel-icon{width:32px;height:32px}
+.encyclopedia-pixel-icon{margin-right:5px}
+.seed-option-icon,.world-plot-icon,.dialog-crop>span{display:inline-flex;align-items:center;justify-content:center}
