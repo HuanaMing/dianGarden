@@ -2613,7 +2613,11 @@
       if (Math.hypot(candidate.x - previousX, candidate.z - previousZ) > 0.0001) state.heading = Math.atan2(candidate.x - previousX, candidate.z - previousZ);
       if (droneDocks[index]?.deployed !== false) addDrone(positions, colors, candidate.x, candidate.y, candidate.z, time * (animation ? 0.04 : 0.012), state.heading, droneDocks[index]?.battery ?? 100);
       if (animation && candidate.workProgress > 0) {
-          const [targetX, targetZ] = animation.target;
+        if (!animation.workStarted) {
+          animation.workStarted = true;
+          animation.onWorkStart?.();
+        }
+        const [targetX, targetZ] = animation.target;
           const targetY = Number.isInteger(animation.targetPlotIndex) ? getPlotHeight(animation.targetPlotIndex) : 0;
         if (animation.kind === 'expand') {
           const half = TILE * 0.5 * candidate.workProgress;
@@ -3411,10 +3415,10 @@
       const harvestY = getPlotHeight(index) + flowerHeight * plantHeight + 0.12;
       return startDroneAnimation(droneIndex, 'harvest', [targetX, targetZ], { hoverDuration: 500, targetPlotIndex: index, workY: harvestY, onDeparture, onComplete, shouldReturn, onReturnComplete });
     },
-    animateWater(index, onDeparture, onComplete, shouldReturn, droneIndex = 0, onReturnComplete) {
+    animateWater(index, onDeparture, onComplete, shouldReturn, droneIndex = 0, onReturnComplete, onWorkStart) {
       if (!Number.isInteger(index) || index < 0 || index >= landCount) return false;
       const [targetX, targetZ] = getPlotPosition(index);
-      return startDroneAnimation(droneIndex, 'water', [targetX, targetZ], { hoverDuration: 1680, targetPlotIndex: index, workY: DRONE_WORK_Y + getPlotHeight(index), onDeparture, onComplete, shouldReturn, onReturnComplete });
+      return startDroneAnimation(droneIndex, 'water', [targetX, targetZ], { hoverDuration: 1680, targetPlotIndex: index, workY: DRONE_WORK_Y + getPlotHeight(index), onDeparture, onComplete, shouldReturn, onReturnComplete, onWorkStart });
     },
     animateExpansion(position, onDeparture, onComplete, shouldReturn, droneIndex = 0, onReturnComplete) {
       const fallback = getPlotPosition(landCount, landCount + 1);
@@ -3430,7 +3434,17 @@
       landCount = plotPositions.length;
       uploadWorld();
     },
-    setPowerSaveMode(enabled) { powerSaveMode = Boolean(enabled); },
+    setPowerSaveMode(enabled) {
+      const next = Boolean(enabled);
+      if (powerSaveMode === next) return;
+      powerSaveMode = next;
+      if (powerSaveMode) {
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      } else {
+        uploadWorld();
+      }
+    },
     setLandCount(count) {
       if (Number.isFinite(count) && count > 0 && count !== landCount) {
         landCount = count;
