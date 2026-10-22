@@ -1341,8 +1341,37 @@
         addLeaf(positions, colors, x, 0.2, z, [0.72, 0.36, 0.16], flowerIndex === 7 ? 0.22 : 0.17, [0.39, 0.64, 0.31]);
       }
       const bloomY = 0.055 + height;
-      // 牡丹暫時移除整個花頭，只保留上方已建立的莖與葉，方便確認植株骨架。
-      if (flowerIndex === 9) return;
+      // 牡丹單瓣測試：暫時只畫一片粉紅色花瓣，確認花瓣座標與顯示路徑。
+      if (flowerIndex === 9) {
+        const petalColor = [1.0, 0.34, 0.58];
+        const angle = 0.62;
+        const radial = [Math.cos(angle), Math.sin(angle)];
+        const tangent = [-radial[1], radial[0]];
+        const petalLength = 0.17;
+        const petalHalfWidth = 0.046;
+        const rows = 6;
+        const petalRows = Array.from({ length: rows + 1 }, (_, row) => {
+          const t = row / rows;
+          const width = petalHalfWidth * Math.pow(Math.sin(Math.PI * t), 0.78);
+          const center = [
+            x + radial[0] * petalLength * t,
+            bloomY - 0.028 + 0.055 * t - 0.012 * Math.sin(Math.PI * t),
+            z + radial[1] * petalLength * t,
+          ];
+          const left = [center[0] + tangent[0] * width, center[1] - 0.012 * Math.sin(Math.PI * t), center[2] + tangent[1] * width];
+          const right = [center[0] - tangent[0] * width, center[1] - 0.012 * Math.sin(Math.PI * t), center[2] - tangent[1] * width];
+          return { left, center, right };
+        });
+        for (let row = 0; row < rows; row += 1) {
+          const a = petalRows[row];
+          const b = petalRows[row + 1];
+          addTriangle(positions, colors, a.left, b.left, b.center, petalColor.map((c) => c * 0.92));
+          addTriangle(positions, colors, a.left, b.center, a.center, petalColor);
+          addTriangle(positions, colors, a.center, b.center, b.right, petalColor.map((c) => Math.min(1, c * 1.04)));
+          addTriangle(positions, colors, a.center, b.right, a.right, petalColor.map((c) => c * 0.96));
+        }
+        return;
+      }
       if (flowerIndex === 4) {
         // Tulip: six overlapping tepals with a softly rounded, subdivided upper rim.
         for (let tepal = 0; tepal < 6; tepal += 1) {
