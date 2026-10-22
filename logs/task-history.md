@@ -1215,3 +1215,10 @@
 - 結果：三層花瓣各控制節點的額外高度差統一提高 30%；水平距離、花瓣寬度、數量及平滑曲線演算法維持不變。
 - 驗證：`src/sky-world.js` JavaScript 語法檢查通過，修改已推送至 `main`；使用者確認任務驗收通過。
 - 檔案：`src/sky-world.js`、`state/current-task.json`、`logs/task-history.md`。
+
+
+## 2026-10-22 — 任務 165：繡球花專屬莖葉模型
+
+- 結果：新增繡球花專屬莖葉幾何，成熟株使用漸細主莖、分層對生寬葉、柔和鋸齒輪廓及低對比中肋；幼苗只顯示縮小基部葉片。移除成熟繡球花的舊版通用側葉，保留既有花球與遊戲資料。
+- 驗證：JavaScript 語法檢查通過；已推送至 `main`，等待使用者遊戲內視覺驗收。
+- 檔案：`src/sky-world.js`、`tasks/active/165-hydrangea-stem-leaf-model.md`、`state/current-task.json`、`state/project.json`、`logs/task-history.md`。
