@@ -1060,15 +1060,16 @@
     const stemColor = [0.27, 0.45, 0.24];
     const leafColors = [[0.34, 0.53, 0.28], [0.39, 0.58, 0.31], [0.29, 0.47, 0.25]];
     const stems = [
-      { side: -1, bend: -1, phase: 0.25, spread: 0.075, lean: -0.038 },
-      { side: 0, bend: 1, phase: 1.45, spread: 0.006, lean: 0.014 },
-      { side: 1, bend: -1, phase: 2.5, spread: 0.071, lean: 0.043 },
+      { side: -1, bend: -1, phase: 0.25, spread: 0.075, lean: -0.038, depth: 0.045, depthPhase: 0.3, heightScale: 0.88 },
+      { side: 0, bend: 1, phase: 1.45, spread: 0.042, lean: 0.014, depth: -0.052, depthPhase: 1.7, heightScale: 1.0 },
+      { side: 1, bend: -1, phase: 2.5, spread: 0.071, lean: 0.043, depth: 0.062, depthPhase: 2.6, heightScale: 0.79 },
     ];
     const centerAt = (stem, t) => {
       const bend = Math.sin(t * Math.PI * 1.15 + stem.phase) * stem.spread * (0.35 + t * 0.65);
       const sway = stem.lean * t + bend * stem.bend;
-      return [x + stem.side * 0.012 + sway, baseY + height * t,
-        z + Math.sin(t * Math.PI + stem.phase) * 0.009 * t];
+      const depthBend = Math.sin(t * Math.PI * 1.25 + stem.depthPhase) * stem.depth * (0.25 + t * 0.75);
+      return [x + stem.side * 0.012 + sway, baseY + height * stem.heightScale * t,
+        z + depthBend + Math.sin(t * Math.PI + stem.phase) * 0.012 * t];
     };
     const addNarrowLeaf = (root, angle, length, color) => {
       const dx = Math.cos(angle), dz = Math.sin(angle);
@@ -1179,7 +1180,7 @@
 
     if (flowerIndex >= 4) {
       // 鬱金香已有專屬基生葉叢，不能再疊加舊版沿莖側伸出的通用葉片。
-      if (flowerIndex !== 4 && flowerIndex !== 5 && flowerIndex !== 6 && flowerIndex !== 7) {
+      if (flowerIndex !== 4 && flowerIndex !== 5 && flowerIndex !== 6 && flowerIndex !== 7 && flowerIndex !== 8) {
         addLeaf(positions, colors, x, 0.13, z, [-0.76, 0.34, -0.18], flowerIndex === 7 ? 0.24 : 0.18, [0.34, 0.6, 0.29]);
         addLeaf(positions, colors, x, 0.2, z, [0.72, 0.36, 0.16], flowerIndex === 7 ? 0.22 : 0.17, [0.39, 0.64, 0.31]);
       }
@@ -1421,16 +1422,17 @@
       } else if (flowerIndex === 8) {
         // 薰衣草三根花穗各自沿不同的柔彎曲線排列，與專屬莖模型相呼應。
         const lavenderStems = [
-          { side: -1, bend: -1, phase: 0.25, spread: 0.075, lean: -0.038 },
-          { side: 0, bend: 1, phase: 1.45, spread: 0.006, lean: 0.014 },
-          { side: 1, bend: -1, phase: 2.5, spread: 0.071, lean: 0.043 },
+          { side: -1, bend: -1, phase: 0.25, spread: 0.075, lean: -0.038, depth: 0.045, depthPhase: 0.3, heightScale: 0.88 },
+          { side: 0, bend: 1, phase: 1.45, spread: 0.042, lean: 0.014, depth: -0.052, depthPhase: 1.7, heightScale: 1.0 },
+          { side: 1, bend: -1, phase: 2.5, spread: 0.071, lean: 0.043, depth: 0.062, depthPhase: 2.6, heightScale: 0.79 },
         ];
         const stemCenter = (stem, t) => {
           const sway = stem.lean * t + Math.sin(t * Math.PI * 1.15 + stem.phase) *
             stem.spread * (0.35 + t * 0.65) * stem.bend;
+          const depthBend = Math.sin(t * Math.PI * 1.25 + stem.depthPhase) * stem.depth * (0.25 + t * 0.75);
           return [x + stem.side * 0.012 + sway,
-            0.055 + height * (0.53 + t * 0.43),
-            z + Math.sin(t * Math.PI + stem.phase) * 0.009 * t];
+            0.055 + height * (0.53 + t * 0.43) * stem.heightScale,
+            z + depthBend + Math.sin(t * Math.PI + stem.phase) * 0.012 * t];
         };
         lavenderStems.forEach((stem, stemIndex) => {
           const whorlCount = 7;
