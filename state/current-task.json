@@ -2,6 +2,6 @@
   "name": "任務172：介面整理、省電模式與花卉像素圖",
   "status": "active",
   "pendingApprovals": [],
-  "nextAction": "先檢查 AGENTS.md、現有 UI DOM/CSS、WebGL render loop、assets/flowers 圖像尺寸與所有花卉 emoji 使用點，再按任務文件分階段實作並逐階段驗收。",
-  "result": "已建立任務規劃。任務171已依使用者要求移至 tasks/blocked/，原因為「任務插隊」。"
+  "nextAction": "等待 GitHub Actions 最新 Playwright 驗收（含桌面／手機橫向、設定、省電模式繪圖暫停／恢復及十一種像素圖載入）完成；若失敗先修正，再進行完整驗收與歸檔。",
+  "result": "任務172的第一輪介面、設定、省電模式及花卉圖示修改已推送；瀏覽器驗收已擴充，Actions 仍在佇列中，尚未確認通過。"
 }
