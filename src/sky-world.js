@@ -1908,7 +1908,7 @@
     animatePlant(index, onDeparture, onComplete, shouldReturn, droneIndex = 0) {
       if (!Number.isInteger(index) || index < 0 || index >= landCount) return false;
       const [targetX, targetZ] = getPlotPosition(index);
-      return startDroneAnimation(droneIndex, 'plant', [targetX, targetZ], { hoverDuration: 500, targetPlotIndex: index, workY: DRONE_WORK_Y + getPlotHeight(index), onDeparture, onComplete, shouldReturn });
+      return startDroneAnimation(droneIndex, 'plant', [targetX, targetZ], { hoverDuration: 500, targetPlotIndex: index, workY: 0.14 + getPlotHeight(index), onDeparture, onComplete, shouldReturn });
     },
     animateHarvest(index, onDeparture, onComplete, shouldReturn, droneIndex = 0) {
       if (!Number.isInteger(index) || index < 0 || index >= landCount) return false;
