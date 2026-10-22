@@ -1126,6 +1126,133 @@
 
   plantStemLeafModels[8] = addLavenderStemLeafGeometry;
 
+
+  function addPeonyStemLeafGeometry(positions, colors, x, z, height, stage) {
+    const baseY = 0.055;
+    const stemColor = [0.27, 0.46, 0.24];
+    const leafColors = [[0.29, 0.48, 0.25], [0.35, 0.55, 0.29], [0.31, 0.51, 0.26]];
+    // 草本牡丹以基部成叢的多根莖為骨架，中央主莖承接既有花頭。
+    const stems = [
+      { angle: -0.35, lean: 0.042, depth: 0.018, phase: 0.2, scale: 1.0 },
+      { angle: 2.15, lean: -0.052, depth: -0.035, phase: 1.4, scale: 0.76 },
+      { angle: 0.9, lean: 0.035, depth: 0.046, phase: 2.2, scale: 0.70 },
+      { angle: 3.45, lean: -0.034, depth: 0.012, phase: 2.8, scale: 0.64 },
+    ];
+    const centerAt = (stem, t) => {
+      const curve = Math.sin(t * Math.PI * 1.15 + stem.phase) * 0.012 * t;
+      return [
+        x + Math.cos(stem.angle) * 0.012 + stem.lean * t + curve,
+        baseY + height * stem.scale * t,
+        z + Math.sin(stem.angle) * 0.012 + stem.depth * t
+          + Math.sin(t * Math.PI + stem.phase) * 0.009 * t,
+      ];
+    };
+    const addLeaflet = (root, tip, widthDirection, width, color) => {
+      const middle = [
+        root[0] * 0.34 + tip[0] * 0.66,
+        root[1] * 0.34 + tip[1] * 0.66 + 0.004,
+        root[2] * 0.34 + tip[2] * 0.66,
+      ];
+      const left = [middle[0] + widthDirection[0] * width, middle[1] + 0.003, middle[2] + widthDirection[1] * width];
+      const right = [middle[0] - widthDirection[0] * width, middle[1] + 0.003, middle[2] - widthDirection[1] * width];
+      addTriangle(positions, colors, root, left, tip, color);
+      addTriangle(positions, colors, root, tip, right, color.map((v) => v * 0.9));
+      addTriangle(positions, colors, left, middle, tip, color.map((v) => Math.min(1, v * 1.06)));
+      addTriangle(positions, colors, middle, right, tip, color.map((v) => v * 0.96));
+    };
+    const addCompoundLeaf = (root, angle, length, color, leafletCount = 3) => {
+      const dx = Math.cos(angle), dz = Math.sin(angle);
+      const sideX = -dz, sideZ = dx;
+      const rachisTip = [root[0] + dx * length, root[1] + length * 0.16, root[2] + dz * length];
+      // 葉軸以細窄三角面表示；兩側小葉成對錯開，末端再補一枚頂生小葉。
+      addTriangle(positions, colors, root,
+        [root[0] + sideX * 0.004, root[1] + 0.002, root[2] + sideZ * 0.004],
+        rachisTip, color.map((v) => v * 0.82));
+      for (let pair = 0; pair < leafletCount; pair += 1) {
+        const t = 0.24 + pair * (0.62 / Math.max(1, leafletCount - 1));
+        const axisPoint = [
+          root[0] + dx * length * t,
+          root[1] + length * 0.16 * t,
+          root[2] + dz * length * t,
+        ];
+        const leafletLength = length * (0.43 - pair * 0.035);
+        const leafletWidth = leafletLength * 0.31;
+        const offset = length * 0.075;
+        const directions = [
+          [dx * 0.30 + sideX, dz * 0.30 + sideZ],
+          [dx * 0.30 - sideX, dz * 0.30 - sideZ],
+        ];
+        directions.forEach((direction, side) => {
+          const tip = [
+            axisPoint[0] + direction[0] * leafletLength + dx * offset * (side ? -1 : 1),
+            axisPoint[1] + leafletLength * 0.12,
+            axisPoint[2] + direction[1] * leafletLength + dz * offset * (side ? -1 : 1),
+          ];
+          const dirLength = Math.hypot(direction[0], direction[1]) || 1;
+          const widthDirection = [-direction[1] / dirLength, direction[0] / dirLength];
+          addLeaflet(axisPoint, tip, widthDirection, leafletWidth, color);
+        });
+      }
+      addLeaflet(
+        [root[0] + dx * length * 0.73, root[1] + length * 0.12, root[2] + dz * length * 0.73],
+        rachisTip,
+        [sideX, sideZ],
+        length * 0.13,
+        color.map((v) => Math.min(1, v * 1.05)),
+      );
+    };
+
+    if (stage === 1) {
+      for (let leaf = 0; leaf < 3; leaf += 1) {
+        const angle = leaf * Math.PI * 2 / 3 + 0.4;
+        const root = [x + Math.cos(angle) * 0.01, baseY + 0.018 + leaf * 0.008, z + Math.sin(angle) * 0.01];
+        addCompoundLeaf(root, angle, 0.09, leafColors[leaf], 2);
+      }
+      return;
+    }
+
+    stems.forEach((stem, stemIndex) => {
+      const sections = 10;
+      const radius = stemIndex === 0 ? 0.0062 : 0.0048;
+      const rings = [];
+      for (let section = 0; section <= sections; section += 1) {
+        const t = section / sections;
+        const center = centerAt(stem, t);
+        rings.push(Array.from({ length: 6 }, (_, side) => {
+          const angle = side / 6 * Math.PI * 2;
+          return [
+            center[0] + Math.cos(angle) * radius * (1 - t * 0.24),
+            center[1],
+            center[2] + Math.sin(angle) * radius * (1 - t * 0.24),
+          ];
+        }));
+      }
+      for (let section = 0; section < sections; section += 1) {
+        for (let side = 0; side < 6; side += 1) {
+          const next = (side + 1) % 6;
+          const color = stemColor.map((v) => v * (side % 2 ? 0.94 : 1.04));
+          addTriangle(positions, colors, rings[section][side], rings[section][next], rings[section + 1][next], color);
+          addTriangle(positions, colors, rings[section][side], rings[section + 1][next], rings[section + 1][side], color.map((v) => v * 0.96));
+        }
+      }
+      // 互生複葉沿莖中下段分布，朝向輪流改變，形成寬而蓬鬆的葉叢。
+      [0.2, 0.39, 0.57].forEach((t, leafIndex) => {
+        const root = centerAt(stem, t);
+        const angle = stem.angle + (leafIndex % 2 ? Math.PI * 0.72 : -Math.PI * 0.22) + stemIndex * 0.38;
+        const length = height * (0.25 - leafIndex * 0.025) * (stemIndex === 0 ? 1 : 0.86);
+        addCompoundLeaf(root, angle, length, leafColors[(stemIndex + leafIndex) % leafColors.length], 3);
+      });
+    });
+    // 貼近地面的外展複葉填滿叢生基部，但保留中央花莖的視覺通道。
+    for (let leaf = 0; leaf < 3; leaf += 1) {
+      const angle = leaf * Math.PI * 2 / 3 + 0.65;
+      const root = [x + Math.cos(angle) * 0.008, baseY + 0.025, z + Math.sin(angle) * 0.008];
+      addCompoundLeaf(root, angle, height * 0.22, leafColors[(leaf + 1) % leafColors.length], 3);
+    }
+  }
+
+  plantStemLeafModels[9] = addPeonyStemLeafGeometry;
+
   function addFlowerModel(positions, colors, x, z, flowerIndex, stage, heightMultiplier = 1, customColor = null) {
     const modelPositions = [];
     const modelColors = [];
@@ -1180,7 +1307,7 @@
 
     if (flowerIndex >= 4) {
       // 鬱金香已有專屬基生葉叢，不能再疊加舊版沿莖側伸出的通用葉片。
-      if (flowerIndex !== 4 && flowerIndex !== 5 && flowerIndex !== 6 && flowerIndex !== 7 && flowerIndex !== 8) {
+      if (flowerIndex !== 4 && flowerIndex !== 5 && flowerIndex !== 6 && flowerIndex !== 7 && flowerIndex !== 8 && flowerIndex !== 9) {
         addLeaf(positions, colors, x, 0.13, z, [-0.76, 0.34, -0.18], flowerIndex === 7 ? 0.24 : 0.18, [0.34, 0.6, 0.29]);
         addLeaf(positions, colors, x, 0.2, z, [0.72, 0.36, 0.16], flowerIndex === 7 ? 0.22 : 0.17, [0.39, 0.64, 0.31]);
       }
