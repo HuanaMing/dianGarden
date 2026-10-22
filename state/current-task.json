@@ -1,9 +1,9 @@
 {
-  "name": "任務168彼岸花專屬莖葉模型",
+  "name": "任務169全花種模型總驗收自動化",
   "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "檢查任務168的 JavaScript 自動驗收與 Pages 部署結果；部署後請使用者確認彼岸花幼株狹長基生葉、成熟花莖與既有花頭的比例及銜接。",
-  "result": "已在 src/sky-world.js 新增 addHiganbanaStemLeafGeometry() 並註冊至花種索引 10。幼株顯示五片狹長帶狀葉，成熟開花株顯示略帶 XZ 雙軸偏移的細長無葉花莖，保留既有花頭及遊戲資料。程式碼已推送 main，等待自動驗收與遊戲內視覺驗收。"
+  "nextAction": "確認 Playwright 是否能依序切換十一種花卉、保存全部截圖且無瀏覽器錯誤；查看 GitHub Actions 結果並處理測試失敗。",
+  "result": "已擴充 tests/browser-smoke.mjs：在原有首頁桌面／手機檢查與圖鑑十一種資料檢查後，逐一選取索引 0–10，確認目前展示的花名，並保存每種花卉的模型畫布與完整圖鑑截圖。截圖是供人工視覺判斷的證據，不代表外觀由程式自動判定正確。"
 }
