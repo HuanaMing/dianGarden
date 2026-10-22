@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 172,
-  "nextAction": "執行任務172：整理頂部資訊卡與控制按鈕、建立設定介面與省電模式、將花卉 emoji 替換為 assets/flowers 中的 32×32 像素圖。任務171因任務插隊暫停，已移至 tasks/blocked/，恢復時先確認第3段 Playwright 驗收結果。",
+  "nextAction": "追蹤任務172的 GitHub Actions Playwright 驗收結果；若失敗，先修正頂部資訊列、設定面板、省電模式或花卉像素圖問題，再完成桌面與手機橫向驗收。任務171因任務插隊暫停於 tasks/blocked/，恢復時先確認第3段驗收。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
