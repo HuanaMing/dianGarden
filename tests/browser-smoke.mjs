@@ -59,12 +59,21 @@ try {
   await page.screenshot({ path: `${outputDir}/hydrangea-gallery.png`, fullPage: true });
   checks.push('繡球花 3D 圖鑑畫面已截圖');
 
+  await page.locator('.encyclopedia-card[data-flower-index="9"] .encyclopedia-card-select').click();
+  await page.waitForFunction(() => document.querySelector('#selected-flower-status')?.textContent?.includes('牡丹'));
+  await page.waitForTimeout(500);
+  await galleryCanvas.screenshot({ path: `${outputDir}/peony-canvas.png` });
+  await page.screenshot({ path: `${outputDir}/peony-gallery.png`, fullPage: true });
+  checks.push('牡丹 3D 圖鑑畫面已截圖，供核對頂端八面體花瓣');
+
   if (errors.length) throw new Error(`瀏覽器發現錯誤：\n${errors.join('\n')}`);
   console.log(JSON.stringify({ result: 'PASS', checks, screenshots: [
     `${outputDir}/garden-desktop.png`,
     `${outputDir}/garden-mobile.png`,
     `${outputDir}/hydrangea-canvas.png`,
     `${outputDir}/hydrangea-gallery.png`,
+    `${outputDir}/peony-canvas.png`,
+    `${outputDir}/peony-gallery.png`,
   ], browserErrors: errors }, null, 2));
 } catch (error) {
   await page.screenshot({ path: `${outputDir}/failure-page.png`, fullPage: true }).catch(() => {});
