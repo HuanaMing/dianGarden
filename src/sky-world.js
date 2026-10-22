@@ -1341,62 +1341,64 @@
         addLeaf(positions, colors, x, 0.2, z, [0.72, 0.36, 0.16], flowerIndex === 7 ? 0.22 : 0.17, [0.39, 0.64, 0.31]);
       }
       const bloomY = 0.055 + height;
-      // 牡丹花瓣：先鋪一圈較大的外瓣，再以錯位的內瓣填滿花心。
+      // 牡丹花瓣：五層由外向內抬高收攏，並以更明顯的弧面塑造飽滿花頭。
       if (flowerIndex === 9) {
         const basePink = [1.0, 0.34, 0.58];
-        const rows = 7;
-        const drawPeonyPetal = (angle, petalLength, petalHalfWidth, lift, shade, rootRadius) => {
+        const rows = 10;
+        const drawPeonyPetal = (angle, petalLength, petalHalfWidth, layerBase, arch, tipLift, shade, rootRadius, edgeCurl) => {
           const radial = [Math.cos(angle), Math.sin(angle)];
           const tangent = [-radial[1], radial[0]];
           const petalColor = basePink.map((channel) => Math.min(1, channel * shade));
           const petalRows = Array.from({ length: rows + 1 }, (_, row) => {
             const t = row / rows;
-            const width = petalHalfWidth * Math.pow(Math.sin(Math.PI * t), 0.78);
-            const radius = rootRadius + petalLength * t;
+            const width = petalHalfWidth * Math.pow(Math.sin(Math.PI * t), 0.72);
+            // 花瓣中段隆起、尖端再次翹起；半徑也稍微向內收，避免平直的放射狀薄片。
+            const radius = rootRadius + petalLength * (t - 0.055 * Math.sin(Math.PI * t));
+            const archCurve = arch * Math.sin(Math.PI * t);
             const center = [
               x + radial[0] * radius,
-              bloomY - 0.028 + lift * t + 0.055 * t - 0.012 * Math.sin(Math.PI * t),
+              bloomY + layerBase + archCurve + tipLift * t - 0.012 * Math.sin(Math.PI * t),
               z + radial[1] * radius,
             ];
-            const edgeDip = 0.012 * Math.sin(Math.PI * t);
-            const left = [center[0] + tangent[0] * width, center[1] - edgeDip, center[2] + tangent[1] * width];
-            const right = [center[0] - tangent[0] * width, center[1] - edgeDip, center[2] - tangent[1] * width];
+            const edgeDip = 0.006 * Math.sin(Math.PI * t);
+            const curl = edgeCurl * Math.sin(Math.PI * t);
+            const left = [center[0] + tangent[0] * width, center[1] - edgeDip + curl, center[2] + tangent[1] * width];
+            const right = [center[0] - tangent[0] * width, center[1] - edgeDip + curl, center[2] - tangent[1] * width];
             return { left, center, right };
           });
           for (let row = 0; row < rows; row += 1) {
             const a = petalRows[row];
             const b = petalRows[row + 1];
-            addTriangle(positions, colors, a.left, b.left, b.center, petalColor.map((c) => c * 0.92));
+            addTriangle(positions, colors, a.left, b.left, b.center, petalColor.map((c) => c * 0.88));
             addTriangle(positions, colors, a.left, b.center, a.center, petalColor);
-            addTriangle(positions, colors, a.center, b.center, b.right, petalColor.map((c) => Math.min(1, c * 1.04)));
-            addTriangle(positions, colors, a.center, b.right, a.right, petalColor.map((c) => c * 0.96));
+            addTriangle(positions, colors, a.center, b.center, b.right, petalColor.map((c) => Math.min(1, c * 1.05)));
+            addTriangle(positions, colors, a.center, b.right, a.right, petalColor.map((c) => c * 0.94));
           }
         };
-        // 外圈 10 片，角度均勻分布並稍微錯開長度，避免輪廓像規則齒輪。
-        for (let petal = 0; petal < 10; petal += 1) {
-          const angle = petal / 10 * Math.PI * 2 + 0.12;
-          const variation = petal % 3;
-          drawPeonyPetal(
-            angle,
-            0.155 + (variation === 0 ? 0.018 : variation === 1 ? 0.004 : -0.008),
-            0.043 + (variation === 1 ? 0.004 : 0),
-            variation === 0 ? 0.006 : 0,
-            variation === 0 ? 1.0 : variation === 1 ? 0.94 : 0.88,
-            0.002
-          );
-        }
-        // 內圈 8 片向上收攏，顏色略深，形成牡丹花心的層次。
-        for (let petal = 0; petal < 8; petal += 1) {
-          const angle = petal / 8 * Math.PI * 2 + 0.12 + Math.PI / 8;
-          const variation = petal % 3;
-          drawPeonyPetal(
-            angle,
-            0.105 + (variation === 0 ? 0.012 : variation === 1 ? 0.003 : -0.006),
-            0.035 + (variation === 1 ? 0.003 : 0),
-            0.012,
-            variation === 0 ? 0.82 : variation === 1 ? 0.9 : 0.96,
-            0.012
-          );
+        const layers = [
+          { count: 12, length: 0.166, width: 0.041, base: -0.032, arch: 0.072, tip: -0.006, shade: 0.96, root: 0.002, curl: 0.014 },
+          { count: 10, length: 0.145, width: 0.043, base: -0.006, arch: 0.083, tip: 0.008, shade: 1.00, root: 0.008, curl: 0.018 },
+          { count: 9, length: 0.119, width: 0.038, base: 0.014, arch: 0.091, tip: 0.018, shade: 0.91, root: 0.012, curl: 0.020 },
+          { count: 7, length: 0.092, width: 0.032, base: 0.035, arch: 0.080, tip: 0.026, shade: 0.86, root: 0.014, curl: 0.022 },
+          { count: 6, length: 0.067, width: 0.026, base: 0.052, arch: 0.064, tip: 0.030, shade: 0.94, root: 0.010, curl: 0.018 },
+        ];
+        for (let layer = 0; layer < layers.length; layer += 1) {
+          const shape = layers[layer];
+          for (let petal = 0; petal < shape.count; petal += 1) {
+            const angle = petal / shape.count * Math.PI * 2 + layer * 0.29 + (layer % 2 ? Math.PI / shape.count : 0.11);
+            const variation = petal % 3;
+            drawPeonyPetal(
+              angle,
+              shape.length * (variation === 0 ? 1.04 : variation === 1 ? 1.0 : 0.94),
+              shape.width * (variation === 1 ? 1.05 : variation === 2 ? 0.96 : 1.0),
+              shape.base + (variation === 0 ? 0.003 : variation === 2 ? -0.003 : 0),
+              shape.arch * (variation === 0 ? 1.06 : variation === 2 ? 0.94 : 1.0),
+              shape.tip,
+              shape.shade * (variation === 0 ? 1.04 : variation === 2 ? 0.94 : 1.0),
+              shape.root,
+              shape.curl
+            );
+          }
         }
         return;
       }
