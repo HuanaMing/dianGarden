@@ -1,9 +1,9 @@
 {
-  "name": "任務 152：降低無人機播種作業高度",
+  "name": "任務 154",
   "status": "implemented_static_check_passed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "開始任務 153：調整無人機收成作業高度，依成熟花朵模型高度及 plantHeight 倍率定位；只改收成任務，不影響其他工作。任務 150–152 的瀏覽器視覺驗收仍待確認。",
-  "result": "任務 152 已將播種作業高度設為目標地塊表面上方 0.14 世界單位，隨地塊高度計算。JavaScript 語法編譯檢查通過；未執行瀏覽器視覺驗收。"
+  "nextAction": "開始任務 155：處理植物成熟後的澆水待辦清理。",
+  "result": "任務 154 已修改 src/game.js 的派工候選排序，並通過 JavaScript 語法編譯檢查；多機瀏覽器驗收尚未執行。"
 }
