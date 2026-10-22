@@ -860,7 +860,7 @@
 
     if (flowerIndex >= 4) {
       // 鬱金香已有專屬基生葉叢，不能再疊加舊版沿莖側伸出的通用葉片。
-      if (flowerIndex !== 4) {
+      if (flowerIndex !== 4 && flowerIndex !== 5) {
         addLeaf(positions, colors, x, 0.13, z, [-0.76, 0.34, -0.18], flowerIndex === 7 ? 0.24 : 0.18, [0.34, 0.6, 0.29]);
         addLeaf(positions, colors, x, 0.2, z, [0.72, 0.36, 0.16], flowerIndex === 7 ? 0.22 : 0.17, [0.39, 0.64, 0.31]);
       }
@@ -897,9 +897,9 @@
       } else if (flowerIndex === 5) {
         // Carnation: layered fan-shaped petals with a scalloped, fringed rim.
         const tiers = [
-          { count: 12, inner: 0.018, outer: 0.14, y: bloomY - 0.018, width: 0.042, crown: 0.075 },
-          { count: 11, inner: 0.014, outer: 0.112, y: bloomY + 0.012, width: 0.038, crown: 0.069 },
-          { count: 9, inner: 0.009, outer: 0.075, y: bloomY + 0.039, width: 0.031, crown: 0.06 },
+          { count: 12, inner: 0.018, outer: 0.14, y: bloomY - 0.018, width: 0.126, crown: 0.075 },
+          { count: 11, inner: 0.014, outer: 0.112, y: bloomY + 0.012, width: 0.114, crown: 0.069 },
+          { count: 9, inner: 0.009, outer: 0.075, y: bloomY + 0.039, width: 0.093, crown: 0.06 },
         ];
         for (let tier = 0; tier < tiers.length; tier += 1) {
           const shape = tiers[tier];
@@ -911,20 +911,29 @@
             const root = [x + radial[0] * shape.inner, rootY, z + radial[1] * shape.inner];
             const innerLeft = [root[0] + tangent[0] * shape.width * 0.34, shape.y + shape.crown * 0.22, root[2] + tangent[1] * shape.width * 0.34];
             const innerRight = [root[0] - tangent[0] * shape.width * 0.34, shape.y + shape.crown * 0.22, root[2] - tangent[1] * shape.width * 0.34];
-            const peaks = [-1, 0, 1].map((edge) => {
-              const distance = shape.outer * (edge === 0 ? 1 : edge < 0 ? 0.83 : 0.9);
-              const spread = edge * shape.width * 0.44;
-              const height = shape.crown * (edge === 0 ? 0.78 : 0.62);
-              return [x + radial[0] * distance + tangent[0] * spread, shape.y + height,
-                z + radial[1] * distance + tangent[1] * spread];
+            // 每片花瓣的外緣使用多個交替高低的頂點，形成清楚的細鋸齒。
+            const edgePoints = Array.from({ length: 9 }, (_, edge) => {
+              const t = edge / 8;
+              const distance = shape.outer * (0.83 + 0.17 * Math.sin(t * Math.PI));
+              const spread = (t * 2 - 1) * shape.width * 0.44;
+              const tooth = edge === 0 || edge === 8 ? 0.54 : (edge % 2 === 0 ? 0.86 : 0.58);
+              return [
+                x + radial[0] * distance + tangent[0] * spread,
+                shape.y + shape.crown * tooth,
+                z + radial[1] * distance + tangent[1] * spread,
+              ];
             });
             const petalColor = (petal + tier) % 3 === 0
               ? headColor.map((channel) => Math.min(1, channel * 1.1))
               : (petal + tier) % 3 === 1 ? headColor.map((channel) => channel * 0.94) : headColor;
-            addTriangle(positions, colors, root, innerLeft, peaks[0], petalColor);
-            addTriangle(positions, colors, root, peaks[0], peaks[1], petalColor);
-            addTriangle(positions, colors, root, peaks[1], peaks[2], petalColor.map((channel) => channel * 0.97));
-            addTriangle(positions, colors, root, peaks[2], innerRight, petalColor);
+            addTriangle(positions, colors, root, innerLeft, edgePoints[0], petalColor);
+            addTriangle(positions, colors, root, edgePoints[0], edgePoints[1], petalColor);
+            for (let edge = 1; edge < edgePoints.length - 1; edge += 1) {
+              addTriangle(positions, colors, root, edgePoints[edge], edgePoints[edge + 1],
+                petalColor.map((channel) => channel * (edge % 2 ? 0.97 : 1.02)));
+            }
+            addTriangle(positions, colors, root, edgePoints[edgePoints.length - 1], innerRight, petalColor);
+
           }
         }
         addOctahedron(positions, colors, x, bloomY + 0.035, z, 0.039, 0.044, 0.039, headColor);
