@@ -1240,3 +1240,15 @@
 - 結果：三根花莖加入不同高度倍率（0.88、1.00、0.79）；莖身與花穗路徑同步加入 XZ 兩個水平軸的平滑彎曲；薰衣草不再疊加舊版通用側葉，保留專屬狹長葉片。
 - 驗證：JavaScript 語法檢查通過。尚未進行瀏覽器畫面驗收。
 - 檔案：`src/sky-world.js`、`tasks/active/166-lavender-stem-leaf-model.md`、`state/current-task.json`、`state/project.json`、`logs/task-history.md`
+
+
+## 2026-10-22 — 任務 166：薰衣草莖葉重做驗收完成
+
+- 結果：使用者確認任務166重做版驗收成功。
+
+## 2026-10-22 — 任務 167：牡丹專屬莖葉模型（第一版）
+
+- 背景依據：依照 `docs/flower-background.md` 的草本牡丹株型參考，建立基部成叢、多根莖與分裂複葉；確認專案素材路徑為 `assets/flowers/牡丹.png`，但尚未直接目視比對圖片。
+- 結果：新增 `addPeonyStemLeafGeometry()` 並註冊至花種索引 9。成熟株使用四根高低不同、略向外展的莖，沿中下段配置交錯互生的複葉；幼苗只顯示縮小的基部複葉。牡丹不再疊加舊版通用側葉，保留既有花頭與遊戲數值。
+- 驗證：JavaScript 語法檢查通過；尚未進行瀏覽器畫面驗收。
+- 檔案：`src/sky-world.js`、`tasks/active/167-peony-stem-leaf-model.md`、`state/current-task.json`、`state/project.json`、`logs/task-history.md`
