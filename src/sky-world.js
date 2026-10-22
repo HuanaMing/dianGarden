@@ -1035,9 +1035,9 @@
         // 菊花花瓣以細長橢圓舌狀花瓣呈現：沿徑向分段漸寬、圓潤收尾，
         // 不使用尖端匯聚的四面體／金字塔形折面。
         const rayLayers = [
-          { count: 28, inner: 0.022, outer: 0.18, y: bloomY - 0.012, width: 0.0125, lift: 0.032, droop: 0.034 },
-          { count: 23, inner: 0.021, outer: 0.145, y: bloomY + 0.006, width: 0.0115, lift: 0.043, droop: 0.018 },
-          { count: 18, inner: 0.018, outer: 0.112, y: bloomY + 0.016, width: 0.0105, lift: 0.05, droop: 0.006 },
+          { count: 28, inner: 0.022, outer: 0.18, y: bloomY - 0.025, width: 0.0125, lift: 0.022, droop: 0.018 },
+          { count: 23, inner: 0.021, outer: 0.145, y: bloomY, width: 0.0115, lift: 0.024, droop: 0.012 },
+          { count: 18, inner: 0.018, outer: 0.112, y: bloomY + 0.025, width: 0.0105, lift: 0.026, droop: 0.006 },
         ];
         for (let layer = 0; layer < rayLayers.length; layer += 1) {
           const shape = rayLayers[layer];
@@ -1067,16 +1067,16 @@
             const petalColor = ray % 5 === 0 ? headColor.map((channel) => Math.min(1, channel * 1.06)) : headColor;
             // 在外端補上半圓形花瓣帽，形成鈍圓橢圓端，而非三角尖端。
             const capCenterRadius = shape.outer - capRadius;
-            const capCenterY = shape.y - shape.droop;
-            const capCenter = [x + radial[0] * capCenterRadius, capCenterY, z + radial[1] * capCenterRadius];
+            const capCenterY = centerline[centerline.length - 1][1];
+            const capCenter = centerline[centerline.length - 1];
             const capSegments = 8;
             const capPoints = Array.from({ length: capSegments + 1 }, (_, segment) => {
               const capAngle = -Math.PI / 2 + Math.PI * segment / capSegments;
-              const radialOffset = Math.sin(capAngle) * capRadius;
-              const tangentOffset = Math.cos(capAngle) * capRadius;
+              const radialOffset = Math.cos(capAngle) * capRadius;
+              const tangentOffset = Math.sin(capAngle) * capRadius;
               return [
                 x + radial[0] * (capCenterRadius + radialOffset) + tangent[0] * tangentOffset,
-                capCenterY - shape.droop * 0.08 * Math.cos(capAngle),
+                capCenterY,
                 z + radial[1] * (capCenterRadius + radialOffset) + tangent[1] * tangentOffset,
               ];
             });
