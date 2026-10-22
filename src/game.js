@@ -251,8 +251,8 @@
   let dockIsSelected = false;
   let isResetting = false;
   const activeJobs = new Map();
-  const recentlyReturnedDrones = new Set();
   const returningDrones = new Set();
+  const lastCompletedPlotByDrone = new Map();
   let nextDroneIndex = 0;
   const jobQueue = [];
   let lastBatterySaveAt = Date.now();
@@ -718,7 +718,7 @@
     const candidateOrder = game.drones.map((drone, index) => ({ drone, index, rotation: (index - startIndex + game.drones.length) % game.drones.length }))
       .filter(({ drone, index }) => drone.deployed !== false && !activeJobs.has(index))
       .sort((a, b) => {
-        const priority = (candidate) => candidate.drone.battery === 100 ? 0 : recentlyReturnedDrones.has(candidate.index) ? 1 : 2;
+        const priority = (candidate) => candidate.drone.battery === 100 ? 0 : returningDrones.has(candidate.index) ? 1 : 2;
         const priorityDifference = priority(a) - priority(b);
         if (priorityDifference !== 0) return priorityDifference;
         if (priority(a) === 2 && a.drone.battery !== b.drone.battery) return b.drone.battery - a.drone.battery;
@@ -726,18 +726,21 @@
       });
     for (const { index: droneIndex, drone } of candidateOrder) {
       if (!jobQueue.length) break;
-      if (drone.battery < 100 && !recentlyReturnedDrones.has(droneIndex) && returningDrones.size) break;
+      
       if (game.drones[droneIndex]?.deployed === false || activeJobs.has(droneIndex)) continue;
-      const queueIndex = jobQueue.findIndex((job) => {
+      const isEligibleJob = (job) => {
         if (game.drones[droneIndex].battery < estimateJobBattery(job, droneIndex)) return false;
         if ([...activeJobs.values()].some((active) => active.kind === 'expand')) return false;
         if (job.kind === 'expand' && activeJobs.size) return false;
         if (job.kind !== 'expand' && [...activeJobs.values()].some((active) => active.kind !== 'expand' && active.index === job.index)) return false;
         return true;
-      });
+      };
+      const previousPlotIndex = lastCompletedPlotByDrone.get(droneIndex);
+      let queueIndex = previousPlotIndex === undefined ? -1 : jobQueue.findIndex((job) => job.kind !== 'expand' && job.index === previousPlotIndex && isEligibleJob(job));
+      if (queueIndex < 0) queueIndex = jobQueue.findIndex(isEligibleJob);
       if (queueIndex < 0) continue;
       const [job] = jobQueue.splice(queueIndex, 1);
-      recentlyReturnedDrones.delete(droneIndex);
+      returningDrones.delete(droneIndex);
       updateBatteries();
       activeJobs.set(droneIndex, job);
       nextDroneIndex = (droneIndex + 1) % game.drones.length;
@@ -753,19 +756,15 @@
         commit();
         updateBatteries();
         activeJobs.delete(droneIndex);
-        returningDrones.delete(droneIndex);
-        if (plannedReturn) recentlyReturnedDrones.add(droneIndex);
+        if (job.kind !== 'expand') lastCompletedPlotByDrone.set(droneIndex, job.index);
         renderJobQueue();
         processJobQueue();
       };
-      let plannedReturn = false;
       const shouldReturn = () => {
-        plannedReturn = job.kind === 'expand'
-          || jobQueue.some((queued) => queued.kind === 'expand')
-          || jobQueue.length === 0;
-        if (plannedReturn) returningDrones.add(droneIndex);
-        return plannedReturn;
+        returningDrones.add(droneIndex);
+        return true;
       };
+      const onReturnComplete = () => returningDrones.delete(droneIndex);
       if (job.kind === 'water') {
         const plot = game.plots[job.index];
         if (!plot || plot.crop === null || plot.watered || growthElapsed(plot) >= (crops[plot.crop] || crops[0]).growTime) {
@@ -774,10 +773,10 @@
         }
       }
       let started;
-      if (job.kind === 'plant') started = world.animatePlant?.(job.index, commit, finish, shouldReturn, droneIndex);
-      else if (job.kind === 'harvest') started = world.animateHarvest?.(job.index, commit, finish, shouldReturn, droneIndex);
-      else if (job.kind === 'water') started = world.animateWater?.(job.index, commit, finish, shouldReturn, droneIndex);
-      else started = world.animateExpansion?.(job.position, commit, finish, shouldReturn, droneIndex);
+      if (job.kind === 'plant') started = world.animatePlant?.(job.index, commit, finish, shouldReturn, droneIndex, onReturnComplete);
+      else if (job.kind === 'harvest') started = world.animateHarvest?.(job.index, commit, finish, shouldReturn, droneIndex, onReturnComplete);
+      else if (job.kind === 'water') started = world.animateWater?.(job.index, commit, finish, shouldReturn, droneIndex, onReturnComplete);
+      else started = world.animateExpansion?.(job.position, commit, finish, shouldReturn, droneIndex, onReturnComplete);
       if (started === undefined || started === false) finish();
     }
     renderJobQueue();
