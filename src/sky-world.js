@@ -1520,6 +1520,18 @@
 
     const bloomY = 0.055 + height;
     if (flowerIndex === 3) {
+      // 將玫瑰花頭縮至原尺寸一半，並把底部下移至花萼頂端。
+      const roseScale = 0.5;
+      const roseBaseY = bloomY - 0.01;
+      const roseCalyxY = bloomY - 0.034;
+      const addRoseTriangle = (positions, colors, a, b, c, color) => {
+        const transform = (point) => [
+          x + 0.014 + (point[0] - x) * roseScale,
+          roseCalyxY + (point[1] - roseBaseY) * roseScale,
+          z + 0.008 + (point[2] - z) * roseScale,
+        ];
+        addTriangle(positions, colors, transform(a), transform(b), transform(c), color);
+      };
       // 蛋形花苞本體、逐層收緊並帶旋向的包覆花瓣、頂端螺旋花心與三片外翻外瓣。
       const smooth = (edge0, edge1, value) => {
         const k = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
@@ -1629,22 +1641,10 @@
           [x + Math.cos(angle + 1.7) * capRadius * 0.75, topY + 0.003, z + Math.sin(angle + 1.7) * capRadius * 0.75],
           headColor.map((channel) => Math.min(1, channel * (0.9 + curl * 0.06))));
       }
-      // 將整個玫瑰花頭縮至原尺寸一半，並把花頭底部下移至花萼頂端。
-      const roseScale = 0.5;
-      const roseBaseY = bloomY - 0.01;
-      const roseCalyxY = bloomY - 0.034;
-      const addRoseTriangle = (positions, colors, a, b, c, color) => {
-        const transform = (point) => [
-          x + 0.014 + (point[0] - x) * roseScale,
-          roseCalyxY + (point[1] - roseBaseY) * roseScale,
-          z + 0.008 + (point[2] - z) * roseScale,
-        ];
-        addTriangle(positions, colors, transform(a), transform(b), transform(c), color);
-      };
-    }
-
       // 玫瑰已完成專用花頭與花萼；略過舊版通用花頭，避免額外生成紅色八面體。
       return;
+    }
+
     if (!dedicatedStemLeafModel) {
       addLeaf(positions, colors, x, 0.22, z, [-0.82, 0.38, -0.12], 0.22, [0.31, 0.58, 0.3]);
       addLeaf(positions, colors, x, 0.32, z, [0.74, 0.34, 0.16], 0.21, [0.37, 0.64, 0.33]);
