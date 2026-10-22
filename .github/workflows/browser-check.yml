@@ -1,0 +1,58 @@
+name: 花明摸魚花園－瀏覽器自動驗收
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '.github/workflows/browser-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  browser-check:
+    name: Playwright 瀏覽器驗收
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 取得專案程式碼
+        uses: actions/checkout@v4
+
+      - name: 設定 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 安裝 Playwright
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+
+      - name: 啟動遊戲靜態伺服器
+        run: |
+          python3 -m http.server 4173 --directory src > /tmp/diangarden-http.log 2>&1 &
+          echo $! > /tmp/diangarden-http.pid
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:4173/index.html > /dev/null; then
+              echo "遊戲伺服器已就緒"
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/diangarden-http.log
+          exit 1
+
+      - name: 執行瀏覽器驗收
+        run: node tests/browser-smoke.mjs
+
+      - name: 保存截圖與驗收結果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diangarden-browser-check
+          path: test-results/screenshots/
+          if-no-files-found: warn
+          retention-days: 14
