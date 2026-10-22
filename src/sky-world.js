@@ -310,25 +310,30 @@
       const width = stage === 1 ? 0.023 : 0.034;
       const root = [x + radial[0] * 0.012, baseY + 0.012, z + radial[1] * 0.012];
       const shoulder = [
-        x + radial[0] * length * 0.55,
+        x + radial[0] * length * 0.52,
         baseY + (stage === 1 ? 0.085 : 0.145),
-        z + radial[1] * length * 0.55,
+        z + radial[1] * length * 0.52,
       ];
+      const originalHighestY = shoulder[1] + 0.018;
       const tip = [
         x + radial[0] * length,
-        baseY + (stage === 1 ? 0.055 : 0.095),
+        originalHighestY + 0.02,
         z + radial[1] * length,
       ];
       const left = [shoulder[0] + tangent[0] * width, shoulder[1] + 0.008, shoulder[2] + tangent[1] * width];
       const right = [shoulder[0] - tangent[0] * width, shoulder[1] + 0.008, shoulder[2] - tangent[1] * width];
-      const ridge = [shoulder[0] - radial[0] * 0.006, shoulder[1] + 0.018, shoulder[2] - radial[1] * 0.006];
+      const ridge = [shoulder[0] - radial[0] * 0.009, originalHighestY, shoulder[2] - radial[1] * 0.009];
+      // Extra contour vertex sits 0.009 below the original ridge peak to flatten the leaf profile.
+      const lowerRidge = [ridge[0], ridge[1] - 0.009, ridge[2]];
       const color = leafColors[leaf % leafColors.length];
-      addTriangle(positions, colors, root, left, ridge, color);
+      addTriangle(positions, colors, root, left, lowerRidge, color);
+      addTriangle(positions, colors, lowerRidge, left, ridge, color.map((channel) => Math.min(1, channel * 1.03)));
       addTriangle(positions, colors, ridge, left, tip, color.map((channel) => Math.min(1, channel * 1.05)));
-      addTriangle(positions, colors, root, ridge, right, color.map((channel) => channel * 0.9));
+      addTriangle(positions, colors, root, lowerRidge, right, color.map((channel) => channel * 0.9));
+      addTriangle(positions, colors, lowerRidge, ridge, right, color.map((channel) => channel * 0.94));
       addTriangle(positions, colors, ridge, tip, right, color);
-      // A narrow central ridge gives each thick, strap-like leaf a readable spine.
-      addTriangle(positions, colors, root, ridge, tip, color.map((channel) => Math.min(1, channel * 1.12)));
+      // A narrow central spine keeps the strap-like leaf readable without a tall ridge.
+      addTriangle(positions, colors, root, lowerRidge, tip, color.map((channel) => Math.min(1, channel * 1.08)));
     }
 
     if (stage === 1) return;
