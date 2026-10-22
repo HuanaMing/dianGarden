@@ -1,9 +1,9 @@
 {
-  "name": "任務 154",
+  "name": "任務 155：植物成熟時取消澆水待辦",
   "status": "implemented_static_check_passed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "開始任務 155：處理植物成熟後的澆水待辦清理。",
-  "result": "任務 154 已修改 src/game.js 的派工候選排序，並通過 JavaScript 語法編譯檢查；多機瀏覽器驗收尚未執行。"
+  "nextAction": "開始任務 156：移除「澆水狀態改變」提示，僅隱藏指定提示並保留其他必要通知。",
+  "result": "任務 155 已在 src/game.js 加入成熟時清除排隊澆水工作；尚未提交的活動澆水工作會取消結算並安全結束。JavaScript 語法編譯檢查通過；瀏覽器佇列測試尚未執行。"
 }
