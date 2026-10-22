@@ -1252,3 +1252,10 @@
 - 結果：新增 `addPeonyStemLeafGeometry()` 並註冊至花種索引 9。成熟株使用四根高低不同、略向外展的莖，沿中下段配置交錯互生的複葉；幼苗只顯示縮小的基部複葉。牡丹不再疊加舊版通用側葉，保留既有花頭與遊戲數值。
 - 驗證：JavaScript 語法檢查通過；尚未進行瀏覽器畫面驗收。
 - 檔案：`src/sky-world.js`、`tasks/active/167-peony-stem-leaf-model.md`、`state/current-task.json`、`state/project.json`、`logs/task-history.md`
+
+## 2026-10-22 — 任務167牡丹莖葉重做
+
+- 使用者回報：連到牡丹花頭的主莖沒有接到中心；沒有花的側莖太長。
+- 修正：主莖頂端在 XZ 平面精確落到花頭中心，曲線在莖頂收斂；三根無花側莖高度比例縮短為 0.52、0.46、0.40，葉片尺寸隨莖高同步縮放。
+- 驗證：JavaScript 語法檢查通過並推送 main；尚待使用者在遊戲畫面驗收。
+- 檔案：`src/sky-world.js`、`tasks/active/167-peony-stem-leaf-model.md`、`state/current-task.json`、`state/project.json`、`logs/task-history.md`
