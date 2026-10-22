@@ -1492,92 +1492,115 @@
 
     const bloomY = 0.055 + height;
     if (flowerIndex === 3) {
-      // 經典酒杯型玫瑰：花瓣先向外展開，再平滑向上收起，最後 1% 才外翻；
-      // 同層花瓣沿圓周逐步升高，層與層的高度銜接成連續螺旋。
-      const roseCupLayers = [
-        { count: 7, inner: 0.038, outer: 0.076, base: -0.032, rim: 0.071, crown: 0.016, edge: 0.012, halfAngle: 0.48, phase: 0.10, curl: -0.018 },
-        { count: 7, inner: 0.033, outer: 0.051, base: -0.030, rim: 0.073, crown: 0.022, edge: 0.014, halfAngle: 0.43, phase: 0.48, curl: -0.006 },
-        { count: 6, inner: 0.028, outer: 0.026, base: -0.028, rim: 0.071, crown: 0.020, edge: 0.011, halfAngle: 0.38, phase: 0.22, curl: 0.009 },
-        { count: 5, inner: 0.023, outer: 0.001, base: -0.026, rim: 0.069, crown: 0.014, edge: 0.008, halfAngle: 0.32, phase: 0.80, curl: 0.012 }
+      // 蛋形花苞本體、逐層收緊並帶旋向的包覆花瓣、頂端螺旋花心與三片外翻外瓣。
+      const smooth = (edge0, edge1, value) => {
+        const k = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
+        return k * k * (3 - 2 * k);
+      };
+      const bodyBase = bloomY - 0.01, bodyHeight = 0.27;
+      const slim = 0.78;
+      const eggRadius = (s) => 0.025 + 0.075 * Math.pow(Math.max(0, Math.sin(Math.PI * Math.pow(s, 0.7))), 0.9);
+      const bodyLayers = [
+        { count: 5, scale: 1.00, from: 0.00, to: 0.80, twist: 0.30, phase: 0.20, lip: 0.016, shade: 1.00 },
+        { count: 4, scale: 0.86, from: 0.10, to: 0.84, twist: 0.60, phase: 0.90, lip: 0.008, shade: 0.93 },
+        { count: 3, scale: 0.64, from: 0.25, to: 0.88, twist: 0.95, phase: 0.50, lip: 0, shade: 0.86 },
       ];
-      for (let layer = 0; layer < roseCupLayers.length; layer += 1) {
-        const shape = roseCupLayers[layer];
-        for (let petal = 0; petal < shape.count; petal += 1) {
-          const centerAngle = petal / shape.count * Math.PI * 2 + shape.phase;
-          const tSamples = [0, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.98, 0.99, 1];
-          const radialSteps = tSamples.length - 1, acrossSteps = 8;
+      for (const layer of bodyLayers) {
+        const halfAngle = Math.PI / layer.count * 1.3;
+        for (let petal = 0; petal < layer.count; petal += 1) {
+          const centerAngle = petal / layer.count * Math.PI * 2 + layer.phase;
+          const overlapOffset = 0.006 * petal / layer.count;
+          const petalTint = petal % 2 ? 0.97 : 1.03;
+          const upSteps = 8, acrossSteps = 6;
           const grid = [];
-          for (let radialStep = 0; radialStep <= radialSteps; radialStep += 1) {
-            const t = tSamples[radialStep];
+          for (let up = 0; up <= upSteps; up += 1) {
+            const t = up / upSteps;
+            const s = layer.from + (layer.to - layer.from) * t;
             const row = [];
-            for (let acrossStep = 0; acrossStep <= acrossSteps; acrossStep += 1) {
-              const u = acrossStep / acrossSteps * 2 - 1;
-              const angle = centerAngle + u * shape.halfAngle * (0.64 + 0.36 * t);
-              // 以 smoothstep 平滑連接三段：0–30% 向外伸展，30–99% 向上彎，
-              // 僅最後 1% 向外翻；避免分段直線造成折角。
-              const smoothstep = (value) => {
-                const q = Math.max(0, Math.min(1, value));
-                return q * q * (3 - 2 * q);
-              };
-              const outwardStart = smoothstep(t / 0.30);
-              const outwardTip = smoothstep((t - 0.99) / 0.01);
-              // 30% 之後固定徑向位置、只向上升；最後 1% 才恢復外展，避免中段看起來外折。
-              const radiusProfile = 0.34 * outwardStart + 0.66 * outwardTip;
-              const radius = shape.inner + (shape.outer - shape.inner) * radiusProfile
-                + 0.006 * u * u * Math.sin(t * Math.PI);
-              const riseT = 0.02 + 0.93 * smoothstep((t - 0.30) / 0.69) + 0.05 * outwardTip;
-              const rise = shape.base + (shape.rim - shape.base) * Math.min(1, riseT);
-              const bowl = shape.crown * Math.sin(t * Math.PI);
-              const edgeRoll = shape.edge * Math.pow(Math.abs(u), 1.55) * Math.sin(Math.PI * (0.16 + 0.70 * t));
-              const lipCurl = shape.curl * Math.pow(t, 3);
-              const sideFold = -0.010 * u * u * Math.sin(t * Math.PI);
-              const y = bloomY + rise + bowl + edgeRoll + lipCurl + sideFold;
+            for (let across = 0; across <= acrossSteps; across += 1) {
+              const u = across / acrossSteps * 2 - 1;
+              const angle = centerAngle + u * halfAngle + layer.twist * t;
+              const bulge = 1 + 0.07 * (1 - u * u) * Math.sin(Math.PI * Math.min(1, t * 1.15));
+              const lip = layer.lip * smooth(0.78, 1, t) * (0.6 + 0.4 * (1 - u * u));
+              const radius = Math.max(0.01, (eggRadius(s) * layer.scale * bulge + lip + overlapOffset) * slim);
+              const y = bodyBase + bodyHeight * s - 0.008 * u * u;
               row.push([x + Math.cos(angle) * radius, y, z + Math.sin(angle) * radius]);
             }
             grid.push(row);
           }
-          for (let radialStep = 0; radialStep < radialSteps; radialStep += 1) {
-            const t = (tSamples[radialStep] + tSamples[radialStep + 1]) * 0.5;
-            // 陰影沿花瓣根部、交疊內緣與杯口背面形成層次，不以花心向外放射。
-            const rootShade = 0.76 + 0.22 * Math.min(1, t / 0.42);
-            const lipShade = t > 0.78 ? 0.94 + 0.06 * (1 - (t - 0.78) / 0.22) : 1;
-            for (let acrossStep = 0; acrossStep < acrossSteps; acrossStep += 1) {
-              const a = grid[radialStep][acrossStep];
-              const b = grid[radialStep + 1][acrossStep];
-              const c = grid[radialStep + 1][acrossStep + 1];
-              const d = grid[radialStep][acrossStep + 1];
-              const faceColor = headColor.map((channel) => channel * rootShade * lipShade);
-              const edgeColor = faceColor.map((channel) => channel * (acrossStep === 0 || acrossStep === acrossSteps - 1 ? 0.88 : 1.025));
-              addTriangle(positions, colors, a, b, c, edgeColor);
+          for (let up = 0; up < upSteps; up += 1) {
+            const t = (up + 0.5) / upSteps;
+            const faceShade = layer.shade * petalTint * (0.74 + 0.26 * smooth(0, 0.55, t)) * (1 + 0.06 * smooth(0.8, 1, t));
+            for (let across = 0; across < acrossSteps; across += 1) {
+              const isEdge = across === 0 || across === acrossSteps - 1;
+              const faceColor = headColor.map((channel) => Math.min(1, channel * faceShade * (isEdge ? 0.9 : 1)));
+              const a = grid[up][across], b = grid[up + 1][across];
+              const c = grid[up + 1][across + 1], d = grid[up][across + 1];
+              addTriangle(positions, colors, a, b, c, faceColor);
               addTriangle(positions, colors, a, c, d, faceColor);
             }
           }
         }
       }
-      // 深綠萼片包住花托，從側面也能看見花瓣向上展開的杯狀基部。
-      for (let sepal = 0; sepal < 5; sepal += 1) {
-        const angle = sepal / 5 * Math.PI * 2 + 0.18;
-        const root = [x + Math.cos(angle) * 0.016, bloomY - 0.030, z + Math.sin(angle) * 0.016];
-        const shoulder = [x + Math.cos(angle) * 0.047, bloomY - 0.040, z + Math.sin(angle) * 0.047];
-        const tip = [x + Math.cos(angle) * 0.103, bloomY - 0.074, z + Math.sin(angle) * 0.103];
-        const side = [-Math.sin(angle) * 0.012, 0.002, Math.cos(angle) * 0.012];
-        addTriangle(positions, colors, root, [shoulder[0] + side[0], shoulder[1] + 0.003, shoulder[2] + side[2]], tip, [0.30, 0.49, 0.23]);
-        addTriangle(positions, colors, root, tip, [shoulder[0] - side[0], shoulder[1] - 0.002, shoulder[2] - side[2]], [0.23, 0.40, 0.19]);
+
+      // 最外層三片花瓣：包住花苞下半部，末端向外下翻。
+      const outerCount = 3;
+      for (let petal = 0; petal < outerCount; petal += 1) {
+        const centerAngle = petal / outerCount * Math.PI * 2 + 0.7;
+        const halfAngle = 1.2;
+        const upSteps = 10, acrossSteps = 8;
+        const grid = [];
+        for (let step = 0; step <= upSteps; step += 1) {
+          const t = step / upSteps;
+          const s = 0.02 + 0.72 * t;
+          const curl = smooth(0.82, 1, t);
+          const row = [];
+          for (let across = 0; across <= acrossSteps; across += 1) {
+            const u = across / acrossSteps * 2 - 1;
+            const angle = centerAngle + u * halfAngle + 0.2 * t;
+            const bulge = 1 + 0.05 * (1 - u * u) * Math.sin(Math.PI * Math.min(1, t * 1.15));
+            const radius = (eggRadius(s) * 1.12 * bulge + 0.016 + 0.003 * petal + 0.03 * curl * curl) * slim;
+            const y = bodyBase + bodyHeight * s - 0.008 * u * u - 0.006 * curl;
+            row.push([x + Math.cos(angle) * radius, y, z + Math.sin(angle) * radius]);
+          }
+          grid.push(row);
+        }
+        for (let step = 0; step < upSteps; step += 1) {
+          const t = (step + 0.5) / upSteps;
+          const faceShade = (0.76 + 0.3 * smooth(0, 0.6, t)) * (petal % 2 ? 0.98 : 1.04) * (1 + 0.05 * smooth(0.82, 1, t));
+          for (let across = 0; across < acrossSteps; across += 1) {
+            const isEdge = across === 0 || across === acrossSteps - 1;
+            const faceColor = headColor.map((channel) => Math.min(1, channel * faceShade * (isEdge ? 0.9 : 1)));
+            const a = grid[step][across], b = grid[step + 1][across];
+            const c = grid[step + 1][across + 1], d = grid[step][across + 1];
+            addTriangle(positions, colors, a, b, c, faceColor);
+            addTriangle(positions, colors, a, c, d, faceColor);
+          }
+        }
       }
 
-      // 高中心旋卷：窄小花瓣斜向疊合，從上方可見旋向，從側面可見杯口高度。
-      for (let curl = 0; curl < 5; curl += 1) {
-        const angle = curl * 1.72 + 0.36;
-        const r0 = 0.003 + curl * 0.0025;
-        const r1 = 0.017 + curl * 0.002;
-        const y0 = bloomY + 0.096 + curl * 0.006;
-        const p0 = [x + Math.cos(angle) * r0, y0, z + Math.sin(angle) * r0];
-        const p1 = [x + Math.cos(angle + 0.72) * r1, y0 + 0.008, z + Math.sin(angle + 0.72) * r1];
-        const p2 = [x + Math.cos(angle + 1.45) * r1 * 0.78, y0 + 0.019, z + Math.sin(angle + 1.45) * r1 * 0.78];
-        addTriangle(positions, colors, p0, p1, p2,
-          headColor.map((channel) => Math.min(1, channel * (1.06 - curl * 0.055))));
+      // 螺旋花心：先以略微下凹的扇形封口，再以三枚小旋瓣標示旋向。
+      const topS = 0.88;
+      const topY = bodyBase + bodyHeight * topS;
+      const capRadius = Math.max(0.01, eggRadius(topS) * 0.64 * slim);
+      const coreColor = headColor.map((channel) => channel * 0.72);
+      for (let k = 0; k < 6; k += 1) {
+        const a0 = k / 6 * Math.PI * 2 + 1.45;
+        const a1 = (k + 1) / 6 * Math.PI * 2 + 1.45;
+        addTriangle(positions, colors,
+          [x, topY - 0.004, z],
+          [x + Math.cos(a0) * capRadius, topY, z + Math.sin(a0) * capRadius],
+          [x + Math.cos(a1) * capRadius, topY, z + Math.sin(a1) * capRadius],
+          k % 2 ? coreColor : coreColor.map((channel) => channel * 1.12));
       }
-      return;
+      for (let curl = 0; curl < 3; curl += 1) {
+        const angle = curl * 2.1 + 0.4;
+        addTriangle(positions, colors,
+          [x + Math.cos(angle) * capRadius * 0.15, topY - 0.002, z + Math.sin(angle) * capRadius * 0.15],
+          [x + Math.cos(angle + 0.9) * capRadius * 1.1, topY + 0.001, z + Math.sin(angle + 0.9) * capRadius * 1.1],
+          [x + Math.cos(angle + 1.7) * capRadius * 0.75, topY + 0.003, z + Math.sin(angle + 1.7) * capRadius * 0.75],
+          headColor.map((channel) => Math.min(1, channel * (0.9 + curl * 0.06))));
+      }
     }
 
     if (!dedicatedStemLeafModel) {
