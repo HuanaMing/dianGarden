@@ -2736,7 +2736,7 @@
       const postWaterWet = Number.isFinite(plot?.waterUntil) && plot.waterUntil > Date.now();
       // Rain tints soil immediately; its post-rain waterUntil animation remains a separate state.
       const soilNow = Date.now();
-      const rainWetness = rainWet ? Math.min(1, Math.max(0, (soilNow - (rainStartedAt ?? soilNow)) / 30_000)) : 0;
+      const rainWetness = rainWet ? Math.min(1, Math.max(0, (soilNow - (rainStartedAt ?? soilNow)) / 1680)) : 0;
       const postWaterProgress = postWaterWet ? Math.min(1, Math.max(0, (soilNow - plot.waterStartedAt) / Math.max(1, plot.waterUntil - plot.waterStartedAt))) : 1;
       const waterStartWetness = Number.isFinite(plot?.waterWetnessStart) ? plot.waterWetnessStart : 1;
       const dryingWetness = postWaterWet ? waterStartWetness * (1 - postWaterProgress) : 0;
