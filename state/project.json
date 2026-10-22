@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "blocked",
   "activeTask": "109-personal-ios-app-lock-screen-flower-widget",
-  "nextAction": "任務162已驗收完成並歸檔；任務163康乃馨專屬莖葉模型第一版已實作，待遊戲內視覺驗收。",
+  "nextAction": "任務162已驗收完成並歸檔；任務163康乃馨模型已重作：移除舊側葉、花瓣加寬三倍並加入鋸齒上緣，待遊戲內視覺驗收。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
