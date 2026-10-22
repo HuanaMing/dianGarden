@@ -613,16 +613,21 @@
   function isDroneExcluded(plot) { return Boolean(plot?.manual || plot?.grassOnly); }
   function plotModeSettingMarkup(plot, index) {
     const mode = plotMode(plot);
-    const labels = { auto: '自動', manual: '手動', grass: '草地' };
+    if (mode === 'auto') return '';
+    const labels = { manual: '手動', grass: '草地' };
     const descriptions = {
-      auto: '無人機可依自動模式播種、澆水與收成。',
       manual: '無人機不會對此地塊執行作物工作。',
-      grass: '純草地不可種植，無人機也會略過此地。',
+      grass: '草地不會種植新植物；成熟植物可保留在草地上。',
     };
     const active = hasActivePlotJob(index);
-    const next = mode === 'manual' ? '草地' : mode === 'grass' ? '手動' : '';
-    const modeHelp = mode === 'auto' ? '自動地塊類型固定，不能直接轉換為手動地塊或草地。' : `${descriptions[mode]} 點擊切換至${next}。`;
-    return `<div class="manual-plot-setting plot-mode-setting"><div><strong>地塊性質：${labels[mode]}</strong><small>${modeHelp}</small></div><button class="plot-mode-switch" type="button" data-plot-mode-switch data-mode="${mode}" aria-label="${mode === 'auto' ? `農地 ${index + 1} 為固定自動地塊` : `農地 ${index + 1} 地塊性質：${labels[mode]}，點擊切換至${next}`}" ${active || mode === 'auto' ? 'disabled' : ''}><span class="${mode === 'auto' ? 'is-current' : ''}">自動</span><span class="${mode === 'manual' ? 'is-current' : ''}">手動</span><span class="${mode === 'grass' ? 'is-current' : ''}">草地</span></button></div>${active ? '<p class="manual-plot-busy">無人機正在此地工作，工作結束後才能切換。</p>' : ''}`;
+    const crop = plot.crop === null ? null : crops[plot.crop] || crops[0];
+    const mature = Boolean(crop && growthElapsed(plot) >= crop.growTime);
+    const canSwitch = !crop || mature;
+    const next = mode === 'manual' ? '草地' : '手動';
+    const modeHelp = crop && !mature
+      ? '植物成熟前不能轉成草地，以免生長中的植物被保留在草地上。'
+      : `${descriptions[mode]} 點擊切換至${next}。`;
+    return `<div class="manual-plot-setting plot-mode-setting"><div><strong>地塊性質：${labels[mode]}</strong><small>${modeHelp}</small></div><button class="plot-mode-switch" type="button" data-plot-mode-switch data-mode="${mode}" aria-label="農地 ${index + 1} 地塊性質：${labels[mode]}，點擊切換至${next}" ${active || !canSwitch ? 'disabled' : ''}><span class="${mode === 'manual' ? 'is-current' : ''}">${mode === 'manual' ? '手動' : '草地'}</span><span aria-hidden="true">⇄</span><span class="${mode === 'grass' ? 'is-current' : ''}">${mode === 'grass' ? '草地' : '手動'}</span></button></div>${active ? '<p class="manual-plot-busy">無人機正在此地工作，工作結束後才能切換。</p>' : ''}`;
   }
   function setPlotMode(index) {
     const plot = game.plots[index];
@@ -630,6 +635,12 @@
     if (hasActivePlotJob(index)) { renderFarmDialog(); notify('無人機正在此地工作，工作結束後才能切換農地性質。'); return; }
     const oldMode = plotMode(plot);
     if (oldMode === 'auto') { notify('自動地塊不能轉換為手動地塊或草地。'); return; }
+    const crop = plot.crop === null ? null : crops[plot.crop] || crops[0];
+    const mature = Boolean(crop && growthElapsed(plot) >= crop.growTime);
+    if (oldMode === 'manual' && crop && !mature) {
+      notify('植物成熟後才能將手動地塊切換成草地。');
+      return;
+    }
     const newMode = oldMode === 'manual' ? 'grass' : 'manual';
     const changedPlot = { ...plot, manual: newMode !== 'auto', grassOnly: newMode === 'grass' };
     const changedPlots = game.plots.map((item, plotIndex) => plotIndex === index ? changedPlot : item);
@@ -764,10 +775,12 @@
       returningDrones.delete(droneIndex);
       updateBatteries();
       activeJobs.set(droneIndex, job);
-      if (job.kind === 'water' && game.plots[job.index]) {
-        game.plots[job.index].waterVisualStartedAt = Date.now();
+      const onWaterWorkStart = () => {
+        const workingPlot = game.plots[job.index];
+        if (job.kind !== 'water' || !workingPlot) return;
+        workingPlot.waterVisualStartedAt = Date.now();
         updateHud();
-      }
+      };
       nextDroneIndex = (droneIndex + 1) % game.drones.length;
       let finished = false;
       const commit = () => {
@@ -803,7 +816,7 @@
       let started;
       if (job.kind === 'plant') started = world.animatePlant?.(job.index, commit, finish, shouldReturn, droneIndex, onReturnComplete);
       else if (job.kind === 'harvest') started = world.animateHarvest?.(job.index, commit, finish, shouldReturn, droneIndex, onReturnComplete);
-      else if (job.kind === 'water') started = world.animateWater?.(job.index, commit, finish, shouldReturn, droneIndex, onReturnComplete);
+      else if (job.kind === 'water') started = world.animateWater?.(job.index, commit, finish, shouldReturn, droneIndex, onReturnComplete, onWaterWorkStart);
       else started = world.animateExpansion?.(job.position, commit, finish, shouldReturn, droneIndex, onReturnComplete);
       if (started === undefined || started === false) finish();
     }
@@ -919,6 +932,17 @@
     render();
     notify('新無人機與專屬停靠坪台已加入花園。');
   }
+  document.querySelector('#farm-management-toggle')?.addEventListener('click', () => {
+    const panel = document.querySelector('#farm-management-panel');
+    if (!panel) return;
+    panel.hidden = !panel.hidden;
+    document.querySelector('#farm-management-toggle')?.setAttribute('aria-expanded', String(!panel.hidden));
+  });
+  document.querySelector('#farm-management-close')?.addEventListener('click', () => {
+    const panel = document.querySelector('#farm-management-panel');
+    if (panel) panel.hidden = true;
+    document.querySelector('#farm-management-toggle')?.setAttribute('aria-expanded', 'false');
+  });
   expandButton?.addEventListener('click', () => {
     const expansionPending = [...activeJobs.values()].some((job) => job.kind === 'expand') || jobQueue.some((job) => job.kind === 'expand');
     if (expansionPending) return notify('農地擴建中，請稍後');
@@ -938,7 +962,8 @@
     powerSaveToggle.setAttribute('aria-pressed', String(enabled));
     powerSaveToggle.textContent = `省電模式：${enabled ? '開' : '關'}`;
     window.skyWorld?.setPowerSaveMode?.(enabled);
-    notify(enabled ? '省電模式已開啟：遊戲邏輯持續運作，暫停 GPU 繪圖。' : '省電模式已關閉：恢復場景繪圖。');
+    document.querySelector('.world-frame')?.classList.toggle('is-power-save', enabled);
+    notify(enabled ? '省電模式已開啟：清空場景畫布並暫停 GPU 繪圖，遊戲邏輯持續運作。' : '省電模式已關閉：恢復場景繪圖。');
   });
   settingsToggle?.addEventListener('click', () => {
     const open = settingsPanel?.hidden !== false;
