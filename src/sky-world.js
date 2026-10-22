@@ -81,6 +81,8 @@
   let galleryFlowerIndex = 0;
   let plotStates = galleryMode ? [{ crop: 0, plantedAt: 0, elapsed: 1, growTime: 1, plantHeight: 1 }] : [];
   let environmentState = { phase: 'day', isDay: true, isRaining: false, lightLevel: 1, sunflowerYaw: 0 };
+  let rainStartedAt = null;
+  let lastSoilTransitionUploadAt = 0;
   let selectedPlotIndex = null;
   let yaw = 0.78;
   let pitch = galleryMode ? 0.72 : 0.54;
@@ -2733,7 +2735,14 @@
       const rainWet = environmentState.isRaining;
       const postWaterWet = Number.isFinite(plot?.waterUntil) && plot.waterUntil > Date.now();
       // Rain tints soil immediately; its post-rain waterUntil animation remains a separate state.
-      const wet = rainWet || postWaterWet;
+      const soilNow = Date.now();
+      const rainWetness = rainWet ? Math.min(1, Math.max(0, (soilNow - (rainStartedAt ?? soilNow)) / 30_000)) : 0;
+      const postWaterProgress = postWaterWet ? Math.min(1, Math.max(0, (soilNow - plot.waterStartedAt) / Math.max(1, plot.waterUntil - plot.waterStartedAt))) : 1;
+      const waterStartWetness = Number.isFinite(plot?.waterWetnessStart) ? plot.waterWetnessStart : 1;
+      const dryingWetness = postWaterWet ? waterStartWetness * (1 - postWaterProgress) : 0;
+      const wateringWetness = Number.isFinite(plot?.waterVisualStartedAt) ? Math.min(1, Math.max(0, (soilNow - plot.waterVisualStartedAt) / 1680)) : 0;
+      const wetness = Math.max(rainWetness, dryingWetness, wateringWetness);
+      const wet = wetness > 0.001;
       let plantBaseY = plotY;
       if (plot?.grassOnly) {
         const surfaceHeightAt = addGrassRamp(positions, colors, i, x, z, half, plotY);
@@ -2748,14 +2757,11 @@
         addGrassTexture(positions, colors, x, z, half, plotY, [0.43, 0.68, 0.39]);
       }
       const bed = TILE * 0.66;
-      if (!plot?.grassOnly) addBox(positions, colors, x - bed / 2, plotY + 0.001, z - bed / 2, x + bed / 2, plotY + 0.055, z + bed / 2, wet ? {
-        top: [0.43, 0.29, 0.2], front: [0.39, 0.26, 0.19], right: [0.36, 0.24, 0.18],
-        back: [0.41, 0.27, 0.2], left: [0.38, 0.25, 0.19], bottom: [0.34, 0.23, 0.18],
-      } : {
-        top: [0.66, 0.45, 0.31], front: [0.57, 0.38, 0.28], right: [0.53, 0.35, 0.27],
-        back: [0.6, 0.4, 0.29], left: [0.56, 0.37, 0.27], bottom: [0.5, 0.34, 0.26],
-      });
-      if (!plot?.grassOnly) addSoilTexture(positions, colors, x, z, bed, plotY + 0.057, wet);
+      const drySoil = { top: [0.66, 0.45, 0.31], front: [0.57, 0.38, 0.28], right: [0.53, 0.35, 0.27], back: [0.6, 0.4, 0.29], left: [0.56, 0.37, 0.27], bottom: [0.5, 0.34, 0.26] };
+      const wetSoil = { top: [0.43, 0.29, 0.2], front: [0.39, 0.26, 0.19], right: [0.36, 0.24, 0.18], back: [0.41, 0.27, 0.2], left: [0.38, 0.25, 0.19], bottom: [0.34, 0.23, 0.18] };
+      const soilPalette = Object.fromEntries(Object.keys(drySoil).map((face) => [face, drySoil[face].map((channel, channelIndex) => channel + (wetSoil[face][channelIndex] - channel) * wetness)]));
+      if (!plot?.grassOnly) addBox(positions, colors, x - bed / 2, plotY + 0.001, z - bed / 2, x + bed / 2, plotY + 0.055, z + bed / 2, soilPalette);
+      if (!plot?.grassOnly) addSoilTexture(positions, colors, x, z, bed, plotY + 0.057, wetness > 0.5);
       if (i === selectedPlotIndex) {
         const edge = 0.035;
         const frameHalf = half + 0.08;
@@ -3429,12 +3435,13 @@
     },
     setPlots(plots) {
       if (!Array.isArray(plots)) return;
-      plotStates = plots.map((plot) => ({ crop: plot.crop, plantedAt: plot.plantedAt, plantHeight: plot.plantHeight, customColor: plot.customColor, elapsed: plot.elapsed, growTime: plot.growTime, waterUntil: plot.waterUntil, grassOnly: plot.grassOnly === true }));
+      plotStates = plots.map((plot) => ({ crop: plot.crop, plantedAt: plot.plantedAt, plantHeight: plot.plantHeight, customColor: plot.customColor, elapsed: plot.elapsed, growTime: plot.growTime, waterStartedAt: plot.waterStartedAt, waterUntil: plot.waterUntil, waterWetnessStart: plot.waterWetnessStart, waterVisualStartedAt: plot.waterVisualStartedAt, grassOnly: plot.grassOnly === true }));
       uploadWorld();
     },
     setEnvironment(state) {
       if (!state || typeof state.isRaining !== 'boolean') return;
       const rainChanged = environmentState.isRaining !== state.isRaining;
+      if (rainChanged) rainStartedAt = state.isRaining ? Date.now() : null;
       const phaseChanged = environmentState.phase !== state.phase;
       const cycle = window.skyEnvironment?.DAY_CYCLE_MS || 16 * 60_000;
       const cycleTime = Number.isFinite(state.worldTimeMs) ? ((state.worldTimeMs % cycle) + cycle) % cycle : 0;
