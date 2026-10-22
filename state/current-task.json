@@ -1,9 +1,9 @@
 {
-  "name": "任務 159 重作：向日葵花盤與風信子模型調整",
-  "status": "implementation_static_check_passed_visual_review_pending",
+  "name": "任務160：鈴蘭專屬莖葉模型",
+  "status": "implementation_pending_static_check_and_visual_review",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "最新修改風信子葉片：最高點 ridge 的徑向內移量由 0.009 增至 0.011；葉肩相對基部高度乘以 0.8（幼苗 0.068、成熟 0.116）。lowerRidge 與葉肩寬度的前次調整保留。待執行 JavaScript 語法檢查及瀏覽器視覺驗收。",
-  "result": "任務 159 已調整向日葵花頭、風信子花瓣及葉片輪廓。最新修改將風信子最高點稍微內移並降低葉肩；瀏覽器視覺驗收尚未執行。"
+  "nextAction": "執行 src/sky-world.js 的 JavaScript 語法檢查與靜態結構檢查；確認鈴蘭索引2註冊、幼苗與成熟兩片基生寬葉、成熟細彎花梗、原有鐘形花朵保留且通用葉片已移除。瀏覽器視覺驗收尚未執行。",
+  "result": "任務159依使用者確認已歸檔至 tasks/done，並刪除 tasks/active 中原始檔。任務160已在 src/sky-world.js 實作鈴蘭專屬莖葉模型，待靜態檢查及視覺驗收。"
 }
