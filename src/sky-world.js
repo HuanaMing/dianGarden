@@ -657,8 +657,7 @@
     }
 
     if (flowerIndex === 0) {
-      addLeaf(positions, colors, x, 0.35, z, [-0.8, 0.32, -0.14], 0.29, [0.36, 0.62, 0.27]);
-      addLeaf(positions, colors, x, 0.49, z, [0.77, 0.34, 0.18], 0.27, [0.39, 0.66, 0.29]);
+      if (dedicatedStemLeafModel) dedicatedStemLeafModel(positions, colors, x, z, height, stage);
       const headY = 0.055 + height;
       const flowerHeadStart = positions.length;
       // Layered ray florets form the familiar face-on sunflower silhouette.
