@@ -567,6 +567,14 @@
   }
   function updateHudCollapse() {
     document.querySelector('.world-frame')?.classList.toggle('is-hud-collapsed', game.hudCollapsed);
+    if (game.hudCollapsed) {
+      const farmPanel = document.querySelector('#farm-management-panel');
+      if (farmPanel) farmPanel.hidden = true;
+      document.querySelector('#farm-management-toggle')?.setAttribute('aria-expanded', 'false');
+      if (settingsPanel) settingsPanel.hidden = true;
+      settingsToggle?.setAttribute('aria-expanded', 'false');
+      setDronePanelOpen(false);
+    }
     if (hudCollapsedSummary) { const environment = window.skyEnvironment.getState(game); hudCollapsedSummary.textContent = `${game.gardenName} · 🪙 ${game.coins} · 🌱 ${game.plots.length} · ${environment.isRaining ? '陰雨' : '晴朗'} · ${({ dawn: '清晨', day: '白天', dusk: '黃昏', night: '夜晚' })[environment.phase]} · ${jobStatus?.textContent || '無人機待命'}${persistenceWarning ? ' · 存檔需留意' : ''}`; }
     if (!hudToggle) return;
     hudToggle.textContent = game.hudCollapsed ? '🔽' : '🔼';
