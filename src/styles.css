@@ -322,3 +322,12 @@ input, textarea, [contenteditable="true"]{
   .world-status{flex-wrap:nowrap}
   .drone-jobs,.settings-panel{top:60px;max-height:calc(100dvh - 72px);overflow:auto}
 }
+
+
+/* HUD 收合時保留頂列的設定、圖鑑與展開入口。 */
+.world-frame.is-hud-collapsed .world-topbar{display:flex!important}
+.world-frame.is-hud-collapsed .world-brand,
+.world-frame.is-hud-collapsed .world-status,
+.world-frame.is-hud-collapsed .drone-panel-toggle{display:none!important}
+.world-frame.is-hud-collapsed .hud-collapsed-summary{display:none!important}
+.world-frame.is-hud-collapsed .topbar-actions{margin-left:auto}
