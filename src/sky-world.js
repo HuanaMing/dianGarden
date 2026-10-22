@@ -1417,7 +1417,7 @@
 
     if (flowerIndex >= 4) {
       // 鬱金香已有專屬基生葉叢，不能再疊加舊版沿莖側伸出的通用葉片。
-      if (flowerIndex !== 4 && flowerIndex !== 5 && flowerIndex !== 6 && flowerIndex !== 7 && flowerIndex !== 8 && flowerIndex !== 9) {
+      if (flowerIndex !== 4 && flowerIndex !== 5 && flowerIndex !== 6 && flowerIndex !== 7 && flowerIndex !== 8 && flowerIndex !== 9 && flowerIndex !== 10) {
         addLeaf(positions, colors, x, 0.13, z, [-0.76, 0.34, -0.18], flowerIndex === 7 ? 0.24 : 0.18, [0.34, 0.6, 0.29]);
         addLeaf(positions, colors, x, 0.2, z, [0.72, 0.36, 0.16], flowerIndex === 7 ? 0.22 : 0.17, [0.39, 0.64, 0.31]);
       }
