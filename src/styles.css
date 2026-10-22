@@ -351,3 +351,5 @@ input, textarea, [contenteditable="true"]{
 .world-topbar{left:0;right:0;top:0;border-radius:0 0 16px 16px;padding-left:16px;padding-right:16px}
 @media(max-width:700px){.world-topbar{left:0;right:0;top:0;border-radius:0 0 13px 13px;padding-left:8px;padding-right:8px}}
 @media(max-width:700px) and (orientation:landscape){.world-topbar{left:0;right:0;top:0}}
+
+.settings-save-status{display:none}
