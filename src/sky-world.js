@@ -1082,10 +1082,11 @@
       const [targetX, targetZ] = target;
       const idleX = animation.idlePosition.x, idleZ = animation.idlePosition.z;
       const durationForDistance = (distance) => distance / DRONE_SPEED * 1000;
-      const climbDuration = durationForDistance(Math.abs(laneY - startY));
-      const outboundDistance = routeLength(animation.outboundRoute);
-      const horizontalDuration = durationForDistance(outboundDistance);
-      const descentDuration = durationForDistance(Math.abs(laneY - workY));
+      const continueAtTarget = animation.continueAtTarget === true;
+      const climbDuration = continueAtTarget ? 0 : durationForDistance(Math.abs(laneY - startY));
+      const outboundDistance = continueAtTarget ? 0 : routeLength(animation.outboundRoute);
+      const horizontalDuration = continueAtTarget ? 0 : durationForDistance(outboundDistance);
+      const descentDuration = continueAtTarget ? 0 : durationForDistance(Math.abs(laneY - workY));
       const outboundDuration = climbDuration + horizontalDuration + descentDuration;
       const returnClimbDuration = durationForDistance(Math.abs(laneY - workY));
       const returnDistance = routeLength(animation.returnRoute);
@@ -1130,9 +1131,10 @@
           }
         }
       }
-      const completing = elapsed >= returnStart + (animation.returning === false ? 0 : returnDuration);
-      if (completing && animation.returning !== false) { x = idleX; y = idleY; z = idleZ; }
-      return { x, y, z, elapsed, workProgress, completing, returnStart };
+      const workComplete = elapsed >= returnStart;
+      const completing = animation.workCompleted === true && elapsed >= returnStart + returnDuration;
+      if (completing) { x = idleX; y = idleY; z = idleZ; }
+      return { x, y, z, elapsed, workProgress, workComplete, completing, returnStart };
     });
 
     for (let index = 0; index < droneCount; index += 1) {
@@ -1172,16 +1174,24 @@
           addOctahedron(effectPositions, effectColors, targetX, targetY + 0.16 + pulse, targetZ, 0.025 + pulse, 0.035 + pulse, 0.025 + pulse, [0.76, 0.87, 0.45]);
         }
       }
-      if (animation && candidate.completing && state.animation === animation) {
+      if (animation && candidate.workComplete && !animation.workCompleted && state.animation === animation) {
+        animation.workCompleted = true;
+        animation.returning = animation.shouldReturn?.() !== false;
+        if (!animation.departed) { animation.departed = true; animation.onDeparture?.(); }
+        if (Number.isInteger(animation.targetPlotIndex)) state.lastCompletedPlotIndex = animation.targetPlotIndex;
         state.animation = null;
         const onComplete = animation.onComplete;
         animation.onComplete = null;
         onComplete?.();
-        if (state.animation === null && animation.returning === false) {
-          animation.returning = true;
-          animation.elapsed = candidate.returnStart;
+        if (state.animation === null) {
+          animation.elapsed = Math.max(candidate.elapsed, candidate.returnStart);
           state.animation = animation;
         }
+      } else if (animation && candidate.completing && state.animation === animation) {
+        state.animation = null;
+        const onReturnComplete = animation.onReturnComplete;
+        animation.onReturnComplete = null;
+        onReturnComplete?.();
       }
     }
     droneVertexCount = positions.length / 3;
@@ -1886,14 +1896,17 @@
   function startDroneAnimation(droneIndex, kind, target, options) {
     if (!Number.isInteger(droneIndex) || droneIndex < 0 || droneIndex >= droneCount || droneDocks[droneIndex]?.deployed === false) return false;
     const state = droneStates[droneIndex];
-    if (state.animation) return false;
+    if (state.animation && !(state.animation.workCompleted && state.animation.returning === true)) return false;
     const dock = droneDocks[droneIndex] || dockPosition;
     const idlePosition = { x: dock.x, z: dock.z };
     const idleY = DRONE_IDLE_Y + (dock.y || 0);
     const start = state.location.slice();
+    const continueAtTarget = Number.isInteger(options.targetPlotIndex)
+      && state.lastCompletedPlotIndex === options.targetPlotIndex
+      && Math.hypot(start[0] - target[0], start[1] - target[1]) < 0.0001;
     const returnGoal = [idlePosition.x, idlePosition.z];
     state.animation = {
-      kind, target, start, startY: state.y,
+      kind, target, start, startY: state.y, continueAtTarget,
       idleY, workY: Number.isFinite(options.workY) ? options.workY : DRONE_WORK_Y,
       targetPlotIndex: options.targetPlotIndex,
       idlePosition, elapsed: 0, returning: undefined, departed: false,
@@ -1905,30 +1918,30 @@
     return true;
   }
   window.skyWorld = {
-    animatePlant(index, onDeparture, onComplete, shouldReturn, droneIndex = 0) {
+    animatePlant(index, onDeparture, onComplete, shouldReturn, droneIndex = 0, onReturnComplete) {
       if (!Number.isInteger(index) || index < 0 || index >= landCount) return false;
       const [targetX, targetZ] = getPlotPosition(index);
-      return startDroneAnimation(droneIndex, 'plant', [targetX, targetZ], { hoverDuration: 500, targetPlotIndex: index, workY: 0.14 + getPlotHeight(index), onDeparture, onComplete, shouldReturn });
+      return startDroneAnimation(droneIndex, 'plant', [targetX, targetZ], { hoverDuration: 500, targetPlotIndex: index, workY: 0.14 + getPlotHeight(index), onDeparture, onComplete, shouldReturn, onReturnComplete });
     },
-    animateHarvest(index, onDeparture, onComplete, shouldReturn, droneIndex = 0) {
+    animateHarvest(index, onDeparture, onComplete, shouldReturn, droneIndex = 0, onReturnComplete) {
       if (!Number.isInteger(index) || index < 0 || index >= landCount) return false;
       const [targetX, targetZ] = getPlotPosition(index);
       const plot = plotStates[index];
       const flowerHeight = window.flowerCatalog?.[plot?.crop]?.height || 0.5;
       const plantHeight = Number.isFinite(plot?.plantHeight) ? plot.plantHeight : 1;
       const harvestY = getPlotHeight(index) + flowerHeight * plantHeight + 0.12;
-      return startDroneAnimation(droneIndex, 'harvest', [targetX, targetZ], { hoverDuration: 500, targetPlotIndex: index, workY: harvestY, onDeparture, onComplete, shouldReturn });
+      return startDroneAnimation(droneIndex, 'harvest', [targetX, targetZ], { hoverDuration: 500, targetPlotIndex: index, workY: harvestY, onDeparture, onComplete, shouldReturn, onReturnComplete });
     },
-    animateWater(index, onDeparture, onComplete, shouldReturn, droneIndex = 0) {
+    animateWater(index, onDeparture, onComplete, shouldReturn, droneIndex = 0, onReturnComplete) {
       if (!Number.isInteger(index) || index < 0 || index >= landCount) return false;
       const [targetX, targetZ] = getPlotPosition(index);
-      return startDroneAnimation(droneIndex, 'water', [targetX, targetZ], { hoverDuration: 1680, targetPlotIndex: index, workY: DRONE_WORK_Y + getPlotHeight(index), onDeparture, onComplete, shouldReturn });
+      return startDroneAnimation(droneIndex, 'water', [targetX, targetZ], { hoverDuration: 1680, targetPlotIndex: index, workY: DRONE_WORK_Y + getPlotHeight(index), onDeparture, onComplete, shouldReturn, onReturnComplete });
     },
-    animateExpansion(position, onDeparture, onComplete, shouldReturn, droneIndex = 0) {
+    animateExpansion(position, onDeparture, onComplete, shouldReturn, droneIndex = 0, onReturnComplete) {
       const fallback = getPlotPosition(landCount, landCount + 1);
       const targetX = Number.isInteger(position?.x) ? position.x : fallback[0];
       const targetZ = Number.isInteger(position?.z) ? position.z : fallback[1];
-      return startDroneAnimation(droneIndex, 'expand', [targetX, targetZ], { hoverDuration: 700, onDeparture, onComplete, shouldReturn });
+      return startDroneAnimation(droneIndex, 'expand', [targetX, targetZ], { hoverDuration: 700, onDeparture, onComplete, shouldReturn, onReturnComplete });
     },
     setPlotPositions(positions) {
       if (!Array.isArray(positions) || !positions.length || positions.some((position) => !Number.isInteger(position.x) || !Number.isInteger(position.z) || (position.y !== undefined && (!Number.isFinite(position.y) || Math.abs(position.y * 2 - Math.round(position.y * 2)) > 1e-8)))) return;
