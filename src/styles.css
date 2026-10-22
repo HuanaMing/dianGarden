@@ -455,7 +455,7 @@ input, textarea, [contenteditable="true"]{
   .farm-management-panel .world-plot-state{font-size:8px}
   .settings-panel{top:48px!important;right:8px!important}
   .drone-jobs{top:48px!important;right:8px!important}
-  .world-frame.is-hud-collapsed .topbar-actions{left:8px!important;padding:6px 7px 7px;gap:4px}
+  .world-frame.is-hud-collapsed .topbar-actions{left:auto!important;right:8px!important;padding:6px 7px 7px;gap:4px}
 }
 
 /* Align popup panels to the actual bottom edge of the responsive top bar. */
