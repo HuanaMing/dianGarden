@@ -326,7 +326,7 @@
 
       // ridge：葉片原最高脊線頂點；相對 shoulder 徑向內移 0.011，Y 高 0.018。
       const ridge = [shoulder[0] - radial[0] * 0.011, originalHighestY, shoulder[2] - radial[1] * 0.011];
-      // lowerRidge：新增的較低脊線頂點；徑向內移 0.0045，Y 高於 shoulder 0.0063。
+      // lowerRidge：新增的低脊線頂點；徑向內移 0.0045，Y 比 shoulder 低 0.018。
       const lowerRidge = [
         shoulder[0] - radial[0] * 0.0045,
         shoulder[1] - 0.018,
