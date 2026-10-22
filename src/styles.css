@@ -266,13 +266,13 @@ input, textarea, [contenteditable="true"]{
   -webkit-touch-callout:default;
 }
 
-/* Prevent iOS Safari from zooming the page when mobile form controls receive focus. */
+/* iOS Safari only avoids focus auto-zoom when the computed text-control font is at least 16px.
+   Use !important because several editor-specific rules set smaller font sizes. */
 @media (max-width: 700px) {
-  input,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]),
   textarea,
   select,
-  .garden-name-editor input,
-  .variant-editor input {
-    font-size: 16px;
+  [contenteditable="true"] {
+    font-size: 16px !important;
   }
 }
