@@ -3007,7 +3007,13 @@
   }
 
   let previousTime = 0;
+  let powerSaveMode = false;
   function draw(time) {
+    if (powerSaveMode) {
+      previousTime = time;
+      setTimeout(() => requestAnimationFrame(draw), 250);
+      return;
+    }
     const delta = previousTime ? time - previousTime : 16;
     previousTime = time;
     moveCamera(delta);
@@ -3414,6 +3420,7 @@
       landCount = plotPositions.length;
       uploadWorld();
     },
+    setPowerSaveMode(enabled) { powerSaveMode = Boolean(enabled); },
     setLandCount(count) {
       if (Number.isFinite(count) && count > 0 && count !== landCount) {
         landCount = count;
