@@ -202,6 +202,31 @@
     }
   }
 
+  function addIcosahedron(positions, colors, x, y, z, radius, color) {
+    // 正二十面體：12 個頂點、20 個等邊三角面，所有頂點到中心的距離相同。
+    const phi = (1 + Math.sqrt(5)) / 2;
+    const rawVertices = [
+      [-1, phi, 0], [1, phi, 0], [-1, -phi, 0], [1, -phi, 0],
+      [0, -1, phi], [0, 1, phi], [0, -1, -phi], [0, 1, -phi],
+      [phi, 0, -1], [phi, 0, 1], [-phi, 0, -1], [-phi, 0, 1],
+    ];
+    const scale = radius / Math.sqrt(1 + phi * phi);
+    const vertices = rawVertices.map(([vx, vy, vz]) => [
+      x + vx * scale, y + vy * scale, z + vz * scale,
+    ]);
+    const faces = [
+      [0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11],
+      [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
+      [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9],
+      [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1],
+    ];
+    for (let i = 0; i < faces.length; i += 1) {
+      const shade = i % 5 === 0 ? 1.08 : i % 3 === 0 ? 0.86 : 0.96;
+      addTriangle(positions, colors, vertices[faces[i][0]], vertices[faces[i][1]], vertices[faces[i][2]],
+        color.map((channel) => Math.min(1, channel * shade)));
+    }
+  }
+
   function addLeaf(positions, colors, x, y, z, direction, length, color) {
     const start = [x, y, z];
     const tip = [x + direction[0] * length, y + direction[1] * length, z + direction[2] * length];
@@ -1501,8 +1526,8 @@
         for (let floret = 0; floret < diskCount; floret += 1) {
           const radius = 0.042 * Math.sqrt((floret + 0.5) / diskCount);
           const angle = floret * goldenAngle;
-          addOctahedron(positions, colors, x + Math.cos(angle) * radius, bloomY + 0.012, z + Math.sin(angle) * radius,
-            0.008, 0.008, 0.008, floret % 3 ? [0.77, 0.48, 0.17] : [0.9, 0.65, 0.23]);
+          addIcosahedron(positions, colors, x + Math.cos(angle) * radius, bloomY + 0.012, z + Math.sin(angle) * radius,
+            0.008, floret % 3 ? [0.77, 0.48, 0.17] : [0.9, 0.65, 0.23]);
         }
       } else if (flowerIndex === 7) {
         // Hydrangea: a rounded mophead built from four-sepal florets.
