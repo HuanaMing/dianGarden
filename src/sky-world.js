@@ -404,10 +404,11 @@
   // 花梗中心線共用於莖幾何與花朵定位，確保每朵花確實接在不同高度的莖節上。
   function getLilyOfTheValleyStalkPoint(x, z, height, t) {
     const baseY = 0.055;
+    // 水平擺幅收窄，整體更直立；以小幅正弦回擺保留清楚但不誇張的 S 形。
     return [
-      x + 0.015 + 0.24 * t - 0.12 * Math.sin(Math.PI * t),
+      x + 0.015 + 0.12 * t + 0.035 * Math.sin(Math.PI * 2 * t),
       baseY + height * (1.28 * t - 0.52 * t * t),
-      z + 0.012 + 0.025 * t + 0.012 * Math.sin(Math.PI * t),
+      z + 0.012 + 0.012 * t + 0.006 * Math.sin(Math.PI * 2 * t),
     ];
   }
 
