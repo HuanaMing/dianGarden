@@ -1086,7 +1086,7 @@
       const climbDuration = continueAtTarget ? 0 : durationForDistance(Math.abs(laneY - startY));
       const outboundDistance = continueAtTarget ? 0 : routeLength(animation.outboundRoute);
       const horizontalDuration = continueAtTarget ? 0 : durationForDistance(outboundDistance);
-      const descentDuration = continueAtTarget ? 0 : durationForDistance(Math.abs(laneY - workY));
+      const descentDuration = continueAtTarget ? durationForDistance(Math.abs(startY - workY)) : durationForDistance(Math.abs(laneY - workY));
       const outboundDuration = climbDuration + horizontalDuration + descentDuration;
       const returnClimbDuration = durationForDistance(Math.abs(laneY - workY));
       const returnDistance = routeLength(animation.returnRoute);
@@ -1105,7 +1105,8 @@
       } else if (elapsed < outboundDuration) {
         const descentProgress = (elapsed - climbDuration - horizontalDuration) / descentDuration;
         x = targetX; z = targetZ;
-        y = laneY + (workY - laneY) * descentProgress;
+        const approachStartY = continueAtTarget ? startY : laneY;
+        y = approachStartY + (workY - approachStartY) * descentProgress;
       } else if (elapsed < returnStart) {
         workProgress = Math.min(1, (elapsed - outboundDuration) / hoverDuration);
         x = targetX; y = workY; z = targetZ;
