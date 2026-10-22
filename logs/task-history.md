@@ -1222,3 +1222,15 @@
 - 結果：新增繡球花專屬莖葉幾何，成熟株使用漸細主莖、分層對生寬葉、柔和鋸齒輪廓及低對比中肋；幼苗只顯示縮小基部葉片。移除成熟繡球花的舊版通用側葉，保留既有花球與遊戲資料。
 - 驗證：JavaScript 語法檢查通過；已推送至 `main`，等待使用者遊戲內視覺驗收。
 - 檔案：`src/sky-world.js`、`tasks/active/165-hydrangea-stem-leaf-model.md`、`state/current-task.json`、`state/project.json`、`logs/task-history.md`。
+
+
+## 2026-10-22 — 任務 165：繡球花專屬莖葉模型（驗收完成）
+
+- 結果：使用者確認驗收完畢；任務文件由 `tasks/active/` 歸檔至 `tasks/done/`。
+- 檔案：`tasks/done/165-hydrangea-stem-leaf-model.md`
+
+## 2026-10-22 — 任務 166：薰衣草專屬莖葉與三根花莖（第一版）
+
+- 結果：新增三根不同曲線的薰衣草花莖、狹長葉片與對應三根紫色花穗；幼苗維持簡化基部葉叢。JavaScript 語法檢查通過並推送至 `main`。
+- 限制與驗收：尚未在瀏覽器實際驗收；`assets/` 內像素圖尚未定位與對照。
+- 檔案：`src/sky-world.js`、`tasks/active/166-lavender-stem-leaf-model.md`
