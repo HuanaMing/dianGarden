@@ -3024,6 +3024,10 @@
     previousTime = time;
     moveCamera(delta);
     resize();
+    if (time - lastSoilTransitionUploadAt >= 80 && (environmentState.isRaining || plotStates.some((plot) => Number.isFinite(plot.waterVisualStartedAt) || (Number.isFinite(plot.waterStartedAt) && Number.isFinite(plot.waterUntil) && plot.waterUntil > Date.now())))) {
+      lastSoilTransitionUploadAt = time;
+      uploadWorld(time);
+    }
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
@@ -3491,7 +3495,18 @@
       if (unchanged) return;
       droneDocks = docks.map(({ x, z, y = 0, deployed, deploymentOrder, battery }) => ({ x, z, y, deployed: deployed !== false, deploymentOrder, battery: Math.max(0, Math.min(100, battery ?? 100)) }));
       droneDocks[0] = { ...droneDocks[0], ...dockPosition };
-      droneDocks.forEach((dock, index) => { if (!droneStates[index].animation) droneStates[index].location = [dock.x, dock.z]; });
+      droneDocks.forEach((dock, index) => {
+        const animation = droneStates[index]?.animation;
+        if (!animation) droneStates[index].location = [dock.x, dock.z];
+        else {
+          animation.idlePosition = { x: dock.x, z: dock.z };
+          if (animation.returning) {
+            const current = droneStates[index].location || animation.target;
+            animation.returnRoute = findDroneRoute(current, [dock.x, dock.z], index);
+            animation.returnStart = animation.elapsed;
+          }
+        }
+      });
       uploadWorld();
     },
   };
