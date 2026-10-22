@@ -1294,3 +1294,12 @@
 - 結果：土壤紋理依地塊座標採用穩定旋轉，降低不同地塊重複圖案的感覺；草地色斑加入適度明暗變化，增加地表層次。
 - 驗證：已推送程式碼，等待瀏覽器自動驗收及修改後截圖檢視。
 - 檔案：`src/sky-world.js`、`tasks/active/170-garden-visual-polish.md`。
+
+
+## 2026-10-22 — 任務佇列收尾
+
+- 任務169：十一種花卉逐一選取及截圖的 Playwright 驗收成功，截圖產物 `diangarden-browser-check` 已上傳。
+- 任務170：調整土壤紋理方向與草地斑塊明暗；瀏覽器驗收成功（run 26），GitHub Pages 部署成功（run 598），人工檢視桌面首頁截圖。
+- 任務142、143、145、151–156、159、162、169、170 已確認歸檔於 `tasks/done/`；清理 151–156、159 的過期 inbox 指標，避免重複排程。非牡丹花卉模型驗收依使用者確認結案。
+- 目前 `tasks/active/` 與 `tasks/inbox/` 僅保留 `.gitkeep`。`tasks/blocked/` 尚有任務109（等待 Xcode 環境與付費使用批准）及任務167（等待手工建模）。
+- 驗收連結：https://github.com/HuanaMing/dianGarden/actions/runs/39781764581 ；部署連結：https://github.com/HuanaMing/dianGarden/actions/runs/39781869799
