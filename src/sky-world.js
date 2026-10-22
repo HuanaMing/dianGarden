@@ -1919,70 +1919,26 @@
 
     const bloomY = 0.055 + height;
     if (flowerIndex === 9) {
-      // 牡丹花頭：多層寬大、微皺且彼此交錯的花瓣，形成飽滿的半球冠。
+      // 牡丹：圓頂外輪廓（正視半圓、俯視正圓），以正二十面體作為花序單元。
       const peonyBaseY = bloomY - 0.018;
-      const layers = [
-        // 外圈花瓣較低、內圈逐步抬高，但高度差收斂，避免堆成尖頂／金字塔。
-        { count: 13, radius: 0.142, width: 0.050, baseY: -0.012, lift: 0.046, phase: 0.12, shade: 0.91, curl: 0.018 },
-        { count: 12, radius: 0.119, width: 0.046, baseY: 0.004, lift: 0.057, phase: 0.36, shade: 1.00, curl: 0.014 },
-        { count: 10, radius: 0.088, width: 0.039, baseY: 0.016, lift: 0.064, phase: 0.08, shade: 1.06, curl: 0.010 },
-        { count: 8, radius: 0.057, width: 0.030, baseY: 0.025, lift: 0.067, phase: 0.42, shade: 0.98, curl: 0.006 },
-      ];
-      const smoothPeony = (a, b, value) => {
-        const t = Math.max(0, Math.min(1, (value - a) / (b - a)));
-        return t * t * (3 - 2 * t);
-      };
-      layers.forEach((layer, layerIndex) => {
-        for (let petal = 0; petal < layer.count; petal += 1) {
-          const angle = petal / layer.count * Math.PI * 2 + layer.phase;
-          const halfWidth = layer.width * (0.82 + (petal % 3) * 0.09);
-          const rows = 7, columns = 6;
-          const grid = [];
-          for (let row = 0; row <= rows; row += 1) {
-            const t = row / rows;
-            const rowPoints = [];
-            for (let col = 0; col <= columns; col += 1) {
-              const u = col / columns * 2 - 1;
-              const edgeWave = Math.cos(u * Math.PI * 2.1 + petal * 0.72 + layerIndex) * 0.006;
-              const outerFold = smoothPeony(0.64, 1, t);
-              const side = u * halfWidth * Math.sin(Math.PI * (0.12 + t * 0.88));
-              const radial = layer.radius * (0.16 + t * 0.84) + layer.curl * t * t
-                + edgeWave * (0.25 + 0.75 * outerFold);
-              const petalAngle = angle + side / Math.max(0.035, radial) * 0.58
-                + (t - 0.5) * 0.16 + Math.sin(u * Math.PI) * 0.035;
-              const crown = Math.sin(t * Math.PI * 0.82) * 0.028 * (1 - u * u);
-              const rim = outerFold * (0.009 + 0.008 * Math.cos(u * Math.PI * 3 + petal));
-              // 以花頭中心為最高點、外緣自然下降，使用半球曲面而非逐層線性抬高。
-              const domeRadius = 0.172;
-              const domeHeight = 0.118;
-              const domeProfile = Math.sqrt(Math.max(0, 1 - (Math.min(domeRadius, radial) / domeRadius) ** 2));
-              const y = peonyBaseY + 0.006 + domeHeight * domeProfile
-                + crown * 0.18 + rim * 0.22 - 0.006 * u * u;
-              rowPoints.push([
-                x + Math.cos(petalAngle) * radial,
-                y,
-                z + Math.sin(petalAngle) * radial,
-              ]);
-            }
-            grid.push(rowPoints);
-          }
-          const variation = petal % 4 === 0 ? 1.06 : petal % 4 === 1 ? 0.97 : petal % 4 === 2 ? 1.015 : 0.93;
-          for (let row = 0; row < rows; row += 1) {
-            const t = (row + 0.5) / rows;
-            for (let col = 0; col < columns; col += 1) {
-              const u = col / columns * 2 - 1;
-              const shade = layer.shade * variation * (0.84 + 0.16 * smoothPeony(0, 0.9, t))
-                * (Math.abs(u) > 0.65 ? 0.91 : 1.0);
-              const color = headColor.map((channel) => Math.min(1, channel * shade));
-              const a = grid[row][col], b = grid[row + 1][col];
-              const c = grid[row + 1][col + 1], d = grid[row][col + 1];
-              addTriangle(positions, colors, a, b, c, color);
-              addTriangle(positions, colors, a, c, d, color.map((channel) => Math.min(1, channel * 1.015)));
-            }
-          }
-        }
-      });
-      // 不再使用向上突出的三角形花心，避免破壞半球輪廓；內層花瓣已覆蓋中心。
+      const floretCount = 32;
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+      const domeRadius = 0.172;
+      const domeHeight = 0.118;
+      for (let bloom = 0; bloom < floretCount; bloom += 1) {
+        // 在圓形俯視範圍內均勻散佈單元；半球曲面決定每個單元的高度。
+        const radial = domeRadius * Math.sqrt((bloom + 0.5) / floretCount);
+        const angle = bloom * goldenAngle;
+        const domeProfile = Math.sqrt(Math.max(0, 1 - (radial / domeRadius) ** 2));
+        const centerY = peonyBaseY + 0.006 + domeHeight * domeProfile;
+        const centerX = x + Math.cos(angle) * radial;
+        const centerZ = z + Math.sin(angle) * radial;
+        const variation = bloom % 4 === 0 ? 1.06 : bloom % 4 === 1 ? 0.95 : bloom % 4 === 2 ? 1.015 : 0.98;
+        const floretColor = headColor.map((channel) => Math.min(1, channel * variation));
+        // 單元尺寸隨離中心距離略增，外緣仍維持圓潤而不超出圓頂輪廓。
+        const unitRadius = 0.021 + 0.006 * (radial / domeRadius);
+        addIcosahedron(positions, colors, centerX, centerY, centerZ, unitRadius, floretColor);
+      }
       return;
     }
 
