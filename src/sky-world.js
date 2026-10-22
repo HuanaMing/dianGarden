@@ -806,7 +806,7 @@
   plantStemLeafModels[4] = addTulipStemLeafGeometry;
   function addChrysanthemumStemLeafGeometry(positions, colors, x, z, height, stage) {
     const baseY = 0.055;
-    const stemTop = baseY + height * 0.92;
+    const stemTop = baseY + height;
     const stemColor = [0.29, 0.48, 0.27];
     const leafColors = [
       [0.31, 0.49, 0.29],
@@ -824,7 +824,7 @@
       const centerZ = z + Math.sin(t * Math.PI * 0.8) * 0.002;
       return Array.from({ length: sides }, (_, side) => {
         const angle = side / sides * Math.PI * 2;
-        return [centerX + Math.cos(angle) * radius, baseY + height * 0.92 * t,
+        return [centerX + Math.cos(angle) * radius, baseY + height * t,
           centerZ + Math.sin(angle) * radius];
       });
     });
@@ -1032,39 +1032,56 @@
         }
         addOctahedron(positions, colors, x, bloomY + 0.035, z, 0.039, 0.044, 0.039, headColor);
       } else if (flowerIndex === 6) {
-        // Chrysanthemum: several ranks of slender rays around a floret disk.
+        // 菊花花瓣以細長橢圓舌狀花瓣呈現：沿徑向分段漸寬、圓潤收尾，
+        // 不使用尖端匯聚的四面體／金字塔形折面。
         const rayLayers = [
-          { count: 24, inner: 0.035, outer: 0.17, y: bloomY - 0.01, width: 0.019, crown: 0.075 },
-          { count: 19, inner: 0.032, outer: 0.132, y: bloomY + 0.018, width: 0.018, crown: 0.068 },
+          { count: 28, inner: 0.025, outer: 0.17, y: bloomY - 0.006, width: 0.0105, lift: 0.012 },
+          { count: 23, inner: 0.023, outer: 0.135, y: bloomY + 0.008, width: 0.0095, lift: 0.009 },
+          { count: 17, inner: 0.019, outer: 0.098, y: bloomY + 0.018, width: 0.0085, lift: 0.007 },
         ];
         for (let layer = 0; layer < rayLayers.length; layer += 1) {
           const shape = rayLayers[layer];
           for (let ray = 0; ray < shape.count; ray += 1) {
-            const angle = ray / shape.count * Math.PI * 2 + layer * 0.12;
+            const angle = ray / shape.count * Math.PI * 2 + layer * 0.105;
             const radial = [Math.cos(angle), Math.sin(angle)];
             const tangent = [-radial[1], radial[0]];
-            const root = [x + radial[0] * shape.inner, shape.y - 0.018, z + radial[1] * shape.inner];
-            const tip = [x + radial[0] * shape.outer, shape.y + (ray % 4 === 0 ? 0.025 : 0.017), z + radial[1] * shape.outer];
-            const middleRadius = shape.inner + (shape.outer - shape.inner) * 0.58;
-            const ridge = [x + radial[0] * middleRadius, shape.y + shape.crown, z + radial[1] * middleRadius];
-            const left = [x + radial[0] * middleRadius + tangent[0] * shape.width, shape.y + shape.crown * 0.62,
-              z + radial[1] * middleRadius + tangent[1] * shape.width];
-            const right = [x + radial[0] * middleRadius - tangent[0] * shape.width, shape.y + shape.crown * 0.62,
-              z + radial[1] * middleRadius - tangent[1] * shape.width];
-            const petalColor = ray % 4 === 0 ? headColor.map((channel) => Math.min(1, channel * 1.08)) : headColor;
-            addTriangle(positions, colors, root, left, ridge, petalColor.map((channel) => channel * 0.94));
-            addTriangle(positions, colors, left, tip, ridge, petalColor);
-            addTriangle(positions, colors, root, ridge, right, petalColor);
-            addTriangle(positions, colors, ridge, tip, right, petalColor.map((channel) => channel * 0.95));
+            const petalLength = shape.outer - shape.inner;
+            const sections = 8;
+            const centerline = [];
+            const leftEdge = [];
+            const rightEdge = [];
+            for (let section = 0; section <= sections; section += 1) {
+              const t = section / sections;
+              // 橢圓形寬度包絡：兩端收窄，中段飽滿，末端保留圓弧而非尖角。
+              const envelope = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.72);
+              const radius = shape.inner + petalLength * t;
+              const centerY = shape.y + shape.lift * Math.sin(Math.PI * t);
+              const center = [x + radial[0] * radius, centerY, z + radial[1] * radius];
+              const halfWidth = shape.width * envelope;
+              centerline.push(center);
+              leftEdge.push([center[0] + tangent[0] * halfWidth, centerY, center[2] + tangent[1] * halfWidth]);
+              rightEdge.push([center[0] - tangent[0] * halfWidth, centerY, center[2] - tangent[1] * halfWidth]);
+            }
+            const petalColor = ray % 5 === 0 ? headColor.map((channel) => Math.min(1, channel * 1.06)) : headColor;
+            for (let section = 0; section < sections; section += 1) {
+              const a = centerline[section], b = centerline[section + 1];
+              const leftA = leftEdge[section], leftB = leftEdge[section + 1];
+              const rightA = rightEdge[section], rightB = rightEdge[section + 1];
+              const shade = section % 2 === 0 ? 1.025 : 0.97;
+              addTriangle(positions, colors, a, leftA, leftB, petalColor.map((channel) => Math.min(1, channel * shade)));
+              addTriangle(positions, colors, a, leftB, b, petalColor);
+              addTriangle(positions, colors, a, b, rightB, petalColor.map((channel) => channel * 0.94));
+              addTriangle(positions, colors, a, rightB, rightA, petalColor.map((channel) => channel * 0.97));
+            }
           }
         }
         const diskCount = 32;
         const goldenAngle = Math.PI * (3 - Math.sqrt(5));
         for (let floret = 0; floret < diskCount; floret += 1) {
-          const radius = 0.052 * Math.sqrt((floret + 0.5) / diskCount);
+          const radius = 0.048 * Math.sqrt((floret + 0.5) / diskCount);
           const angle = floret * goldenAngle;
-          addOctahedron(positions, colors, x + Math.cos(angle) * radius, bloomY + 0.025, z + Math.sin(angle) * radius,
-            0.012, 0.014, 0.012, floret % 3 ? [0.77, 0.48, 0.17] : [0.9, 0.65, 0.23]);
+          addOctahedron(positions, colors, x + Math.cos(angle) * radius, bloomY + 0.012, z + Math.sin(angle) * radius,
+            0.009, 0.009, 0.009, floret % 3 ? [0.77, 0.48, 0.17] : [0.9, 0.65, 0.23]);
         }
       } else if (flowerIndex === 7) {
         // Hydrangea: a rounded mophead built from four-sepal florets.
