@@ -547,6 +547,34 @@
     ];
     addBranch(mainPoints, [0.010, 0.0085, 0.0065, 0.0045]);
 
+    // 玫瑰花萼：五片深綠色尖形萼片從花托底部向外伸展，避免花頭底部呈現紅色多面體。
+    if (stage === 2) {
+      const calyxY = stemTop - 0.006;
+      const calyxColor = [0.19, 0.34, 0.16];
+      const calyxShade = [0.15, 0.28, 0.12];
+      for (let sepal = 0; sepal < 5; sepal += 1) {
+        const angle = sepal / 5 * Math.PI * 2 + 0.28;
+        const radial = [Math.cos(angle), Math.sin(angle)];
+        const tangent = [-radial[1], radial[0]];
+        const base = [x + 0.014 + radial[0] * 0.004, calyxY, z + 0.008 + radial[1] * 0.004];
+        const shoulder = [
+          x + 0.014 + radial[0] * 0.025,
+          calyxY + 0.004,
+          z + 0.008 + radial[1] * 0.025,
+        ];
+        const tip = [
+          x + 0.014 + radial[0] * 0.058,
+          calyxY + 0.012,
+          z + 0.008 + radial[1] * 0.058,
+        ];
+        const left = [shoulder[0] + tangent[0] * 0.012, shoulder[1] + 0.002, shoulder[2] + tangent[1] * 0.012];
+        const right = [shoulder[0] - tangent[0] * 0.012, shoulder[1] + 0.002, shoulder[2] - tangent[1] * 0.012];
+        addTriangle(positions, colors, base, left, tip, calyxColor);
+        addTriangle(positions, colors, left, right, tip, calyxShade);
+        addTriangle(positions, colors, right, base, tip, calyxColor.map((channel) => channel * 0.92));
+      }
+    }
+
     const branchDefs = [
       { start: 0.30, dir: [-1, 0.18], reach: 0.115 },
       { start: 0.49, dir: [0.88, -0.34], reach: 0.105 },
