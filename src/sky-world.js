@@ -1564,8 +1564,8 @@
               const faceColor = headColor.map((channel) => Math.min(1, channel * faceShade * (isEdge ? 0.9 : 1)));
               const a = grid[up][across], b = grid[up + 1][across];
               const c = grid[up + 1][across + 1], d = grid[up][across + 1];
-              addTriangle(positions, colors, a, b, c, faceColor);
-              addTriangle(positions, colors, a, c, d, faceColor);
+              addRoseTriangle(positions, colors, a, b, c, faceColor);
+              addRoseTriangle(positions, colors, a, c, d, faceColor);
             }
           }
         }
@@ -1601,8 +1601,8 @@
             const faceColor = headColor.map((channel) => Math.min(1, channel * faceShade * (isEdge ? 0.9 : 1)));
             const a = grid[step][across], b = grid[step + 1][across];
             const c = grid[step + 1][across + 1], d = grid[step][across + 1];
-            addTriangle(positions, colors, a, b, c, faceColor);
-            addTriangle(positions, colors, a, c, d, faceColor);
+            addRoseTriangle(positions, colors, a, b, c, faceColor);
+            addRoseTriangle(positions, colors, a, c, d, faceColor);
           }
         }
       }
@@ -1615,7 +1615,7 @@
       for (let k = 0; k < 6; k += 1) {
         const a0 = k / 6 * Math.PI * 2 + 1.45;
         const a1 = (k + 1) / 6 * Math.PI * 2 + 1.45;
-        addTriangle(positions, colors,
+        addRoseTriangle(positions, colors,
           [x, topY - 0.004, z],
           [x + Math.cos(a0) * capRadius, topY, z + Math.sin(a0) * capRadius],
           [x + Math.cos(a1) * capRadius, topY, z + Math.sin(a1) * capRadius],
@@ -1623,17 +1623,28 @@
       }
       for (let curl = 0; curl < 3; curl += 1) {
         const angle = curl * 2.1 + 0.4;
-        addTriangle(positions, colors,
+        addRoseTriangle(positions, colors,
           [x + Math.cos(angle) * capRadius * 0.15, topY - 0.002, z + Math.sin(angle) * capRadius * 0.15],
           [x + Math.cos(angle + 0.9) * capRadius * 1.1, topY + 0.001, z + Math.sin(angle + 0.9) * capRadius * 1.1],
           [x + Math.cos(angle + 1.7) * capRadius * 0.75, topY + 0.003, z + Math.sin(angle + 1.7) * capRadius * 0.75],
           headColor.map((channel) => Math.min(1, channel * (0.9 + curl * 0.06))));
       }
+      // 將整個玫瑰花頭縮至原尺寸一半，並把花頭底部下移至花萼頂端。
+      const roseScale = 0.5;
+      const roseBaseY = bloomY - 0.01;
+      const roseCalyxY = bloomY - 0.034;
+      const addRoseTriangle = (positions, colors, a, b, c, color) => {
+        const transform = (point) => [
+          x + (point[0] - x) * roseScale,
+          roseCalyxY + (point[1] - roseBaseY) * roseScale,
+          z + (point[2] - z) * roseScale,
+        ];
+        addTriangle(positions, colors, transform(a), transform(b), transform(c), color);
+      };
     }
 
-    // 玫瑰已完成專用花頭與花萼；略過下方舊版通用花頭，避免額外生成紅色八面體。
-    return;
-
+      // 玫瑰已完成專用花頭與花萼；略過舊版通用花頭，避免額外生成紅色八面體。
+      return;
     if (!dedicatedStemLeafModel) {
       addLeaf(positions, colors, x, 0.22, z, [-0.82, 0.38, -0.12], 0.22, [0.31, 0.58, 0.3]);
       addLeaf(positions, colors, x, 0.32, z, [0.74, 0.34, 0.16], 0.21, [0.37, 0.64, 0.33]);
