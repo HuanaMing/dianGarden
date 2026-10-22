@@ -1178,7 +1178,7 @@
         animation.workCompleted = true;
         animation.returning = animation.shouldReturn?.() !== false;
         if (!animation.departed) { animation.departed = true; animation.onDeparture?.(); }
-        if (Number.isInteger(animation.targetPlotIndex)) state.lastCompletedPlotIndex = animation.targetPlotIndex;
+        state.lastCompletedPlotIndex = Number.isInteger(animation.targetPlotIndex) ? animation.targetPlotIndex : null;
         state.animation = null;
         const onComplete = animation.onComplete;
         animation.onComplete = null;
