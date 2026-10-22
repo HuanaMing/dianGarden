@@ -48,6 +48,13 @@ try {
   for (const selector of ['#settings-toggle', '.encyclopedia-link', '#hud-toggle', '#drone-panel-toggle']) {
     if (!(await page.locator(selector).isVisible())) throw new Error(`頂部控制按鈕未顯示：${selector}`);
   }
+  await page.locator('#hud-toggle').click();
+  if (!(await page.locator('#hud-toggle').isVisible()) || await page.locator('#hud-toggle').textContent() !== '🔽') throw new Error('收合介面後沒有保留可復原的按鈕');
+  await page.locator('#hud-toggle').click();
+  if (await page.locator('#hud-toggle').textContent() !== '🔼') throw new Error('再次點擊收合按鈕未恢復介面');
+  await page.locator('#drone-panel-toggle').click();
+  if (await page.locator('#drone-panel-toggle').textContent() !== '🚁') throw new Error('無人機按鈕圖示異常，不應變成文字');
+  await page.locator('#drone-panel-toggle').click();
   await page.locator('#settings-toggle').click();
   if (!(await page.locator('#settings-panel').isVisible())) throw new Error('設定按鈕未能開啟設定面板');
   await page.locator('#power-save-toggle').click();
@@ -59,7 +66,7 @@ try {
   await page.locator('#power-save-toggle').click();
   await page.waitForTimeout(400);
   if (await page.evaluate(() => window.__webglDrawCalls) <= drawCallsDuringPowerSave) throw new Error('關閉省電模式後 WebGL 繪圖未恢復');
-  checks.push('設定面板、頂部控制入口及省電模式繪圖暫停／恢復通過');
+  checks.push('收合／恢復、無人機圖示、設定面板及省電模式繪圖暫停／恢復通過');
 
   const worldMessage = await page.locator('#world-message').innerText().catch(() => '');
   if (worldMessage.includes('載入失敗') || worldMessage.includes('無法啟用 WebGL')) {
