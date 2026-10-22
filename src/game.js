@@ -252,6 +252,7 @@
   let isResetting = false;
   const activeJobs = new Map();
   const recentlyReturnedDrones = new Set();
+  const returningDrones = new Set();
   let nextDroneIndex = 0;
   const jobQueue = [];
   let lastBatterySaveAt = Date.now();
@@ -698,8 +699,9 @@
         if (priority(a) === 2 && a.drone.battery !== b.drone.battery) return b.drone.battery - a.drone.battery;
         return a.rotation - b.rotation;
       });
-    for (const { index: droneIndex } of candidateOrder) {
+    for (const { index: droneIndex, drone } of candidateOrder) {
       if (!jobQueue.length) break;
+      if (drone.battery < 100 && !recentlyReturnedDrones.has(droneIndex) && returningDrones.size) break;
       if (game.drones[droneIndex]?.deployed === false || activeJobs.has(droneIndex)) continue;
       const queueIndex = jobQueue.findIndex((job) => {
         if (game.drones[droneIndex].battery < estimateJobBattery(job, droneIndex)) return false;
@@ -726,6 +728,7 @@
         commit();
         updateBatteries();
         activeJobs.delete(droneIndex);
+        returningDrones.delete(droneIndex);
         if (plannedReturn) recentlyReturnedDrones.add(droneIndex);
         renderJobQueue();
         processJobQueue();
@@ -735,6 +738,7 @@
         plannedReturn = job.kind === 'expand'
           || jobQueue.some((queued) => queued.kind === 'expand')
           || jobQueue.length === 0;
+        if (plannedReturn) returningDrones.add(droneIndex);
         return plannedReturn;
       };
       if (job.kind === 'water') {
