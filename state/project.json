@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "blocked",
   "activeTask": "109-personal-ios-app-lock-screen-flower-widget",
-  "nextAction": "任務161玫瑰專屬莖葉與成熟花頭重做正在進行，程式與靜態檢查已完成，等待瀏覽器視覺驗收。任務147與149已驗收完成並歸檔。專案 activeTask 仍保留任務109，其Xcode環境與雲端Mac付費批准尚未解決。",
+  "nextAction": "任務161：玫瑰莖葉已獲使用者確認；花頭已重作為經典紅玫瑰酒杯型，下一步從正面、側面、斜上方與正上方驗收。任務147與149已完成歸檔。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
