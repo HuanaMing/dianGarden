@@ -160,3 +160,9 @@
 - 修改：葉肩高度公式恢復為 `baseY + (stage === 1 ? 0.085 : 0.145)`，移除先前的 `* 0.8`；`lowerRidge[1]` 改為 `shoulder[1] - 0.018`。其餘頂點的水平位置及葉尖高度公式保留。
 - 驗證：已重新讀取 GitHub 最新程式碼並確認兩項公式已更新；尚未執行 JavaScript 語法檢查或瀏覽器視覺驗收。
 - 狀態：保持 active。
+
+### 159 重作：降低風信子側葉肩並將葉尖對齊 ridge（2026-10-22）
+- 需求：左右側葉肩（`left`、`right`）降低至葉肩參考高度 `shoulder[1] - 0.018`；葉尖高度維持，水平位置改為位於 `ridge` 正上方。
+- 修改：`left[1]` 與 `right[1]` 均由 `shoulder[1] + 0.008` 改為 `shoulder[1] - 0.018`。葉尖 Y 座標仍為 `originalHighestY + 0.02`，X/Z 座標直接使用 `ridge[0]`、`ridge[2]`，不再取 `ridge` 與 `lowerRidge` 的中點。
+- 驗證：已更新 GitHub `main` 分支程式碼與任務紀錄；尚未執行 JavaScript 語法檢查或瀏覽器視覺驗收。
+- 狀態：保持 active，待檢查葉片側肩與葉尖輪廓。
