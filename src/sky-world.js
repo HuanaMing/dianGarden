@@ -808,7 +808,7 @@
         positions[vertex + 2] = z - offsetX * headSin + offsetZ * headCos;
       }
       // Move the whole head slightly forward so its rear edge meets the stalk.
-      const sunflowerHeadForwardOffset = 0.036;
+      const sunflowerHeadForwardOffset = 0.031;
       for (let vertex = flowerHeadStart; vertex < positions.length; vertex += 3) {
         positions[vertex + 2] += sunflowerHeadForwardOffset;
       }
@@ -822,27 +822,29 @@
       for (let row = 0; row < rows; row += 1) {
         const count = row === 0 || row === rows - 1 ? 3 : 4;
         const rowY = 0.055 + height * (0.49 + row * 0.095);
-        const rowRadius = 0.035 + Math.sin((row + 1) / (rows + 1) * Math.PI) * 0.048;
+        // Keep florets close to the central stalk and fold petals inward.
+        const rowRadius = 0.014 + Math.sin((row + 1) / (rows + 1) * Math.PI) * 0.016;
         for (let bloom = 0; bloom < count; bloom += 1) {
           const angle = (bloom / count) * Math.PI * 2 + row * 0.43;
           const radial = [Math.cos(angle), 0, Math.sin(angle)];
           const tangent = [-Math.sin(angle), 0, Math.cos(angle)];
           const center = [x + radial[0] * rowRadius, rowY, z + radial[2] * rowRadius];
-          const width = 0.014;
+          const width = 0.010;
           for (let lobe = 0; lobe < 6; lobe += 1) {
             const lobeAngle = lobe / 6 * Math.PI * 2;
-            const up = Math.cos(lobeAngle) * 0.014;
-            const side = Math.sin(lobeAngle) * 0.014;
-            const root = [center[0] + radial[0] * 0.013, center[1] + up, center[2] + radial[2] * 0.013];
-            const tip = [center[0] + radial[0] * 0.066, center[1] + up * 1.8, center[2] + radial[2] * 0.066];
-            const left = [center[0] + radial[0] * 0.034 + tangent[0] * width + tangent[0] * side,
-              center[1] + up, center[2] + radial[2] * 0.034 + tangent[2] * width + tangent[2] * side];
-            const right = [center[0] + radial[0] * 0.034 - tangent[0] * width + tangent[0] * side,
-              center[1] + up, center[2] + radial[2] * 0.034 - tangent[2] * width + tangent[2] * side];
+            const up = Math.cos(lobeAngle) * 0.012;
+            const side = Math.sin(lobeAngle) * 0.012;
+            const root = [center[0] + radial[0] * 0.012, center[1] + up, center[2] + radial[2] * 0.012];
+            const tip = [center[0] - radial[0] * 0.014, center[1] + up * 1.25, center[2] - radial[2] * 0.014];
+            const petalBase = [center[0] - radial[0] * 0.002, center[1] + up * 0.35, center[2] - radial[2] * 0.002];
+            const left = [petalBase[0] + tangent[0] * width + tangent[0] * side,
+              petalBase[1] + up * 0.35, petalBase[2] + tangent[2] * width + tangent[2] * side];
+            const right = [petalBase[0] - tangent[0] * width + tangent[0] * side,
+              petalBase[1] + up * 0.35, petalBase[2] - tangent[2] * width + tangent[2] * side];
             addTriangle(positions, colors, root, left, tip, headColor);
             addTriangle(positions, colors, root, tip, right, headColor.map((channel) => channel * 0.94));
           }
-          addOctahedron(positions, colors, ...center, 0.018, 0.018, 0.018, headColor);
+          addOctahedron(positions, colors, ...center, 0.012, 0.014, 0.012, headColor);
         }
       }
       return;
