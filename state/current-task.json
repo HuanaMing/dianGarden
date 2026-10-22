@@ -1,9 +1,9 @@
 {
-  "name": "任務160完成歸檔與 active 目錄清理",
-  "status": "completed_archived",
+  "name": "任務161玫瑰專屬莖葉與成熟花頭重做",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務160已由使用者確認完成並歸檔至 tasks/done。tasks/active 僅保留仍待瀏覽器視覺驗收的任務147與149；專案主要狀態仍有任務109的Xcode環境與雲端Mac付費批准待處理。",
-  "result": "任務160完成文件已建立並驗證，active 原始檔及其他已歸檔任務的重複副本已清除。JavaScript語法與靜態檢查通過；瀏覽器視覺驗收未由Agent執行。"
+  "nextAction": "任務161程式修改與靜態檢查已完成；下一步在瀏覽器檢查玫瑰花園及圖鑑的正面、側面與斜上方效果。任務147與149已由使用者確認驗收通過並歸檔。任務109的Xcode環境與雲端Mac付費批准仍待處理。",
+  "result": "已新增玫瑰專屬木質枝條、羽狀複葉及四層曲面重瓣花頭，JavaScript語法編譯檢查通過；瀏覽器視覺驗收尚未執行。"
 }
