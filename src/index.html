@@ -23,16 +23,23 @@
               <span class="environment-status" id="environment-status" aria-live="polite">晴朗 · 白天</span>
               <span class="save-status" id="save-status" role="status" aria-live="polite"></span>
             </div>
-          <button class="drone-panel-toggle" id="drone-panel-toggle" type="button" aria-controls="drone-jobs" aria-expanded="false">🚁 無人機</button>
+          <div class="topbar-actions" role="group" aria-label="花園控制">
+              <button class="drone-panel-toggle" id="drone-panel-toggle" type="button" aria-controls="drone-jobs" aria-expanded="false" aria-label="無人機">🚁</button>
+              <button class="settings-toggle" id="settings-toggle" type="button" aria-controls="settings-panel" aria-expanded="false" aria-label="設定">⚙️</button>
+              <a class="encyclopedia-link" href="encyclopedia.html" aria-label="花卉圖鑑" title="花卉圖鑑">📖</a>
+              <button class="hud-toggle" id="hud-toggle" type="button" aria-controls="world-topbar drone-jobs plot-selector world-instructions" aria-expanded="true" aria-label="收合介面">🔼</button>
+            </div>
           </header>
-          <button class="hud-toggle" id="hud-toggle" type="button" aria-controls="world-topbar drone-jobs plot-selector world-instructions" aria-expanded="true">收合介面</button>
-          <button class="camera-mode" id="camera-mode" type="button" aria-pressed="false">2D模式</button>
+          <section class="settings-panel" id="settings-panel" aria-label="設定" hidden>
+            <h2>設定</h2>
+            <button class="camera-mode" id="camera-mode" type="button" aria-pressed="false">2D模式</button>
+            <button class="reset-progress-button" id="reset-progress" type="button">重置進度</button>
+            <p class="settings-save-status">進度會自動儲存</p>
+          </section>
           <div class="mobile-zoom-controls" role="group" aria-label="場景縮放">
             <button id="zoom-in" type="button" aria-label="放大場景">＋</button>
             <button id="zoom-out" type="button" aria-label="縮小場景">−</button>
           </div>
-          <a class="encyclopedia-link" href="encyclopedia.html">花卉圖鑑</a>
-          <button class="reset-progress-button" id="reset-progress" type="button">重置進度</button>
           <aside class="drone-jobs" id="drone-jobs" aria-label="無人機工作佇列"><strong id="job-status" role="status" aria-live="polite">無人機待命</strong><button class="auto-mode" id="auto-mode" type="button" aria-pressed="false">自動模式：關</button><button class="buy-drone" id="buy-drone" type="button">購買無人機 · 150 🪙 (1/8)</button><div class="drone-fleet" id="drone-fleet" aria-label="無人機部署管理"></div><ol id="job-queue"></ol></aside>
           <div class="hud-collapsed-summary" id="hud-collapsed-summary" role="status" aria-live="polite"></div>
           <div class="world-message" id="world-message" role="status">正在載入空中島嶼…</div>
