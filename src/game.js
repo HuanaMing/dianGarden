@@ -231,6 +231,8 @@
   const buyDroneButton = document.querySelector('#buy-drone');
   const droneFleetDisplay = document.querySelector('#drone-fleet');
   const dronePanelToggle = document.querySelector('#drone-panel-toggle');
+  const settingsToggle = document.querySelector('#settings-toggle');
+  const settingsPanel = document.querySelector('#settings-panel');
   const droneJobsPanel = document.querySelector('#drone-jobs');
   const hudToggle = document.querySelector('#hud-toggle');
   const hudCollapsedSummary = document.querySelector('#hud-collapsed-summary');
@@ -550,7 +552,9 @@
     document.querySelector('.world-frame')?.classList.toggle('is-hud-collapsed', game.hudCollapsed);
     if (hudCollapsedSummary) { const environment = window.skyEnvironment.getState(game); hudCollapsedSummary.textContent = `${game.gardenName} · 🪙 ${game.coins} · 🌱 ${game.plots.length} · ${environment.isRaining ? '陰雨' : '晴朗'} · ${({ dawn: '清晨', day: '白天', dusk: '黃昏', night: '夜晚' })[environment.phase]} · ${jobStatus?.textContent || '無人機待命'}${persistenceWarning ? ' · 存檔需留意' : ''}`; }
     if (!hudToggle) return;
-    hudToggle.textContent = game.hudCollapsed ? '展開介面' : '收合介面';
+    hudToggle.textContent = game.hudCollapsed ? '🔽' : '🔼';
+    hudToggle.setAttribute('aria-label', game.hudCollapsed ? '展開介面' : '收合介面');
+    hudToggle.setAttribute('title', game.hudCollapsed ? '展開介面' : '收合介面');
     hudToggle.setAttribute('aria-expanded', String(!game.hudCollapsed));
   }
   function updateGardenName() {
@@ -895,6 +899,17 @@
     droneJobsPanel?.addEventListener(eventName, refreshDronePanelTimeout);
   });
   hudToggle?.addEventListener('click', () => { game.hudCollapsed = !game.hudCollapsed; save(); updateHudCollapse(); });
+  settingsToggle?.addEventListener('click', () => {
+    const open = settingsPanel?.hidden !== false;
+    if (settingsPanel) settingsPanel.hidden = !open;
+    settingsToggle.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('pointerdown', (event) => {
+    if (settingsPanel?.hidden === false && !settingsPanel.contains(event.target) && !settingsToggle?.contains(event.target)) {
+      settingsPanel.hidden = true;
+      settingsToggle?.setAttribute('aria-expanded', 'false');
+    }
+  });
   gardenNameDisplay?.addEventListener('click', () => { gardenNameInput.value = game.gardenName; gardenNameDisplay.hidden = true; gardenNameEditor.hidden = false; gardenNameInput.focus(); gardenNameInput.select(); });
   gardenNameInput?.addEventListener('input', () => {
     const name = gardenNameInput.value.trim();
