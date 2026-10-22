@@ -1180,3 +1180,9 @@
 - 結果：依使用者回饋加大三層菊花舌狀花瓣的彎曲程度；第一層改為向上彎，第二、三層改為向下彎，維持既有基準高度差與圓鈍花瓣端部。
 - 驗證：`src/sky-world.js` JavaScript 語法編譯檢查通過；尚待使用者在遊戲內確認視覺效果。
 - 檔案：`src/sky-world.js`、`tasks/active/164-chrysanthemum-stem-leaf-model.md`、`docs/architecture.md`、`state/current-task.json`、`state/project.json`。
+
+## 2026-10-22 — 任務 164：菊花三層花瓣改為包覆花心
+
+- 結果：三層花瓣統一改為側向伸展、中段向上拱起、末端略微內扣的曲線；由外至內逐步加強內扣，形成包覆中央花心的杯狀輪廓。
+- 驗證：`src/sky-world.js` JavaScript 語法編譯檢查通過；待遊戲內視覺驗收。
+- 檔案：`src/sky-world.js`、`tasks/active/164-chrysanthemum-stem-leaf-model.md`、`docs/architecture.md`、`state/current-task.json`、`state/project.json`。
