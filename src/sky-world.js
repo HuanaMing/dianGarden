@@ -776,27 +776,39 @@
     }
 
     if (flowerIndex >= 4) {
-      addLeaf(positions, colors, x, 0.13, z, [-0.76, 0.34, -0.18], flowerIndex === 7 ? 0.24 : 0.18, [0.34, 0.6, 0.29]);
-      addLeaf(positions, colors, x, 0.2, z, [0.72, 0.36, 0.16], flowerIndex === 7 ? 0.22 : 0.17, [0.39, 0.64, 0.31]);
+      // 鬱金香已有專屬基生葉叢，不能再疊加舊版沿莖側伸出的通用葉片。
+      if (flowerIndex !== 4) {
+        addLeaf(positions, colors, x, 0.13, z, [-0.76, 0.34, -0.18], flowerIndex === 7 ? 0.24 : 0.18, [0.34, 0.6, 0.29]);
+        addLeaf(positions, colors, x, 0.2, z, [0.72, 0.36, 0.16], flowerIndex === 7 ? 0.22 : 0.17, [0.39, 0.64, 0.31]);
+      }
       const bloomY = 0.055 + height;
       if (flowerIndex === 4) {
-        // Tulip: six overlapping tepals rise into a shallow, open cup.
+        // Tulip: six overlapping tepals with a softly rounded, subdivided upper rim.
         for (let tepal = 0; tepal < 6; tepal += 1) {
           const angle0 = tepal / 6 * Math.PI * 2;
           const angle1 = (tepal + 1) / 6 * Math.PI * 2;
           const middle = (angle0 + angle1) / 2;
           const baseY = bloomY - 0.035;
-          const rimY = bloomY + (tepal % 2 ? 0.092 : 0.108);
-          const base0 = [x + Math.cos(angle0) * 0.036, baseY, z + Math.sin(angle0) * 0.036];
-          const base1 = [x + Math.cos(angle1) * 0.036, baseY, z + Math.sin(angle1) * 0.036];
-          const rim0 = [x + Math.cos(angle0) * 0.085, rimY, z + Math.sin(angle0) * 0.085];
-          const rim1 = [x + Math.cos(angle1) * 0.085, rimY, z + Math.sin(angle1) * 0.085];
+          const rimHeight = tepal % 2 ? 0.092 : 0.108;
           const shade = tepal % 2 ? 0.95 : 1.06;
           const tepalColor = headColor.map((channel) => Math.min(1, channel * shade));
-          addTriangle(positions, colors, base0, rim0, rim1, tepalColor);
-          addTriangle(positions, colors, base0, rim1, base1, tepalColor.map((channel) => channel * 0.96));
+          const rimPoints = Array.from({ length: 5 }, (_, point) => {
+            const t = point / 4;
+            const angle = angle0 + (angle1 - angle0) * t;
+            const roundedHeight = rimHeight * (0.88 + 0.12 * Math.sin(Math.PI * t));
+            return [x + Math.cos(angle) * 0.085, bloomY + roundedHeight, z + Math.sin(angle) * 0.085];
+          });
+          const basePoints = Array.from({ length: 5 }, (_, point) => {
+            const t = point / 4;
+            const angle = angle0 + (angle1 - angle0) * t;
+            return [x + Math.cos(angle) * 0.036, baseY, z + Math.sin(angle) * 0.036];
+          });
+          for (let segment = 0; segment < 4; segment += 1) {
+            addTriangle(positions, colors, basePoints[segment], rimPoints[segment], rimPoints[segment + 1], tepalColor);
+            addTriangle(positions, colors, basePoints[segment], rimPoints[segment + 1], basePoints[segment + 1], tepalColor.map((channel) => channel * 0.96));
+          }
           const rib = [x + Math.cos(middle) * 0.062, bloomY + 0.035, z + Math.sin(middle) * 0.062];
-          addTriangle(positions, colors, base0, rib, rim0, tepalColor.map((channel) => Math.min(1, channel * 1.04)));
+          addTriangle(positions, colors, basePoints[2], rib, rimPoints[0], tepalColor.map((channel) => Math.min(1, channel * 1.04)));
         }
         addOctahedron(positions, colors, x, bloomY + 0.006, z, 0.023, 0.02, 0.023, [0.88, 0.67, 0.27]);
       } else if (flowerIndex === 5) {
