@@ -291,16 +291,27 @@
     // rose medium-sized, and hyacinth/lily-of-the-valley compact.
     const matureHeight = flowerHeights[flowerIndex] || flowerHeights[0];
     const height = stage === 1 ? matureHeight * 0.31 : matureHeight;
-    const stemWidth = flowerIndex === 2 ? 0.018 : 0.028;
-    const stemColor = [0.3, 0.53, 0.27];
-    addBox(positions, colors, x - stemWidth / 2, 0.055, z - stemWidth / 2, x + stemWidth / 2, 0.055 + height, z + stemWidth / 2, {
-      top: [0.36, 0.59, 0.3], front: [0.28, 0.47, 0.25], right: [0.25, 0.42, 0.22],
-      back: [0.32, 0.52, 0.27], left: stemColor, bottom: [0.22, 0.38, 0.2],
-    });
+    const dedicatedStemLeafModel = plantStemLeafModels[flowerIndex];
+    if (dedicatedStemLeafModel) {
+      if (stage === 1) {
+        dedicatedStemLeafModel(positions, colors, x, z, height, stage);
+        return;
+      }
+    } else {
+      const stemWidth = flowerIndex === 2 ? 0.018 : 0.028;
+      const stemColor = [0.3, 0.53, 0.27];
+      addBox(positions, colors, x - stemWidth / 2, 0.055, z - stemWidth / 2, x + stemWidth / 2, 0.055 + height, z + stemWidth / 2, {
+        top: [0.36, 0.59, 0.3], front: [0.28, 0.47, 0.25], right: [0.25, 0.42, 0.22],
+        back: [0.32, 0.52, 0.27], left: stemColor, bottom: [0.22, 0.38, 0.2],
+      });
+    }
 
     if (stage === 1) {
-      addLeaf(positions, colors, x, 0.11, z, [-0.75, 0.52, -0.15], 0.12, [0.34, 0.62, 0.29]);
-      addLeaf(positions, colors, x, 0.12, z, [0.66, 0.54, 0.2], 0.12, [0.38, 0.66, 0.31]);
+      if (dedicatedStemLeafModel) dedicatedStemLeafModel(positions, colors, x, z, height, stage);
+      else {
+        addLeaf(positions, colors, x, 0.11, z, [-0.75, 0.52, -0.15], 0.12, [0.34, 0.62, 0.29]);
+        addLeaf(positions, colors, x, 0.12, z, [0.66, 0.54, 0.2], 0.12, [0.38, 0.66, 0.31]);
+      }
       return;
     }
 
