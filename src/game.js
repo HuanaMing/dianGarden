@@ -757,6 +757,7 @@
         updateBatteries();
         activeJobs.delete(droneIndex);
         if (job.kind !== 'expand') lastCompletedPlotByDrone.set(droneIndex, job.index);
+        else lastCompletedPlotByDrone.delete(droneIndex);
         renderJobQueue();
         processJobQueue();
       };
