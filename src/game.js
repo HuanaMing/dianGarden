@@ -232,6 +232,7 @@
   const jobStatus = document.querySelector('#job-status');
   const jobQueueDisplay = document.querySelector('#job-queue');
   const expandButton = document.querySelector('#world-expand');
+  const manualLandButton = document.querySelector('#world-buy-manual-plot');
   const autoModeButton = document.querySelector('#auto-mode');
   const buyDroneButton = document.querySelector('#buy-drone');
   const droneFleetDisplay = document.querySelector('#drone-fleet');
@@ -386,12 +387,14 @@
   function renderFarmDialog() {
     if (!dialog.open || !dialogContext) return;
     dialog.classList.remove('has-variant-panel');
-    if (dialogContext.type === 'expansion') {
-      const cost = getLandCost();
-      dialogTitle.textContent = '擴建空中土地';
-      dialogContent.innerHTML = `<p class="seed-dialog-description">開墾新土地需要 ${cost} 枚金幣。你目前有 ${game.coins} 枚。</p><div class="dialog-actions"><button class="dialog-cancel" type="button" data-dialog-cancel>再想想</button><button class="action-button" type="button" data-confirm-expansion ${game.coins < cost ? 'disabled' : ''}>確認開墾　${cost} 🪙</button></div>`;
+    if (dialogContext.type === 'expansion' || dialogContext.type === 'manual-expansion') {
+      const isManual = dialogContext.type === 'manual-expansion';
+      const cost = isManual ? LAND_COST : getLandCost();
+      dialogTitle.textContent = isManual ? '購買手動地塊' : '購買自動地塊';
+      const description = isManual ? '手動地塊固定價格為 75 金幣，不會由無人機自動播種、澆水或收成。' : '自動地塊依現有擴建價格規則計價，可由無人機執行自動工作。';
+      dialogContent.innerHTML = `<p class="seed-dialog-description">${description} 需要 ${cost} 枚金幣。你目前有 ${game.coins} 枚。</p><div class="dialog-actions"><button class="dialog-cancel" type="button" data-dialog-cancel>再想想</button><button class="action-button" type="button" data-confirm-expansion ${game.coins < cost ? 'disabled' : ''}>確認購買　${cost} 🪙</button></div>`;
       dialogContent.querySelector('[data-dialog-cancel]').addEventListener('click', () => dialog.close());
-      dialogContent.querySelector('[data-confirm-expansion]').addEventListener('click', () => { if (game.coins >= getLandCost()) { dialog.close(); buyLand(); } });
+      dialogContent.querySelector('[data-confirm-expansion]').addEventListener('click', () => { if (game.coins >= cost) { dialog.close(); if (isManual) buyManualLand(); else buyLand(); } });
       return;
     }
     const index = dialogContext.index;
@@ -617,16 +620,17 @@
       grass: '純草地不可種植，無人機也會略過此地。',
     };
     const active = hasActivePlotJob(index);
-    const next = { auto: '手動', manual: '草地', grass: '自動' }[mode];
-    return `<div class="manual-plot-setting plot-mode-setting"><div><strong>地塊性質：${labels[mode]}</strong><small>${descriptions[mode]} 點擊切換至${next}。</small></div><button class="plot-mode-switch" type="button" data-plot-mode-switch data-mode="${mode}" aria-label="農地 ${index + 1} 地塊性質：${labels[mode]}，點擊切換至${next}" ${active ? 'disabled' : ''}><span class="${mode === 'auto' ? 'is-current' : ''}">自動</span><span class="${mode === 'manual' ? 'is-current' : ''}">手動</span><span class="${mode === 'grass' ? 'is-current' : ''}">草地</span></button></div>${active ? '<p class="manual-plot-busy">無人機正在此地工作，工作結束後才能切換。</p>' : ''}`;
+    const next = mode === 'manual' ? '草地' : mode === 'grass' ? '手動' : '';
+    const modeHelp = mode === 'auto' ? '自動地塊類型固定，不能直接轉換為手動地塊或草地。' : `${descriptions[mode]} 點擊切換至${next}。`;
+    return `<div class="manual-plot-setting plot-mode-setting"><div><strong>地塊性質：${labels[mode]}</strong><small>${modeHelp}</small></div><button class="plot-mode-switch" type="button" data-plot-mode-switch data-mode="${mode}" aria-label="${mode === 'auto' ? `農地 ${index + 1} 為固定自動地塊` : `農地 ${index + 1} 地塊性質：${labels[mode]}，點擊切換至${next}`}" ${active || mode === 'auto' ? 'disabled' : ''}><span class="${mode === 'auto' ? 'is-current' : ''}">自動</span><span class="${mode === 'manual' ? 'is-current' : ''}">手動</span><span class="${mode === 'grass' ? 'is-current' : ''}">草地</span></button></div>${active ? '<p class="manual-plot-busy">無人機正在此地工作，工作結束後才能切換。</p>' : ''}`;
   }
   function setPlotMode(index) {
     const plot = game.plots[index];
     if (!plot) return;
     if (hasActivePlotJob(index)) { renderFarmDialog(); notify('無人機正在此地工作，工作結束後才能切換農地性質。'); return; }
-    const order = ['auto', 'manual', 'grass'];
     const oldMode = plotMode(plot);
-    const newMode = order[(order.indexOf(oldMode) + 1) % order.length];
+    if (oldMode === 'auto') { notify('自動地塊不能轉換為手動地塊或草地。'); return; }
+    const newMode = oldMode === 'manual' ? 'grass' : 'manual';
     const changedPlot = { ...plot, manual: newMode !== 'auto', grassOnly: newMode === 'grass' };
     const changedPlots = game.plots.map((item, plotIndex) => plotIndex === index ? changedPlot : item);
     const deployedDocks = game.drones.filter((drone) => drone.deployed !== false).map((drone) => drone.dockPosition);
@@ -886,6 +890,16 @@
     }
     if (dialogContext?.type === 'plot' && game.plots[dialogContext.index]?.crop !== null) renderFarmDialog();
   }
+  function buyManualLand() {
+    const cost = LAND_COST;
+    if (game.coins < cost) return notify('手動地塊固定需要 75 枚金幣，目前金幣不足。');
+    const position = getNextPlotPosition(game.plots, game.drones.map((drone) => drone.dockPosition));
+    if (!position) return notify('找不到不與坪台重疊的相鄰位置，請先移動坪台。');
+    const [x, z] = position;
+    game.coins -= cost;
+    game.plots.push({ crop: null, plantedAt: null, manual: true, grassOnly: false, x, z, y: 0 });
+    save(); render(); notify('已購買手動地塊，固定扣除 75 金幣。');
+  }
   function buyLand() {
     const cost = getLandCost();
     if (game.coins < cost) return notify(`金幣不足，開墾下一塊地需要 ${cost} 枚金幣。`);
@@ -910,6 +924,7 @@
     if (expansionPending) return notify('農地擴建中，請稍後');
     openExpansionDialog();
   });
+  manualLandButton?.addEventListener('click', () => { dialogContext = { type: 'manual-expansion' }; dialog.showModal(); renderFarmDialog(); });
   buyDroneButton?.addEventListener('click', buyDrone);
   dronePanelToggle?.addEventListener('click', () => {
     setDronePanelOpen(!droneJobsPanel?.classList.contains('is-open'));
