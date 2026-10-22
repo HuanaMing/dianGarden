@@ -739,6 +739,11 @@
         positions[vertex] = x + offsetX * headCos + offsetZ * headSin;
         positions[vertex + 2] = z - offsetX * headSin + offsetZ * headCos;
       }
+      // Move the whole head slightly forward so its rear edge meets the stalk.
+      const sunflowerHeadForwardOffset = 0.018;
+      for (let vertex = flowerHeadStart; vertex < positions.length; vertex += 3) {
+        positions[vertex + 2] += sunflowerHeadForwardOffset;
+      }
       return;
     }
 
