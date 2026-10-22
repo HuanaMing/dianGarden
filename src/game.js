@@ -251,6 +251,7 @@
   let dockIsSelected = false;
   let isResetting = false;
   const activeJobs = new Map();
+  const recentlyReturnedDrones = new Set();
   let nextDroneIndex = 0;
   const jobQueue = [];
   let lastBatterySaveAt = Date.now();
@@ -688,8 +689,17 @@
     const world = window.skyWorld;
     if (!world || !jobQueue.length) { renderJobQueue(); return; }
     const startIndex = nextDroneIndex;
-    for (let offset = 0; offset < game.drones.length && jobQueue.length; offset += 1) {
-      const droneIndex = (startIndex + offset) % game.drones.length;
+    const candidateOrder = game.drones.map((drone, index) => ({ drone, index, rotation: (index - startIndex + game.drones.length) % game.drones.length }))
+      .filter(({ drone, index }) => drone.deployed !== false && !activeJobs.has(index))
+      .sort((a, b) => {
+        const priority = (candidate) => candidate.drone.battery === 100 ? 0 : recentlyReturnedDrones.has(candidate.index) ? 1 : 2;
+        const priorityDifference = priority(a) - priority(b);
+        if (priorityDifference !== 0) return priorityDifference;
+        if (priority(a) === 2 && a.drone.battery !== b.drone.battery) return b.drone.battery - a.drone.battery;
+        return a.rotation - b.rotation;
+      });
+    for (const { index: droneIndex } of candidateOrder) {
+      if (!jobQueue.length) break;
       if (game.drones[droneIndex]?.deployed === false || activeJobs.has(droneIndex)) continue;
       const queueIndex = jobQueue.findIndex((job) => {
         if (game.drones[droneIndex].battery < estimateJobBattery(job, droneIndex)) return false;
@@ -700,6 +710,7 @@
       });
       if (queueIndex < 0) continue;
       const [job] = jobQueue.splice(queueIndex, 1);
+      recentlyReturnedDrones.delete(droneIndex);
       updateBatteries();
       activeJobs.set(droneIndex, job);
       nextDroneIndex = (droneIndex + 1) % game.drones.length;
@@ -715,12 +726,17 @@
         commit();
         updateBatteries();
         activeJobs.delete(droneIndex);
+        if (plannedReturn) recentlyReturnedDrones.add(droneIndex);
         renderJobQueue();
         processJobQueue();
       };
-      const shouldReturn = () => job.kind === 'expand'
-        || jobQueue.some((queued) => queued.kind === 'expand')
-        || jobQueue.length === 0;
+      let plannedReturn = false;
+      const shouldReturn = () => {
+        plannedReturn = job.kind === 'expand'
+          || jobQueue.some((queued) => queued.kind === 'expand')
+          || jobQueue.length === 0;
+        return plannedReturn;
+      };
       if (job.kind === 'water') {
         const plot = game.plots[job.index];
         if (!plot || plot.crop === null || plot.watered || growthElapsed(plot) >= (crops[plot.crop] || crops[0]).growTime) {
