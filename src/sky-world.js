@@ -307,7 +307,7 @@
       const radial = [Math.cos(angle), Math.sin(angle)];
       const tangent = [-radial[1], radial[0]];
       const length = (stage === 1 ? 0.12 : 0.205) + (leaf % 2) * 0.012;
-      const width = stage === 1 ? 0.023 : 0.034;
+      const width = (stage === 1 ? 0.023 : 0.034) * 0.5;
       const root = [x + radial[0] * 0.012, baseY + 0.012, z + radial[1] * 0.012];
       const shoulder = [
         x + radial[0] * length * 0.52,
@@ -318,10 +318,10 @@
       const left = [shoulder[0] + tangent[0] * width, shoulder[1] + 0.008, shoulder[2] + tangent[1] * width];
       const right = [shoulder[0] - tangent[0] * width, shoulder[1] + 0.008, shoulder[2] - tangent[1] * width];
       const ridge = [shoulder[0] - radial[0] * 0.009, originalHighestY, shoulder[2] - radial[1] * 0.009];
-      // Place the lower ridge inward from the shoulder, while keeping it outward of the highest point.
+      // Keep lowerRidge outward of the highest point and reduce its height above the shoulder to 70%.
       const lowerRidge = [
         shoulder[0] - radial[0] * 0.0045,
-        ridge[1] - 0.009,
+        shoulder[1] + 0.009 * 0.7,
         shoulder[2] - radial[1] * 0.0045,
       ];
       // Keep the tip's height unchanged; place its horizontal position midway between ridge and lowerRidge.
