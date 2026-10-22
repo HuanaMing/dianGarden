@@ -1282,6 +1282,87 @@
 
   plantStemLeafModels[9] = addPeonyStemLeafGeometry;
 
+  function addHiganbanaStemLeafGeometry(positions, colors, x, z, height, stage) {
+    const baseY = 0.055;
+    const leafColors = [
+      [0.22, 0.39, 0.19],
+      [0.27, 0.45, 0.21],
+      [0.31, 0.49, 0.23],
+      [0.24, 0.42, 0.2],
+      [0.29, 0.46, 0.22],
+    ];
+
+    // 彼岸花的葉期與花期通常分離：幼株階段以基部狹長帶狀葉表現葉叢。
+    // 成熟開花階段則收掉葉片，只保留細長、近乎無葉的花莖。
+    if (stage === 1) {
+      const leafCount = 5;
+      const sections = 7;
+      for (let leaf = 0; leaf < leafCount; leaf += 1) {
+        const angle = leaf / leafCount * Math.PI * 2 + 0.18;
+        const radial = [Math.cos(angle), Math.sin(angle)];
+        const tangent = [-radial[1], radial[0]];
+        const length = height * (0.88 + (leaf % 3) * 0.12);
+        const maxWidth = 0.013 + (leaf % 2) * 0.002;
+        const points = [];
+
+        for (let section = 0; section <= sections; section += 1) {
+          const t = section / sections;
+          const distance = length * t;
+          const width = maxWidth * Math.pow(Math.sin(Math.PI * t), 0.72);
+          const center = [
+            x + radial[0] * (0.008 + distance),
+            baseY + 0.008 + 0.025 * Math.sin(Math.PI * t) - 0.035 * t * t,
+            z + radial[1] * (0.008 + distance),
+          ];
+          const left = [center[0] + tangent[0] * width, center[1] + 0.003, center[2] + tangent[1] * width];
+          const right = [center[0] - tangent[0] * width, center[1] + 0.003, center[2] - tangent[1] * width];
+          const ridge = [center[0], center[1] + 0.0035, center[2]];
+          points.push({ left, right, ridge });
+        }
+
+        for (let section = 0; section < sections; section += 1) {
+          const a = points[section];
+          const b = points[section + 1];
+          const color = leafColors[leaf].map((channel) => Math.min(1, channel * (section % 2 ? 0.96 : 1.04)));
+          addTriangle(positions, colors, a.left, b.left, b.ridge, color);
+          addTriangle(positions, colors, a.left, b.ridge, a.ridge, color.map((channel) => Math.min(1, channel * 1.04)));
+          addTriangle(positions, colors, a.ridge, b.ridge, b.right, color.map((channel) => channel * 0.94));
+          addTriangle(positions, colors, a.ridge, b.right, a.right, color.map((channel) => channel * 0.9));
+        }
+      }
+      return;
+    }
+
+    // 開花時的花莖細長、近乎無葉，略有自然的 XZ 雙軸偏移。
+    const stalkTop = Math.max(baseY + 0.12, baseY + height - 0.085);
+    const segments = 9;
+    const sides = 7;
+    const rings = Array.from({ length: segments + 1 }, (_, segment) => {
+      const t = segment / segments;
+      const centerX = x + 0.007 * Math.sin(t * Math.PI * 0.9) - 0.002 * t;
+      const centerZ = z + 0.005 * Math.sin(t * Math.PI * 1.2 + 0.3);
+      const radius = 0.0065 * (1 - 0.24 * t);
+      return Array.from({ length: sides }, (_, side) => {
+        const angle = side / sides * Math.PI * 2;
+        return [centerX + Math.cos(angle) * radius, baseY + (stalkTop - baseY) * t,
+          centerZ + Math.sin(angle) * radius];
+      });
+    });
+
+    for (let segment = 0; segment < segments; segment += 1) {
+      for (let side = 0; side < sides; side += 1) {
+        const next = (side + 1) % sides;
+        const shade = side % 2 ? 0.92 : 1.04;
+        const color = [0.25, 0.43, 0.21].map((channel) => channel * shade);
+        addTriangle(positions, colors, rings[segment][side], rings[segment][next], rings[segment + 1][next], color);
+        addTriangle(positions, colors, rings[segment][side], rings[segment + 1][next], rings[segment + 1][side],
+          color.map((channel) => channel * 0.96));
+      }
+    }
+  }
+
+  plantStemLeafModels[10] = addHiganbanaStemLeafGeometry;
+
   function addFlowerModel(positions, colors, x, z, flowerIndex, stage, heightMultiplier = 1, customColor = null) {
     const modelPositions = [];
     const modelColors = [];
