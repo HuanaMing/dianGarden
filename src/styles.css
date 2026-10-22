@@ -346,3 +346,8 @@ input, textarea, [contenteditable="true"]{
 .plot-pixel-icon{width:32px;height:32px}
 .encyclopedia-pixel-icon{margin-right:5px}
 .seed-option-icon,.world-plot-icon,.dialog-crop>span{display:inline-flex;align-items:center;justify-content:center}
+
+/* 頂部資訊卡橫跨整個場景橫幅，不留左右空隙。 */
+.world-topbar{left:0;right:0;top:0;border-radius:0 0 16px 16px;padding-left:16px;padding-right:16px}
+@media(max-width:700px){.world-topbar{left:0;right:0;top:0;border-radius:0 0 13px 13px;padding-left:8px;padding-right:8px}}
+@media(max-width:700px) and (orientation:landscape){.world-topbar{left:0;right:0;top:0}}
