@@ -1919,25 +1919,37 @@
 
     const bloomY = 0.055 + height;
     if (flowerIndex === 9) {
-      // 牡丹：圓頂外輪廓（正視半圓、俯視正圓），以正二十面體作為花序單元。
+      // 牡丹實驗版：粉紅八面體花瓣沿正二十面體頂點分布，形成緊密的圓頂。
       const peonyBaseY = bloomY - 0.018;
-      const floretCount = 32;
-      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
       const domeRadius = 0.172;
       const domeHeight = 0.118;
-      for (let bloom = 0; bloom < floretCount; bloom += 1) {
-        // 在圓形俯視範圍內均勻散佈單元；半球曲面決定每個單元的高度。
-        const radial = domeRadius * Math.sqrt((bloom + 0.5) / floretCount);
-        const angle = bloom * goldenAngle;
+      const phi = (1 + Math.sqrt(5)) / 2;
+      // 將正二十面體轉成「頂點朝上」的頂點配置：頂點、上環五點、下環五點；
+      // 底部頂點留作花頭底部，不另放花瓣，避免破壞圓頂外輪廓。
+      const upperRingY = 1 / Math.sqrt(5);
+      const ringRadius = Math.sqrt(1 - upperRingY * upperRingY);
+      const vertices = [{ ring: "top", angle: 0, radial: 0, level: 1 }];
+      for (let i = 0; i < 5; i += 1) {
+        const angle = (Math.PI * 2 * i) / 5;
+        vertices.push({ ring: "upper", angle, radial: 0.56, level: 0.78 });
+      }
+      for (let i = 0; i < 5; i += 1) {
+        const angle = (Math.PI * 2 * i) / 5 + Math.PI / 5;
+        vertices.push({ ring: "lower", angle, radial: 0.98, level: 0.42 });
+      }
+      for (let bloom = 0; bloom < vertices.length; bloom += 1) {
+        const vertex = vertices[bloom];
+        const radial = domeRadius * vertex.radial;
+        const centerX = x + Math.cos(vertex.angle) * radial;
+        const centerZ = z + Math.sin(vertex.angle) * radial;
         const domeProfile = Math.sqrt(Math.max(0, 1 - (radial / domeRadius) ** 2));
         const centerY = peonyBaseY + 0.006 + domeHeight * domeProfile;
-        const centerX = x + Math.cos(angle) * radial;
-        const centerZ = z + Math.sin(angle) * radial;
-        const variation = bloom % 4 === 0 ? 1.06 : bloom % 4 === 1 ? 0.95 : bloom % 4 === 2 ? 1.015 : 0.98;
-        const floretColor = headColor.map((channel) => Math.min(1, channel * variation));
-        // 單元尺寸隨離中心距離略增，外緣仍維持圓潤而不超出圓頂輪廓。
-        const unitRadius = 0.021 + 0.006 * (radial / domeRadius);
-        addIcosahedron(positions, colors, centerX, centerY, centerZ, unitRadius, floretColor);
+        const pink = headColor.map((channel) => Math.min(1, channel * (bloom % 3 === 0 ? 1.04 : bloom % 3 === 1 ? 0.96 : 1)));
+        // 加大橫向尺寸，讓相鄰八面體彼此貼合；略壓低高度以減少突兀尖峰。
+        const rx = vertex.ring === "top" ? 0.062 : vertex.ring === "upper" ? 0.068 : 0.073;
+        const ry = vertex.ring === "top" ? 0.052 : 0.056;
+        const rz = rx;
+        addOctahedron(positions, colors, centerX, centerY, centerZ, rx, ry, rz, pink);
       }
       return;
     }
