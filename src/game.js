@@ -689,7 +689,7 @@
     if (job.kind === 'water') {
       const plot = game.plots[job.index];
       if (window.skyEnvironment.getState(game).isRaining) return;
-      if (!plot || isDroneExcluded(plot) || plot.crop === null || plot.watered || growthElapsed(plot) >= (crops[plot.crop] || crops[0]).growTime) return notify('澆水條件已改變，工作已略過。');
+      if (!plot || isDroneExcluded(plot) || plot.crop === null || plot.watered || growthElapsed(plot) >= (crops[plot.crop] || crops[0]).growTime) return;
       plot.watered = true; plot.waterSource = 'drone'; plot.waterStartedAt = Date.now(); plot.waterUntil = plot.waterStartedAt + WATER_DURATION; save(); render(); if (!job.automatic) notify('澆水完成！這株花接下來 30 秒會以 1.2 倍速度生長。'); return;
     }
     const expansionCost = getLandCost();
@@ -769,7 +769,6 @@
       if (job.kind === 'water') {
         const plot = game.plots[job.index];
         if (!plot || plot.crop === null || plot.watered || growthElapsed(plot) >= (crops[plot.crop] || crops[0]).growTime) {
-          notify('澆水條件已改變，工作已略過。');
           activeJobs.delete(droneIndex);
           continue;
         }
