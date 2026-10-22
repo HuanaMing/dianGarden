@@ -34,6 +34,7 @@
 - `src/encyclopedia.html`、`src/flower-encyclopedia.js`：可旋轉縮放十一種 3D 花卉模型的圖鑑頁面及資料卡片。
 - `src/game.js`：種植、生長、收成、開墾、情境視窗、存檔、多機派工與電量管理；無人機工作耗電並在晴朗白天閒置時充電，電量不足的工作留在佇列等待。
 - `tasks/`：任務佇列，按狀態分類。
+- `assets/flowers/`：花卉 PNG 素材集中存放處，目前收納十一種花卉的圖片素材。
 - `docs/`：架構及決策紀錄。
 - `docs/flower-background.md`：花卉花語、生長節奏與代表株型資料及來源。
 - `state/`：專案與目前任務狀態的 JSON 紀錄。
