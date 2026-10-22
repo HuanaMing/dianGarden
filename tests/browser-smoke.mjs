@@ -67,7 +67,7 @@ try {
   }
   await page.screenshot({ path: `${outputDir}/garden-desktop.png`, fullPage: true });
 
-  await page.setViewportSize({ width: 844, height: 390 });
+  await page.setViewportSize({ width: 667, height: 375 });
   await page.waitForTimeout(350);
   const landscapeTopbar = await page.locator('#world-topbar').boundingBox();
   const landscapeFrame = await page.locator('.world-frame').boundingBox();
