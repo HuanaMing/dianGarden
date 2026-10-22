@@ -401,6 +401,16 @@
 
   plantStemLeafModels[1] = addHyacinthStemLeafGeometry;
 
+  // 花梗中心線共用於莖幾何與花朵定位，確保每朵花確實接在不同高度的莖節上。
+  function getLilyOfTheValleyStalkPoint(x, z, height, t) {
+    const baseY = 0.055;
+    return [
+      x + 0.015 + 0.24 * t - 0.12 * Math.sin(Math.PI * t),
+      baseY + height * (1.28 * t - 0.52 * t * t),
+      z + 0.012 + 0.025 * t + 0.012 * Math.sin(Math.PI * t),
+    ];
+  }
+
   function addLilyOfTheValleyStemLeafGeometry(positions, colors, x, z, height, stage) {
     const baseY = 0.055;
     const leafGreen = [
@@ -464,18 +474,12 @@
 
     if (stage === 1) return;
 
-    // 成熟鈴蘭的花梗纖細、略向一側拱彎；花朵沿花梗單側下垂排列。
-    const stalkSegments = 6;
-    const stalkStart = [x + 0.006, baseY, z];
-    const stalkEnd = [x + 0.085, baseY + height * 0.83, z + 0.018];
+    // 成熟鈴蘭的花梗加長並形成像貓尾巴般先回彎、再向外上揚的弧線。
+    const stalkSegments = 10;
     const stalkPoints = [];
     for (let segment = 0; segment <= stalkSegments; segment += 1) {
       const t = segment / stalkSegments;
-      stalkPoints.push([
-        stalkStart[0] + (stalkEnd[0] - stalkStart[0]) * t - 0.018 * Math.sin(Math.PI * t),
-        stalkStart[1] + (stalkEnd[1] - stalkStart[1]) * t,
-        stalkStart[2] + (stalkEnd[2] - stalkStart[2]) * t,
-      ]);
+      stalkPoints.push(getLilyOfTheValleyStalkPoint(x, z, height, t));
     }
     for (let segment = 0; segment < stalkSegments; segment += 1) {
       const a = stalkPoints[segment];
@@ -483,7 +487,8 @@
       const dx = b[0] - a[0];
       const dz = b[2] - a[2];
       const length = Math.hypot(dx, dz) || 1;
-      const side = [-dz / length * 0.0035, dx / length * 0.0035];
+      // 截面半寬由 0.0035 增至 0.0042，莖粗為原本的 1.2 倍。
+      const side = [-dz / length * 0.0042, dx / length * 0.0042];
       const aL = [a[0] + side[0], a[1], a[2] + side[1]];
       const aR = [a[0] - side[0], a[1], a[2] - side[1]];
       const bL = [b[0] + side[0], b[1], b[2] + side[1]];
@@ -990,15 +995,18 @@
       const bellCount = 6;
       for (let bell = 0; bell < bellCount; bell += 1) {
         const progress = bell / (bellCount - 1);
-        const offset = -0.13 + progress * 0.25 + Math.sin(bell * 1.7) * 0.014;
-        const depthOffset = bell % 2 === 0 ? -0.026 : 0.026;
-        const offsetY = bell % 2 === 0 ? 0.008 : -0.006;
-        const bellY = 0.055 + height * (0.82 - progress * 0.2) + offsetY;
-        const cx = x + offset;
-        const cz = z + depthOffset;
+        // 花朵沿共用花梗中心線由中段排到近末端，交錯位於花梗側面。
+        const stalkT = 0.42 + progress * 0.5;
+        const attachment = getLilyOfTheValleyStalkPoint(x, z, height, stalkT);
+        const sideSign = bell % 2 === 0 ? 1 : -1;
+        const cx = attachment[0] + 0.018 + progress * 0.012;
+        const cz = attachment[2] + sideSign * 0.026;
+        const bellY = attachment[1] - 0.024 - (bell % 2) * 0.004;
         const cy = bellY - 0.026;
         const green = [0.36, 0.57, 0.31];
-        addTriangle(positions, colors, [x, bellY + 0.04, z], [cx, bellY + 0.018, cz - 0.008], [cx, bellY + 0.018, cz + 0.008], green);
+        addTriangle(positions, colors, attachment,
+          [cx, bellY + 0.018, cz - sideSign * 0.008],
+          [cx, bellY + 0.018, cz + sideSign * 0.008], green);
         const innerRadius = 0.014;
         const rimRadius = 0.047;
         for (let lobe = 0; lobe < 6; lobe += 1) {
