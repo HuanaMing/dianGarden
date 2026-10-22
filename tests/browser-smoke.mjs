@@ -45,7 +45,7 @@ try {
   if (!topbarBounds || !frameBounds || topbarBounds.width < frameBounds.width - 40) {
     throw new Error('桌面版頂部花園資訊卡沒有延伸占滿橫幅');
   }
-  for (const selector of ['#settings-toggle', '.encyclopedia-link', '#hud-toggle', '#drone-panel-toggle']) {
+  for (const selector of ['#settings-toggle', '.encyclopedia-link', '#hud-toggle', '#drone-panel-toggle', '#farm-management-toggle']) {
     if (!(await page.locator(selector).isVisible())) throw new Error(`頂部控制按鈕未顯示：${selector}`);
   }
   await page.locator('#hud-toggle').click();
@@ -57,8 +57,15 @@ try {
   await page.locator('#drone-panel-toggle').click();
   await page.locator('#settings-toggle').click();
   if (!(await page.locator('#settings-panel').isVisible())) throw new Error('設定按鈕未能開啟設定面板');
+  if (!(await page.locator('.operation-help').isVisible())) throw new Error('操作說明未移至設定面板');
   await page.locator('#power-save-toggle').click();
   if (await page.locator('#power-save-toggle').getAttribute('aria-pressed') !== 'true') throw new Error('省電模式未能開啟');
+  if (!(await page.locator('.world-frame').evaluate(element => element.classList.contains('is-power-save')))) throw new Error('省電模式未切換畫布清空樣式');
+  const canvasClearAlpha = await page.locator('#sky-canvas').evaluate(canvas => {
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    return gl ? gl.getParameter(gl.COLOR_CLEAR_VALUE)[3] : null;
+  });
+  if (canvasClearAlpha !== 0) throw new Error('省電模式清空畫布時未使用透明清除色');
   const drawCallsAtPowerSave = await page.evaluate(() => window.__webglDrawCalls);
   await page.waitForTimeout(700);
   const drawCallsDuringPowerSave = await page.evaluate(() => window.__webglDrawCalls);
@@ -68,12 +75,18 @@ try {
   if (await page.evaluate(() => window.__webglDrawCalls) <= drawCallsDuringPowerSave) throw new Error('關閉省電模式後 WebGL 繪圖未恢復');
   checks.push('收合／恢復、無人機圖示、設定面板及省電模式繪圖暫停／恢復通過');
 
-  if (!(await page.locator('#world-buy-manual-plot').isVisible())) throw new Error('手動地塊獨立購買入口未顯示');
-  if (!(await page.locator('#world-expand').isVisible())) throw new Error('自動地塊獨立購買入口未顯示');
+  await page.locator('#farm-management-toggle').click();
+  if (await page.locator('#farm-management-toggle').getAttribute('aria-expanded') !== 'true') throw new Error('農地管理按鈕未能開啟整合面板');
+  if (!(await page.locator('#world-buy-manual-plot').isVisible())) throw new Error('農地管理面板未顯示手動地塊購買入口');
+  if (!(await page.locator('#world-expand').isVisible())) throw new Error('農地管理面板未顯示自動地塊購買入口');
+  await page.locator('[data-plot-button="0"]').click();
+  if (await page.locator('#farm-dialog .plot-mode-switch').count() !== 0) throw new Error('自動地塊仍顯示地塊性質切換開關');
+  await page.locator('[data-close-farm-dialog]').click();
   await page.locator('#world-buy-manual-plot').click();
   if (!(await page.locator('#farm-dialog').innerText()).includes('75')) throw new Error('手動地塊購買對話框未顯示固定 75 金幣價格');
   await page.locator('[data-dialog-cancel]').click();
-  checks.push('手動／自動地塊購買入口分離，手動地塊固定 75 金幣');
+  await page.locator('#farm-management-close').click();
+  checks.push('農地管理整合購買入口、操作說明移入設定、自動地塊不提供性質切換');
 
   const worldMessage = await page.locator('#world-message').innerText().catch(() => '');
   if (worldMessage.includes('載入失敗') || worldMessage.includes('無法啟用 WebGL')) {
