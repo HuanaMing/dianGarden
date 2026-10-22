@@ -23,6 +23,7 @@
               <span class="environment-status" id="environment-status" aria-live="polite">晴朗 · 白天</span>
             </div>
           <div class="topbar-actions" role="group" aria-label="花園控制">
+              <button class="farm-management-toggle" id="farm-management-toggle" type="button" aria-controls="farm-management-panel" aria-expanded="false" aria-label="農地管理" title="農地管理">🌱</button>
               <button class="drone-panel-toggle" id="drone-panel-toggle" type="button" aria-controls="drone-jobs" aria-expanded="false" aria-label="無人機">🚁</button>
               <button class="settings-toggle" id="settings-toggle" type="button" aria-controls="settings-panel" aria-expanded="false" aria-label="設定">⚙️</button>
               <a class="encyclopedia-link" href="encyclopedia.html" aria-label="花卉圖鑑" title="花卉圖鑑">📖</a>
@@ -34,6 +35,10 @@
             <button class="camera-mode" id="camera-mode" type="button" aria-pressed="false">2D模式</button>
             <button class="reset-progress-button" id="reset-progress" type="button">重置進度</button>
             <button class="power-save-toggle" id="power-save-toggle" type="button" aria-pressed="false">省電模式：關</button>
+            <section class="operation-help" aria-label="操作說明">
+              <h3>操作說明</h3>
+              <p>點一下選取；選取後短按查看、長按拖曳拼接。拖曳天空旋轉視角，WASD 移動，滾輪縮放。</p>
+            </section>
             <p class="save-status" id="save-status" role="status" aria-live="polite"></p>
           </section>
           <div class="mobile-zoom-controls" role="group" aria-label="場景縮放">
@@ -43,9 +48,11 @@
           <aside class="drone-jobs" id="drone-jobs" aria-label="無人機工作佇列"><strong id="job-status" role="status" aria-live="polite">無人機待命</strong><button class="auto-mode" id="auto-mode" type="button" aria-pressed="false">自動模式：關</button><button class="buy-drone" id="buy-drone" type="button">購買無人機 · 150 🪙 (1/8)</button><div class="drone-fleet" id="drone-fleet" aria-label="無人機部署管理"></div><ol id="job-queue"></ol></aside>
           <div class="hud-collapsed-summary" id="hud-collapsed-summary" role="status" aria-live="polite"></div>
           <div class="world-message" id="world-message" role="status">正在載入空中島嶼…</div>
-          <nav class="world-plots" id="plot-selector" aria-label="空中農地" role="group"></nav>
-          <p class="world-help" id="world-instructions">點一下選取；選取後短按查看、長按拖曳拼接 <b>·</b> 拖曳天空旋轉視角 <b>·</b> WASD 移動 <b>·</b> 滾輪縮放</p>
-          <div class="land-purchase-actions" role="group" aria-label="購買地塊"><button class="world-buy-manual-plot" id="world-buy-manual-plot" type="button" aria-label="購買手動地塊，固定 75 金幣">手動地塊 · 75 🪙</button><button class="world-expand" id="world-expand" type="button" aria-label="購買自動地塊">自動地塊</button></div>
+          <section class="farm-management-panel" id="farm-management-panel" aria-label="農地管理" hidden>
+            <div class="farm-management-heading"><strong>農地管理</strong><button id="farm-management-close" type="button" aria-label="關閉農地管理">×</button></div>
+            <nav class="world-plots" id="plot-selector" aria-label="空中農地" role="group"></nav>
+            <div class="land-purchase-actions" role="group" aria-label="購買地塊"><button class="world-buy-manual-plot" id="world-buy-manual-plot" type="button" aria-label="購買手動地塊，固定 75 金幣">手動地塊 · 75 🪙</button><button class="world-expand" id="world-expand" type="button" aria-label="購買自動地塊">自動地塊</button></div>
+          </section>
           <dialog class="seed-dialog" id="farm-dialog" aria-labelledby="farm-dialog-title">
             <div class="seed-dialog-heading"><div><p class="eyebrow">YOUR SKY GARDEN</p><h2 id="farm-dialog-title">農地</h2></div><button class="dialog-close" type="button" aria-label="關閉操作視窗" data-close-farm-dialog>×</button></div>
             <div class="farm-dialog-content" id="farm-dialog-content"></div>
