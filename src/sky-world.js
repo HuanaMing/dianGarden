@@ -1158,10 +1158,10 @@
       // 經典酒杯型玫瑰：每片花瓣先向外展開，沿中段向上收起，
       // 到杯口再向外翻；花瓣加寬，明暗沿花瓣內外層交疊而非放射排列。
       const roseCupLayers = [
-        { count: 7, inner: 0.022, outer: 0.151, base: -0.046, rim: 0.034, crown: 0.016, edge: 0.012, halfAngle: 0.48, phase: 0.10, curl: -0.022 },
-        { count: 7, inner: 0.016, outer: 0.124, base: -0.010, rim: 0.086, crown: 0.024, edge: 0.014, halfAngle: 0.43, phase: 0.48, curl: -0.008 },
-        { count: 6, inner: 0.008, outer: 0.092, base: 0.015, rim: 0.122, crown: 0.021, edge: 0.011, halfAngle: 0.38, phase: 0.22, curl: 0.012 },
-        { count: 5, inner: 0.003, outer: 0.060, base: 0.040, rim: 0.139, crown: 0.014, edge: 0.008, halfAngle: 0.32, phase: 0.80, curl: 0.015 },
+        { count: 7, inner: 0.019, outer: 0.151, base: -0.032, rim: 0.055, crown: 0.016, edge: 0.012, halfAngle: 0.48, phase: 0.10, curl: -0.018 },
+        { count: 7, inner: 0.014, outer: 0.132, base: -0.020, rim: 0.079, crown: 0.022, edge: 0.014, halfAngle: 0.43, phase: 0.48, curl: -0.006 },
+        { count: 6, inner: 0.008, outer: 0.105, base: -0.008, rim: 0.103, crown: 0.020, edge: 0.011, halfAngle: 0.38, phase: 0.22, curl: 0.009 },
+        { count: 5, inner: 0.003, outer: 0.076, base: 0.006, rim: 0.125, crown: 0.014, edge: 0.008, halfAngle: 0.32, phase: 0.80, curl: 0.012 },
       ];
       for (let layer = 0; layer < roseCupLayers.length; layer += 1) {
         const shape = roseCupLayers[layer];
@@ -1175,19 +1175,20 @@
             for (let acrossStep = 0; acrossStep <= acrossSteps; acrossStep += 1) {
               const u = acrossStep / acrossSteps * 2 - 1;
               const angle = centerAngle + u * shape.halfAngle * (0.64 + 0.36 * t);
-              // 半徑曲線分三段：先外展、中央段稍收並升高、杯口再外翻。
-              const outwardStart = Math.min(1, t / 0.34);
-              const inwardMiddle = Math.max(0, Math.min(1, (t - 0.34) / 0.38));
-              const outwardLip = Math.max(0, Math.min(1, (t - 0.72) / 0.28));
-              const radiusProfile = 0.34 * outwardStart - 0.11 * inwardMiddle + 0.77 * outwardLip;
+              // 以 smoothstep 平滑連接三段：0–30% 向外伸展，30–95% 向上彎，
+              // 最後 5% 再向外翻；避免分段直線造成折角。
+              const smoothstep = (value) => {
+                const q = Math.max(0, Math.min(1, value));
+                return q * q * (3 - 2 * q);
+              };
+              const outwardStart = smoothstep(t / 0.30);
+              const upwardArc = smoothstep((t - 0.30) / 0.65);
+              const outwardTip = smoothstep((t - 0.95) / 0.05);
+              const radiusProfile = 0.34 * outwardStart + 0.10 * upwardArc + 0.56 * outwardTip;
               const radius = shape.inner + (shape.outer - shape.inner) * radiusProfile
                 + 0.006 * u * u * Math.sin(t * Math.PI);
-              const riseT = t < 0.34
-                ? 0.12 * (t / 0.34)
-                : t < 0.72
-                  ? 0.12 + 0.62 * ((t - 0.34) / 0.38)
-                  : 0.74 + 0.26 * ((t - 0.72) / 0.28);
-              const rise = shape.base + (shape.rim - shape.base) * riseT;
+              const riseT = 0.02 + 0.93 * smoothstep((t - 0.30) / 0.65) + 0.05 * outwardTip;
+              const rise = shape.base + (shape.rim - shape.base) * Math.min(1, riseT);
               const bowl = shape.crown * Math.sin(t * Math.PI);
               const edgeRoll = shape.edge * Math.pow(Math.abs(u), 1.55) * Math.sin(Math.PI * (0.16 + 0.70 * t));
               const lipCurl = shape.curl * Math.pow(t, 3);
@@ -1202,7 +1203,6 @@
             // 陰影沿花瓣根部、交疊內緣與杯口背面形成層次，不以花心向外放射。
             const rootShade = 0.76 + 0.22 * Math.min(1, t / 0.42);
             const lipShade = t > 0.78 ? 0.94 + 0.06 * (1 - (t - 0.78) / 0.22) : 1;
-            const acrossShade = (acrossStep) => 1;
             for (let acrossStep = 0; acrossStep < acrossSteps; acrossStep += 1) {
               const a = grid[radialStep][acrossStep];
               const b = grid[radialStep + 1][acrossStep];
