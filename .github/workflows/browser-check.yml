@@ -33,10 +33,10 @@ jobs:
 
       - name: 啟動遊戲靜態伺服器
         run: |
-          python3 -m http.server 4173 --directory src > /tmp/diangarden-http.log 2>&1 &
+          python3 -m http.server 4173 --directory . > /tmp/diangarden-http.log 2>&1 &
           echo $! > /tmp/diangarden-http.pid
           for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:4173/index.html > /dev/null; then
+            if curl --fail --silent http://127.0.0.1:4173/src/index.html > /dev/null; then
               echo "遊戲伺服器已就緒"
               exit 0
             fi
@@ -46,7 +46,7 @@ jobs:
           exit 1
 
       - name: 執行瀏覽器驗收
-        run: node tests/browser-smoke.mjs
+        run: GARDEN_TEST_URL=http://127.0.0.1:4173/src node tests/browser-smoke.mjs
 
       - name: 保存截圖與驗收結果
         if: always()
