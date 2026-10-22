@@ -1273,3 +1273,11 @@
 - 結果：降低牡丹內層花瓣及花心尖端高度，縮小各層高度差，讓整體輪廓更接近圓潤半球形而非金字塔。
 - 驗證：JavaScript 語法檢查通過並推送 main；尚未於瀏覽器實際視覺驗收，等待使用者確認。
 - 檔案：`src/sky-world.js`、`tasks/active/167-peony-stem-leaf-model.md`、`state/current-task.json`、`state/project.json`、`logs/task-history.md`
+
+
+## 2026-10-22 — 任務 168：彼岸花專屬莖葉模型
+
+- 結果：新增 `addHiganbanaStemLeafGeometry()` 並註冊至花種索引 10。幼株使用五片狹長帶狀基生葉；成熟開花株使用細長、略帶 XZ 雙軸偏移的無葉花莖，保留原有彼岸花花頭與遊戲資料。
+- 任務排程：依使用者要求暫緩牡丹花頭工作，任務167已從 `tasks/active/` 移回 `tasks/inbox/`，未標記完成。
+- 驗證：程式碼已推送 main，等待 GitHub Actions 自動驗收及使用者遊戲內視覺確認。
+- 檔案：`src/sky-world.js`、`tasks/active/168-higanbana-stem-leaf-model.md`、`tasks/inbox/167-peony-stem-leaf-model.md`、`state/current-task.json`、`state/project.json`、`logs/task-history.md`
