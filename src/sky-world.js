@@ -1155,33 +1155,38 @@
 
     const bloomY = 0.055 + height;
     if (flowerIndex === 3) {
-      // 玫瑰花頭完全改用分層曲面花瓣：外瓣舒展、內瓣逐步收緊並形成旋卷花心。
-      const rosePetalLayers = [
-        { count: 8, inner: 0.018, outer: 0.128, halfAngle: 0.34, base: -0.038, lift: 0.043, edge: 0.013, tip: -0.012, phase: 0.08 },
-        { count: 7, inner: 0.010, outer: 0.099, halfAngle: 0.32, base: -0.006, lift: 0.052, edge: 0.014, tip: 0.006, phase: 0.34 },
-        { count: 6, inner: 0.004, outer: 0.071, halfAngle: 0.29, base: 0.020, lift: 0.048, edge: 0.012, tip: 0.019, phase: 0.72 },
-        { count: 5, inner: 0.001, outer: 0.047, halfAngle: 0.25, base: 0.043, lift: 0.034, edge: 0.008, tip: 0.027, phase: 1.16 },
+      // 經典紅玫瑰酒杯型：外層花瓣向外舒展，中層沿杯壁上揚，內層直立收口；
+      // 不採用英式玫瑰那種矮圓、密集、全平面的玫瑰花心。
+      const roseCupLayers = [
+        { count: 7, inner: 0.026, outer: 0.139, base: -0.045, rim: 0.036, crown: 0.018, edge: 0.010, halfAngle: 0.39, phase: 0.10, curl: -0.020 },
+        { count: 7, inner: 0.018, outer: 0.112, base: -0.012, rim: 0.082, crown: 0.024, edge: 0.012, halfAngle: 0.35, phase: 0.48, curl: -0.006 },
+        { count: 6, inner: 0.009, outer: 0.084, base: 0.015, rim: 0.119, crown: 0.022, edge: 0.009, halfAngle: 0.31, phase: 0.22, curl: 0.010 },
+        { count: 5, inner: 0.003, outer: 0.055, base: 0.039, rim: 0.136, crown: 0.014, edge: 0.006, halfAngle: 0.27, phase: 0.80, curl: 0.014 },
       ];
-      for (let layer = 0; layer < rosePetalLayers.length; layer += 1) {
-        const ring = rosePetalLayers[layer];
-        for (let petal = 0; petal < ring.count; petal += 1) {
-          const centerAngle = petal / ring.count * Math.PI * 2 + ring.phase;
-          const shade = [0.94, 1.05, 0.98, 1.08][(petal + layer * 2) % 4];
+      for (let layer = 0; layer < roseCupLayers.length; layer += 1) {
+        const shape = roseCupLayers[layer];
+        for (let petal = 0; petal < shape.count; petal += 1) {
+          const centerAngle = petal / shape.count * Math.PI * 2 + shape.phase;
+          const shade = [0.88, 0.96, 1.04, 0.92, 1.08][(petal + layer * 2) % 5];
           const petalColor = headColor.map((channel) => Math.min(1, channel * shade));
-          const underside = petalColor.map((channel) => channel * 0.78);
-          const radialSteps = 5, acrossSteps = 4;
+          const underside = petalColor.map((channel) => channel * 0.70);
+          const radialSteps = 7, acrossSteps = 6;
           const grid = [];
           for (let radialStep = 0; radialStep <= radialSteps; radialStep += 1) {
             const t = radialStep / radialSteps;
             const row = [];
             for (let acrossStep = 0; acrossStep <= acrossSteps; acrossStep += 1) {
               const u = acrossStep / acrossSteps * 2 - 1;
-              const angle = centerAngle + u * ring.halfAngle * (0.72 + 0.28 * t);
-              const radius = ring.inner + (ring.outer - ring.inner) * t + 0.004 * u * u * Math.sin(t * Math.PI);
-              const crown = ring.lift * Math.sin(t * Math.PI * 0.82);
-              const curledTip = ring.tip * Math.pow(t, 3);
-              const edgeLift = ring.edge * Math.pow(Math.abs(u), 1.65) * Math.sin(Math.PI * (0.12 + 0.72 * t));
-              const y = bloomY + ring.base + crown + curledTip + edgeLift;
+              const angle = centerAngle + u * shape.halfAngle * (0.68 + 0.32 * t);
+              const radius = shape.inner + (shape.outer - shape.inner) * t
+                + 0.005 * u * u * Math.sin(t * Math.PI);
+              // 從花托向杯口連續上揚；外瓣向下翻，中間與內層則更直立。
+              const rise = shape.base + (shape.rim - shape.base) * Math.pow(t, 0.82);
+              const bowl = shape.crown * Math.sin(t * Math.PI);
+              const edgeRoll = shape.edge * Math.pow(Math.abs(u), 1.7) * Math.sin(Math.PI * (0.18 + 0.68 * t));
+              const lipCurl = shape.curl * Math.pow(t, 3);
+              const sideFold = -0.009 * u * u * Math.sin(t * Math.PI);
+              const y = bloomY + rise + bowl + edgeRoll + lipCurl + sideFold;
               row.push([x + Math.cos(angle) * radius, y, z + Math.sin(angle) * radius]);
             }
             grid.push(row);
@@ -1194,38 +1199,39 @@
               const d = grid[radialStep][acrossStep + 1];
               const faceColor = (acrossStep === 0 || acrossStep === acrossSteps - 1) ? underside : petalColor;
               addTriangle(positions, colors, a, b, c, faceColor);
-              addTriangle(positions, colors, a, c, d, faceColor.map((channel) => Math.min(1, channel * 1.015)));
+              addTriangle(positions, colors, a, c, d, faceColor.map((channel) => Math.min(1, channel * 1.025)));
             }
           }
         }
       }
 
-      // 五枚尖端略向下的綠色萼片，包住花托下緣。
+      // 深綠萼片包住花托，從側面也能看見花瓣向上展開的杯狀基部。
       for (let sepal = 0; sepal < 5; sepal += 1) {
         const angle = sepal / 5 * Math.PI * 2 + 0.18;
-        const root = [x + Math.cos(angle) * 0.018, bloomY - 0.023, z + Math.sin(angle) * 0.018];
-        const shoulder = [x + Math.cos(angle) * 0.055, bloomY - 0.035, z + Math.sin(angle) * 0.055];
-        const tip = [x + Math.cos(angle) * 0.112, bloomY - 0.066, z + Math.sin(angle) * 0.112];
-        const side = [-Math.sin(angle) * 0.014, 0.003, Math.cos(angle) * 0.014];
-        addTriangle(positions, colors, root, [shoulder[0] + side[0], shoulder[1] + 0.003, shoulder[2] + side[2]], tip, [0.31, 0.52, 0.25]);
-        addTriangle(positions, colors, root, tip, [shoulder[0] - side[0], shoulder[1] - 0.002, shoulder[2] - side[2]], [0.26, 0.45, 0.21]);
+        const root = [x + Math.cos(angle) * 0.016, bloomY - 0.030, z + Math.sin(angle) * 0.016];
+        const shoulder = [x + Math.cos(angle) * 0.047, bloomY - 0.040, z + Math.sin(angle) * 0.047];
+        const tip = [x + Math.cos(angle) * 0.103, bloomY - 0.074, z + Math.sin(angle) * 0.103];
+        const side = [-Math.sin(angle) * 0.012, 0.002, Math.cos(angle) * 0.012];
+        addTriangle(positions, colors, root, [shoulder[0] + side[0], shoulder[1] + 0.003, shoulder[2] + side[2]], tip, [0.30, 0.49, 0.23]);
+        addTriangle(positions, colors, root, tip, [shoulder[0] - side[0], shoulder[1] - 0.002, shoulder[2] - side[2]], [0.23, 0.40, 0.19]);
       }
-      // 花心以小型錯位旋瓣收口，不再使用規則多面體堆疊。
-      for (let curl = 0; curl < 4; curl += 1) {
-        const angle = curl * Math.PI * 0.72 + 0.4;
-        const r0 = 0.004 + curl * 0.003;
-        const r1 = r0 + 0.018;
-        const y0 = bloomY + 0.062 + curl * 0.004;
+
+      // 高中心旋卷：窄小花瓣斜向疊合，從上方可見旋向，從側面可見杯口高度。
+      for (let curl = 0; curl < 5; curl += 1) {
+        const angle = curl * 1.72 + 0.36;
+        const r0 = 0.003 + curl * 0.0025;
+        const r1 = 0.017 + curl * 0.002;
+        const y0 = bloomY + 0.096 + curl * 0.006;
         const p0 = [x + Math.cos(angle) * r0, y0, z + Math.sin(angle) * r0];
-        const p1 = [x + Math.cos(angle + 0.8) * r1, y0 + 0.006, z + Math.sin(angle + 0.8) * r1];
-        const p2 = [x + Math.cos(angle + 1.5) * r1 * 0.8, y0 + 0.013, z + Math.sin(angle + 1.5) * r1 * 0.8];
-        addTriangle(positions, colors, p0, p1, p2, headColor.map((channel) => Math.min(1, channel * (1.03 - curl * 0.05))));
+        const p1 = [x + Math.cos(angle + 0.72) * r1, y0 + 0.008, z + Math.sin(angle + 0.72) * r1];
+        const p2 = [x + Math.cos(angle + 1.45) * r1 * 0.78, y0 + 0.019, z + Math.sin(angle + 1.45) * r1 * 0.78];
+        addTriangle(positions, colors, p0, p1, p2,
+          headColor.map((channel) => Math.min(1, channel * (1.06 - curl * 0.055))));
       }
       return;
     }
 
-    if (!dedicatedStemLeafModel) {
-      addLeaf(positions, colors, x, 0.22, z, [-0.82, 0.38, -0.12], 0.22, [0.31, 0.58, 0.3]);
+    addLeaf(positions, colors, x, 0.22, z, [-0.82, 0.38, -0.12], 0.22, [0.31, 0.58, 0.3]);
       addLeaf(positions, colors, x, 0.32, z, [0.74, 0.34, 0.16], 0.21, [0.37, 0.64, 0.33]);
     }
     for (let petal = 0; petal < 5; petal += 1) {
