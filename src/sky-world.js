@@ -1045,13 +1045,12 @@
       const [plantX, plantZ] = getPlotPosition(index);
       const plantY = getPlotHeight(index);
       for (let particle = 0; particle < 5; particle += 1) {
-        const phase = (time * 0.0015 + particle * 0.23 + index * 0.17) % 1;
         const angle = particle * 2.399 + index;
         const radius = 0.16 + (particle % 2) * 0.07;
         const px = plantX + Math.cos(angle) * radius;
         const pz = plantZ + Math.sin(angle) * radius;
-        const py = plantY + 0.16 + phase * 0.38;
-        const size = 0.018 + Math.sin(phase * Math.PI) * 0.009;
+        const py = plantY + 0.16 + (particle % 3) * 0.075;
+        const size = 0.022;
         addOctahedron(effectPositions, effectColors, px, py, pz, size, size * 1.6, size, [0.47, 0.78, 0.72]);
       }
     });
