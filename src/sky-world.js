@@ -212,6 +212,54 @@
     addTriangle(positions, colors, start, tip, right, color.map((channel) => channel * 0.88));
   }
 
+  // Dedicated stem/leaf builders are indexed by the flower catalog. Null entries
+  // preserve the existing geometry until each species receives its own model.
+  const plantStemLeafModels = Array.from({ length: 11 }, () => null);
+
+  function addSunflowerStemLeafGeometry(positions, colors, x, z, height, stage) {
+    const stemTop = 0.055 + height;
+    const stemWidth = 0.044;
+    addBox(positions, colors, x - stemWidth / 2, 0.055, z - stemWidth / 2,
+      x + stemWidth / 2, stemTop, z + stemWidth / 2, {
+        top: [0.36, 0.59, 0.3], front: [0.28, 0.47, 0.25], right: [0.25, 0.42, 0.22],
+        back: [0.32, 0.52, 0.27], left: [0.3, 0.53, 0.27], bottom: [0.22, 0.38, 0.2],
+      });
+
+    const leafNodes = stage === 1 ? [0.42, 0.72] : [0.28, 0.46, 0.64, 0.8];
+    const leafLengths = stage === 1 ? [0.13, 0.12] : [0.245, 0.235, 0.205, 0.17];
+    const leafColors = [[0.34, 0.6, 0.26], [0.39, 0.66, 0.29], [0.31, 0.56, 0.24], [0.36, 0.62, 0.27]];
+
+    for (let leaf = 0; leaf < leafNodes.length; leaf += 1) {
+      const nodeY = 0.055 + height * leafNodes[leaf];
+      const angle = leaf * 2.38 + 0.42;
+      const radial = [Math.cos(angle), Math.sin(angle)];
+      const tangent = [-radial[1], radial[0]];
+      const length = leafLengths[leaf];
+      const width = stage === 1 ? 0.045 : 0.078 - leaf * 0.006;
+      const droop = length * 0.29;
+      const base = [x + radial[0] * 0.018, nodeY, z + radial[1] * 0.018];
+      const bladeStart = [x + radial[0] * 0.052, nodeY - 0.012, z + radial[1] * 0.052];
+      const shoulderY = nodeY - droop * 0.42;
+      const shoulder = [x + radial[0] * length * 0.57, shoulderY, z + radial[1] * length * 0.57];
+      const tip = [x + radial[0] * length, nodeY - droop, z + radial[1] * length];
+      const left = [shoulder[0] + tangent[0] * width, shoulderY + 0.014, shoulder[2] + tangent[1] * width];
+      const right = [shoulder[0] - tangent[0] * width, shoulderY + 0.014, shoulder[2] - tangent[1] * width];
+      const ridge = [shoulder[0] + radial[0] * length * 0.13, shoulderY + 0.023, shoulder[2] + radial[1] * length * 0.13];
+      const color = leafColors[leaf % leafColors.length];
+      const petioleSide = [tangent[0] * 0.006, tangent[1] * 0.006];
+
+      addTriangle(positions, colors, base,
+        [bladeStart[0] + petioleSide[0], bladeStart[1], bladeStart[2] + petioleSide[1]],
+        [bladeStart[0] - petioleSide[0], bladeStart[1], bladeStart[2] - petioleSide[1]], [0.25, 0.46, 0.2]);
+      addTriangle(positions, colors, bladeStart, left, ridge, color);
+      addTriangle(positions, colors, ridge, left, tip, color.map((channel) => Math.min(1, channel * 1.05)));
+      addTriangle(positions, colors, bladeStart, ridge, right, color.map((channel) => channel * 0.9));
+      addTriangle(positions, colors, ridge, tip, right, color);
+    }
+  }
+
+  plantStemLeafModels[0] = addSunflowerStemLeafGeometry;
+
   function addFlowerModel(positions, colors, x, z, flowerIndex, stage, heightMultiplier = 1, customColor = null) {
     const modelPositions = [];
     const modelColors = [];
