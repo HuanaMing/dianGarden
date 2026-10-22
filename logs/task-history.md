@@ -1186,3 +1186,9 @@
 - 結果：三層花瓣統一改為側向伸展、中段向上拱起、末端略微內扣的曲線；由外至內逐步加強內扣，形成包覆中央花心的杯狀輪廓。
 - 驗證：`src/sky-world.js` JavaScript 語法編譯檢查通過；待遊戲內視覺驗收。
 - 檔案：`src/sky-world.js`、`tasks/active/164-chrysanthemum-stem-leaf-model.md`、`docs/architecture.md`、`state/current-task.json`、`state/project.json`。
+
+## 2026-10-22 — 玫瑰花頭造型重作
+
+- 結果：依使用者提供的數學參數，將玫瑰花頭改為瘦長蛋形包絡、三層旋轉交疊的包覆花瓣、三片外翻外瓣與頂端螺旋花心。
+- 驗證：`src/sky-world.js` JavaScript 語法編譯檢查通過；尚待遊戲內視覺驗收。
+- 檔案：`src/sky-world.js`、`docs/architecture.md`、`logs/task-history.md`。
