@@ -505,6 +505,132 @@
 
   plantStemLeafModels[2] = addLilyOfTheValleyStemLeafGeometry;
 
+  function addRoseStemLeafGeometry(positions, colors, x, z, height, stage) {
+    const baseY = 0.055;
+    const stemTop = baseY + height - 0.028;
+    const stemColor = [0.29, 0.43, 0.22];
+    const leafColors = [[0.28, 0.48, 0.24], [0.34, 0.55, 0.27], [0.38, 0.59, 0.29]];
+
+    // 灌木玫瑰以略有弧度的木質主枝及側枝構成骨架。
+    const addBranch = (points, radii) => {
+      const sides = 6;
+      const rings = points.map((point, index) => {
+        const previous = points[Math.max(0, index - 1)];
+        const next = points[Math.min(points.length - 1, index + 1)];
+        let dx = next[0] - previous[0], dz = next[2] - previous[2];
+        const length = Math.hypot(dx, dz) || 1;
+        const sideX = -dz / length, sideZ = dx / length;
+        return Array.from({ length: sides }, (_, side) => {
+          const angle = side / sides * Math.PI * 2;
+          return [point[0] + sideX * Math.cos(angle) * radii[index],
+            point[1] + Math.sin(angle) * radii[index] * 0.82,
+            point[2] + sideZ * Math.cos(angle) * radii[index]];
+        });
+      });
+      for (let ring = 0; ring < rings.length - 1; ring += 1) {
+        for (let side = 0; side < sides; side += 1) {
+          const next = (side + 1) % sides;
+          const shade = side % 2 ? 0.9 : 1.04;
+          addTriangle(positions, colors, rings[ring][side], rings[ring][next], rings[ring + 1][next],
+            stemColor.map((channel) => channel * shade));
+          addTriangle(positions, colors, rings[ring][side], rings[ring + 1][next], rings[ring + 1][side],
+            stemColor.map((channel) => channel * 0.96));
+        }
+      }
+    };
+
+    const mainPoints = [
+      [x, baseY, z],
+      [x - 0.004, baseY + height * 0.28, z + 0.003],
+      [x + 0.008, baseY + height * 0.57, z + 0.006],
+      [x + 0.014, stemTop, z + 0.008],
+    ];
+    addBranch(mainPoints, [0.010, 0.0085, 0.0065, 0.0045]);
+
+    const branchDefs = [
+      { start: 0.30, dir: [-1, 0.18], reach: 0.115 },
+      { start: 0.49, dir: [0.88, -0.34], reach: 0.105 },
+      { start: 0.66, dir: [-0.74, -0.52], reach: 0.082 },
+    ];
+    const leafClusters = [];
+    for (const branch of branchDefs) {
+      const sy = baseY + height * branch.start;
+      const sx = x + (branch.start > 0.5 ? 0.008 : -0.003);
+      const sz = z + branch.start * 0.008;
+      const dx = branch.dir[0], dz = branch.dir[1];
+      const end = [sx + dx * branch.reach, sy + height * 0.16, sz + dz * branch.reach];
+      addBranch([
+        [sx, sy, sz],
+        [sx + dx * branch.reach * 0.45, sy + height * 0.07, sz + dz * branch.reach * 0.45],
+        end,
+      ], [0.0058, 0.004, 0.0026]);
+      leafClusters.push({ start: [sx, sy, sz], end, dx, dz, reach: branch.reach });
+    }
+
+    // 玫瑰羽狀複葉：沿葉軸安排五對小葉及一枚端生小葉。
+    const addLeaflet = (start, direction, length, width, color) => {
+      const magnitude = Math.hypot(direction[0], direction[1]) || 1;
+      const dx = direction[0] / magnitude, dz = direction[1] / magnitude;
+      const sideX = -dz, sideZ = dx;
+      const tip = [start[0] + dx * length, start[1] + length * 0.12, start[2] + dz * length];
+      const mid = [start[0] + dx * length * 0.52, start[1] + length * 0.07 + 0.003, start[2] + dz * length * 0.52];
+      const left = [mid[0] + sideX * width, mid[1] + 0.002, mid[2] + sideZ * width];
+      const right = [mid[0] - sideX * width, mid[1] + 0.002, mid[2] - sideZ * width];
+      addTriangle(positions, colors, start, left, mid, color.map((channel) => channel * 0.88));
+      addTriangle(positions, colors, left, tip, mid, color);
+      addTriangle(positions, colors, mid, tip, right, color.map((channel) => channel * 0.95));
+      addTriangle(positions, colors, right, start, mid, color.map((channel) => channel * 0.82));
+      // 小葉尖端的深色中脈讓複葉在小尺寸下仍容易辨認。
+      addTriangle(positions, colors, mid, tip,
+        [mid[0] + (tip[0] - mid[0]) * 0.88, mid[1] + 0.0015, mid[2] + (tip[2] - mid[2]) * 0.88],
+        [0.22, 0.39, 0.19]);
+    };
+
+    for (let clusterIndex = 0; clusterIndex < leafClusters.length; clusterIndex += 1) {
+      const cluster = leafClusters[clusterIndex];
+      const axisX = cluster.dx, axisZ = cluster.dz;
+      const sideX = -axisZ, sideZ = axisX;
+      const leafAxisLength = cluster.reach * 0.84;
+      for (let pair = 0; pair < 3; pair += 1) {
+        const t = 0.20 + pair * 0.235;
+        const origin = [
+          cluster.start[0] + axisX * leafAxisLength * t,
+          cluster.start[1] + height * 0.11 * t + 0.004,
+          cluster.start[2] + axisZ * leafAxisLength * t,
+        ];
+        const leafletLength = (stage === 1 ? 0.022 : 0.034) * (1 - pair * 0.08);
+        const leafletWidth = leafletLength * 0.38;
+        const color = leafColors[(pair + clusterIndex) % leafColors.length];
+        addLeaflet(origin, [sideX + axisX * 0.42, sideZ + axisZ * 0.42], leafletLength, leafletWidth, color);
+        addLeaflet(origin, [-sideX + axisX * 0.42, -sideZ + axisZ * 0.42], leafletLength, leafletWidth, color.map((channel) => channel * 0.94));
+      }
+      const terminal = [
+        cluster.start[0] + axisX * leafAxisLength,
+        cluster.start[1] + height * 0.12,
+        cluster.start[2] + axisZ * leafAxisLength,
+      ];
+      addLeaflet(terminal, [axisX, axisZ], stage === 1 ? 0.027 : 0.039, 0.014, leafColors[clusterIndex % leafColors.length]);
+    }
+
+    // 僅在成熟株型加入少量向外斜生的細刺，避免刺的視覺量壓過葉片。
+    if (stage === 2) {
+      for (const thorn of [
+        [0.28, -1, 0.12], [0.44, 1, -0.2], [0.61, -0.8, -0.5],
+      ]) {
+        const y = baseY + height * thorn[0];
+        const root = [x + thorn[0] * 0.01, y, z + thorn[0] * 0.008];
+        const tip = [root[0] + thorn[1] * 0.018, y + 0.012, root[2] + thorn[2] * 0.018];
+        const side = [-(tip[2] - root[2]) * 0.18, 0, (tip[0] - root[0]) * 0.18];
+        addTriangle(positions, colors, root,
+          [root[0] + side[0], root[1] + 0.003, root[2] + side[2]], tip, [0.42, 0.48, 0.29]);
+        addTriangle(positions, colors, root, tip,
+          [root[0] - side[0], root[1] - 0.002, root[2] - side[2]], [0.31, 0.4, 0.23]);
+      }
+    }
+  }
+
+  plantStemLeafModels[3] = addRoseStemLeafGeometry;
+
   function addFlowerModel(positions, colors, x, z, flowerIndex, stage, heightMultiplier = 1, customColor = null) {
     const modelPositions = [];
     const modelColors = [];
@@ -538,10 +664,8 @@
     const height = stage === 1 ? matureHeight * 0.31 : matureHeight;
     const dedicatedStemLeafModel = plantStemLeafModels[flowerIndex];
     if (dedicatedStemLeafModel) {
-      if (stage === 1) {
-        dedicatedStemLeafModel(positions, colors, x, z, height, stage);
-        return;
-      }
+      dedicatedStemLeafModel(positions, colors, x, z, height, stage);
+      if (stage === 1) return;
     } else {
       const stemWidth = flowerIndex === 2 ? 0.018 : 0.028;
       const stemColor = [0.3, 0.53, 0.27];
@@ -552,8 +676,7 @@
     }
 
     if (stage === 1) {
-      if (dedicatedStemLeafModel) dedicatedStemLeafModel(positions, colors, x, z, height, stage);
-      else {
+      if (!dedicatedStemLeafModel) {
         addLeaf(positions, colors, x, 0.11, z, [-0.75, 0.52, -0.15], 0.12, [0.34, 0.62, 0.29]);
         addLeaf(positions, colors, x, 0.12, z, [0.66, 0.54, 0.2], 0.12, [0.38, 0.66, 0.31]);
       }
@@ -1032,55 +1155,78 @@
 
     const bloomY = 0.055 + height;
     if (flowerIndex === 3) {
-      // Rose: overlapping petals curl around a tight, clockwise spiral center.
-      const roseLayers = [
-        { count: 10, radius: 0.098, length: 0.086, width: 0.039, y: bloomY - 0.04, crown: 0.075, phase: 0, sweep: 0.46 },
-        { count: 9, radius: 0.069, length: 0.076, width: 0.036, y: bloomY - 0.015, crown: 0.085, phase: 0.31, sweep: 0.54 },
-        { count: 7, radius: 0.041, length: 0.061, width: 0.03, y: bloomY + 0.014, crown: 0.075, phase: 0.72, sweep: 0.62 },
-        { count: 5, radius: 0.017, length: 0.043, width: 0.024, y: bloomY + 0.043, crown: 0.055, phase: 1.28, sweep: 0.68 },
+      // 玫瑰花頭完全改用分層曲面花瓣：外瓣舒展、內瓣逐步收緊並形成旋卷花心。
+      const rosePetalLayers = [
+        { count: 8, inner: 0.018, outer: 0.128, halfAngle: 0.34, base: -0.038, lift: 0.043, edge: 0.013, tip: -0.012, phase: 0.08 },
+        { count: 7, inner: 0.010, outer: 0.099, halfAngle: 0.32, base: -0.006, lift: 0.052, edge: 0.014, tip: 0.006, phase: 0.34 },
+        { count: 6, inner: 0.004, outer: 0.071, halfAngle: 0.29, base: 0.020, lift: 0.048, edge: 0.012, tip: 0.019, phase: 0.72 },
+        { count: 5, inner: 0.001, outer: 0.047, halfAngle: 0.25, base: 0.043, lift: 0.034, edge: 0.008, tip: 0.027, phase: 1.16 },
       ];
-      for (let layer = 0; layer < roseLayers.length; layer += 1) {
-        const ring = roseLayers[layer];
+      for (let layer = 0; layer < rosePetalLayers.length; layer += 1) {
+        const ring = rosePetalLayers[layer];
         for (let petal = 0; petal < ring.count; petal += 1) {
-          const angle = (petal / ring.count) * Math.PI * 2 + ring.phase;
-          const point = (along, across, y) => [
-            x + Math.cos(angle) * (ring.radius + along) - Math.sin(angle) * (across + along * ring.sweep),
-            y,
-            z + Math.sin(angle) * (ring.radius + along) + Math.cos(angle) * (across + along * ring.sweep),
-          ];
-          const root = point(-ring.length * 0.56, 0, ring.y - 0.035);
-          const leftShoulder = point(-ring.length * 0.04, -ring.width * 0.68, ring.y + ring.crown * 0.6);
-          const ridge = point(ring.length * 0.02, 0, ring.y + ring.crown);
-          const rightShoulder = point(-ring.length * 0.04, ring.width * 0.68, ring.y + ring.crown * 0.6);
-          const leftLip = point(ring.length * 0.5, -ring.width * 0.48, ring.y + ring.crown * 0.72);
-          const lip = point(ring.length * (0.5 + (petal % 2) * 0.035), 0, ring.y + ring.crown * 0.84);
-          const rightLip = point(ring.length * 0.5, ring.width * 0.48, ring.y + ring.crown * 0.72);
-          const colorScale = (petal + layer) % 3 === 0 ? 1.09 : (petal + layer) % 3 === 1 ? 0.92 : 1;
-          const petalColor = headColor.map((channel) => Math.min(1, channel * colorScale));
-          const shadeColor = petalColor.map((channel) => channel * 0.9);
-          addTriangle(positions, colors, root, leftShoulder, ridge, shadeColor);
-          addTriangle(positions, colors, leftShoulder, leftLip, lip, petalColor);
-          addTriangle(positions, colors, leftShoulder, lip, ridge, petalColor);
-          addTriangle(positions, colors, root, ridge, rightShoulder, petalColor);
-          addTriangle(positions, colors, rightShoulder, lip, rightLip, shadeColor);
-          addTriangle(positions, colors, rightShoulder, ridge, lip, petalColor);
+          const centerAngle = petal / ring.count * Math.PI * 2 + ring.phase;
+          const shade = [0.94, 1.05, 0.98, 1.08][(petal + layer * 2) % 4];
+          const petalColor = headColor.map((channel) => Math.min(1, channel * shade));
+          const underside = petalColor.map((channel) => channel * 0.78);
+          const radialSteps = 5, acrossSteps = 4;
+          const grid = [];
+          for (let radialStep = 0; radialStep <= radialSteps; radialStep += 1) {
+            const t = radialStep / radialSteps;
+            const row = [];
+            for (let acrossStep = 0; acrossStep <= acrossSteps; acrossStep += 1) {
+              const u = acrossStep / acrossSteps * 2 - 1;
+              const angle = centerAngle + u * ring.halfAngle * (0.72 + 0.28 * t);
+              const radius = ring.inner + (ring.outer - ring.inner) * t + 0.004 * u * u * Math.sin(t * Math.PI);
+              const crown = ring.lift * Math.sin(t * Math.PI * 0.82);
+              const curledTip = ring.tip * Math.pow(t, 3);
+              const edgeLift = ring.edge * Math.pow(Math.abs(u), 1.65) * Math.sin(Math.PI * (0.12 + 0.72 * t));
+              const y = bloomY + ring.base + crown + curledTip + edgeLift;
+              row.push([x + Math.cos(angle) * radius, y, z + Math.sin(angle) * radius]);
+            }
+            grid.push(row);
+          }
+          for (let radialStep = 0; radialStep < radialSteps; radialStep += 1) {
+            for (let acrossStep = 0; acrossStep < acrossSteps; acrossStep += 1) {
+              const a = grid[radialStep][acrossStep];
+              const b = grid[radialStep + 1][acrossStep];
+              const c = grid[radialStep + 1][acrossStep + 1];
+              const d = grid[radialStep][acrossStep + 1];
+              const faceColor = (acrossStep === 0 || acrossStep === acrossSteps - 1) ? underside : petalColor;
+              addTriangle(positions, colors, a, b, c, faceColor);
+              addTriangle(positions, colors, a, c, d, faceColor.map((channel) => Math.min(1, channel * 1.015)));
+            }
+          }
         }
       }
+
+      // 五枚尖端略向下的綠色萼片，包住花托下緣。
       for (let sepal = 0; sepal < 5; sepal += 1) {
-        const angle = sepal / 5 * Math.PI * 2 + 0.2;
-        const root = [x + Math.cos(angle) * 0.025, bloomY - 0.012, z + Math.sin(angle) * 0.025];
-        const tip = [x + Math.cos(angle) * 0.105, bloomY - 0.055, z + Math.sin(angle) * 0.105];
-        const side = [-Math.sin(angle) * 0.018, 0, Math.cos(angle) * 0.018];
-        addTriangle(positions, colors, root,
-          [tip[0] + side[0], tip[1], tip[2] + side[2]], tip, [0.3, 0.5, 0.25]);
-        addTriangle(positions, colors, root, tip,
-          [tip[0] - side[0], tip[1], tip[2] - side[2]], [0.34, 0.55, 0.28]);
+        const angle = sepal / 5 * Math.PI * 2 + 0.18;
+        const root = [x + Math.cos(angle) * 0.018, bloomY - 0.023, z + Math.sin(angle) * 0.018];
+        const shoulder = [x + Math.cos(angle) * 0.055, bloomY - 0.035, z + Math.sin(angle) * 0.055];
+        const tip = [x + Math.cos(angle) * 0.112, bloomY - 0.066, z + Math.sin(angle) * 0.112];
+        const side = [-Math.sin(angle) * 0.014, 0.003, Math.cos(angle) * 0.014];
+        addTriangle(positions, colors, root, [shoulder[0] + side[0], shoulder[1] + 0.003, shoulder[2] + side[2]], tip, [0.31, 0.52, 0.25]);
+        addTriangle(positions, colors, root, tip, [shoulder[0] - side[0], shoulder[1] - 0.002, shoulder[2] - side[2]], [0.26, 0.45, 0.21]);
+      }
+      // 花心以小型錯位旋瓣收口，不再使用規則多面體堆疊。
+      for (let curl = 0; curl < 4; curl += 1) {
+        const angle = curl * Math.PI * 0.72 + 0.4;
+        const r0 = 0.004 + curl * 0.003;
+        const r1 = r0 + 0.018;
+        const y0 = bloomY + 0.062 + curl * 0.004;
+        const p0 = [x + Math.cos(angle) * r0, y0, z + Math.sin(angle) * r0];
+        const p1 = [x + Math.cos(angle + 0.8) * r1, y0 + 0.006, z + Math.sin(angle + 0.8) * r1];
+        const p2 = [x + Math.cos(angle + 1.5) * r1 * 0.8, y0 + 0.013, z + Math.sin(angle + 1.5) * r1 * 0.8];
+        addTriangle(positions, colors, p0, p1, p2, headColor.map((channel) => Math.min(1, channel * (1.03 - curl * 0.05))));
       }
       return;
     }
 
     addLeaf(positions, colors, x, 0.22, z, [-0.82, 0.38, -0.12], 0.22, [0.31, 0.58, 0.3]);
-    addLeaf(positions, colors, x, 0.32, z, [0.74, 0.34, 0.16], 0.21, [0.37, 0.64, 0.33]);
+      addLeaf(positions, colors, x, 0.32, z, [0.74, 0.34, 0.16], 0.21, [0.37, 0.64, 0.33]);
+    }
     for (let petal = 0; petal < 5; petal += 1) {
       const angle = (petal / 5) * Math.PI * 2;
       addOctahedron(positions, colors, x + Math.cos(angle) * 0.055, bloomY, z + Math.sin(angle) * 0.055,
