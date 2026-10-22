@@ -1,9 +1,9 @@
 {
-  "name": "任務160重作：鈴蘭中心莖 S 形姿態",
-  "status": "implementation_static_check_passed_visual_review_pending",
+  "name": "任務160重作：鈴蘭增高與花梗上段受重微彎",
+  "status": "implementation_static_check_pending_visual_review_pending",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "鈴蘭中心莖已收窄水平擺幅、調整為更直立且保留 S 形回擺；六朵花使用共用中心線函式，定位同步更新。JavaScript 語法編譯及靜態檢查通過，瀏覽器視覺驗收尚未執行。",
-  "result": "任務160持續 active。本次依回饋將鈴蘭中心莖改為更直立的 S 形曲線，花朵定位同步沿用新曲線；語法與靜態檢查通過，待瀏覽器視覺驗收。"
+  "nextAction": "鈴蘭成熟花梗高度約增加至前一版的1.5倍，下段由中央直立生長，上段逐步微彎；花朵定位共用更新後的中心線。需完成語法／靜態檢查並待瀏覽器視覺驗收。",
+  "result": "任務160仍為 active。本次調整花梗高度與上段彎曲，六朵花的定位沿用共用中心線，需驗證程式並等待視覺確認。"
 }
