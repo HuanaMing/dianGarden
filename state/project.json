@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": "167-peony-flower-head-model",
-  "nextAction": "任務167牡丹花頭模型已重做並推送，語法檢查通過，等待使用者於遊戲中驗收；任務109仍等待可用 Xcode 環境及付費使用確認。",
+  "nextAction": "任務167牡丹花頭輪廓已調整為更圓潤的半球形並推送，語法檢查通過，等待使用者於遊戲中驗收；任務109仍等待可用 Xcode 環境及付費使用確認。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
