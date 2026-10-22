@@ -1168,10 +1168,11 @@
         for (let petal = 0; petal < shape.count; petal += 1) {
           const centerAngle = petal / shape.count * Math.PI * 2 + shape.phase;
           const spiralOffset = (petal / shape.count) * shape.spiralStep;
-          const radialSteps = 9, acrossSteps = 8;
+          const tSamples = [0, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.98, 0.99, 1];
+          const radialSteps = tSamples.length - 1, acrossSteps = 8;
           const grid = [];
           for (let radialStep = 0; radialStep <= radialSteps; radialStep += 1) {
-            const t = radialStep / radialSteps;
+            const t = tSamples[radialStep];
             const row = [];
             for (let acrossStep = 0; acrossStep <= acrossSteps; acrossStep += 1) {
               const u = acrossStep / acrossSteps * 2 - 1;
@@ -1183,9 +1184,9 @@
                 return q * q * (3 - 2 * q);
               };
               const outwardStart = smoothstep(t / 0.30);
-              const upwardArc = smoothstep((t - 0.30) / 0.69);
               const outwardTip = smoothstep((t - 0.99) / 0.01);
-              const radiusProfile = 0.34 * outwardStart + 0.10 * upwardArc + 0.56 * outwardTip;
+              // 30% 之後固定徑向位置、只向上升；最後 1% 才恢復外展，避免中段看起來外折。
+              const radiusProfile = 0.34 * outwardStart + 0.66 * outwardTip;
               const radius = shape.inner + (shape.outer - shape.inner) * radiusProfile
                 + 0.006 * u * u * Math.sin(t * Math.PI);
               const riseT = 0.02 + 0.93 * smoothstep((t - 0.30) / 0.69) + 0.05 * outwardTip;
@@ -1200,7 +1201,7 @@
             grid.push(row);
           }
           for (let radialStep = 0; radialStep < radialSteps; radialStep += 1) {
-            const t = (radialStep + 0.5) / radialSteps;
+            const t = (tSamples[radialStep] + tSamples[radialStep + 1]) * 0.5;
             // 陰影沿花瓣根部、交疊內緣與杯口背面形成層次，不以花心向外放射。
             const rootShade = 0.76 + 0.22 * Math.min(1, t / 0.42);
             const lipShade = t > 0.78 ? 0.94 + 0.06 * (1 - (t - 0.78) / 0.22) : 1;
