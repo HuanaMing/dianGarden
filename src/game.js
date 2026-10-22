@@ -386,7 +386,7 @@
   }
   function renderFarmDialog() {
     if (!dialog.open || !dialogContext) return;
-    dialog.classList.remove('has-variant-panel');
+    dialog.classList.remove('has-variant-panel', 'has-seed-picker');
     if (dialogContext.type === 'expansion' || dialogContext.type === 'manual-expansion') {
       const isManual = dialogContext.type === 'manual-expansion';
       const cost = isManual ? LAND_COST : getLandCost();
@@ -403,6 +403,7 @@
     selectPlot(index);
     dialogTitle.textContent = `農地 ${String(index + 1).padStart(2, '0')}`;
     if (plot.crop === null) {
+      dialog.classList.add('has-seed-picker');
       const deleteAction = game.plots.length > 1 ? `<button class="dialog-delete-plot" type="button" data-delete-plot ${hasDroneJobs() ? 'disabled' : ''}>${hasDroneJobs() ? '無人機工作時無法刪除' : '刪除這塊地'}</button>` : '';
       dialogContent.innerHTML = `${plotModeSettingMarkup(plot, index)}<p class="seed-dialog-description">${plot.grassOnly ? '草地地塊無法種植；切換地塊性質後即可播種。' : `選擇要種下的花種。你目前有 ${game.coins} 枚金幣。`}</p><div class="seed-picker-layout"><div class="seed-picker-main"><div class="seed-options"></div></div><aside class="variant-picker-panel" id="variant-picker-panel" hidden><div class="variant-picker-heading"><h3 id="variant-picker-title">選擇花種變種</h3><button class="variant-picker-close" type="button" aria-label="關閉變種選單">×</button></div><div class="variant-seed-options" id="variant-seed-options"></div></aside></div>${deleteAction}`;
       const options = dialogContent.querySelector('.seed-options');
@@ -413,7 +414,7 @@
       else crops.forEach((crop, cropIndex) => {
         const row = document.createElement('div'); row.className = 'seed-choice-row';
         const option = document.createElement('button'); option.className = 'seed-option'; option.type = 'button';
-        option.innerHTML = `<span class="seed-option-icon">${flowerIconMarkup(crop, 'flower-pixel-icon seed-pixel-icon')}</span><span class="seed-option-copy"><strong>${crop.name}</strong><small>種子 ${crop.seedCost} 🪙 · 生長約 ${crop.growTime / 1000} 秒 · 收成 ${crop.harvestReward} 🪙</small>${crop.meaning ? `<small class="crop-flower-meaning">花語靈感：${crop.meaning}</small>` : ''}</span>`;
+        option.innerHTML = `<span class="seed-option-icon">${flowerIconMarkup(crop, 'flower-pixel-icon seed-pixel-icon')}</span><span class="seed-option-copy"><strong>${crop.name}</strong><small>種子 ${crop.seedCost} 🪙 · 生長約 ${crop.growTime / 1000} 秒 · 收成 ${crop.harvestReward} 🪙</small></span>`;
         option.disabled = game.coins < crop.seedCost;
         option.addEventListener('click', () => { if (game.plots[index]?.crop === null && game.coins >= crop.seedCost) { dialog.close(); plant(index, cropIndex); } });
         const variantTrigger = document.createElement('button'); variantTrigger.className = 'seed-variant-trigger'; variantTrigger.type = 'button'; variantTrigger.textContent = '▷';
