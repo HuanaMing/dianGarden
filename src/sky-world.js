@@ -401,6 +401,101 @@
 
   plantStemLeafModels[1] = addHyacinthStemLeafGeometry;
 
+  function addLilyOfTheValleyStemLeafGeometry(positions, colors, x, z, height, stage) {
+    const baseY = 0.055;
+    const leafGreen = [
+      [0.30, 0.53, 0.25],
+      [0.36, 0.60, 0.29],
+    ];
+
+    // 鈴蘭由根莖基部抽出兩片寬橢圓披針形葉，葉片先向上再自然拱展。
+    // 以多段葉脈中心線和漸寬網格構成葉片，避免沿用其他花種的細長三角葉。
+    for (let leaf = 0; leaf < 2; leaf += 1) {
+      const angle = leaf === 0 ? -0.78 : 2.36;
+      const radial = [Math.cos(angle), Math.sin(angle)];
+      const tangent = [-radial[1], radial[0]];
+      const length = (stage === 1 ? 0.155 : 0.245) + leaf * 0.012;
+      const maxWidth = stage === 1 ? 0.027 : 0.047;
+      const rise = stage === 1 ? 0.105 : 0.17;
+      const sections = 5;
+      const centerline = [];
+
+      for (let section = 0; section <= sections; section += 1) {
+        const t = section / sections;
+        const distance = length * t;
+        const y = baseY + 0.008 + rise * Math.sin(t * Math.PI * 0.78) - rise * 0.12 * t * t;
+        centerline.push([
+          x + radial[0] * distance,
+          y,
+          z + radial[1] * distance,
+        ]);
+      }
+
+      for (let section = 0; section < sections; section += 1) {
+        const t0 = section / sections;
+        const t1 = (section + 1) / sections;
+        const widthAt = (t) => maxWidth * Math.pow(Math.sin(Math.PI * t), 0.72);
+        const a = centerline[section];
+        const b = centerline[section + 1];
+        const w0 = widthAt(t0);
+        const w1 = widthAt(t1);
+        const left0 = [a[0] + tangent[0] * w0, a[1] + 0.002, a[2] + tangent[1] * w0];
+        const right0 = [a[0] - tangent[0] * w0, a[1] + 0.002, a[2] - tangent[1] * w0];
+        const left1 = [b[0] + tangent[0] * w1, b[1], b[2] + tangent[1] * w1];
+        const right1 = [b[0] - tangent[0] * w1, b[1], b[2] - tangent[1] * w1];
+        const color = leafGreen[leaf].map((channel) => Math.min(1, channel * (section % 2 ? 0.97 : 1.04)));
+        addTriangle(positions, colors, a, left0, left1, color);
+        addTriangle(positions, colors, a, left1, b, color.map((channel) => Math.min(1, channel * 1.03)));
+        addTriangle(positions, colors, a, right1, right0, color.map((channel) => channel * 0.88));
+        addTriangle(positions, colors, a, b, right1, color.map((channel) => channel * 0.93));
+      }
+
+      // 葉片中央的細葉脈讓寬葉在低多邊形風格下仍有清楚方向。
+      for (let section = 0; section < sections; section += 1) {
+        const a = centerline[section];
+        const b = centerline[section + 1];
+        const veinColor = leafGreen[leaf].map((channel) => Math.min(1, channel * 1.12));
+        addTriangle(positions, colors, a, [a[0] + tangent[0] * 0.0025, a[1] + 0.003, a[2] + tangent[1] * 0.0025],
+          [b[0] + tangent[0] * 0.0025, b[1] + 0.003, b[2] + tangent[1] * 0.0025], veinColor);
+        addTriangle(positions, colors, a, [b[0] - tangent[0] * 0.0025, b[1] + 0.003, b[2] - tangent[1] * 0.0025],
+          [a[0] - tangent[0] * 0.0025, a[1] + 0.003, a[2] - tangent[1] * 0.0025], veinColor.map((channel) => channel * 0.92));
+      }
+    }
+
+    if (stage === 1) return;
+
+    // 成熟鈴蘭的花梗纖細、略向一側拱彎；花朵沿花梗單側下垂排列。
+    const stalkSegments = 6;
+    const stalkStart = [x + 0.006, baseY, z];
+    const stalkEnd = [x + 0.085, baseY + height * 0.83, z + 0.018];
+    const stalkPoints = [];
+    for (let segment = 0; segment <= stalkSegments; segment += 1) {
+      const t = segment / stalkSegments;
+      stalkPoints.push([
+        stalkStart[0] + (stalkEnd[0] - stalkStart[0]) * t - 0.018 * Math.sin(Math.PI * t),
+        stalkStart[1] + (stalkEnd[1] - stalkStart[1]) * t,
+        stalkStart[2] + (stalkEnd[2] - stalkStart[2]) * t,
+      ]);
+    }
+    for (let segment = 0; segment < stalkSegments; segment += 1) {
+      const a = stalkPoints[segment];
+      const b = stalkPoints[segment + 1];
+      const dx = b[0] - a[0];
+      const dz = b[2] - a[2];
+      const length = Math.hypot(dx, dz) || 1;
+      const side = [-dz / length * 0.0035, dx / length * 0.0035];
+      const aL = [a[0] + side[0], a[1], a[2] + side[1]];
+      const aR = [a[0] - side[0], a[1], a[2] - side[1]];
+      const bL = [b[0] + side[0], b[1], b[2] + side[1]];
+      const bR = [b[0] - side[0], b[1], b[2] - side[1]];
+      const stalkColor = [0.31, 0.51, 0.27];
+      addTriangle(positions, colors, aL, aR, bR, stalkColor);
+      addTriangle(positions, colors, aL, bR, bL, stalkColor.map((channel) => channel * 0.94));
+    }
+  }
+
+  plantStemLeafModels[2] = addLilyOfTheValleyStemLeafGeometry;
+
   function addFlowerModel(positions, colors, x, z, flowerIndex, stage, heightMultiplier = 1, customColor = null) {
     const modelPositions = [];
     const modelColors = [];
@@ -891,8 +986,7 @@
     }
 
     if (flowerIndex === 2) {
-      addLeaf(positions, colors, x, 0.13, z, [-0.88, 0.18, -0.28], 0.39, [0.36, 0.61, 0.31]);
-      addLeaf(positions, colors, x, 0.14, z, [0.88, 0.2, 0.26], 0.38, [0.41, 0.66, 0.34]);
+      if (dedicatedStemLeafModel) dedicatedStemLeafModel(positions, colors, x, z, height, stage);
       const bellCount = 6;
       for (let bell = 0; bell < bellCount; bell += 1) {
         const progress = bell / (bellCount - 1);
