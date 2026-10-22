@@ -15,18 +15,22 @@
   const vertexSource = `
     attribute vec3 aPosition;
     attribute vec3 aColor;
+    attribute float aOpacity;
     uniform mat4 uProjection;
     uniform mat4 uView;
     varying vec3 vColor;
+    varying float vOpacity;
     void main() {
       gl_Position = uProjection * uView * vec4(aPosition, 1.0);
       vColor = aColor;
+      vOpacity = aOpacity;
     }
   `;
   const fragmentSource = `
     precision mediump float;
     varying vec3 vColor;
-    void main() { gl_FragColor = vec4(vColor, 1.0); }
+    varying float vOpacity;
+    void main() { gl_FragColor = vec4(vColor, vOpacity); }
   `;
 
   function makeShader(type, source) {
@@ -58,6 +62,7 @@
   const locations = {
     position: gl.getAttribLocation(program, 'aPosition'),
     color: gl.getAttribLocation(program, 'aColor'),
+    opacity: gl.getAttribLocation(program, 'aOpacity'),
     projection: gl.getUniformLocation(program, 'uProjection'),
     view: gl.getUniformLocation(program, 'uView'),
   };
@@ -67,6 +72,7 @@
   const droneColorBuffer = gl.createBuffer();
   const effectPositionBuffer = gl.createBuffer();
   const effectColorBuffer = gl.createBuffer();
+  const effectOpacityBuffer = gl.createBuffer();
   let vertexCount = 0;
   let droneVertexCount = 0;
   let effectVertexCount = 0;
@@ -1029,6 +1035,7 @@
     const colors = [];
     const effectPositions = [];
     const effectColors = [];
+    const effectOpacitySpans = [];
     const effectNow = Date.now();
     if (environmentState.isRaining) {
       const rainPalette = { top: [0.48, 0.69, 0.76], front: [0.36, 0.57, 0.65], right: [0.32, 0.52, 0.61], back: [0.42, 0.63, 0.7], left: [0.36, 0.57, 0.65], bottom: [0.28, 0.46, 0.54] };
@@ -1051,7 +1058,11 @@
         const pz = plantZ + Math.sin(angle) * radius;
         const py = plantY + 0.16 + (particle % 3) * 0.075;
         const size = 0.022;
+        const cycle = (time * 0.0018 + particle * 0.21 + index * 0.13) * Math.PI * 2;
+        const opacity = 0.08 + (0.92 * (1 - Math.cos(cycle)) * 0.5);
+        const firstVertex = effectPositions.length / 3;
         addOctahedron(effectPositions, effectColors, px, py, pz, size, size * 1.6, size, [0.47, 0.78, 0.72]);
+        effectOpacitySpans.push({ first: firstVertex, last: effectPositions.length / 3, opacity });
       }
     });
     const delta = Math.min(16, Math.max(0, time - droneFrameTime));
@@ -1179,6 +1190,12 @@
     gl.bindBuffer(gl.ARRAY_BUFFER, droneColorBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.DYNAMIC_DRAW);
     effectVertexCount = effectPositions.length / 3;
+    const effectOpacities = new Float32Array(effectVertexCount).fill(1);
+    for (const span of effectOpacitySpans) {
+      for (let vertex = span.first; vertex < span.last; vertex += 1) effectOpacities[vertex] = span.opacity;
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, effectOpacityBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, effectOpacities, gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, effectPositionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(effectPositions), gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, effectColorBuffer);
@@ -1525,6 +1542,8 @@
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.useProgram(program);
     updateDroneFrame(time);
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -1533,6 +1552,8 @@
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
     gl.enableVertexAttribArray(locations.color);
     gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, 0, 0);
+    gl.disableVertexAttribArray(locations.opacity);
+    gl.vertexAttrib1f(locations.opacity, 1);
     const horizontal = Math.cos(pitch) * distance;
     const eye = cameraMode === '2d' ? [targetX, topDownHeight, targetZ] : [targetX + Math.sin(yaw) * horizontal, Math.sin(pitch) * distance, targetZ + Math.cos(yaw) * horizontal];
     currentProjection = perspective(Math.PI / 4, canvas.width / Math.max(canvas.height, 1), 0.1, 100);
@@ -1544,7 +1565,14 @@
     gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, effectColorBuffer);
     gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, effectOpacityBuffer);
+    gl.enableVertexAttribArray(locations.opacity);
+    gl.vertexAttribPointer(locations.opacity, 1, gl.FLOAT, false, 0, 0);
+    gl.depthMask(false);
     gl.drawArrays(gl.TRIANGLES, 0, effectVertexCount);
+    gl.depthMask(true);
+    gl.disableVertexAttribArray(locations.opacity);
+    gl.vertexAttrib1f(locations.opacity, 1);
     gl.bindBuffer(gl.ARRAY_BUFFER, dronePositionBuffer);
     gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, droneColorBuffer);
