@@ -460,6 +460,34 @@
             cy + right[1] * lx + normal[1] * ly + forward[1] * lz,
             cz + right[2] * lx + normal[2] * ly + forward[2] * lz,
           ];
+          // Add a tapered 3D pedicel from each floret base back to the main stem.
+          // A four-sided tube keeps the stalk visible from different camera angles.
+          const stalkStart = [
+            cx - normal[0] * 0.018,
+            cy - normal[1] * 0.018,
+            cz - normal[2] * 0.018,
+          ];
+          const stalkEnd = [x, bloomY - 0.085, z];
+          const stalkDirection = normalize(stalkEnd.map((value, axis) => value - stalkStart[axis]));
+          const stalkReference = Math.abs(stalkDirection[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0];
+          const stalkSide = normalize(cross(stalkDirection, stalkReference));
+          const stalkDepth = normalize(cross(stalkDirection, stalkSide));
+          const stalkRing = (center, radius) => [
+            center.map((value, axis) => value + stalkSide[axis] * radius + stalkDepth[axis] * radius * 0.72),
+            center.map((value, axis) => value - stalkSide[axis] * radius + stalkDepth[axis] * radius * 0.72),
+            center.map((value, axis) => value - stalkSide[axis] * radius - stalkDepth[axis] * radius * 0.72),
+            center.map((value, axis) => value + stalkSide[axis] * radius - stalkDepth[axis] * radius * 0.72),
+          ];
+          const stalkTopRing = stalkRing(stalkStart, 0.006);
+          const stalkBottomRing = stalkRing(stalkEnd, 0.009);
+          const stalkColor = [0.24, 0.43, 0.19];
+          const stalkShade = [0.19, 0.35, 0.15];
+          for (let stalkFace = 0; stalkFace < 4; stalkFace += 1) {
+            const next = (stalkFace + 1) % 4;
+            addTriangle(positions, colors, stalkTopRing[stalkFace], stalkBottomRing[stalkFace], stalkBottomRing[next], stalkColor);
+            addTriangle(positions, colors, stalkTopRing[stalkFace], stalkBottomRing[next], stalkTopRing[next], stalkShade);
+          }
+
           const petalPoint = (radius, side, axial, angle) => {
             const tangentX = -Math.sin(angle);
             const tangentZ = Math.cos(angle);
