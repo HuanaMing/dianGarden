@@ -1,9 +1,9 @@
 {
-  "name": "任務170花園整體視覺層次升級",
-  "status": "in_progress",
+  "name": "任務佇列盤點與收尾",
+  "status": "completed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "檢查最新 Playwright 瀏覽器驗收結果；確認十一種花卉仍可切換、首頁桌面與手機畫面正常，並記錄土壤紋理變化的驗收結果。",
-  "result": "在 src/sky-world.js 的 addSoilTexture() 中依地塊座標產生穩定旋轉角度，避免每塊土壤床的紋理方向完全相同；在 addGrassTexture() 中將草地色斑亮度倍率從僅偏亮調整為較平衡的明暗變化（0.94–1.13），增加表面層次。未改動花種資料、遊戲數值、存檔格式、土地操作或無人機規則。"
+  "nextAction": "目前 tasks/active 與 tasks/inbox 均無待執行任務。blocked 僅有任務109（等待可用 Xcode 環境與雲端 Mac 付費使用確認）及任務167（等待手工建模）。",
+  "result": "任務169全花種模型自動驗收通過；任務170地表視覺調整完成，Playwright 驗收及 GitHub Pages 部署均成功。依使用者確認，非牡丹的花卉模型任務驗收通過。整理已歸檔任務留下的 inbox 指標文件，避免已完成任務仍顯示待辦。"
 }
