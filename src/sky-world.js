@@ -1035,10 +1035,10 @@
         // 菊花花瓣以細長橢圓舌狀花瓣呈現：沿徑向分段漸寬、圓潤收尾，
         // 不使用尖端匯聚的四面體／金字塔形折面。
         const rayLayers = [
-          // 第一層花瓣弧度明顯向上；第二、三層則以更大的反向弧度向下垂。
-          { count: 28, inner: 0.022, outer: 0.18, y: bloomY - 0.01, width: 0.0125, lift: 0.052, droop: -0.012 },
-          { count: 23, inner: 0.021, outer: 0.145, y: bloomY, width: 0.0115, lift: -0.038, droop: 0.012 },
-          { count: 18, inner: 0.018, outer: 0.112, y: bloomY + 0.01, width: 0.0105, lift: -0.048, droop: 0.016 },
+          // 三層花瓣都由側向伸展後向上拱起，末端略微回收，形成包覆花心的杯狀輪廓。
+          { count: 28, inner: 0.022, outer: 0.18, y: bloomY - 0.01, width: 0.0125, lift: 0.072, inward: 0.12, tipLift: 0.012 },
+          { count: 23, inner: 0.021, outer: 0.145, y: bloomY, width: 0.0115, lift: 0.061, inward: 0.14, tipLift: 0.01 },
+          { count: 18, inner: 0.018, outer: 0.112, y: bloomY + 0.01, width: 0.0105, lift: 0.05, inward: 0.16, tipLift: 0.008 },
         ];
         for (let layer = 0; layer < rayLayers.length; layer += 1) {
           const shape = rayLayers[layer];
@@ -1062,8 +1062,11 @@
                 Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.48),
                 0.88 * t
               );
-              const radius = shape.inner + petalLength * t;
-              const centerY = shape.y + shape.lift * Math.sin(Math.PI * t * 0.9) - shape.droop * t;
+              const curlT = Math.max(0, Math.min(1, (t - 0.68) / 0.32));
+              const curlEase = curlT * curlT * (3 - 2 * curlT);
+              // 前段朝側向伸展，中段抬升；末段沿徑向稍微回收，讓花瓣朝中央花心內扣。
+              const radius = shape.inner + petalLength * (t - shape.inward * curlEase);
+              const centerY = shape.y + shape.lift * Math.sin(Math.PI * t * 0.78) + shape.tipLift * curlEase;
               const center = [x + radial[0] * radius, centerY, z + radial[1] * radius];
               const halfWidth = shape.width * envelope;
               centerline.push(center);
