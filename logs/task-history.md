@@ -1027,3 +1027,10 @@
 - 驗證：`src/sky-world.js` JavaScript 語法編譯檢查通過，模型註冊及分支接入靜態檢查通過。
 - 限制：尚未進行瀏覽器視覺驗收；向日葵花頭接合與風信子葉叢比例仍待目視確認。
 - 檔案：`src/sky-world.js`、`tasks/active/159-independent-stem-leaf-models-sunflower.md`、`docs/architecture.md`、`logs/task-history.md`、`state/current-task.json`、`state/project.json`
+
+
+## 2026-10-22 — 任務 159 重作：向日葵花盤後退、風信子花瓣內收
+
+- 向日葵花頭沿世界 Z 軸正方向的總位移由 0.036 改為 0.031，等於後退 0.005；主莖與葉片不變。
+- 風信子花序收窄，花瓣尖端朝中央花莖內收，縮短向外延伸距離，保留原有六層花序及配色。
+- JavaScript 語法編譯檢查通過；尚未執行瀏覽器視覺驗收。
