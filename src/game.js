@@ -17,6 +17,10 @@
   const crops = (window.flowerCatalog || []).map((flower) => ({
     ...flower, icon: flower.emoji, seedIcon: '🌱', meaning: flower.meaning,
   }));
+  function flowerIconMarkup(flower, className = 'flower-pixel-icon') {
+    if (!flower?.image) return flower?.emoji || '🌱';
+    return '<img class="' + className + '" src="' + flower.image + '" width="32" height="32" alt="" aria-hidden="true" decoding="async" style="image-rendering:pixelated">';
+  }
   if (crops.length !== 11) throw new Error('花卉目錄載入失敗');
   let persistenceAvailable = true;
   let persistenceWarning = '';
@@ -400,7 +404,7 @@
       else crops.forEach((crop, cropIndex) => {
         const row = document.createElement('div'); row.className = 'seed-choice-row';
         const option = document.createElement('button'); option.className = 'seed-option'; option.type = 'button';
-        option.innerHTML = `<span class="seed-option-icon">${crop.icon}</span><span class="seed-option-copy"><strong>${crop.name}</strong><small>種子 ${crop.seedCost} 🪙 · 生長約 ${crop.growTime / 1000} 秒 · 收成 ${crop.harvestReward} 🪙</small>${crop.meaning ? `<small class="crop-flower-meaning">花語靈感：${crop.meaning}</small>` : ''}</span>`;
+        option.innerHTML = `<span class="seed-option-icon">${flowerIconMarkup(crop, 'flower-pixel-icon seed-pixel-icon')}</span><span class="seed-option-copy"><strong>${crop.name}</strong><small>種子 ${crop.seedCost} 🪙 · 生長約 ${crop.growTime / 1000} 秒 · 收成 ${crop.harvestReward} 🪙</small>${crop.meaning ? `<small class="crop-flower-meaning">花語靈感：${crop.meaning}</small>` : ''}</span>`;
         option.disabled = game.coins < crop.seedCost;
         option.addEventListener('click', () => { if (game.plots[index]?.crop === null && game.coins >= crop.seedCost) { dialog.close(); plant(index, cropIndex); } });
         const variantTrigger = document.createElement('button'); variantTrigger.className = 'seed-variant-trigger'; variantTrigger.type = 'button'; variantTrigger.textContent = '▷';
@@ -454,7 +458,7 @@
     const rainStatus = '';
     const boostStatus = plot.watered ? `<p class="water-status">${plot.waterSource === 'rain' ? '雨水已補足澆水狀態' : Number.isFinite(plot.waterUntil) && plot.waterUntil > Date.now() ? `澆水加速中，還有 ${Math.ceil((plot.waterUntil - Date.now()) / 1000)} 秒` : '這株花已完成澆水加速'}</p>` : '';
     const deleteAction = game.plots.length > 1 ? `<button class="dialog-delete-plot" type="button" data-delete-plot ${hasDroneJobs() ? 'disabled' : ''}>${hasDroneJobs() ? '無人機工作時無法刪除' : '刪除這塊地'}</button>` : '';
-    dialogContent.innerHTML = `${plotModeSettingMarkup(plot, index)}<div class="dialog-crop"><span>${ready ? crop.icon : crop.seedIcon}</span><div><strong>${crop.name}${ready ? ' 已成熟' : ' 正在生長'}</strong><p>${ready ? `預計收成可獲得 ${crop.harvestReward} 枚金幣。` : `預計還需 ${remaining} 秒成熟。`}</p></div></div><div class="dialog-progress"><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div><small>${progress}%</small></div>${ready ? '<button class="action-button harvest dialog-primary" type="button" data-dialog-harvest>收成並領取金幣</button>' : waterAction}${rainStatus}${boostStatus}${deleteAction}`;
+    dialogContent.innerHTML = `${plotModeSettingMarkup(plot, index)}<div class="dialog-crop"><span>${ready ? flowerIconMarkup(crop) : crop.seedIcon}</span><div><strong>${crop.name}${ready ? ' 已成熟' : ' 正在生長'}</strong><p>${ready ? `預計收成可獲得 ${crop.harvestReward} 枚金幣。` : `預計還需 ${remaining} 秒成熟。`}</p></div></div><div class="dialog-progress"><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div><small>${progress}%</small></div>${ready ? '<button class="action-button harvest dialog-primary" type="button" data-dialog-harvest>收成並領取金幣</button>' : waterAction}${rainStatus}${boostStatus}${deleteAction}`;
     dialogContent.querySelector('[data-dialog-harvest]')?.addEventListener('click', () => { dialog.close(); harvest(index); });
     dialogContent.querySelector('[data-dialog-water]')?.addEventListener('click', () => { dialog.close(); water(index); });
     dialogContent.querySelector('[data-delete-plot]')?.addEventListener('click', () => deletePlot(index));
@@ -854,7 +858,7 @@
       button.dataset.plotButton = index;
       button.setAttribute('aria-label', `農地 ${index + 1}，${state}。開啟操作`);
       button.setAttribute('aria-pressed', 'false');
-      button.innerHTML = `<span class="world-plot-number">${String(index + 1).padStart(2, '0')}</span><span class="world-plot-icon" aria-hidden="true">${crop ? ready ? crop.icon : crop.seedIcon : '＋'}</span><span class="world-plot-state">${plotMode(plot) === 'grass' ? '草地' : plotMode(plot) === 'manual' ? '手動' : !crop ? '空地' : rainWet ? '雨中濕潤' : ready ? '可收成' : `${remaining}s`}</span>${crop ? `<span class="world-plot-progress" aria-hidden="true"><span style="width:${progress}%"></span></span>` : ''}`;
+      button.innerHTML = `<span class="world-plot-number">${String(index + 1).padStart(2, '0')}</span><span class="world-plot-icon" aria-hidden="true">${crop ? ready ? flowerIconMarkup(crop, 'flower-pixel-icon plot-pixel-icon') : crop.seedIcon : '＋'}</span><span class="world-plot-state">${plotMode(plot) === 'grass' ? '草地' : plotMode(plot) === 'manual' ? '手動' : !crop ? '空地' : rainWet ? '雨中濕潤' : ready ? '可收成' : `${remaining}s`}</span>${crop ? `<span class="world-plot-progress" aria-hidden="true"><span style="width:${progress}%"></span></span>` : ''}`;
       button.addEventListener('click', () => openPlotDialog(index));
       plotSelector.append(button);
     });
