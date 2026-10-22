@@ -319,10 +319,10 @@
       ];
       const originalHighestY = shoulder[1] + 0.018;
 
-      // left：左側葉肩頂點 = shoulder + 切線方向半葉寬，Y 高於 shoulder 0.008。
-      const left = [shoulder[0] + tangent[0] * width, shoulder[1] + 0.008, shoulder[2] + tangent[1] * width];
-      // right：右側葉肩頂點 = shoulder - 切線方向半葉寬，Y 高於 shoulder 0.008。
-      const right = [shoulder[0] - tangent[0] * width, shoulder[1] + 0.008, shoulder[2] - tangent[1] * width];
+      // left：左側葉肩頂點 = shoulder + 切線方向半葉寬，Y 降至 shoulder 下方 0.018。
+      const left = [shoulder[0] + tangent[0] * width, shoulder[1] - 0.018, shoulder[2] + tangent[1] * width];
+      // right：右側葉肩頂點 = shoulder - 切線方向半葉寬，Y 降至 shoulder 下方 0.018。
+      const right = [shoulder[0] - tangent[0] * width, shoulder[1] - 0.018, shoulder[2] - tangent[1] * width];
 
       // ridge：葉片原最高脊線頂點；相對 shoulder 徑向內移 0.011，Y 高 0.018。
       const ridge = [shoulder[0] - radial[0] * 0.011, originalHighestY, shoulder[2] - radial[1] * 0.011];
@@ -332,11 +332,11 @@
         shoulder[1] - 0.018,
         shoulder[2] - radial[1] * 0.0045,
       ];
-      // tip：葉尖頂點；Y 位於 ridge 的高度再上方 0.02，水平座標是 ridge 與 lowerRidge 的中點。
+      // tip：葉尖頂點；高度維持原最高點上方 0.02，水平座標與 ridge 完全相同（位於 ridge 正上方）。
       const tip = [
-        (ridge[0] + lowerRidge[0]) / 2,
+        ridge[0],
         originalHighestY + 0.02,
-        (ridge[2] + lowerRidge[2]) / 2,
+        ridge[2],
       ];
       const color = leafColors[leaf % leafColors.length];
       addTriangle(positions, colors, root, left, lowerRidge, color);
