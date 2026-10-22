@@ -1927,7 +1927,12 @@
                 + (t - 0.5) * 0.16 + Math.sin(u * Math.PI) * 0.035;
               const crown = Math.sin(t * Math.PI * 0.82) * 0.028 * (1 - u * u);
               const rim = outerFold * (0.009 + 0.008 * Math.cos(u * Math.PI * 3 + petal));
-              const y = peonyBaseY + layer.baseY + t * layer.lift + crown + rim - 0.012 * u * u;
+              // 以花頭中心為最高點、外緣自然下降，使用半球曲面而非逐層線性抬高。
+              const domeRadius = 0.172;
+              const domeHeight = 0.118;
+              const domeProfile = Math.sqrt(Math.max(0, 1 - (Math.min(domeRadius, radial) / domeRadius) ** 2));
+              const y = peonyBaseY + 0.006 + domeHeight * domeProfile
+                + crown * 0.18 + rim * 0.22 - 0.006 * u * u;
               rowPoints.push([
                 x + Math.cos(petalAngle) * radial,
                 y,
@@ -1952,18 +1957,7 @@
           }
         }
       });
-      // 花心以較小、偏深的花瓣收束，避免中心看起來像單一幾何球。
-      for (let petal = 0; petal < 7; petal += 1) {
-        const angle = petal / 7 * Math.PI * 2 + 0.2;
-        const root = [x + Math.cos(angle) * 0.012, peonyBaseY + 0.071, z + Math.sin(angle) * 0.012];
-        const tip = [x + Math.cos(angle + 0.28) * 0.041, peonyBaseY + 0.091 + (petal % 2) * 0.004,
-          z + Math.sin(angle + 0.28) * 0.041];
-        const left = [x + Math.cos(angle - 0.32) * 0.029, peonyBaseY + 0.083, z + Math.sin(angle - 0.32) * 0.029];
-        const right = [x + Math.cos(angle + 0.68) * 0.029, peonyBaseY + 0.082, z + Math.sin(angle + 0.68) * 0.029];
-        const innerColor = headColor.map((channel) => Math.min(1, channel * (petal % 2 ? 0.88 : 1.08)));
-        addTriangle(positions, colors, root, left, tip, innerColor);
-        addTriangle(positions, colors, root, tip, right, innerColor.map((channel) => channel * 0.94));
-      }
+      // 不再使用向上突出的三角形花心，避免破壞半球輪廓；內層花瓣已覆蓋中心。
       return;
     }
 
