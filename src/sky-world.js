@@ -1923,19 +1923,16 @@
       const peonyBaseY = bloomY - 0.018;
       const domeRadius = 0.172;
       const domeHeight = 0.118;
-      const phi = (1 + Math.sqrt(5)) / 2;
       // 將正二十面體轉成「頂點朝上」的頂點配置：頂點、上環五點、下環五點；
       // 底部頂點留作花頭底部，不另放花瓣，避免破壞圓頂外輪廓。
-      const upperRingY = 1 / Math.sqrt(5);
-      const ringRadius = Math.sqrt(1 - upperRingY * upperRingY);
-      const vertices = [{ ring: "top", angle: 0, radial: 0, level: 1 }];
+      const vertices = [{ ring: "top", angle: 0, radial: 0 }];
       for (let i = 0; i < 5; i += 1) {
         const angle = (Math.PI * 2 * i) / 5;
-        vertices.push({ ring: "upper", angle, radial: 0.56, level: 0.78 });
+        vertices.push({ ring: "upper", angle, radial: 0.56 });
       }
       for (let i = 0; i < 5; i += 1) {
         const angle = (Math.PI * 2 * i) / 5 + Math.PI / 5;
-        vertices.push({ ring: "lower", angle, radial: 0.98, level: 0.42 });
+        vertices.push({ ring: "lower", angle, radial: 0.98 });
       }
       for (let bloom = 0; bloom < vertices.length; bloom += 1) {
         const vertex = vertices[bloom];
