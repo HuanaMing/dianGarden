@@ -323,8 +323,12 @@
       const left = [shoulder[0] + tangent[0] * width, shoulder[1] + 0.008, shoulder[2] + tangent[1] * width];
       const right = [shoulder[0] - tangent[0] * width, shoulder[1] + 0.008, shoulder[2] - tangent[1] * width];
       const ridge = [shoulder[0] - radial[0] * 0.009, originalHighestY, shoulder[2] - radial[1] * 0.009];
-      // Extra contour vertex sits 0.009 below the original ridge peak to flatten the leaf profile.
-      const lowerRidge = [ridge[0], ridge[1] - 0.009, ridge[2]];
+      // Keep the lower ridge slightly inward from the shoulder, but never closer to the plant center than the peak.
+      const lowerRidge = [
+        shoulder[0] - radial[0] * 0.0045,
+        ridge[1] - 0.009,
+        shoulder[2] - radial[1] * 0.0045,
+      ];
       const color = leafColors[leaf % leafColors.length];
       addTriangle(positions, colors, root, left, lowerRidge, color);
       addTriangle(positions, colors, lowerRidge, left, ridge, color.map((channel) => Math.min(1, channel * 1.03)));
