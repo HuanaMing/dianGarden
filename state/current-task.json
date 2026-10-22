@@ -1,9 +1,9 @@
 {
-  "name": "任務160重作：鈴蘭增高與花梗上段受重微彎",
-  "status": "implementation_static_check_pending_visual_review_pending",
+  "name": "任務160完成歸檔與 active 目錄清理",
+  "status": "completed_archived",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "鈴蘭成熟花梗高度約增加至前一版的1.5倍，下段由中央直立生長，上段逐步微彎；花朵定位共用更新後的中心線。需完成語法／靜態檢查並待瀏覽器視覺驗收。",
-  "result": "任務160仍為 active。本次調整花梗高度與上段彎曲，六朵花的定位沿用共用中心線，需驗證程式並等待視覺確認。"
+  "nextAction": "任務160已由使用者確認完成並歸檔至 tasks/done。tasks/active 僅保留仍待瀏覽器視覺驗收的任務147與149；專案主要狀態仍有任務109的Xcode環境與雲端Mac付費批准待處理。",
+  "result": "任務160完成文件已建立並驗證，active 原始檔及其他已歸檔任務的重複副本已清除。JavaScript語法與靜態檢查通過；瀏覽器視覺驗收未由Agent執行。"
 }
