@@ -1035,9 +1035,9 @@
         // 菊花花瓣以細長橢圓舌狀花瓣呈現：沿徑向分段漸寬、圓潤收尾，
         // 不使用尖端匯聚的四面體／金字塔形折面。
         const rayLayers = [
-          { count: 28, inner: 0.022, outer: 0.18, y: bloomY - 0.025, width: 0.0125, lift: 0.022, droop: 0.018 },
-          { count: 23, inner: 0.021, outer: 0.145, y: bloomY, width: 0.0115, lift: 0.024, droop: 0.012 },
-          { count: 18, inner: 0.018, outer: 0.112, y: bloomY + 0.025, width: 0.0105, lift: 0.026, droop: 0.006 },
+          { count: 28, inner: 0.022, outer: 0.18, y: bloomY - 0.01, width: 0.0125, lift: 0.018, droop: 0.012 },
+          { count: 23, inner: 0.021, outer: 0.145, y: bloomY, width: 0.0115, lift: 0.019, droop: 0.009 },
+          { count: 18, inner: 0.018, outer: 0.112, y: bloomY + 0.01, width: 0.0105, lift: 0.02, droop: 0.006 },
         ];
         for (let layer = 0; layer < rayLayers.length; layer += 1) {
           const shape = rayLayers[layer];
@@ -1055,7 +1055,12 @@
             for (let section = 0; section <= sections; section += 1) {
               const t = section / sections;
               // 橢圓舌狀輪廓：中段飽滿、根部收窄；圓頭由後續半圓網格封口。
-              const envelope = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.48);
+              // 尾端寬度維持為花瓣半寬的 88%，直接與半圓封口兩側銜接；
+              // 不讓主花瓣先收成尖點，再把圓帽接在尖端外面。
+              const envelope = Math.max(
+                Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.48),
+                0.88 * t
+              );
               const radius = shape.inner + petalLength * t;
               const centerY = shape.y + shape.lift * Math.sin(Math.PI * t * 0.82) - shape.droop * t;
               const center = [x + radial[0] * radius, centerY, z + radial[1] * radius];
