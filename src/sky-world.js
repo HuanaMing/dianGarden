@@ -311,14 +311,14 @@
       const root = [x + radial[0] * 0.012, baseY + 0.012, z + radial[1] * 0.012];
       const shoulder = [
         x + radial[0] * length * 0.52,
-        baseY + (stage === 1 ? 0.085 : 0.145),
+        baseY + (stage === 1 ? 0.085 : 0.145) * 0.8,
         z + radial[1] * length * 0.52,
       ];
       const originalHighestY = shoulder[1] + 0.018;
       const left = [shoulder[0] + tangent[0] * width, shoulder[1] + 0.008, shoulder[2] + tangent[1] * width];
       const right = [shoulder[0] - tangent[0] * width, shoulder[1] + 0.008, shoulder[2] - tangent[1] * width];
-      const ridge = [shoulder[0] - radial[0] * 0.009, originalHighestY, shoulder[2] - radial[1] * 0.009];
-      // Keep lowerRidge outward of the highest point and reduce its height above the shoulder to 70%.
+      const ridge = [shoulder[0] - radial[0] * 0.011, originalHighestY, shoulder[2] - radial[1] * 0.011];
+      // Move the highest ridge slightly inward; keep lowerRidge farther outward and 70% of its former height above the shoulder.
       const lowerRidge = [
         shoulder[0] - radial[0] * 0.0045,
         shoulder[1] + 0.009 * 0.7,
