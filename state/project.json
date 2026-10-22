@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "blocked",
   "activeTask": "109-personal-ios-app-lock-screen-flower-widget",
-  "nextAction": "任務 149 彼岸花三瓣花冠與共面拋物線花絲已更新，待桌面／手機瀏覽器驗收；任務 109 仍等待可用 Xcode 環境及雲端 Mac 費用決策",
+  "nextAction": "先完成任務 149 的瀏覽器視覺驗收；接續依序執行 tasks/inbox/150–156（濕潤水滴、無人機作業高度、派工優先序與澆水佇列／提示）。任務 109 仍等待可用 Xcode 環境及雲端 Mac 費用決策。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
