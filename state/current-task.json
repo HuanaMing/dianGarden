@@ -1,9 +1,9 @@
 {
-  "name": "任務 158：十一種植物莖葉姿態背景資料",
-  "status": "completed_documentation",
+  "name": "任務 159：獨立植物莖葉模型架構與向日葵莖葉",
+  "status": "implementation_static_check_passed_visual_review_pending",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務 158 已完成。後續植物建模可依 docs/flower-background.md 的十一種莖葉姿態資料逐株調整；若恢復模型修改，先比對 src/sky-world.js 現有各花種幾何，將植物學特徵轉為可辨識且符合場景尺度的簡化形態。任務 151、154、157 的瀏覽器行為驗收及任務 149 的彼岸花視覺驗收仍待確認；任務 109 的 Xcode 環境與雲端 Mac 費用批准事項保持不變。",
-  "result": "任務 158 已查閱外部園藝／植物學來源，並將十一種植物的莖型、葉形、葉序、株型、建模建議及來源連結加入 docs/flower-background.md。只更新文件，未修改模型程式或玩法數值。"
+  "nextAction": "任務 159 已完成現有模型盤點、11 種植物專屬莖葉註冊掛接點，以及向日葵獨立莖葉幾何。下一步進行瀏覽器視覺驗收，確認向日葵葉片比例、主莖與花盤銜接、成長階段及其餘十種植物沒有外觀回歸；通過後再將任務移至 done。任務 151、154、157 的瀏覽器行為驗收及任務 149 的彼岸花視覺驗收仍待確認；任務 109 的 Xcode 環境與雲端 Mac 費用批准事項保持不變。",
+  "result": "已在 src/sky-world.js 新增 11 槽 plantStemLeafModels 註冊表與 addSunflowerStemLeafGeometry()，向日葵採專屬粗直立莖、交錯寬葉、葉柄與略下垂葉尖；其餘十種仍沿用舊繪製路徑。JavaScript 語法檢查通過，瀏覽器視覺驗收未執行。"
 }
