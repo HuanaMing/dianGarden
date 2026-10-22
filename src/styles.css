@@ -399,7 +399,7 @@ input, textarea, [contenteditable="true"]{
 
 /* 任務175：收合控制列、面板延伸感與五欄農地管理。 */
 .world-frame.is-hud-collapsed .topbar-actions{
-  position:absolute!important;top:0!important;left:12px!important;right:auto!important;
+  position:absolute!important;top:0!important;left:auto!important;right:12px!important;
   display:flex!important;align-items:center;gap:6px;margin:0!important;padding:7px 9px 8px;
   border:1px solid #ffffffd6;border-top:0;border-radius:0 0 15px 15px;
   background:#fffdf2f2;box-shadow:0 5px 16px #426e6620;backdrop-filter:blur(8px);
