@@ -1,9 +1,9 @@
 {
   "name": "任務160：鈴蘭專屬莖葉模型",
-  "status": "implementation_pending_static_check_and_visual_review",
+  "status": "implementation_static_check_passed_visual_review_pending",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "執行 src/sky-world.js 的 JavaScript 語法檢查與靜態結構檢查；確認鈴蘭索引2註冊、幼苗與成熟兩片基生寬葉、成熟細彎花梗、原有鐘形花朵保留且通用葉片已移除。瀏覽器視覺驗收尚未執行。",
-  "result": "任務159依使用者確認已歸檔至 tasks/done，並刪除 tasks/active 中原始檔。任務160已在 src/sky-world.js 實作鈴蘭專屬莖葉模型，待靜態檢查及視覺驗收。"
+  "nextAction": "鈴蘭專屬莖葉模型的 JavaScript 語法編譯檢查已通過；靜態檢查確認索引2註冊、幼苗／成熟兩片基生寬葉、成熟細彎花梗、原有鐘形花朵保留且通用葉片已移除。瀏覽器視覺驗收尚未執行。",
+  "result": "任務159已由使用者確認完成並歸檔，active 中的原始檔已刪除。任務160已新增鈴蘭專屬莖葉模型；JavaScript 語法檢查與靜態結構檢查通過，待瀏覽器視覺驗收。"
 }
