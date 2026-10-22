@@ -233,6 +233,7 @@
   const dronePanelToggle = document.querySelector('#drone-panel-toggle');
   const settingsToggle = document.querySelector('#settings-toggle');
   const settingsPanel = document.querySelector('#settings-panel');
+  const powerSaveToggle = document.querySelector('#power-save-toggle');
   const droneJobsPanel = document.querySelector('#drone-jobs');
   const hudToggle = document.querySelector('#hud-toggle');
   const hudCollapsedSummary = document.querySelector('#hud-collapsed-summary');
@@ -899,6 +900,13 @@
     droneJobsPanel?.addEventListener(eventName, refreshDronePanelTimeout);
   });
   hudToggle?.addEventListener('click', () => { game.hudCollapsed = !game.hudCollapsed; save(); updateHudCollapse(); });
+  powerSaveToggle?.addEventListener('click', () => {
+    const enabled = powerSaveToggle.getAttribute('aria-pressed') !== 'true';
+    powerSaveToggle.setAttribute('aria-pressed', String(enabled));
+    powerSaveToggle.textContent = `省電模式：${enabled ? '開' : '關'}`;
+    window.skyWorld?.setPowerSaveMode?.(enabled);
+    notify(enabled ? '省電模式已開啟：遊戲邏輯持續運作，暫停 GPU 繪圖。' : '省電模式已關閉：恢復場景繪圖。');
+  });
   settingsToggle?.addEventListener('click', () => {
     const open = settingsPanel?.hidden !== false;
     if (settingsPanel) settingsPanel.hidden = !open;
