@@ -1352,18 +1352,19 @@
           const petalRows = Array.from({ length: rows + 1 }, (_, row) => {
             const t = row / rows;
             const width = petalHalfWidth * Math.pow(Math.sin(Math.PI * t), 0.72);
-            // 花瓣中段隆起、尖端再次翹起；半徑也稍微向內收，避免平直的放射狀薄片。
+            // 花瓣沿長度方向採「根部抬起、尖端再向上翹」的弧線；中段下凹，
+            // 不再把整片花瓣的中心線拱成向上的凸包。半徑略向內收，讓輪廓更柔和。
             const radius = rootRadius + petalLength * (t - 0.055 * Math.sin(Math.PI * t));
-            const archCurve = arch * Math.sin(Math.PI * t);
+            const archCurve = -arch * Math.sin(Math.PI * t);
             const center = [
               x + radial[0] * radius,
-              bloomY + layerBase + archCurve + tipLift * t - 0.012 * Math.sin(Math.PI * t),
+              bloomY + layerBase + archCurve + tipLift * t,
               z + radial[1] * radius,
             ];
-            const edgeDip = 0.006 * Math.sin(Math.PI * t);
+            // 只抬高兩側邊緣，形成花瓣內凹、邊緣微翹的碗狀曲面。
             const curl = edgeCurl * Math.sin(Math.PI * t);
-            const left = [center[0] + tangent[0] * width, center[1] - edgeDip + curl, center[2] + tangent[1] * width];
-            const right = [center[0] - tangent[0] * width, center[1] - edgeDip + curl, center[2] - tangent[1] * width];
+            const left = [center[0] + tangent[0] * width, center[1] + curl, center[2] + tangent[1] * width];
+            const right = [center[0] - tangent[0] * width, center[1] + curl, center[2] - tangent[1] * width];
             return { left, center, right };
           });
           for (let row = 0; row < rows; row += 1) {
