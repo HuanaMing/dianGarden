@@ -218,12 +218,45 @@
 
   function addSunflowerStemLeafGeometry(positions, colors, x, z, height, stage) {
     const stemTop = 0.055 + height;
-    const stemWidth = 0.044;
-    addBox(positions, colors, x - stemWidth / 2, 0.055, z - stemWidth / 2,
-      x + stemWidth / 2, stemTop, z + stemWidth / 2, {
-        top: [0.36, 0.59, 0.3], front: [0.28, 0.47, 0.25], right: [0.25, 0.42, 0.22],
-        back: [0.32, 0.52, 0.27], left: [0.3, 0.53, 0.27], bottom: [0.22, 0.38, 0.2],
+    // Build a tapered, low-poly round stalk from short ring segments instead
+    // of a square box. A tiny centerline drift avoids a perfectly mechanical look.
+    const stemRings = [
+      { t: 0, radius: 0.022 },
+      { t: 0.22, radius: 0.0205 },
+      { t: 0.46, radius: 0.0185 },
+      { t: 0.7, radius: 0.0165 },
+      { t: 0.9, radius: 0.015 },
+      { t: 1, radius: 0.014 },
+    ];
+    const stemSides = 10;
+    const stemRingVertices = stemRings.map(({ t, radius }) => {
+      const centerX = x + Math.sin(t * Math.PI) * 0.0045;
+      const centerZ = z + Math.sin(t * Math.PI * 0.8) * 0.0025;
+      return Array.from({ length: stemSides }, (_, side) => {
+        const angle = side / stemSides * Math.PI * 2;
+        return [centerX + Math.cos(angle) * radius, 0.055 + height * t,
+          centerZ + Math.sin(angle) * radius];
       });
+    });
+    for (let ring = 0; ring < stemRingVertices.length - 1; ring += 1) {
+      for (let side = 0; side < stemSides; side += 1) {
+        const next = (side + 1) % stemSides;
+        const lowerA = stemRingVertices[ring][side];
+        const lowerB = stemRingVertices[ring][next];
+        const upperA = stemRingVertices[ring + 1][side];
+        const upperB = stemRingVertices[ring + 1][next];
+        const shade = 0.88 + (Math.cos((side + 0.5) / stemSides * Math.PI * 2) + 1) * 0.08;
+        const stemColor = [0.28, 0.48, 0.24].map((channel) => Math.min(1, channel * shade));
+        addTriangle(positions, colors, lowerA, lowerB, upperB, stemColor);
+        addTriangle(positions, colors, lowerA, upperB, upperA, stemColor.map((channel) => channel * 0.97));
+      }
+    }
+    // Close the stalk base with a small green polygon hidden against the soil.
+    const stemBaseCenter = [x, 0.055, z];
+    for (let side = 0; side < stemSides; side += 1) {
+      addTriangle(positions, colors, stemBaseCenter, stemRingVertices[0][(side + 1) % stemSides],
+        stemRingVertices[0][side], [0.23, 0.39, 0.2]);
+    }
 
     const leafNodes = stage === 1 ? [0.42, 0.72] : [0.28, 0.46, 0.64, 0.8];
     const leafLengths = stage === 1 ? [0.13, 0.12] : [0.245, 0.235, 0.205, 0.17];
