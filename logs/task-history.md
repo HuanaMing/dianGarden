@@ -1234,3 +1234,9 @@
 - 結果：新增三根不同曲線的薰衣草花莖、狹長葉片與對應三根紫色花穗；幼苗維持簡化基部葉叢。JavaScript 語法檢查通過並推送至 `main`。
 - 限制與驗收：尚未在瀏覽器實際驗收；`assets/` 內像素圖尚未定位與對照。
 - 檔案：`src/sky-world.js`、`tasks/active/166-lavender-stem-leaf-model.md`
+
+## 2026-10-22 — 任務 166 重做：薰衣草花莖高低、XZ 彎曲與舊葉清理
+
+- 結果：三根花莖加入不同高度倍率（0.88、1.00、0.79）；莖身與花穗路徑同步加入 XZ 兩個水平軸的平滑彎曲；薰衣草不再疊加舊版通用側葉，保留專屬狹長葉片。
+- 驗證：JavaScript 語法檢查通過。尚未進行瀏覽器畫面驗收。
+- 檔案：`src/sky-world.js`、`tasks/active/166-lavender-stem-leaf-model.md`、`state/current-task.json`、`state/project.json`、`logs/task-history.md`
