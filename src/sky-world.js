@@ -293,6 +293,74 @@
 
   plantStemLeafModels[0] = addSunflowerStemLeafGeometry;
 
+  function addHyacinthStemLeafGeometry(positions, colors, x, z, height, stage) {
+    const baseY = 0.055;
+    const leafCount = 5;
+    const leafColors = [
+      [0.31, 0.55, 0.28], [0.36, 0.61, 0.31], [0.29, 0.51, 0.26],
+      [0.34, 0.58, 0.29], [0.39, 0.63, 0.32],
+    ];
+
+    // Hyacinth leaves form a compact basal rosette, not nodes along the flower stalk.
+    for (let leaf = 0; leaf < leafCount; leaf += 1) {
+      const angle = leaf / leafCount * Math.PI * 2 + 0.22;
+      const radial = [Math.cos(angle), Math.sin(angle)];
+      const tangent = [-radial[1], radial[0]];
+      const length = (stage === 1 ? 0.12 : 0.205) + (leaf % 2) * 0.012;
+      const width = stage === 1 ? 0.023 : 0.034;
+      const root = [x + radial[0] * 0.012, baseY + 0.012, z + radial[1] * 0.012];
+      const shoulder = [
+        x + radial[0] * length * 0.55,
+        baseY + (stage === 1 ? 0.085 : 0.145),
+        z + radial[1] * length * 0.55,
+      ];
+      const tip = [
+        x + radial[0] * length,
+        baseY + (stage === 1 ? 0.055 : 0.095),
+        z + radial[1] * length,
+      ];
+      const left = [shoulder[0] + tangent[0] * width, shoulder[1] + 0.008, shoulder[2] + tangent[1] * width];
+      const right = [shoulder[0] - tangent[0] * width, shoulder[1] + 0.008, shoulder[2] - tangent[1] * width];
+      const ridge = [shoulder[0] - radial[0] * 0.006, shoulder[1] + 0.018, shoulder[2] - radial[1] * 0.006];
+      const color = leafColors[leaf % leafColors.length];
+      addTriangle(positions, colors, root, left, ridge, color);
+      addTriangle(positions, colors, ridge, left, tip, color.map((channel) => Math.min(1, channel * 1.05)));
+      addTriangle(positions, colors, root, ridge, right, color.map((channel) => channel * 0.9));
+      addTriangle(positions, colors, ridge, tip, right, color);
+      // A narrow central ridge gives each thick, strap-like leaf a readable spine.
+      addTriangle(positions, colors, root, ridge, tip, color.map((channel) => Math.min(1, channel * 1.12)));
+    }
+
+    if (stage === 1) return;
+
+    // One sturdy, leafless flower stalk rises from the center of the rosette.
+    const stalkTop = baseY + height * 0.82;
+    const stalkBottom = baseY + 0.07;
+    const stalkRings = [
+      { t: 0, radius: 0.012 },
+      { t: 0.35, radius: 0.0105 },
+      { t: 0.72, radius: 0.009 },
+      { t: 1, radius: 0.008 },
+    ];
+    const sides = 8;
+    const rings = stalkRings.map(({ t, radius }) => Array.from({ length: sides }, (_, side) => {
+      const angle = side / sides * Math.PI * 2;
+      return [x + Math.cos(angle) * radius, stalkBottom + (stalkTop - stalkBottom) * t,
+        z + Math.sin(angle) * radius];
+    }));
+    for (let ring = 0; ring < rings.length - 1; ring += 1) {
+      for (let side = 0; side < sides; side += 1) {
+        const next = (side + 1) % sides;
+        const shade = side % 2 ? 0.94 : 1;
+        const color = [0.3, 0.53, 0.27].map((channel) => channel * shade);
+        addTriangle(positions, colors, rings[ring][side], rings[ring][next], rings[ring + 1][next], color);
+        addTriangle(positions, colors, rings[ring][side], rings[ring + 1][next], rings[ring + 1][side], color.map((channel) => channel * 0.97));
+      }
+    }
+  }
+
+  plantStemLeafModels[1] = addHyacinthStemLeafGeometry;
+
   function addFlowerModel(positions, colors, x, z, flowerIndex, stage, heightMultiplier = 1, customColor = null) {
     const modelPositions = [];
     const modelColors = [];
@@ -740,7 +808,7 @@
         positions[vertex + 2] = z - offsetX * headSin + offsetZ * headCos;
       }
       // Move the whole head slightly forward so its rear edge meets the stalk.
-      const sunflowerHeadForwardOffset = 0.018;
+      const sunflowerHeadForwardOffset = 0.036;
       for (let vertex = flowerHeadStart; vertex < positions.length; vertex += 3) {
         positions[vertex + 2] += sunflowerHeadForwardOffset;
       }
@@ -748,8 +816,7 @@
     }
 
     if (flowerIndex === 1) {
-      addLeaf(positions, colors, x, 0.12, z, [-0.82, 0.31, -0.14], 0.2, [0.32, 0.58, 0.32]);
-      addLeaf(positions, colors, x, 0.12, z, [0.75, 0.36, 0.18], 0.2, [0.36, 0.63, 0.34]);
+      if (dedicatedStemLeafModel) dedicatedStemLeafModel(positions, colors, x, z, height, stage);
       // A dense upright raceme of individual six-part, flared florets.
       const rows = 6;
       for (let row = 0; row < rows; row += 1) {
