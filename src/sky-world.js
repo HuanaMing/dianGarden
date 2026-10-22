@@ -315,19 +315,20 @@
         z + radial[1] * length * 0.52,
       ];
       const originalHighestY = shoulder[1] + 0.018;
-      const tip = [
-        x + radial[0] * length,
-        originalHighestY + 0.02,
-        z + radial[1] * length,
-      ];
       const left = [shoulder[0] + tangent[0] * width, shoulder[1] + 0.008, shoulder[2] + tangent[1] * width];
       const right = [shoulder[0] - tangent[0] * width, shoulder[1] + 0.008, shoulder[2] - tangent[1] * width];
       const ridge = [shoulder[0] - radial[0] * 0.009, originalHighestY, shoulder[2] - radial[1] * 0.009];
-      // Keep the lower ridge slightly inward from the shoulder, but never closer to the plant center than the peak.
+      // Place the lower ridge inward from the shoulder, while keeping it outward of the highest point.
       const lowerRidge = [
         shoulder[0] - radial[0] * 0.0045,
         ridge[1] - 0.009,
         shoulder[2] - radial[1] * 0.0045,
+      ];
+      // Keep the tip's height unchanged; place its horizontal position midway between ridge and lowerRidge.
+      const tip = [
+        (ridge[0] + lowerRidge[0]) / 2,
+        originalHighestY + 0.02,
+        (ridge[2] + lowerRidge[2]) / 2,
       ];
       const color = leafColors[leaf % leafColors.length];
       addTriangle(positions, colors, root, left, lowerRidge, color);
