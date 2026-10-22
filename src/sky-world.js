@@ -1341,6 +1341,8 @@
         addLeaf(positions, colors, x, 0.2, z, [0.72, 0.36, 0.16], flowerIndex === 7 ? 0.22 : 0.17, [0.39, 0.64, 0.31]);
       }
       const bloomY = 0.055 + height;
+      // 牡丹暫時移除整個花頭，只保留上方已建立的莖與葉，方便確認植株骨架。
+      if (flowerIndex === 9) return;
       if (flowerIndex === 4) {
         // Tulip: six overlapping tepals with a softly rounded, subdivided upper rim.
         for (let tepal = 0; tepal < 6; tepal += 1) {
