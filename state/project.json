@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "blocked",
   "activeTask": "109-personal-ios-app-lock-screen-flower-widget",
-  "nextAction": "任務160：已新增鈴蘭專屬莖葉模型（兩片基生寬葉、細彎花梗並保留既有鐘形花朵），待 JavaScript 語法檢查及瀏覽器視覺驗收。任務109的可用Xcode環境與雲端Mac付費批准事項仍未解決。",
+  "nextAction": "任務160重作：鈴蘭花梗已加長並調整為貓尾狀回彎、莖粗增加1.2倍，六朵鐘形花沿共用花梗中心線分布。JavaScript 語法與靜態結構檢查通過，待瀏覽器視覺驗收。任務109的可用Xcode環境與雲端Mac付費批准事項仍未解決。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
