@@ -72,3 +72,48 @@
 - [RHS 大葉繡球 *Hydrangea hortensis*](https://www.rhs.org.uk/plants/40787/hydrangea-hortensis/details)
 - [RHS 英國薰衣草 *Lavandula angustifolia*](https://www.rhs.org.uk/plants/91398/lavandula-angustifolia/details)
 - [RHS 牡丹 ‘Garden Lace’](https://www.rhs.org.uk/plants/219565/paeonia-lactiflora-garden-lace/details)
+
+---
+
+## 任務 158：十一種花卉的莖葉姿態與建模參考
+
+本節整理遊戲目錄中全部十一種植物的莖、葉及整體株型，供後續 src/sky-world.js 低多邊形模型調整使用。植物學觀察以外部園藝／植物學來源為依據；「建模建議」是小尺寸 3D 場景的視覺簡化，不是植物學原始描述。不同品種、栽培方式與生長階段可能造成姿態差異。
+
+### 姿態速查表
+
+| 遊戲花卉 | 真實植株的莖型與葉片姿態 | 後續建模可抓住的辨識特徵 |
+| --- | --- | --- |
+| 向日葵 Helianthus annuus | 莖粗壯直立，表面粗糙且常有毛；下部葉可能對生，上部多互生。葉片寬卵形至心形，具長葉柄，葉緣多具齒，通常向外伸展或略下垂；花頭位於莖端，也可能有分枝。 | 主莖明顯粗於其他草本花；葉片做成較寬的心形／卵形片，沿莖節交錯分布，葉柄可見，葉尖自然朝外、稍微下傾。避免把所有葉片做成細長帶狀。 |
+| 風信子 Hyacinthus orientalis | 球根植物，數片厚實、光滑、帶狀至線形葉從基部簇生，葉片多直立後略向外彎；中央抽出較粗壯的無葉花莖，密集花序集中在頂端。 | 葉片成基部簇生，寬而厚，從球根周圍向上再微微外拱；中央單一花莖突出葉叢。不要把葉子沿花莖分節排列。 |
+| 鈴蘭 Convallaria majalis | 根莖形成群落；通常有一至數片寬橢圓形至披針形基生葉，葉面平滑、弧形葉脈明顯。花序由葉叢旁抽出，花莖較細，頂端總狀花序略彎，白色鐘形小花沿一側下垂。 | 葉片寬大、成對或少量從地面基部抽出，彼此略重疊並微向外張；花莖細、略弓，花朵朝下且偏向花序同一側。避免做成單根直立莖上均勻環生葉片。 |
+| 玫瑰 Rosa（以灌木型為建模基準） | 株型可直立、拱垂、攀援或蔓生；枝條通常木質化且常具刺。葉為互生羽狀複葉，常見數枚鋸齒緣小葉沿葉軸排列，葉面常有光澤。 | 使用較硬挺的主枝與數條分枝，枝條方向可略斜或拱；每片複葉由多枚小葉組成，沿細葉軸成對或近似成對排列。刺是可選細節，不應蓋過葉片輪廓。 |
+| 鬱金香 Tulipa | 球根植物，通常由基部長出數片寬線形至帶狀、略帶蠟質感的葉片；葉片直立或向外拱。單一較粗的無葉花莖從葉叢中央伸出，頂端通常一朵花。 | 葉片數量少、寬而長，從基部向上包圍花莖，呈直立劍形／帶狀並有少量弧度；花莖單一且近乎垂直。不要做成多分枝灌木。 |
+| 康乃馨 Dianthus caryophyllus | 多年生草本，莖從基部叢生，直立且少分枝；葉片狹長、線形至披針形，通常對生，常呈灰綠或粉白蠟粉感。花多生於枝端。 | 由基部形成窄而密的葉叢，多根纖細直立莖向上伸；葉片細長、對生、略抱莖，整株比玫瑰更草本、分枝更少。葉色可偏灰綠以表現蠟粉感。 |
+| 菊花 Chrysanthemum morifolium | 莖直立，可分枝也可不分枝；葉互生，卵形至卵披針形，葉緣粗鋸齒，部分品種葉片深裂或呈羽狀裂片，葉背可帶細毛。花頭多在枝端排列。 | 以直立主莖加數條上部分枝為主；葉片有明顯鋸齒或裂片，不做成平滑橢圓；葉片沿莖互生、方向交錯。 |
+| 繡球花 Hydrangea macrophylla（大葉繡球參考） | 木本灌木，多根枝條由基部叢生，整體呈圓拱狀。葉片大而寬，卵形至橢圓形，對生、葉柄明顯、鋸齒緣，葉面較厚且常帶皺褶感。 | 先建立多枝灌木骨架，再以大型對生葉片形成飽滿外輪廓；葉片比其他本專案植物更寬大，邊緣略有鋸齒。避免只做一根細莖托起巨大花球。 |
+| 薰衣草 Lavandula angustifolia | 常綠小灌木，基部逐漸木質化；枝條細而直立，葉片狹窄線形、灰綠或銀灰色，沿枝條成對排列。花序由細長花梗頂端形成直立穗狀。 | 基部做成略密的灌木叢，外圍有多根細直花梗；葉片短、窄、成對，整體輪廓偏緊湊直立。花穗與葉片的細長尺度應有明顯差異。 |
+| 牡丹 Paeonia lactiflora（草本牡丹參考） | 草本多年生，從基部成叢長出多根直立莖；葉互生，為二回或三回分裂複葉，由多枚卵形至披針形小葉組成，整體葉叢蓬鬆寬大。大花通常高於葉叢，重瓣品種花頭較重，部分植株需要支撐。 | 先做出低矮、寬幅、由多莖構成的葉叢；複葉用數片分裂小葉表示，不以單片橢圓葉代替。花莖從葉叢中穿出，花頭高於葉面但不要把整株拉成細長單莖。 |
+| 彼岸花 Lycoris radiata | 球根植物，花期常見無葉花莖由地面抽出，莖端數朵紅花組成繖形花序；花瓣強烈反捲、邊緣波曲，雄蕊長而外伸。帶狀深綠葉通常在花後才出現，冬季至早春持續一段時間，因此葉與花在自然週期中常不共存。 | 花期模型以細長直立、近乎無葉的花莖托起數朵向外放射的花，花絲明顯伸出；葉期則以基部成簇、狹長帶狀、略向外拱的葉片表現。若遊戲同時呈現花與葉，應視為美術合成而非典型自然花期姿態。 |
+
+### 後續 3D 建模的共同規則
+
+1. **先辨識株型，再雕葉片。** 球根型（風信子、鬱金香、彼岸花）以基部葉叢或花後葉期為骨架；叢生草本（康乃馨、牡丹、菊花）以多莖與葉叢為骨架；木本／半木本灌木（玫瑰、繡球花、薰衣草）要先呈現分枝與株冠。
+2. **葉序要有差別。** 風信子、鬱金香的葉主要集中在基部；鈴蘭以基生寬葉為主；玫瑰的羽狀複葉沿枝互生；康乃馨常見對生窄葉；菊花與牡丹以互生葉為主；繡球花典型為對生大葉。
+3. **葉片姿態不要全部水平放射。** 帶狀葉可直立再外拱；寬葉可依葉柄向外伸並略下垂；小葉沿葉軸展開；薰衣草葉片則保持窄、短且貼近細枝。
+4. **以低多邊形保留輪廓特徵。** 小尺寸下優先呈現葉片長寬比例、葉序、分枝密度與傾角；鋸齒、葉脈、表面粗糙度等細節只在輪廓或光照下確實可辨時才加入。
+5. **花期與葉期分開判斷。** 彼岸花最需要注意季節性葉花分離；其他球根植物也應保留基部葉叢與中央花莖的空間關係。遊戲為了識別度而合併自然界不同時期的器官時，應標註為視覺簡化。
+6. **不將參考值當成唯一形態。** 玫瑰、菊花、繡球花及牡丹的品種差異尤其大。這份資料用代表性株型作為建模起點，實際模型仍應與本專案的尺寸比例、鏡頭距離及既有花頭造型協調。
+
+### 本節外部來源
+
+- 向日葵：Kew Science, Plants of the World Online — [Helianthus annuus](https://powo.science.kew.org/taxon/urn:lsid:ipni.org:names:119003-2/general-information)；Iowa State University Extension — [Common sunflower](https://crops.extension.iastate.edu/encyclopedia/common-sunflower)。
+- 風信子：Royal Horticultural Society — [Hyacinth (Hyacinthus)](https://www.rhs.org.uk/plants/hyacinth)。
+- 鈴蘭：Royal Horticultural Society — [Convallaria majalis](https://www.rhs.org.uk/plants/4327/convallaria-majalis/details)；North Carolina State University Extension — [Lily-of-the-Valley](https://plants.ces.ncsu.edu/plants/convallaria-majalis/)。
+- 玫瑰：Royal Horticultural Society — [Roses (Rosa)](https://www.rhs.org.uk/plants/roses)。
+- 鬱金香：Royal Horticultural Society — [Tulip (Tulipa)](https://www.rhs.org.uk/plants/tulip)。
+- 康乃馨：臺灣景觀植物介紹 — [香石竹 (Dianthus caryophyllus)](https://tlpg.hsiliu.org.tw/plant/view/521)。
+- 菊花：農業部茶及飲料作物改良場 — [臺灣杭菊簡介](https://www.tbrs.gov.tw/ws.php?id=4834&print=Y)。
+- 繡球花：North Carolina State University Extension — [Bigleaf Hydrangea (Hydrangea macrophylla)](https://plants.ces.ncsu.edu/plants/hydrangea-macrophylla/)。
+- 薰衣草：Royal Horticultural Society — [English lavender](https://www.rhs.org.uk/plants/282089/lavandula-angustifolia-hidcote-group/details)；National Parks Board Singapore — [Lavandula angustifolia](https://www.nparks.gov.sg/florafaunaweb/flora/6/2/6295)。
+- 牡丹：Royal Horticultural Society — [Chinese peony (Paeonia lactiflora)](https://www.rhs.org.uk/plants/12123/paeonia-lactiflora/details)；Longwood Gardens — [Paeonia lactiflora plant profile (PDF)](https://longwoodgardens.org/sites/default/files/wysiwyg/paeonia-lactiflora-v3.pdf)。
+- 彼岸花：Royal Horticultural Society — [Red spider lily (Lycoris radiata)](https://www.rhs.org.uk/plants/58864/lycoris-radiata/details)；World Flora Online／Flora of China — [Lycoris radiata](https://www.worldfloraonline.org/taxon/wfo-0000683573)。
