@@ -127,7 +127,17 @@
     name.className = 'encyclopedia-card-title';
     name.setAttribute('role', 'heading');
     name.setAttribute('aria-level', '2');
-    name.textContent = `${flower.emoji} ${flower.name}`;
+    const flowerImage = document.createElement('img');
+    flowerImage.className = 'flower-pixel-icon encyclopedia-pixel-icon';
+    flowerImage.src = flower.image || '';
+    flowerImage.width = 32;
+    flowerImage.height = 32;
+    flowerImage.alt = '';
+    flowerImage.setAttribute('aria-hidden', 'true');
+    flowerImage.decoding = 'async';
+    flowerImage.style.imageRendering = 'pixelated';
+    flowerImage.addEventListener('error', () => { flowerImage.hidden = true; name.dataset.iconFallback = flower.emoji; });
+    name.append(flowerImage, document.createTextNode(' ' + flower.name));
     const meaning = document.createElement('span');
     meaning.className = 'encyclopedia-meaning';
     meaning.textContent = `花語意象：${flower.meaning}`;
