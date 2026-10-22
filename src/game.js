@@ -562,6 +562,30 @@
   function hasPendingJob(kind, index) {
     return [...activeJobs.values()].some((job) => job.kind === kind && job.index === index) || jobQueue.some((job) => job.kind === kind && job.index === index);
   }
+  function cancelMatureWaterJobs() {
+    let changed = false;
+    for (let index = jobQueue.length - 1; index >= 0; index -= 1) {
+      const job = jobQueue[index];
+      if (job.kind !== 'water') continue;
+      const plot = game.plots[job.index];
+      const crop = plot && plot.crop !== null ? crops[plot.crop] || crops[0] : null;
+      if (crop && growthElapsed(plot) >= crop.growTime) {
+        jobQueue.splice(index, 1);
+        changed = true;
+      }
+    }
+    for (const job of activeJobs.values()) {
+      if (job.kind === 'water' && !job.committed) {
+        const plot = game.plots[job.index];
+        const crop = plot && plot.crop !== null ? crops[plot.crop] || crops[0] : null;
+        if (crop && growthElapsed(plot) >= crop.growTime) {
+          job.cancelled = true;
+          changed = true;
+        }
+      }
+    }
+    if (changed) renderJobQueue();
+  }
   function hasActivePlotJob(index) {
     return [...activeJobs.values()].some((job) => job.kind !== 'expand' && job.index === index);
   }
@@ -683,6 +707,7 @@
   }
   function processJobQueue() {
     updateBatteries();
+    cancelMatureWaterJobs();
     for (let index = jobQueue.length - 1; index >= 0; index -= 1) {
       const job = jobQueue[index];
       if (job.kind !== 'expand' && isDroneExcluded(game.plots[job.index])) jobQueue.splice(index, 1);
@@ -718,7 +743,7 @@
       nextDroneIndex = (droneIndex + 1) % game.drones.length;
       let finished = false;
       const commit = () => {
-        if (job.committed) return;
+        if (job.committed || job.cancelled) return;
         job.committed = true;
         completeJob(job);
       };
