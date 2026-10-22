@@ -2766,6 +2766,20 @@
       const soilPalette = Object.fromEntries(Object.keys(drySoil).map((face) => [face, drySoil[face].map((channel, channelIndex) => channel + (wetSoil[face][channelIndex] - channel) * wetness)]));
       if (!plot?.grassOnly) addBox(positions, colors, x - bed / 2, plotY + 0.001, z - bed / 2, x + bed / 2, plotY + 0.055, z + bed / 2, soilPalette);
       if (!plot?.grassOnly) addSoilTexture(positions, colors, x, z, bed, plotY + 0.057, wetness > 0.5);
+      // 手動農地以低對比的鼠尾草綠窄邊框標示，與草地和花卉保持協調。
+      if (plot?.manual === true && !plot?.grassOnly) {
+        const rim = 0.024;
+        const rimY = plotY + 0.058;
+        const rimColors = {
+          top: [0.42, 0.53, 0.36], front: [0.34, 0.43, 0.3],
+          right: [0.31, 0.4, 0.28], back: [0.39, 0.49, 0.33],
+          left: [0.35, 0.44, 0.3], bottom: [0.29, 0.37, 0.26],
+        };
+        addBox(positions, colors, x - bed / 2 - rim, rimY, z - bed / 2 - rim, x + bed / 2 + rim, rimY + 0.018, z - bed / 2, rimColors);
+        addBox(positions, colors, x - bed / 2 - rim, rimY, z + bed / 2, x + bed / 2 + rim, rimY + 0.018, z + bed / 2 + rim, rimColors);
+        addBox(positions, colors, x - bed / 2 - rim, rimY, z - bed / 2, x - bed / 2, rimY + 0.018, z + bed / 2, rimColors);
+        addBox(positions, colors, x + bed / 2, rimY, z - bed / 2, x + bed / 2 + rim, rimY + 0.018, z + bed / 2, rimColors);
+      }
       if (i === selectedPlotIndex) {
         const edge = 0.035;
         const frameHalf = half + 0.08;
@@ -3453,7 +3467,7 @@
     },
     setPlots(plots) {
       if (!Array.isArray(plots)) return;
-      plotStates = plots.map((plot) => ({ crop: plot.crop, plantedAt: plot.plantedAt, plantHeight: plot.plantHeight, customColor: plot.customColor, elapsed: plot.elapsed, growTime: plot.growTime, waterStartedAt: plot.waterStartedAt, waterUntil: plot.waterUntil, waterWetnessStart: plot.waterWetnessStart, waterVisualStartedAt: plot.waterVisualStartedAt, grassOnly: plot.grassOnly === true }));
+      plotStates = plots.map((plot) => ({ crop: plot.crop, plantedAt: plot.plantedAt, plantHeight: plot.plantHeight, customColor: plot.customColor, elapsed: plot.elapsed, growTime: plot.growTime, waterStartedAt: plot.waterStartedAt, waterUntil: plot.waterUntil, waterWetnessStart: plot.waterWetnessStart, waterVisualStartedAt: plot.waterVisualStartedAt, manual: plot.manual === true, grassOnly: plot.grassOnly === true }));
       uploadWorld();
     },
     setEnvironment(state) {
