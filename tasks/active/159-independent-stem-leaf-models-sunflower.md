@@ -166,3 +166,9 @@
 - 修改：`left[1]` 與 `right[1]` 均由 `shoulder[1] + 0.008` 改為 `shoulder[1] - 0.018`。葉尖 Y 座標仍為 `originalHighestY + 0.02`，X/Z 座標直接使用 `ridge[0]`、`ridge[2]`，不再取 `ridge` 與 `lowerRidge` 的中點。
 - 驗證：已更新 GitHub `main` 分支程式碼與任務紀錄；尚未執行 JavaScript 語法檢查或瀏覽器視覺驗收。
 - 狀態：保持 active，待檢查葉片側肩與葉尖輪廓。
+
+### 159 重作：復原風信子側葉肩、降低 shoulder 並提高葉尖（2026-10-22）
+- 需求：取消 `left`、`right` 降至 `shoulder[1] - 0.018` 的改動；將 `shoulder` 的高度偏移值改為原本的 0.8 倍；葉尖提高至 `ridge` 上方 0.04。
+- 修改：`left[1]`、`right[1]` 恢復為 `shoulder[1] + 0.008`；`shoulder[1]` 的基部相對高度改為 `(stage === 1 ? 0.085 : 0.145) * 0.8`；`tip[1]` 改為 `ridge[1] + 0.04`，水平位置仍與 `ridge` 完全相同。
+- 驗證：已更新 GitHub `main` 分支程式碼與任務紀錄；尚未執行 JavaScript 語法檢查或瀏覽器視覺驗收。
+- 狀態：保持 active，待檢查降低葉肩後的葉片輪廓與葉尖高度。
