@@ -1094,16 +1094,34 @@
         for (const shape of rayLayers) {
           shape.profile = knots.map((t) => interpolateProfile(shape.profile, t));
         }
+        // 使用非均勻節點的三次 Hermite 曲線，讓節點之間的斜率連續，
+        // 避免每一段都重新放慢再加速而產生不自然的折彎。
         const profileAt = (profile, t) => {
           let segment = 0;
           while (segment < knots.length - 2 && t > knots[segment + 1]) segment += 1;
-          const span = knots[segment + 1] - knots[segment];
-          const local = Math.max(0, Math.min(1, (t - knots[segment]) / span));
-          const eased = local * local * (3 - 2 * local);
-          return [
-            profile[segment][0] + (profile[segment + 1][0] - profile[segment][0]) * eased,
-            profile[segment][1] + (profile[segment + 1][1] - profile[segment][1]) * eased,
-          ];
+          const t0 = knots[segment];
+          const t1 = knots[segment + 1];
+          const span = t1 - t0;
+          const u = Math.max(0, Math.min(1, (t - t0) / span));
+          const u2 = u * u;
+          const u3 = u2 * u;
+          const h00 = 2 * u3 - 3 * u2 + 1;
+          const h10 = u3 - 2 * u2 + u;
+          const h01 = -2 * u3 + 3 * u2;
+          const h11 = u3 - u2;
+          return [0, 1].map((axis) => {
+            const p0 = profile[segment][axis];
+            const p1 = profile[segment + 1][axis];
+            const prevSlope = segment === 0
+              ? (profile[1][axis] - profile[0][axis]) / (knots[1] - knots[0])
+              : (profile[segment + 1][axis] - profile[segment - 1][axis]) /
+                (knots[segment + 1] - knots[segment - 1]);
+            const nextSlope = segment + 1 === profile.length - 1
+              ? (profile[segment + 1][axis] - profile[segment][axis]) / span
+              : (profile[segment + 2][axis] - profile[segment][axis]) /
+                (knots[segment + 2] - knots[segment]);
+            return h00 * p0 + h10 * span * prevSlope + h01 * p1 + h11 * span * nextSlope;
+          });
         };
         for (let layer = 0; layer < rayLayers.length; layer += 1) {
           const shape = rayLayers[layer];
@@ -1111,7 +1129,7 @@
             const angle = ray / shape.count * Math.PI * 2 + layer * 0.11;
             const radial = [Math.cos(angle), Math.sin(angle)];
             const tangent = [-radial[1], radial[0]];
-            const sections = 20;
+            const sections = 40;
             const centerline = [];
             const leftEdge = [];
             const rightEdge = [];
