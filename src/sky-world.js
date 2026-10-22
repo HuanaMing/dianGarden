@@ -928,6 +928,133 @@
   plantStemLeafModels[5] = addCarnationStemLeafGeometry;
   plantStemLeafModels[6] = addChrysanthemumStemLeafGeometry;
 
+  function addHydrangeaStemLeafGeometry(positions, colors, x, z, height, stage) {
+    const baseY = 0.055;
+    const stemColor = [0.28, 0.46, 0.25];
+    const leafColors = [
+      [0.31, 0.49, 0.27],
+      [0.36, 0.54, 0.30],
+      [0.27, 0.43, 0.23],
+    ];
+
+    const addStem = () => {
+      const sides = 8;
+      const ringCount = 8;
+      const rings = Array.from({ length: ringCount }, (_, ring) => {
+        const t = ring / (ringCount - 1);
+        const radius = 0.010 * (1 - 0.42 * t);
+        const centerX = x + Math.sin(t * Math.PI * 0.9) * 0.002;
+        const centerZ = z + Math.sin(t * Math.PI * 0.7) * 0.0015;
+        return Array.from({ length: sides }, (_, side) => {
+          const angle = side / sides * Math.PI * 2;
+          return [centerX + Math.cos(angle) * radius, baseY + height * t,
+            centerZ + Math.sin(angle) * radius];
+        });
+      });
+      for (let ring = 0; ring < rings.length - 1; ring += 1) {
+        for (let side = 0; side < sides; side += 1) {
+          const next = (side + 1) % sides;
+          const shade = side % 2 ? 0.92 : 1.04;
+          const color = stemColor.map((channel) => channel * shade);
+          addTriangle(positions, colors, rings[ring][side], rings[ring][next], rings[ring + 1][next], color);
+          addTriangle(positions, colors, rings[ring][side], rings[ring + 1][next], rings[ring + 1][side],
+            color.map((channel) => channel * 0.96));
+        }
+      }
+    };
+
+    const addHydrangeaLeaf = (nodeY, angle, length, halfWidth, leafColor, petioleLength = 0.035) => {
+      const radial = [Math.cos(angle), Math.sin(angle)];
+      const tangent = [-radial[1], radial[0]];
+      const root = [x + radial[0] * 0.008, nodeY, z + radial[1] * 0.008];
+      const leafBase = [
+        root[0] + radial[0] * petioleLength,
+        nodeY + 0.006,
+        root[2] + radial[1] * petioleLength,
+      ];
+      const petioleTip = [
+        root[0] + radial[0] * (petioleLength + 0.006),
+        nodeY + 0.007,
+        root[2] + radial[1] * (petioleLength + 0.006),
+      ];
+      addTriangle(positions, colors, root,
+        [root[0] + tangent[0] * 0.002, root[1] + 0.002, root[2] + tangent[1] * 0.002],
+        petioleTip, [0.34, 0.50, 0.28]);
+      addTriangle(positions, colors, root, petioleTip,
+        [root[0] - tangent[0] * 0.002, root[1] + 0.002, root[2] - tangent[1] * 0.002],
+        [0.29, 0.44, 0.24]);
+
+      const sections = 16;
+      const centers = [];
+      const leftEdge = [];
+      const rightEdge = [];
+      for (let section = 0; section <= sections; section += 1) {
+        const t = section / sections;
+        const distance = petioleLength + length * t;
+        const centerY = nodeY + 0.006 + length * (0.12 * t - 0.17 * t * t);
+        const center = [
+          root[0] + radial[0] * distance,
+          centerY,
+          root[2] + radial[1] * distance,
+        ];
+        // 葉片中央較寬，葉基與尖端收窄；邊緣的細微波動形成柔和鋸齒。
+        const envelope = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.78);
+        const serration = 0.91 + 0.09 * Math.cos(t * Math.PI * 12);
+        const width = halfWidth * envelope * serration;
+        centers.push(center);
+        leftEdge.push([center[0] + tangent[0] * width, center[1] + 0.0015, center[2] + tangent[1] * width]);
+        rightEdge.push([center[0] - tangent[0] * width, center[1] + 0.0015, center[2] - tangent[1] * width]);
+      }
+      for (let section = 0; section < sections; section += 1) {
+        const a = centers[section], b = centers[section + 1];
+        const color = leafColor.map((channel) => Math.min(1, channel * (section % 2 ? 0.97 : 1.03)));
+        addTriangle(positions, colors, a, leftEdge[section], leftEdge[section + 1], color);
+        addTriangle(positions, colors, a, leftEdge[section + 1], b, color);
+        addTriangle(positions, colors, a, rightEdge[section + 1], rightEdge[section], color.map((channel) => channel * 0.84));
+        addTriangle(positions, colors, a, b, rightEdge[section + 1], color.map((channel) => channel * 0.92));
+        // 低對比中肋沿葉片延伸，增加寬葉的立體感。
+        const ridgeA = [a[0] + radial[0] * 0.0012, a[1] + 0.002, a[2] + radial[1] * 0.0012];
+        const ridgeB = [b[0] + radial[0] * 0.0012, b[1] + 0.002, b[2] + radial[1] * 0.0012];
+        addTriangle(positions, colors, a, ridgeA, ridgeB, color.map((channel) => Math.min(1, channel * 1.07)));
+      }
+    };
+
+    if (stage === 1) {
+      // 幼苗只保留低矮、向外舒展的基部葉片。
+      for (let leaf = 0; leaf < 5; leaf += 1) {
+        const angle = leaf / 5 * Math.PI * 2 + 0.28;
+        addHydrangeaLeaf(baseY + 0.025, angle, 0.055 + (leaf % 2) * 0.008,
+          0.021, leafColors[leaf % leafColors.length], 0.008);
+      }
+      return;
+    }
+
+    addStem();
+
+    // 繡球花葉片沿莖節成對對生，每一層略微轉向，並在花球下方留出空間。
+    const nodes = [
+      { t: 0.22, angle: 0.35, length: height * 0.31, width: height * 0.092 },
+      { t: 0.39, angle: 1.18, length: height * 0.29, width: height * 0.088 },
+      { t: 0.54, angle: 0.08, length: height * 0.245, width: height * 0.078 },
+    ];
+    nodes.forEach((node, index) => {
+      const nodeY = baseY + height * node.t;
+      const color = leafColors[index % leafColors.length];
+      addHydrangeaLeaf(nodeY, node.angle, node.length, node.width, color);
+      addHydrangeaLeaf(nodeY, node.angle + Math.PI, node.length * 0.96, node.width * 0.94,
+        leafColors[(index + 1) % leafColors.length]);
+    });
+
+    // 靠近土面的短葉補足株型，不讓主莖像細桿直接插入土壤。
+    for (let leaf = 0; leaf < 3; leaf += 1) {
+      const angle = leaf / 3 * Math.PI * 2 + 0.5;
+      addHydrangeaLeaf(baseY + 0.035, angle, height * 0.20, height * 0.065,
+        leafColors[(leaf + 2) % leafColors.length], 0.012);
+    }
+  }
+
+  plantStemLeafModels[7] = addHydrangeaStemLeafGeometry;
+
   function addFlowerModel(positions, colors, x, z, flowerIndex, stage, heightMultiplier = 1, customColor = null) {
     const modelPositions = [];
     const modelColors = [];
@@ -982,7 +1109,7 @@
 
     if (flowerIndex >= 4) {
       // 鬱金香已有專屬基生葉叢，不能再疊加舊版沿莖側伸出的通用葉片。
-      if (flowerIndex !== 4 && flowerIndex !== 5 && flowerIndex !== 6) {
+      if (flowerIndex !== 4 && flowerIndex !== 5 && flowerIndex !== 6 && flowerIndex !== 7) {
         addLeaf(positions, colors, x, 0.13, z, [-0.76, 0.34, -0.18], flowerIndex === 7 ? 0.24 : 0.18, [0.34, 0.6, 0.29]);
         addLeaf(positions, colors, x, 0.2, z, [0.72, 0.36, 0.16], flowerIndex === 7 ? 0.22 : 0.17, [0.39, 0.64, 0.31]);
       }
