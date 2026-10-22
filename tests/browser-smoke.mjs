@@ -103,7 +103,66 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(500);
   await page.screenshot({ path: `${outputDir}/garden-mobile.png`, fullPage: true });
-  checks.push('桌面版、手機直向與橫向版畫面截圖已產生');
+  await page.locator('#farm-management-toggle').click();
+  await page.locator('[data-plot-button="0"]').click();
+  const deleteButtonBounds = await page.locator('#farm-dialog [data-delete-plot]').boundingBox();
+  const dialogBounds = await page.locator('#farm-dialog').boundingBox();
+  if (!deleteButtonBounds || !dialogBounds || deleteButtonBounds.y + deleteButtonBounds.height > 844 || await page.locator('#farm-dialog').evaluate(dialog => dialog.scrollHeight > dialog.clientHeight + 2)) {
+    throw new Error('手機直向選種介面仍需要捲動才能看見刪除地塊按鈕');
+  }
+  await page.locator('[data-close-farm-dialog]').click();
+  await page.locator('#farm-management-close').click();
+  checks.push('桌面版、手機直向與橫向版截圖及手機免捲動刪除按鈕檢查完成');
+
+  const maturePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await maturePage.addInitScript(() => {
+    const now = Date.now();
+    const dockPosition = { x: 0, z: 1.55, y: 0 };
+    localStorage.setItem('sky-garden-save-v1', JSON.stringify({
+      coins: 120, cropCatalogVersion: 4, gardenName: '成熟植物測試', hudCollapsed: false, autoMode: false,
+      autoCropSelection: [0], flowerVariants: [], worldTimeMs: 60000, worldTimeAnchor: now,
+      lastObservedRaining: false, droneCount: 1, deploymentSequence: 1, lastOnlineAt: null,
+      lastOfflineReturnAt: null, dockPosition,
+      drones: [{ dockPosition, deployed: true, deploymentOrder: 1, battery: 100, batteryUpdatedAt: now }],
+      plots: [
+        { crop: null, plantedAt: null, manual: false, grassOnly: false, x: -1, z: 0, y: 0 },
+        { crop: null, plantedAt: null, manual: false, grassOnly: false, x: 0, z: 0, y: 0 },
+        { crop: 0, plantedAt: 1, manual: true, grassOnly: false, x: 1, z: 0, y: 0, plantHeight: 1, watered: false }
+      ]
+    }));
+  });
+  await maturePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await maturePage.locator('#farm-management-toggle').click();
+  await maturePage.locator('[data-plot-button="2"]').click();
+  const matureSwitch = maturePage.locator('#farm-dialog [data-plot-mode-switch]');
+  if (!(await matureSwitch.isEnabled())) throw new Error('成熟植物所在手動地塊不能切換為草地');
+  await matureSwitch.click();
+  if (!(await maturePage.locator('#farm-dialog .dialog-crop').innerText()).includes('已成熟')) throw new Error('成熟植物轉成草地後沒有保留');
+  if (await maturePage.locator('#farm-dialog [data-plot-mode-switch]').getAttribute('data-mode') !== 'grass') throw new Error('成熟植物所在地塊未切換為草地');
+  checks.push('成熟植物可隨手動地塊切換成草地並保留');
+  await maturePage.close();
+
+  const immaturePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await immaturePage.addInitScript(() => {
+    const now = Date.now();
+    const dockPosition = { x: 0, z: 1.55, y: 0 };
+    localStorage.setItem('sky-garden-save-v1', JSON.stringify({
+      coins: 120, cropCatalogVersion: 4, gardenName: '未成熟植物測試', autoMode: false, autoCropSelection: [0],
+      worldTimeMs: 60000, worldTimeAnchor: now, lastObservedRaining: false, droneCount: 1,
+      deploymentSequence: 1, dockPosition, drones: [{ dockPosition, deployed: true, deploymentOrder: 1, battery: 100, batteryUpdatedAt: now }],
+      plots: [
+        { crop: null, plantedAt: null, manual: false, grassOnly: false, x: -1, z: 0, y: 0 },
+        { crop: null, plantedAt: null, manual: false, grassOnly: false, x: 0, z: 0, y: 0 },
+        { crop: 0, plantedAt: now, manual: true, grassOnly: false, x: 1, z: 0, y: 0, plantHeight: 1, watered: false }
+      ]
+    }));
+  });
+  await immaturePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await immaturePage.locator('#farm-management-toggle').click();
+  await immaturePage.locator('[data-plot-button="2"]').click();
+  if (!(await immaturePage.locator('#farm-dialog [data-plot-mode-switch]').isDisabled())) throw new Error('未成熟植物所在手動地塊仍可切換成草地');
+  checks.push('未成熟植物存在時禁止切換成草地');
+  await immaturePage.close();
 
   await page.goto(`${baseURL}/encyclopedia.html`, { waitUntil: 'networkidle', timeout: 30000 });
   await page.locator('.encyclopedia-card').first().waitFor({ state: 'visible' });
