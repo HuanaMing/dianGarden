@@ -1259,3 +1259,10 @@
 - 修正：主莖頂端在 XZ 平面精確落到花頭中心，曲線在莖頂收斂；三根無花側莖高度比例縮短為 0.52、0.46、0.40，葉片尺寸隨莖高同步縮放。
 - 驗證：JavaScript 語法檢查通過並推送 main；尚待使用者在遊戲畫面驗收。
 - 檔案：`src/sky-world.js`、`tasks/active/167-peony-stem-leaf-model.md`、`state/current-task.json`、`state/project.json`、`logs/task-history.md`
+
+
+## 2026-10-22 — 任務 167：牡丹花頭模型優化（重做）
+
+- 結果：新增牡丹專屬花頭幾何，使用四層交錯花瓣、柔和皺褶邊緣與收束花心，保留原有莖葉及遊戲資料。
+- 驗證：JavaScript 語法檢查通過；尚未於瀏覽器實際視覺驗收，等待使用者確認。
+- 檔案：`src/sky-world.js`、`tasks/active/167-peony-stem-leaf-model.md`、`state/current-task.json`、`state/project.json`
