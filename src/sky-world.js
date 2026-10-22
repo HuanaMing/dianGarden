@@ -1158,10 +1158,10 @@
       // 經典酒杯型玫瑰：花瓣先向外展開，再平滑向上收起，最後 1% 才外翻；
       // 同層花瓣沿圓周逐步升高，層與層的高度銜接成連續螺旋。
       const roseCupLayers = [
-        { count: 7, inner: 0.019, outer: 0.038, base: -0.032, rim: 0.071, crown: 0.016, edge: 0.012, halfAngle: 0.48, phase: 0.10, curl: -0.018, spiralStep: 0.018 },
-        { count: 7, inner: 0.014, outer: 0.034, base: -0.030, rim: 0.073, crown: 0.022, edge: 0.014, halfAngle: 0.43, phase: 0.48, curl: -0.006, spiralStep: 0.018 },
-        { count: 6, inner: 0.008, outer: 0.030, base: -0.028, rim: 0.071, crown: 0.020, edge: 0.011, halfAngle: 0.38, phase: 0.22, curl: 0.009, spiralStep: 0.018 },
-        { count: 5, inner: 0.003, outer: 0.026, base: -0.026, rim: 0.069, crown: 0.014, edge: 0.008, halfAngle: 0.32, phase: 0.80, curl: 0.012, spiralStep: 0.018 }
+        { count: 7, inner: 0.038, outer: 0.076, base: -0.032, rim: 0.071, crown: 0.016, edge: 0.012, halfAngle: 0.48, phase: 0.10, curl: -0.018, spiralStep: 0.018 },
+        { count: 7, inner: 0.033, outer: 0.068, base: -0.030, rim: 0.073, crown: 0.022, edge: 0.014, halfAngle: 0.43, phase: 0.48, curl: -0.006, spiralStep: 0.018 },
+        { count: 6, inner: 0.028, outer: 0.060, base: -0.028, rim: 0.071, crown: 0.020, edge: 0.011, halfAngle: 0.38, phase: 0.22, curl: 0.009, spiralStep: 0.018 },
+        { count: 5, inner: 0.023, outer: 0.052, base: -0.026, rim: 0.069, crown: 0.014, edge: 0.008, halfAngle: 0.32, phase: 0.80, curl: 0.012, spiralStep: 0.018 }
       ];
       for (let layer = 0; layer < roseCupLayers.length; layer += 1) {
         const shape = roseCupLayers[layer];
