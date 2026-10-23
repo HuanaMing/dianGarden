@@ -156,54 +156,14 @@
     ring.className = 'touch-hold-ring';
     ring.style.left = `${x}px`;
     ring.style.top = `${y}px`;
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 120 120');
-    const ns = 'http://www.w3.org/2000/svg';
-    const progress = document.createElementNS(ns, 'circle');
-    progress.setAttribute('cx', '60'); progress.setAttribute('cy', '60'); progress.setAttribute('r', '17');
-    progress.setAttribute('class', 'touch-hold-progress');
-    svg.append(progress);
-
-    // 小葉與白色小花沿圓環點綴；裝飾跟著整個 SVG 一起上升、縮放。
-    const makePetal = (cx, cy, rx, ry, rotation) => {
-      const petal = document.createElementNS(ns, 'ellipse');
-      petal.setAttribute('cx', cx); petal.setAttribute('cy', cy);
-      petal.setAttribute('rx', rx); petal.setAttribute('ry', ry);
-      petal.setAttribute('transform', `rotate(${rotation} ${cx} ${cy})`);
-      petal.setAttribute('class', 'touch-hold-petal');
-      return petal;
-    };
-    const makeFlower = (cx, cy, scale = 1) => {
-      const flower = document.createElementNS(ns, 'g');
-      flower.setAttribute('class', 'touch-hold-flower');
-      for (let i = 0; i < 5; i++) {
-        const angle = i * 72 - 90;
-        const rad = angle * Math.PI / 180;
-        flower.append(makePetal(cx + Math.cos(rad) * 3.1 * scale, cy + Math.sin(rad) * 3.1 * scale, 1.9 * scale, 2.7 * scale, angle));
-      }
-      const center = document.createElementNS(ns, 'circle');
-      center.setAttribute('cx', cx); center.setAttribute('cy', cy); center.setAttribute('r', 1.35 * scale);
-      center.setAttribute('class', 'touch-hold-flower-center');
-      flower.append(center);
-      return flower;
-    };
-    const makeLeaf = (cx, cy, rotation) => {
-      // 葉片中心貼著半徑17的圓環，長軸沿切線排列，避免向外凸出。
-      const leaf = makePetal(cx, cy, 1.25, 2.5, rotation);
-      leaf.setAttribute('class', 'touch-hold-leaf');
-      return leaf;
-    };
-    const leaves = [];
-    for (let i = 0; i < 8; i++) {
-      const angle = -67.5 + i * 45;
-      const rad = angle * Math.PI / 180;
-      const cx = 60 + Math.cos(rad) * 17;
-      const cy = 60 + Math.sin(rad) * 17;
-      leaves.push(makeLeaf(cx, cy, angle));
-    }
-    svg.append(...leaves);
-    svg.append(makeFlower(42, 60, 0.92), makeFlower(78, 60, 0.92), makeFlower(60, 42, 0.82), makeFlower(60, 78, 0.82));
-    ring.append(svg); touchFeedbackLayer.append(ring);
+    const wreath = document.createElement('img');
+    wreath.className = 'touch-hold-wreath';
+    wreath.src = '../assets/花草還.webp';
+    wreath.alt = '';
+    wreath.draggable = false;
+    wreath.setAttribute('aria-hidden', 'true');
+    ring.append(wreath);
+    touchFeedbackLayer.append(ring);
     return ring;
   }
   function beginPointerFeedback(event) {
