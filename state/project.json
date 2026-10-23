@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 171,
-  "nextAction": "任務171第1至15段均已通過 Playwright 驗收。重新盤點 CSS class/id 引用與 JS 宣告後，目前沒有額外明顯的未引用 selector 或僅宣告未使用的變數／函式；下一步檢查 JS 函式參數、重複程式與 CSS 中因 DOM 結構變更而失效的後代選擇器。任務171完成後再執行任務172。",
+  "activeTask": null,
+  "nextAction": "任務171已完成並歸檔。任務172已建立於 tasks/inbox，等待使用者確認是否開始縮短 GitHub Actions Playwright 瀏覽器驗收流程。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
