@@ -4,6 +4,6 @@
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "已修正程式中的圖片路徑以符合 assets/花草還.webp；接著確認 Actions 驗收與 Pages 部署。",
-  "result": "改用 assets/花草還.webp 作為單一花草環圖片，移除程式繪製的 SVG 花葉與進度環；保留前200ms隱藏、上升50px並縮小、最高點停留0.2秒、最後0.1秒放大復原。"
+  "nextAction": "修正 Pages 部署漏帶根目錄 assets 的問題；等待 Actions 驗收與部署完成。",
+  "result": "確認 404 原因為 GitHub Pages 只發布 src/，根目錄 assets 未被部署。已調整部署流程將 assets/wreath.webp 複製至 src/assets/wreath.webp，並將程式路徑改為 assets/wreath.webp；同步更新瀏覽器驗收。"
 }
