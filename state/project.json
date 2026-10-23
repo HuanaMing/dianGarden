@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "任務184：精簡設定面板",
-  "nextAction": "任務184已完成設定面板緊湊化，等待 GitHub Actions 瀏覽器驗收與 Pages 部署結果；任務182匿名遊玩後綁定 Google、自動雙向雲端同步仍在 inbox。",
+  "activeTask": null,
+  "nextAction": "任務184已完成並歸檔；設定面板已精簡，Playwright 瀏覽器驗收與 GitHub Pages 部署均成功。任務182匿名遊玩後綁定 Google、自動雙向雲端同步仍在 inbox，開始前先盤點存檔格式與同步衝突策略。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
