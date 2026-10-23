@@ -549,4 +549,4 @@ input, [contenteditable="true"]{
 /* 任務188：使用 assets 中的透明花草環素材，整張圖隨圓環上升、縮小並放大復原。 */
 .touch-hold-ring{animation:touch-ring-rise .5s cubic-bezier(.2,.65,.3,1) .2s forwards}
 .touch-hold-wreath{position:absolute;left:50%;top:50%;display:block;width:46px;height:46px;max-width:none;object-fit:contain;transform:translate(-50%,-50%);pointer-events:none;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 0 1px rgba(255,255,255,.25))}
-@keyframes touch-ring-rise{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}40%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}80%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}}}
+@keyframes touch-ring-rise{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}40%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}80%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}}
