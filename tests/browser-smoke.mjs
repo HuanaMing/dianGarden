@@ -3,6 +3,12 @@ import fs from 'node:fs/promises';
 
 const baseURL = process.env.GARDEN_TEST_URL || 'http://127.0.0.1:4173';
 const outputDir = 'test-results/screenshots';
+
+const indexHtml = await fs.readFile('src/index.html', 'utf8');
+const versionedResourceUrls = [...indexHtml.matchAll(/(?:src|href)="([^"]+\.(?:js|css)(?:\?[^"]*)?)"/g)].map(match => match[1]);
+if (!versionedResourceUrls.length || versionedResourceUrls.some(url => !new URL(url, 'https://example.test/').searchParams.has('v'))) {
+  throw new Error('HTML 的 JavaScript／CSS 資源缺少部署版本參數：' + JSON.stringify(versionedResourceUrls));
+}
 await fs.mkdir(outputDir, { recursive: true });
 
 const browser = await chromium.launch({ headless: true });
@@ -29,7 +35,7 @@ try {
 
   const gameTitle = await page.title();
   if (!gameTitle.includes('花明摸魚花園')) throw new Error(`遊戲標題不符：${gameTitle}`);
-  checks.push('遊戲首頁可正常開啟');
+  checks.push('遊戲首頁可正常開啟，所有 JavaScript／CSS 資源網址均含部署版本參數');
 
   const publishedVersion = await page.evaluate(async () => {
     const response = await fetch(new URL('version.json', window.location.href), { cache: 'no-store' });
