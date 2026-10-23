@@ -86,6 +86,9 @@ jobs:
           echo "  Commit SHA: $COMMIT_SHA"
           echo "  version.json content:"
           cat src/version.json
+      - name: 為靜態資源加入部署版本參數
+        run: python3 scripts/version-assets.py src/index.html src/version.json
+
       - name: 準備花卉像素圖資產
         run: mkdir -p src/assets/flowers && cp assets/flowers/*.png src/assets/flowers/
       - name: Upload artifact
