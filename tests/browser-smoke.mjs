@@ -243,6 +243,7 @@ try {
   await touchPage.waitForTimeout(330);
   const ringGeometry = await touchPage.locator('.touch-hold-progress').evaluate(element => ({
     radius: Number(element.getAttribute('r')),
+    ringTransform: getComputedStyle(element.closest('.touch-hold-ring')).transform,
     strokeWidth: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-width')),
     stroke: getComputedStyle(element).stroke,
     strokeOpacity: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-opacity')),
@@ -257,6 +258,8 @@ try {
     || ringGeometry.stroke.toLowerCase() !== 'rgb(93, 129, 199)' || ringGeometry.strokeOpacity !== 0.5 || ringGeometry.trackCount !== 0
     || Math.abs(ringGeometry.dashArray - 106.81) > 0.1 || !ringGeometry.mask.includes('radial-gradient') || !ringGeometry.mask.includes('18px') || !ringGeometry.mask.includes('19px')) throw new Error(`長按環顏色、透明漸層、內徑或尺寸不符：${JSON.stringify(ringGeometry)}`);
   if (ringGeometry.dashOffset > 2) throw new Error(`長按環形進度未在 500ms 左右完成：${ringGeometry.dashOffset}`);
+  const riseMatrix = ringGeometry.ringTransform.match(/matrix\\(([^)]+)\\)/);
+  if (!riseMatrix || Math.abs(Number(riseMatrix[1].split(',')[5]) + 50) > 1) throw new Error(`長按環未隨進度上移50px：${ringGeometry.ringTransform}`);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: touchX + 28, y: touchY + 12, id: 1 }] });
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await touchPage.waitForTimeout(50);
