@@ -35,7 +35,7 @@ try {
     const response = await fetch(new URL('version.json', window.location.href), { cache: 'no-store' });
     return response.ok ? response.json() : null;
   });
-  if (!publishedVersion || typeof publishedVersion.version !== 'string' || !/^\\d{6},\\d{2}$/.test(publishedVersion.version)) {
+  if (!publishedVersion || typeof publishedVersion.version !== 'string' || !/^[0-9]{6},[0-9]{2}$/.test(publishedVersion.version)) {
     throw new Error('version.json 無法讀取或版本格式錯誤');
   }
   checks.push('version.json 可同源讀取且符合 YYMMDD,HH 格式');
