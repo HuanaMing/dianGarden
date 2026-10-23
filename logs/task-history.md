@@ -1440,3 +1440,9 @@
 - Playwright 驗收 run 39953660007 成功，設定版本資訊、舊版本更新提示、立即更新 cache-busting 資源請求與既有遊戲回歸測試均通過。
 - 任務文件已歸檔至 `tasks/done/183-settings-version-info-and-force-update.md`。
 - 限制：瀏覽器不允許 JavaScript 直接呼叫原生 Ctrl+F5；目前使用 no-store 重新取得 HTML 加同源資源 cache-busting，達成近似強制更新效果。任務182雲端存檔仍在 inbox，尚未開始。
+
+## 2026-10-23 — 任務 184：精簡設定面板
+
+- 結果：設定面板縮窄並減少內距、卡片間距、按鈕高度與操作說明留白；11 種花卉頭像改為 6 欄緊湊選擇器，保留版本資訊、立即更新、2D、省電、重置及存檔狀態功能。
+- 驗證：新增 Playwright 檢查面板尺寸、卡片內距及頭像選項數量／高度；等待自動驗收與 GitHub Pages 部署完成。
+- 檔案：`src/styles.css`、`tests/browser-smoke.mjs`、`tasks/active/184-compact-settings-panel.md`、`state/project.json`、`state/current-task.json`、`logs/task-history.md`。
