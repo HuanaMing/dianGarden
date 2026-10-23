@@ -257,7 +257,7 @@ try {
   const feedbackDot = touchPage.locator('.touch-feedback-dot').first();
   if (await touchPage.locator('.touch-feedback-dot').count() !== 1) throw new Error('觸控放開後未顯示點擊位置回饋');
   const dotStyle = await feedbackDot.evaluate(element => ({ width: getComputedStyle(element).width, height: getComputedStyle(element).height, background: getComputedStyle(element).backgroundImage, opacity: getComputedStyle(element).opacity, animationDuration: getComputedStyle(element).animationDuration }));
-  if (dotStyle.width !== '76px' || dotStyle.height !== '76px' || !dotStyle.background.includes('radial-gradient') || !dotStyle.background.includes('0.2') || dotStyle.animationDuration !== '0.5s') throw new Error('點擊位置回饋的 20% 中心、邊緣透明漸層、大小或淡出時間錯誤：' + JSON.stringify(dotStyle));
+  if (dotStyle.width !== '76px' || dotStyle.height !== '76px' || !dotStyle.background.includes('radial-gradient') || !dotStyle.background.includes('0.3') || dotStyle.animationDuration !== '0.5s') throw new Error('點擊位置回饋的 30% 中心、邊緣透明漸層、大小或淡出時間錯誤：' + JSON.stringify(dotStyle));
   await touchPage.waitForTimeout(520);
   if (await touchPage.locator('.touch-feedback-dot').count() !== 0) throw new Error('藍色回饋點沒有在 500ms 後消失');
   const multiPoints = [
