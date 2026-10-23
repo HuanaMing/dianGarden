@@ -35,10 +35,10 @@ try {
     const response = await fetch(new URL('version.json', window.location.href), { cache: 'no-store' });
     return response.ok ? response.json() : null;
   });
-  if (!publishedVersion || typeof publishedVersion.version !== 'string' || !/^[0-9]{6},[0-9]{2}(?::[0-9]{2}:[0-9]{2}-r[0-9]+a[0-9]+)?$/.test(publishedVersion.version)) {
+  if (!publishedVersion || typeof publishedVersion.version !== 'string' || !/^[0-9]{6}, [0-9]{3,}$/.test(publishedVersion.version)) {
     throw new Error('version.json 無法讀取或版本格式錯誤');
   }
-  checks.push('version.json 可同源讀取且符合舊版或精確部署版本格式');
+  checks.push('version.json 可同源讀取且符合每日更新序號格式');
 
   const gameCanvas = await page.locator('#sky-canvas').evaluate(canvas => ({
     width: canvas.width,
@@ -357,13 +357,13 @@ try {
   }
 
   const versionPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
-  await versionPage.addInitScript(() => localStorage.setItem('diangarden-seen-version-v1', '000000,00'));
+  await versionPage.addInitScript(() => localStorage.setItem('diangarden-seen-version-v1', '000000, 001'));
   await versionPage.route('**/version.json*', route => route.fulfill({
     status: 200,
     contentType: 'application/json',
-    body: JSON.stringify({ version: '261023,22' }),
+    body: JSON.stringify({ version: '261023, 002' }),
   }));
-  await versionPage.route(url => url.pathname.endsWith('/build-version.js'), route => route.fulfill({ status: 200, contentType: 'application/javascript', body: "window.__DIANGARDEN_BUILD_VERSION__ = '000000,00';" }));
+  await versionPage.route(url => url.pathname.endsWith('/build-version.js'), route => route.fulfill({ status: 200, contentType: 'application/javascript', body: "window.__DIANGARDEN_BUILD_VERSION__ = '000000, 001';" }));
   await versionPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   const updateBanner = versionPage.locator('.diangarden-version-update');
   await updateBanner.waitFor({ state: 'visible', timeout: 5000 });
@@ -380,7 +380,7 @@ try {
     if (/\.(js|css)$/i.test(url.pathname) && url.searchParams.has('__dg_force_refresh')) forceUpdateRequests.push(url.pathname);
   });
   await forceUpdatePage.route(url => url.pathname.endsWith('/version.json'), route => route.fulfill({
-    status: 200, contentType: 'application/json', body: JSON.stringify({ version: '261023,22' }),
+    status: 200, contentType: 'application/json', body: JSON.stringify({ version: '261023, 002' }),
   }));
   const freshIndexHtml = await fs.readFile('src/index.html', 'utf8');
   await forceUpdatePage.route(url => url.pathname.endsWith('/index.html') && url.searchParams.has('__dg_update'), route => route.fulfill({
