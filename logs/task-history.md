@@ -1506,4 +1506,4 @@
 - 根因：立即更新流程會重新導覽至唯一頁面 URL，但已定義的資源 cache-busting 函式從未被呼叫；HTML 中 JavaScript／CSS URL 沒有改變，瀏覽器可能繼續沿用舊快取。
 - 修正：新增 `scripts/version-assets.py`，在 GitHub Pages 產物階段為每個 JavaScript／CSS URL 加上部署版本參數；更新按鈕維持完整頁面導覽，讓舊遊戲執行環境確實終止。
 - 新增瀏覽器驗收，確認 HTML 中所有 JavaScript／CSS URL 均含部署版本參數，並保留立即更新後只存在一個畫布的既有檢查。
-- 驗收及部署結果待 GitHub Actions 完成後補記。
+- 驗收：Playwright 瀏覽器自動驗收 run 39988982229 成功，確認立即更新後重新請求的 `game.js`、`version-check.js`、`styles.css` 均帶有 `v` 部署版本參數；GitHub Pages 部署 run 39988813120 成功。
