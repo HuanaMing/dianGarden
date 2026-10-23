@@ -22,3 +22,11 @@
 - GitHub Actions 瀏覽器驗收成功：https://github.com/HuanaMing/dianGarden/actions/runs/39955495271
 - GitHub Pages 部署成功：https://github.com/HuanaMing/dianGarden/actions/runs/39955488568
 - 沒有修改遊戲規則或存檔格式。
+
+
+## 重做補充：頭像選擇僅顯示像素圖（2026-10-23）
+
+- 依追加需求移除 11 種花卉頭像按鈕下方的花名文字，並隱藏「指定花種」標籤；每個選項保留像素圖及無障礙名稱，點選與手動／自動模式行為不變。
+- 頭像按鈕高度由 40px 降至 27px，圖像維持 22×22px，選擇器因此更緊湊。
+- Playwright 驗收新增檢查：11 個選項各只有一張像素圖、沒有可見文字，並確認圖像載入及 pixelated 呈現。
+- 本次重做的驗收與部署結果待 GitHub Actions 完成後補記。
