@@ -266,6 +266,7 @@ try {
   if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("track.setAttribute('cx', '60'); track.setAttribute('cy', '60'); track.setAttribute('r', '48');")) throw new Error('移動模式即時拖曳或長按環幾何未包含預期實作');
   if (!worldSource.includes('plotWasInMoveModeAtPointerDown') || !worldSource.includes('!plotWasInMoveModeAtPointerDown')) throw new Error('地塊移動模式短按切換高度模式的修正未包含');
   if (!worldSource.includes('rotateHoldGesture') || worldSource.includes('rotateTouchGesture') || !worldSource.includes('if (pointerPlotIndex === null && dockHitAtPointer === null)')) throw new Error('PC 與手機的相機手勢尚未統一');
+  if (!worldSource.includes("heightEdit?.kind === 'dock' && heightEdit.index === pressedDock && heightEdit.mode === 'move'") || !worldSource.includes('screenToGround(pointerStartX, pointerStartY, 1.36 + getDockHeight(pressedDock))')) throw new Error('無人機坪台移動模式未支援直接拖曳或未使用坪台高度平面');
   if (worldSource.includes('if (dragPreview && Number.isInteger(dragPreview.index))')) throw new Error('拖曳預覽仍保留重複十字箭頭');
   checks.push('手機長按環形進度、雙倍線寬、放開回饋點及多指獨立回饋通過');
   checks.push('地塊短按可由移動模式切換高度模式；PC 與手機相機手勢共用');
