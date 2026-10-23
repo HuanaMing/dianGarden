@@ -254,6 +254,7 @@
   let dockDragOffset = [0, 0];
   let dockPressTimer = null;
   let dockPressReady = false;
+  let dockWasInMoveModeAtPointerDown = false;
   const keys = new Set();
   const TILE = 1;
   const DRONE_IDLE_Y = 1.5;
@@ -1225,6 +1226,7 @@
   canvas.addEventListener('pointerdown', (event) => {
     beginPointerFeedback(event);
     plotWasInMoveModeAtPointerDown = false;
+    dockWasInMoveModeAtPointerDown = false;
     if (event.pointerType === 'touch') {
       touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (touchPoints.size === 2) {
@@ -1277,6 +1279,7 @@
         const low = projectPoint([x, baseY, z]), high = projectPoint([x, baseY + 1, z]);
         heightDrag = { kind: 'dock', index: pressedDock, startY: event.clientY, original: getDockHeight(pressedDock), pixelStep: low && high ? Math.max(1, Math.abs(high.y - low.y)) : 48 };
       } else if (heightEdit?.kind === 'dock' && heightEdit.index === pressedDock && heightEdit.mode === 'move') {
+        dockWasInMoveModeAtPointerDown = true;
         dockPressReady = true;
         dragDock = true;
         const worldPoint = screenToGround(pointerStartX, pointerStartY, 1.36 + getDockHeight(pressedDock));
@@ -1445,6 +1448,7 @@
       plotPressIndex = null;
       plotPressReady = false;
       dockPressReady = false;
+      dockWasInMoveModeAtPointerDown = false;
       heightDrag = null;
       if (touchPoints.size === 0) suppressTouchTap = false;
       uploadWorld();
@@ -1467,7 +1471,7 @@
         if (!accepted) uploadWorld();
       }
       // Match plot behavior: a long press enters move mode; a short press on the selected object toggles modes.
-      if (dockPressReady && !pointerMoved) {
+      if (dockPressReady && !pointerMoved && !dockWasInMoveModeAtPointerDown) {
         heightEdit = { kind: 'dock', index: dockHitAtPointer, mode: 'move' };
         window.onSkyHeightEditMode?.('dock', dockHitAtPointer, 'move');
       } else if (!pointerMoved && heightEdit?.kind === 'dock' && heightEdit.index === dockHitAtPointer) {
@@ -1514,13 +1518,14 @@
     plotPressIndex = null;
     plotPressReady = false;
     dockPressReady = false;
+    dockWasInMoveModeAtPointerDown = false;
     dockPreview = null;
     dragPreview = null;
     clearTimeout(emptyTouchRotateTimer);
     rotateHoldGesture = false;
     uploadWorld();
   });
-  canvas.addEventListener('pointercancel', (event) => { cancelPointerFeedback(event); if (event.pointerType === 'touch') touchPoints.delete(event.pointerId); if (touchPoints.size === 0) { pinchActive = false; suppressTouchTap = false; } clearTimeout(emptyTouchRotateTimer); rotateHoldGesture = false; clearTimeout(plotPressTimer); clearTimeout(dockPressTimer); dragging = false; dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null; dockPreview = null; pointerPlotIndex = null; plotPressIndex = null; plotPressReady = false; dockPressReady = false; uploadWorld(); });
+  canvas.addEventListener('pointercancel', (event) => { cancelPointerFeedback(event); if (event.pointerType === 'touch') touchPoints.delete(event.pointerId); if (touchPoints.size === 0) { pinchActive = false; suppressTouchTap = false; } clearTimeout(emptyTouchRotateTimer); rotateHoldGesture = false; clearTimeout(plotPressTimer); clearTimeout(dockPressTimer); dragging = false; dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null; dockPreview = null; pointerPlotIndex = null; plotPressIndex = null; plotPressReady = false; dockPressReady = false; dockWasInMoveModeAtPointerDown = false; uploadWorld(); });
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     if (cameraMode === '2d') topDownHeight = Math.max(3, Math.min(50, topDownHeight + event.deltaY * 0.02));
