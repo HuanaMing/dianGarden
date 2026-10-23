@@ -1518,4 +1518,4 @@
 
 - 修改長按環上移關鍵影格：上升期間逐漸縮小至原尺寸的55%，到達上方50px的頂端時於最後一刻恢復原尺寸。
 - 動畫總長仍為500ms，保留環形進度、顯示延遲與拖曳取消行為。
-- 驗收：等待瀏覽器自動驗收與 Pages 部署結果。
+- 驗收：瀏覽器自動驗收成功（[run 39995530950](https://github.com/HuanaMing/dianGarden/actions/runs/39995530950)）；GitHub Pages 部署成功（[run 39995506272](https://github.com/HuanaMing/dianGarden/actions/runs/39995506272)）。
