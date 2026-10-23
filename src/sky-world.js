@@ -159,7 +159,7 @@
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 120 120');
     const progress = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    progress.setAttribute('cx', '60'); progress.setAttribute('cy', '60'); progress.setAttribute('r', '43.75');
+    progress.setAttribute('cx', '60'); progress.setAttribute('cy', '60'); progress.setAttribute('r', '17');
     progress.setAttribute('class', 'touch-hold-progress');
     svg.append(progress); ring.append(svg); touchFeedbackLayer.append(ring);
     return ring;
