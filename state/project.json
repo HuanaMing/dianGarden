@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 171,
-  "nextAction": "任務171第4段已提交：移除無引用的 .cloud-a／.cloud-b 舊首頁 CSS 定位規則；等待 GitHub Actions run 39878241016 完成，若成功再盤點下一段候選，若失敗先修正或還原。",
+  "nextAction": "任務171第4段已通過瀏覽器驗收；已改善 GitHub Actions 的 Playwright 安裝流程並加入 npm／瀏覽器快取。等待 run 39879113329 完成驗收，再繼續盤點下一段無引用 CSS。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
