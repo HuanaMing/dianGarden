@@ -104,13 +104,17 @@ try {
       versionCardPadding: getComputedStyle(element.querySelector('.version-settings')).paddingTop,
       avatarOptionCount: avatarOptions.length,
       avatarOptionHeight: avatarOptions[0]?.getBoundingClientRect().height ?? 0,
+      avatarTextLabelCount: element.querySelectorAll('.avatar-flower-name').length,
+      avatarPickerLabelVisible: getComputedStyle(element.querySelector('.avatar-flower-label')).display !== 'none',
+      avatarOptionContents: avatarOptions.map(option => ({ imageCount: option.querySelectorAll('.avatar-flower-image').length, text: option.textContent.trim() })),
       versionCardHeight: versionCard.height,
     };
   });
   if (settingsPanelSize.width > 240) throw new Error('設定面板未縮窄：' + JSON.stringify(settingsPanelSize));
-  if (settingsPanelSize.avatarOptionCount !== 11 || settingsPanelSize.avatarOptionHeight > 44) throw new Error('頭像選擇器未壓縮或花種缺漏：' + JSON.stringify(settingsPanelSize));
+  if (settingsPanelSize.avatarOptionCount !== 11 || settingsPanelSize.avatarOptionHeight > 30) throw new Error('頭像選擇器未壓縮或花種缺漏：' + JSON.stringify(settingsPanelSize));
+  if (settingsPanelSize.avatarTextLabelCount !== 0 || settingsPanelSize.avatarPickerLabelVisible || settingsPanelSize.avatarOptionContents.some(option => option.imageCount !== 1 || option.text !== '')) throw new Error('頭像選擇器仍顯示文字或缺少純像素圖：' + JSON.stringify(settingsPanelSize));
   if (Number.parseFloat(settingsPanelSize.padding) > 9 || Number.parseFloat(settingsPanelSize.versionCardPadding) > 8) throw new Error('設定面板內距仍過大：' + JSON.stringify(settingsPanelSize));
-  checks.push('設定面板寬度、內距、版本卡片與 11 種花卉頭像選擇器已精簡');
+  checks.push('設定面板寬度、內距、版本卡片與 11 種純像素圖頭像選擇器已精簡');
 
   if (await page.locator('#avatar-flower-picker').isVisible()) throw new Error('自動頭像模式未隱藏花卉選擇介面');
   const avatarOptions = page.locator('.avatar-flower-option');
