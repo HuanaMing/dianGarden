@@ -1483,5 +1483,5 @@
 ## 2026-10-23 — 任務 186：調整指標回饋與無人機坪台拖曳
 
 - 結果：點擊位置改為中心 20%、邊緣透明的藍色徑向漸層並在放開後 500ms 淡出；長按計時環移除白色底環，進度改為 #5D81C7、中心可見度 50% 並讓內外緣漸隱，內徑對齊點擊藍點半徑；無人機坪台在移動模式下可直接拖曳，並以坪台高度平面計算拖曳偏移。
-- 驗收：更新瀏覽器 smoke test 以檢查回饋點漸層、環形顏色／透明度／尺寸及無白色底環；需待 GitHub Actions 結果確認。
+- 驗收：Playwright 瀏覽器自動驗收成功（[run 39983008337](https://github.com/HuanaMing/dianGarden/actions/runs/39983008337)）；GitHub Pages 部署成功（[run 39983008203](https://github.com/HuanaMing/dianGarden/actions/runs/39983008203)）。
 - 檔案：`src/sky-world.js`、`src/styles.css`、`tests/browser-smoke.mjs`、`docs/architecture.md`、`tasks/done/186-pointer-feedback-and-dock-drag.md`、`state/project.json`、`state/current-task.json`
