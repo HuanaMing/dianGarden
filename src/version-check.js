@@ -4,7 +4,7 @@
 
   const versionUrl = new URL('version.json', scriptUrl);
   const storageKey = 'diangarden-seen-version-v1';
-  const validVersionPattern = /^\d{6},\d{2}$/;
+  const validVersionPattern = /^\d{6},\d{2}(?::\d{2}:\d{2}-r\d+a\d+)?$/;
   const checkIntervalMs = 5 * 60 * 1000;
   let latestVersion = '';
   let dismissedVersion = '';
@@ -47,7 +47,7 @@
     const response = await fetch(url.href, { cache: 'no-store', credentials: 'same-origin' });
     if (!response.ok) throw new Error('版本檔回應錯誤：' + response.status);
     const payload = await response.json();
-    if (typeof payload.version !== 'string' || !/^\d{6},\d{2}$/.test(payload.version)) throw new Error('版本檔格式錯誤');
+    if (typeof payload.version !== 'string' || !/^\d{6},\d{2}(?::\d{2}:\d{2}-r\d+a\d+)?$/.test(payload.version)) throw new Error('版本檔格式錯誤');
     return payload.version;
   }
   function addCacheBuster(documentNode, baseUrl, token) {
