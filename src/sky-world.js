@@ -155,7 +155,6 @@
   const DRONE_LANE_SPACING = 0.62;
   const DRONE_SPEED = 1.0;
   const DRONE_IDLE_BOB = 0.012;
-  const DRONE_ROTOR_RADIUS = 0.19;
   let currentProjection = null;
   let currentView = null;
   let droneCount = galleryMode ? 0 : 1;
@@ -166,10 +165,6 @@
     heading: 0,
   }));
   let droneFrameTime = performance.now();
-
-  function hasDroneAnimations() {
-    return droneStates.some((state) => state.animation !== null);
-  }
 
   function addFace(positions, colors, corners, color) {
     const shade = [1, 0.88, 0.78, 0.88];
@@ -994,11 +989,6 @@
       const radial = [Math.cos(angle), Math.sin(angle)];
       const tangent = [-radial[1], radial[0]];
       const root = [x + radial[0] * 0.008, nodeY, z + radial[1] * 0.008];
-      const leafBase = [
-        root[0] + radial[0] * petioleLength,
-        nodeY + 0.006,
-        root[2] + radial[1] * petioleLength,
-      ];
       const petioleTip = [
         root[0] + radial[0] * (petioleLength + 0.006),
         nodeY + 0.007,
