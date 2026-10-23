@@ -26,7 +26,7 @@
 
 ## 下一步
 第 1–10 段均已完成，最新第 10 段 Playwright run `39885207346` 已成功。第 11 段：移除 `src/styles.css` 中完全空白的 `@media(max-width:370px){}`，該區塊沒有任何規則，不會改變版面。提交：`be9391d2b673518316d52a7077fc2d4eb1e1e75a`；Playwright run `39886341458` 已成功。
-- 第 12 段已提交，清理可證實未使用的 JS：`src/game.js` 移除永遠為空字串的 `rainStatus` 宣告及模板插值；`src/sky-world.js` 移除只有宣告、沒有引用的 `DRONE_ROTOR_RADIUS` 常數、`hasDroneAnimations()` 函式與 `leafBase` 區域變數。提交與 Playwright 驗收待確認。後續繼續盤點 JS 中可證實未使用的常數、函式、空字串佔位及重複邏輯；不因識別字出現次數少就直接刪除，會先確認動態呼叫、跨模組 API 與事件綁定。
+- 第 12 段：清理可證實未使用的 JS：`src/game.js` 移除永遠為空字串的 `rainStatus` 宣告及模板插值；`src/sky-world.js` 移除只有宣告、沒有引用的 `DRONE_ROTOR_RADIUS` 常數、`hasDroneAnimations()` 函式與 `leafBase` 區域變數。提交：`c4fd023ffa0c5d5319605d20f9c14898092623db`。Playwright run `39886538682` 已成功。後續繼續盤點 JS 中可證實未使用的常數、函式、空字串佔位及重複邏輯；不因識別字出現次數少就直接刪除，會先確認動態呼叫、跨模組 API 與事件綁定。
 
 ## 原則
 - 不以「看起來沒用」作為刪除依據；先查詢宣告、引用、事件綁定、跨模組介面與動態呼叫。
