@@ -22,3 +22,9 @@
 - 瀏覽器驗收：[Playwright run 39983008337](https://github.com/HuanaMing/dianGarden/actions/runs/39983008337) 成功。
 - 部署：[GitHub Pages run 39983008203](https://github.com/HuanaMing/dianGarden/actions/runs/39983008203) 成功。
 - 實際裝置上的視覺手感仍由使用者確認。
+
+
+## 2026-10-24 重做補充
+- 點擊藍點中心可見度改為 30%，邊緣透明度 0%，放開後仍以 500ms 將中心可見度淡出至 0%。
+- 長按環內徑維持 38px（等於 76px 點擊藍點半徑），外徑不變；其餘環形樣式不調整。
+- Playwright 驗收與部署結果待確認。
