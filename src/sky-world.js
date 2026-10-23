@@ -1265,11 +1265,12 @@
         uploadWorld();
       }, 500);
     }
-    if (event.pointerType === 'touch' && window.matchMedia?.('(max-width: 700px)').matches === true
-      && pointerPlotIndex === null && dockHitAtPointer === null) {
+    if (pointerPlotIndex === null && dockHitAtPointer === null) {
       const pressPointerId = event.pointerId;
+      const isTouchPointer = event.pointerType === 'touch';
       emptyTouchRotateTimer = setTimeout(() => {
-        if (dragging && touchPoints.has(pressPointerId) && !pointerMoved && touchPoints.size === 1
+        const singleTouchStillHeld = !isTouchPointer || (touchPoints.has(pressPointerId) && touchPoints.size === 1);
+        if (dragging && singleTouchStillHeld && !pointerMoved
           && pointerPlotIndex === null && dockHitAtPointer === null) rotateHoldGesture = true;
       }, 500);
     }
@@ -1341,30 +1342,25 @@
       lastPointerY = event.clientY;
       return;
     }
-    if (event.pointerType === 'touch' && window.matchMedia?.('(max-width: 700px)').matches === true) {
-      const deltaX = event.clientX - lastPointerX;
-      const deltaY = event.clientY - lastPointerY;
-      if (rotateHoldGesture) {
-        if (cameraMode !== '2d') {
-          yaw -= deltaX * 0.008;
-          pitch = Math.max(0.18, Math.min(1.28, pitch + deltaY * 0.006));
-        }
-      } else if (cameraMode === '2d') {
-        const panScale = topDownHeight / 12 * 0.012;
-        targetX -= deltaX * panScale;
-        targetZ -= deltaY * panScale;
-      } else {
-        const forwardX = -Math.sin(yaw);
-        const forwardZ = -Math.cos(yaw);
-        const rightX = Math.cos(yaw);
-        const rightZ = -Math.sin(yaw);
-        const panScale = 0.008;
-        targetX -= rightX * deltaX * panScale - forwardX * deltaY * panScale;
-        targetZ -= rightZ * deltaX * panScale - forwardZ * deltaY * panScale;
+    const deltaX = event.clientX - lastPointerX;
+    const deltaY = event.clientY - lastPointerY;
+    if (rotateHoldGesture) {
+      if (cameraMode !== '2d') {
+        yaw -= deltaX * 0.008;
+        pitch = Math.max(0.18, Math.min(1.28, pitch + deltaY * 0.006));
       }
-    } else if (cameraMode !== '2d') {
-      yaw -= (event.clientX - lastPointerX) * 0.008;
-      pitch = Math.max(0.18, Math.min(1.28, pitch + (event.clientY - lastPointerY) * 0.006));
+    } else if (cameraMode === '2d') {
+      const panScale = topDownHeight / 12 * 0.012;
+      targetX -= deltaX * panScale;
+      targetZ -= deltaY * panScale;
+    } else {
+      const forwardX = -Math.sin(yaw);
+      const forwardZ = -Math.cos(yaw);
+      const rightX = Math.cos(yaw);
+      const rightZ = -Math.sin(yaw);
+      const panScale = 0.008;
+      targetX -= rightX * deltaX * panScale - forwardX * deltaY * panScale;
+      targetZ -= rightZ * deltaX * panScale - forwardZ * deltaY * panScale;
     }
     lastPointerX = event.clientX;
     lastPointerY = event.clientY;
