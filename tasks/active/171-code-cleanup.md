@@ -29,7 +29,7 @@
 - 第 12 段：清理可證實未使用的 JS：`src/game.js` 移除永遠為空字串的 `rainStatus` 宣告及模板插值；`src/sky-world.js` 移除只有宣告、沒有引用的 `DRONE_ROTOR_RADIUS` 常數、`hasDroneAnimations()` 函式與 `leafBase` 區域變數。提交：`c4fd023ffa0c5d5319605d20f9c14898092623db`。Playwright run `39886538682` 已成功。
 - 第 13 段：依照 HTML class、JS 動態 class、classList 與選擇器字串重新盤點後，確認 `.soil`、`.plot-pixel-icon` 在所有現行頁面、腳本及測試中均沒有實際 class 引用，且不是共用選擇器群組；已移除這兩條孤立 CSS 規則。提交：`b3c9fb6c12fbe6bc74f8431f83d967544773cd9a`。Playwright run `39886812190` 已成功。
 - 第 14 段：移除目前不存在任何對應 DOM 的 `footer`、`footer span` 舊樣式，並從共用輸入樣式與手機版字級規則中移除未使用的 `textarea` 選擇器；保留仍適用的 `input`、`select` 與 `[contenteditable="true"]` 規則。提交：`7cb069c4f8fbcbf19a4cd764be50da6a0b058d6f`。Playwright run `39887064077` 已成功。
-- 第 15 段已提交：確認花園名稱編輯表單只有輸入欄，沒有任何按鈕；`save-status` 元素位於設定面板而非 `.world-topbar`，且程式未將它移動到頂欄。移除對應的舊 button 樣式、焦點選擇器，以及 5 條失效的 `.world-topbar .save-status` 規則。等待 Playwright 驗收。後續繼續盤點 JS 中可證實未使用的常數、函式、空字串佔位及重複邏輯；不因識別字出現次數少就直接刪除，會先確認動態呼叫、跨模組 API 與事件綁定。
+- 第 15 段：確認花園名稱編輯表單只有輸入欄，沒有任何按鈕；`save-status` 元素位於設定面板而非 `.world-topbar`，且程式未將它移動到頂欄。移除對應的舊 button 樣式、焦點選擇器，以及 5 條失效的 `.world-topbar .save-status` 規則。提交：`9710c000841f52f4ccad5eea096dccd6a254a9f4`。Playwright run `39887236576` 已成功。後續繼續盤點 JS 中可證實未使用的常數、函式、空字串佔位及重複邏輯；不因識別字出現次數少就直接刪除，會先確認動態呼叫、跨模組 API 與事件綁定。
 
 ## 原則
 - 不以「看起來沒用」作為刪除依據；先查詢宣告、引用、事件綁定、跨模組介面與動態呼叫。
