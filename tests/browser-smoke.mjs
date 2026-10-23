@@ -93,6 +93,25 @@ try {
     throw new Error('設定面板版本號沒有顯示內容');
   }
   checks.push('設定面板顯示目前版本、最新版本與立即更新按鈕');
+
+  const settingsPanelSize = await page.locator('#settings-panel').evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    const versionCard = element.querySelector('.version-settings').getBoundingClientRect();
+    const avatarOptions = [...element.querySelectorAll('.avatar-flower-option')];
+    return {
+      width: rect.width,
+      padding: getComputedStyle(element).paddingTop,
+      versionCardPadding: getComputedStyle(element.querySelector('.version-settings')).paddingTop,
+      avatarOptionCount: avatarOptions.length,
+      avatarOptionHeight: avatarOptions[0]?.getBoundingClientRect().height ?? 0,
+      versionCardHeight: versionCard.height,
+    };
+  });
+  if (settingsPanelSize.width > 240) throw new Error('設定面板未縮窄：' + JSON.stringify(settingsPanelSize));
+  if (settingsPanelSize.avatarOptionCount !== 11 || settingsPanelSize.avatarOptionHeight > 44) throw new Error('頭像選擇器未壓縮或花種缺漏：' + JSON.stringify(settingsPanelSize));
+  if (Number.parseFloat(settingsPanelSize.padding) > 9 || Number.parseFloat(settingsPanelSize.versionCardPadding) > 8) throw new Error('設定面板內距仍過大：' + JSON.stringify(settingsPanelSize));
+  checks.push('設定面板寬度、內距、版本卡片與 11 種花卉頭像選擇器已精簡');
+
   if (await page.locator('#avatar-flower-picker').isVisible()) throw new Error('自動頭像模式未隱藏花卉選擇介面');
   const avatarOptions = page.locator('.avatar-flower-option');
   if (await avatarOptions.count() !== 11) throw new Error('頭像選擇清單未顯示 11 種花卉');
