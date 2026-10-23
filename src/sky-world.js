@@ -159,7 +159,7 @@
     if (cameraMode === '2d') topDownHeight = Math.max(3, Math.min(50, value));
     else distance = Math.max(1.5, Math.min(24, value));
   }
-remove mobile zoom controls logic  const cameraModeButton = document.querySelector('#camera-mode');
+  const cameraModeButton = document.querySelector('#camera-mode');
   cameraModeButton?.addEventListener('click', () => {
     if (cameraMode === '3d') {
       savedCameraPose = { yaw, pitch, distance, targetX, targetZ };
