@@ -68,7 +68,7 @@ try {
   const mouseRingStyle = await mouseRing.locator('.touch-hold-progress').evaluate(element => ({ width: Number.parseFloat(getComputedStyle(element.closest('.touch-hold-ring')).width), radius: Number(element.getAttribute('r')), strokeWidth: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-width')), riseDuration: getComputedStyle(element.closest('.touch-hold-ring')).animationDuration, riseDelay: getComputedStyle(element.closest('.touch-hold-ring')).animationDelay }));
   if (mouseRingStyle.width !== 120 || mouseRingStyle.radius !== 17 || mouseRingStyle.strokeWidth !== 4 || mouseRingStyle.riseDuration !== '0.3s' || mouseRingStyle.riseDelay !== '0.2s') throw new Error('PC 長按環尺寸、線寬或上移動畫錯誤：' + JSON.stringify(mouseRingStyle));
   await page.mouse.up();
-  checks.push('PC 長按環延遲 200ms 顯示、內徑30px／外徑38px，並於500ms上移50px');
+  checks.push('PC 長按環前200ms隱藏、200–400ms上升50px，最後100ms停留縮小並於500ms恢復原尺寸');
 
   if (await page.evaluate(() => window.dianGardenFlowerModels?.count) !== 11) throw new Error('花卉模型模組未完整註冊 11 種花');
   checks.push('11 種花卉模型模組已完整註冊');
