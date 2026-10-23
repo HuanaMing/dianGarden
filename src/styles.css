@@ -548,4 +548,4 @@ input, [contenteditable="true"]{
 .touch-hold-ring{animation:touch-ring-rise .5s linear forwards}
 .touch-hold-ring svg{mask-image:radial-gradient(circle 19px at center,transparent 15px,#000 16px,#000 18px,transparent 19px)}
 .touch-hold-progress{stroke-width:4;stroke-dasharray:106.81;stroke-dashoffset:106.81}
-@keyframes touch-ring-rise{to{transform:translate(-50%,-50%) translateY(-50px)}}
+@keyframes touch-ring-rise{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}99%{transform:translate(-50%,-50%) translateY(-49.5px) scale(.55)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}}
