@@ -129,7 +129,7 @@
   }
   function updatePointerFeedback(event) {
     const state = activePointerFeedback.get(event.pointerId);
-    if (!state || state.moved || Math.hypot(event.clientX - state.startX, event.clientY - state.startY) < 6) return;
+    if (!state || state.moved || Math.hypot(event.clientX - state.startX, event.clientY - state.startY) < 5) return;
     state.moved = true;
     state.ring?.remove(); state.ring = null;
   }
