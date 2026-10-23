@@ -1528,3 +1528,9 @@
 - 更新瀏覽器 smoke test，檢查填充動畫與上移關鍵影格；瀏覽器自動驗收成功（[run 39997966764](https://github.com/HuanaMing/dianGarden/actions/runs/39997966764)），GitHub Pages 部署成功（[run 39997951231](https://github.com/HuanaMing/dianGarden/actions/runs/39997951231)）。
 
 - 2026-10-24 任務188重做撤回：依使用者要求，移除中央圓形填充動畫，恢復原本的整體環縮放方案（上升至50px時縮小至55%，頂端恢復100%）；同步還原 smoke test 與架構／任務狀態紀錄。
+
+
+## 2026-10-24 — 任務188重做：長按環分段動畫時序
+
+- 前200ms隱藏長按環，進度仍從按下時開始；接著200ms上升50px並縮至55%；最後100ms停在最高點繼續縮至35%，動畫結束瞬間恢復原尺寸。
+- 已更新 CSS、Playwright smoke test、架構文件、任務與狀態紀錄；自動驗收與 Pages 部署待 Actions 結果確認。
