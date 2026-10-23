@@ -1,7 +1,7 @@
 {
-  "name": "任務171：清理反覆修改遺留的無用程式碼",
-  "status": "completed",
+  "name": "任務172：縮短 Playwright 瀏覽器驗收流程",
+  "status": "in_progress",
   "pendingApprovals": [],
-  "nextAction": "任務171已完成。任務172仍在 tasks/inbox，等待使用者確認是否開始；確認後再評估與實作 Playwright workflow 效能優化。",
-  "result": "完成15段 CSS／JS 死碼清理，每段均獨立提交並通過 Playwright 驗收。最後五段 run：39886341458、39886538682、39886812190、39887064077、39887236576 均成功。最終靜態盤點未再找到可確認未引用的 CSS 選擇器或未使用的 JS 宣告／參數。完成文件位於 tasks/done/171-code-cleanup.md。"
+  "nextAction": "基線量測完成。修改 browser-check.yml，暫時移除 npx playwright install-deps chromium，保留 Playwright 套件、Chromium 安裝、完整 browser-smoke 與截圖產物；依 Actions 結果決定保留或還原。",
+  "result": "基線：Run 39885207346 約 7 分 24 秒，其中 APT 下載 24.9 MB 花費 6 分 38 秒；Run 39887236576 約 47 秒，同一下載約 1 秒。主要瓶頸為外部 APT 鏡像速度不穩定。"
 }
