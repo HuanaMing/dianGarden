@@ -96,7 +96,7 @@
   const activePointerFeedback = new Map();
   let pinchActive = false;
   let suppressTouchTap = false;
-  let rotateTouchGesture = false;
+  let rotateHoldGesture = false;
   let emptyTouchRotateTimer = null;
   const touchFeedbackLayer = document.createElement('div');
   touchFeedbackLayer.className = 'touch-feedback-layer';
@@ -124,7 +124,7 @@
   function beginPointerFeedback(event) {
     const point = feedbackPoint(event);
     const state = { startX: event.clientX, startY: event.clientY, moved: false, ring: null };
-    if (event.pointerType === 'touch') state.ring = makeHoldRing(point.x, point.y);
+    state.ring = makeHoldRing(point.x, point.y);
     activePointerFeedback.set(event.pointerId, state);
   }
   function updatePointerFeedback(event) {
@@ -185,6 +185,7 @@
   let pointerPlotIndex = null;
   let plotPressIndex = null;
   let plotPressReady = false;
+  let plotWasInMoveModeAtPointerDown = false;
   let plotPressTimer = null;
   let dockPosition = { x: 0, z: 1.55 };
   let heightEdit = null;
@@ -1170,11 +1171,12 @@
 
   canvas.addEventListener('pointerdown', (event) => {
     beginPointerFeedback(event);
+    plotWasInMoveModeAtPointerDown = false;
     if (event.pointerType === 'touch') {
       touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (touchPoints.size === 2) {
         clearTimeout(emptyTouchRotateTimer);
-        rotateTouchGesture = false;
+        rotateHoldGesture = false;
         clearPointerHoldRings();
         pinchActive = true;
         suppressTouchTap = true;
@@ -1203,7 +1205,7 @@
     }
     clearTimeout(plotPressTimer);
     clearTimeout(emptyTouchRotateTimer);
-    rotateTouchGesture = false;
+    rotateHoldGesture = false;
     dragging = true;
     pointerMoved = false;
     dragPreview = null;
@@ -1242,6 +1244,7 @@
         const low = projectPoint([x, baseY, z]), high = projectPoint([x, baseY + 0.5, z]);
         heightDrag = { kind: 'plot', index: pressedPlot, startY: event.clientY, original: getPlotHeight(pressedPlot), pixelStep: low && high ? Math.max(1, Math.abs(high.y - low.y)) : 48 };
       } else if (heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move') {
+        plotWasInMoveModeAtPointerDown = true;
         plotPressReady = true;
         dragPlotIndex = pressedPlot;
         const worldPoint = screenToGround(pointerStartX, pointerStartY, getPlotHeight(pressedPlot) + 0.08);
@@ -1267,7 +1270,7 @@
       const pressPointerId = event.pointerId;
       emptyTouchRotateTimer = setTimeout(() => {
         if (dragging && touchPoints.has(pressPointerId) && !pointerMoved && touchPoints.size === 1
-          && pointerPlotIndex === null && dockHitAtPointer === null) rotateTouchGesture = true;
+          && pointerPlotIndex === null && dockHitAtPointer === null) rotateHoldGesture = true;
       }, 500);
     }
     canvas.setPointerCapture(event.pointerId);
@@ -1287,7 +1290,7 @@
     if (!dragging) return;
     if (!pointerMoved && Math.hypot(event.clientX - pointerStartX, event.clientY - pointerStartY) < 5) return;
     pointerMoved = true;
-    if (!rotateTouchGesture) clearTimeout(emptyTouchRotateTimer);
+    if (!rotateHoldGesture) clearTimeout(emptyTouchRotateTimer);
     if (heightDrag) {
       const stepCount = Math.round((heightDrag.startY - event.clientY) / heightDrag.pixelStep);
       const value = heightDrag.kind === 'plot'
@@ -1341,7 +1344,7 @@
     if (event.pointerType === 'touch' && window.matchMedia?.('(max-width: 700px)').matches === true) {
       const deltaX = event.clientX - lastPointerX;
       const deltaY = event.clientY - lastPointerY;
-      if (rotateTouchGesture) {
+      if (rotateHoldGesture) {
         if (cameraMode !== '2d') {
           yaw -= deltaX * 0.008;
           pitch = Math.max(0.18, Math.min(1.28, pitch + deltaY * 0.006));
@@ -1371,7 +1374,7 @@
     if (event.pointerType === 'touch') touchPoints.delete(event.pointerId);
     if (suppressTouchTap) {
       clearTimeout(emptyTouchRotateTimer);
-      rotateTouchGesture = false;
+      rotateHoldGesture = false;
       pinchActive = false;
       dragging = false;
       clearTimeout(plotPressTimer);
@@ -1393,7 +1396,7 @@
     dragging = false;
     clearTimeout(plotPressTimer);
     clearTimeout(dockPressTimer);
-    const heldWithoutDragging = plotPressReady && plotPressIndex !== null && !pointerMoved;
+    const heldWithoutDragging = plotPressReady && plotPressIndex !== null && !pointerMoved && !plotWasInMoveModeAtPointerDown;
     if (dockHitAtPointer !== null) {
       if (heightDrag?.kind === 'dock' && pointerMoved) {
         const accepted = window.onSkyDockHeightChange?.(heightDrag.index, getDockHeight(heightDrag.index));
@@ -1457,10 +1460,10 @@
     dockPreview = null;
     dragPreview = null;
     clearTimeout(emptyTouchRotateTimer);
-    rotateTouchGesture = false;
+    rotateHoldGesture = false;
     uploadWorld();
   });
-  canvas.addEventListener('pointercancel', (event) => { cancelPointerFeedback(event); if (event.pointerType === 'touch') touchPoints.delete(event.pointerId); if (touchPoints.size === 0) { pinchActive = false; suppressTouchTap = false; } clearTimeout(emptyTouchRotateTimer); rotateTouchGesture = false; clearTimeout(plotPressTimer); clearTimeout(dockPressTimer); dragging = false; dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null; dockPreview = null; pointerPlotIndex = null; plotPressIndex = null; plotPressReady = false; dockPressReady = false; uploadWorld(); });
+  canvas.addEventListener('pointercancel', (event) => { cancelPointerFeedback(event); if (event.pointerType === 'touch') touchPoints.delete(event.pointerId); if (touchPoints.size === 0) { pinchActive = false; suppressTouchTap = false; } clearTimeout(emptyTouchRotateTimer); rotateHoldGesture = false; clearTimeout(plotPressTimer); clearTimeout(dockPressTimer); dragging = false; dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null; dockPreview = null; pointerPlotIndex = null; plotPressIndex = null; plotPressReady = false; dockPressReady = false; uploadWorld(); });
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     if (cameraMode === '2d') topDownHeight = Math.max(3, Math.min(50, topDownHeight + event.deltaY * 0.02));
