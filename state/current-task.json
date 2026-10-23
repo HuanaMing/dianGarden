@@ -1,9 +1,9 @@
 {
   "name": "任務185：修正植物成熟階段來回閃爍",
-  "status": "in_progress",
+  "status": "completed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "等待 GitHub Actions 執行瀏覽器自動驗收與 GitHub Pages 部署；成功後補記結果並歸檔。",
-  "result": "已修改 src/sky-world.js：同一株植物依花種索引與種植時間維持單向成長階段，避免短暫舊成長快照讓成熟花退回種子模型；尚待自動驗收。"
+  "nextAction": "等待使用者確認實際遊玩時成熟花不再閃爍；若仍可重現，需進一步擷取作物的成長快照與場景階段診斷。",
+  "result": "已修改 src/sky-world.js，按花種索引與 plantedAt 記錄同一株植物的最高視覺階段，避免短暫舊成長快照讓成熟花退回種子模型。GitHub Pages 部署 run 39966963133 成功；Playwright 瀏覽器自動驗收 run 39966963160 成功。"
 }
