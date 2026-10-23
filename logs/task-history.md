@@ -1359,3 +1359,12 @@
 - 最後五段提交與 Playwright 驗收均成功：第11段 run 39886341458、第12段 run 39886538682、第13段 run 39886812190、第14段 run 39887064077、第15段 run 39887236576。
 - 最終靜態盤點未再找到可確認未引用的 CSS class／id／純元素選擇器，或僅宣告未使用的 JS 變數／函式；正式遊戲程式也未找到可確認未使用的函式參數。未做猜測性刪除。
 - 任務文件已歸檔至 `tasks/done/171-code-cleanup.md`。任務 172「縮短 Playwright 瀏覽器驗收流程」保留於 `tasks/inbox/172-playwright-workflow-performance.md`，等待使用者確認是否開始。
+
+
+## 2026-10-23 — 任務 172：縮短 Playwright 瀏覽器驗收流程
+
+- 結果：依近期 Actions 執行紀錄確認 APT 系統依賴下載是長時間波動來源，移除 `npx playwright install-deps chromium` 步驟，保留 Chromium 安裝、完整 browser-smoke 驗收及截圖上傳。
+- 基線比較：慢速 run `39885207346` 約 7 分 24 秒，其中 APT 下載 24.9 MB 花 6 分 38 秒；修改前正常 run `39887236576` 約 47 秒；修改後 run `39889061910` 約 45 秒。
+- 驗收：修改後 Actions 成功；完整瀏覽器檢查 PASS、browser errors 為空，25 張截圖成功上傳為 `diangarden-browser-check` artifact（約 2.9 MB，保留 14 天）。
+- 取捨：常態耗時只改善約 2 秒，主要收益是避免 APT 鏡像造成數分鐘延遲；未引入 Docker 或其他新依賴。若未來 GitHub runner 的系統函式庫變動導致測試失敗，再評估固定版本的官方 Playwright container。
+- 涉及：`.github/workflows/browser-check.yml`、`tasks/done/172-playwright-workflow-performance.md`、`state/project.json`、`state/current-task.json`。
