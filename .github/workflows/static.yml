@@ -50,7 +50,7 @@ jobs:
 
           # Count successful deployments earlier today in Taipei time.
           # Exclude this run; the current deployment receives the next number.
-          RUNS_JSON="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs" -f branch=main -f per_page=100 -f "created=>=${MIDNIGHT_UTC}")"
+          RUNS_JSON="$(curl --fail-with-body --silent --show-error -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GH_TOKEN}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs?branch=main&per_page=100&created=%3E%3D${MIDNIGHT_UTC}")"
           SUCCESSFUL_TODAY=0
           while IFS= read -r CREATED_AT; do
             [ -n "$CREATED_AT" ] || continue
