@@ -40,6 +40,7 @@ jobs:
         run: |
           VERSION="$(TZ=Asia/Taipei date +'%y%m%d,%H')"
           printf '{\n  "version": "%s"\n}\n' "$VERSION" > src/version.json
+          printf "window.__DIANGARDEN_BUILD_VERSION__ = '%s';\n" "$VERSION" > src/build-version.js
       - name: 準備花卉像素圖資產
         run: mkdir -p src/assets/flowers && cp assets/flowers/*.png src/assets/flowers/
       - name: Upload artifact
