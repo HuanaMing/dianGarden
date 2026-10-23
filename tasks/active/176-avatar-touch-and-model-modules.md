@@ -39,6 +39,6 @@
 - src/encyclopedia.html：viewport 加入 maximum-scale=1、user-scalable=no；主畫面原本已有同樣限制。
 - tests/browser-smoke.mjs：新增頭像切換與重載保存、舊存檔預設、手機縮放按鈕、兩頁 viewport，以及真實 CDP 觸控事件的長按環、藍點消失時間、多指各自顯示測試。
 - docs/architecture.md：更新頭像存檔欄位及手機手勢說明。
-- 驗收 run 39890619739 成功（commit 9d8d29eae6c485f3ec2b57c1b88ac6ea3081e990）。測試結果 PASS；頭像在重載後保存、單指長按環形進度、多指回饋點與 11 種圖鑑模型檢查均通過，browserErrors 為空。
+- 驗收 run 39890619739 成功（commit 9d8d29eae6c485f3ec2b57c1b88ac6ea3081e990）；後續擴充自動頭像依種植數量選擇的測試後，最新 run 39891053346 也成功（commit 42cf6dbe021e5038c2674c8ad067b860fcb15f10）。測試結果 PASS；頭像在重載後保存、單指長按環形進度、多指回饋點與 11 種圖鑑模型檢查均通過，browserErrors 為空。
 - 前一次 run 因移除縮放程式時的字串修改錯誤而失敗，已修正；修正後 run 39890322040 與包含新增觸控測試的最新 run 39890619739 均成功。早期失敗不代表目前 main 的驗收狀態。
 - 花卉模型拆分仍未執行，等待使用者確認方案 A（classic scripts＋共用幾何 API／模型註冊表），以避免未經確認的大幅架構重構。
