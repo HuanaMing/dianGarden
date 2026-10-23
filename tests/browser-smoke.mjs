@@ -65,10 +65,10 @@ try {
   if (await mouseRing.evaluate(element => getComputedStyle(element).visibility) !== 'hidden') throw new Error('PC 長按環未延遲 200ms 顯示');
   await page.waitForTimeout(120);
   if (await mouseRing.evaluate(element => getComputedStyle(element).visibility) !== 'visible') throw new Error('PC 長按環在按下 200ms 後仍未顯示');
-  const mouseRingStyle = await mouseRing.locator('.touch-hold-progress').evaluate(element => ({ width: Number.parseFloat(getComputedStyle(element.closest('.touch-hold-ring')).width), strokeWidth: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-width')) }));
-  if (mouseRingStyle.width !== 120 || mouseRingStyle.strokeWidth !== 12.5) throw new Error('PC 長按環尺寸或線寬錯誤：' + JSON.stringify(mouseRingStyle));
+  const mouseRingStyle = await mouseRing.locator('.touch-hold-progress').evaluate(element => ({ width: Number.parseFloat(getComputedStyle(element.closest('.touch-hold-ring')).width), radius: Number(element.getAttribute('r')), strokeWidth: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-width')), riseDuration: getComputedStyle(element.closest('.touch-hold-ring')).animationDuration }));
+  if (mouseRingStyle.width !== 120 || mouseRingStyle.radius !== 17 || mouseRingStyle.strokeWidth !== 4 || mouseRingStyle.riseDuration !== '0.5s') throw new Error('PC 長按環尺寸、線寬或上移動畫錯誤：' + JSON.stringify(mouseRingStyle));
   await page.mouse.up();
-  checks.push('PC 長按環延遲 200ms 顯示、容器 120px、線寬 12.5px（內徑 75px、外徑 100px）');
+  checks.push('PC 長按環延遲 200ms 顯示、內徑30px／外徑38px，並於500ms上移50px');
 
   if (await page.evaluate(() => window.dianGardenFlowerModels?.count) !== 11) throw new Error('花卉模型模組未完整註冊 11 種花');
   checks.push('11 種花卉模型模組已完整註冊');
@@ -253,9 +253,9 @@ try {
     mask: getComputedStyle(element.ownerSVGElement).maskImage,
     trackCount: element.ownerSVGElement.querySelectorAll('.touch-hold-track').length,
   }));
-  if (ringGeometry.radius !== 43.75 || ringGeometry.strokeWidth !== 12.5 || ringGeometry.viewBox !== '0 0 120 120' || ringGeometry.width !== 120
+  if (ringGeometry.radius !== 17 || ringGeometry.strokeWidth !== 4 || ringGeometry.viewBox !== '0 0 120 120' || ringGeometry.width !== 120
     || ringGeometry.stroke.toLowerCase() !== 'rgb(93, 129, 199)' || ringGeometry.strokeOpacity !== 0.5 || ringGeometry.trackCount !== 0
-    || Math.abs(ringGeometry.dashArray - 274.89) > 0.1 || !ringGeometry.mask.includes('radial-gradient') || !ringGeometry.mask.includes('47.5px') || !ringGeometry.mask.includes('50.5px')) throw new Error(`長按環顏色、透明漸層、內徑或尺寸不符：${JSON.stringify(ringGeometry)}`);
+    || Math.abs(ringGeometry.dashArray - 106.81) > 0.1 || !ringGeometry.mask.includes('radial-gradient') || !ringGeometry.mask.includes('18px') || !ringGeometry.mask.includes('19px')) throw new Error(`長按環顏色、透明漸層、內徑或尺寸不符：${JSON.stringify(ringGeometry)}`);
   if (ringGeometry.dashOffset > 2) throw new Error(`長按環形進度未在 500ms 左右完成：${ringGeometry.dashOffset}`);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: touchX + 28, y: touchY + 12, id: 1 }] });
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
@@ -276,12 +276,12 @@ try {
   if (await touchPage.locator('.touch-feedback-dot').count() !== 2) throw new Error('多指觸控放開後沒有各自顯示藍色回饋點');
   await touchPage.close();
   const worldSource = await fs.readFile('src/sky-world.js', 'utf8');
-  if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("progress.setAttribute('cx', '60'); progress.setAttribute('cy', '60'); progress.setAttribute('r', '43.75');") || worldSource.includes("track.setAttribute('class', 'touch-hold-track')")) throw new Error('移動模式即時拖曳或無白色底環的長按幾何未包含預期實作');
+  if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("progress.setAttribute('cx', '60'); progress.setAttribute('cy', '60'); progress.setAttribute('r', '17');") || worldSource.includes("track.setAttribute('class', 'touch-hold-track')")) throw new Error('移動模式即時拖曳或無白色底環的長按幾何未包含預期實作');
   if (!worldSource.includes('plotWasInMoveModeAtPointerDown') || !worldSource.includes('!plotWasInMoveModeAtPointerDown')) throw new Error('地塊移動模式短按切換高度模式的修正未包含');
   if (!worldSource.includes('rotateHoldGesture') || worldSource.includes('rotateTouchGesture') || !worldSource.includes('if (pointerPlotIndex === null && dockHitAtPointer === null)')) throw new Error('PC 與手機的相機手勢尚未統一');
   if (!worldSource.includes("heightEdit?.kind === 'dock' && heightEdit.index === pressedDock && heightEdit.mode === 'move'") || !worldSource.includes('screenToGround(pointerStartX, pointerStartY, 1.36 + getDockHeight(pressedDock))')) throw new Error('無人機坪台移動模式未支援直接拖曳或未使用坪台高度平面');
   if (worldSource.includes('if (dragPreview && Number.isInteger(dragPreview.index))')) throw new Error('拖曳預覽仍保留重複十字箭頭');
-  checks.push('手機長按環形進度、內徑75px／外徑100px、放開回饋點及多指獨立回饋通過');
+  checks.push('手機長按環形進度、內徑30px／外徑38px、放開回饋點及多指獨立回饋通過');
   checks.push('地塊短按可由移動模式切換高度模式；PC 與手機相機手勢共用');
 
   const maturePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
