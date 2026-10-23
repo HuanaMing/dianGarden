@@ -146,10 +146,10 @@ try {
   await touchPage.waitForTimeout(450);
   const ringGeometry = await touchPage.locator('.touch-hold-progress').evaluate(element => ({
     radius: Number(element.getAttribute('r')),
-    strokeWidth: Number(getComputedStyle(element).getPropertyValue('stroke-width')),
+    strokeWidth: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-width')),
     viewBox: element.ownerSVGElement.getAttribute('viewBox'),
     width: Number.parseFloat(getComputedStyle(element.closest('.touch-hold-ring')).width),
-    dashOffset: Number(getComputedStyle(element).getPropertyValue('stroke-dashoffset')),
+    dashOffset: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-dashoffset')),
   }));
   if (ringGeometry.radius !== 48 || ringGeometry.strokeWidth !== 3 || ringGeometry.viewBox !== '0 0 120 120' || ringGeometry.width !== 120) throw new Error(`長按環未放大三倍或線寬改變：${JSON.stringify(ringGeometry)}`);
   if (ringGeometry.dashOffset > 2) throw new Error(`長按環形進度未在 500ms 左右完成：${ringGeometry.dashOffset}`);
