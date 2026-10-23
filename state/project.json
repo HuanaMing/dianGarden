@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 186,
-  "nextAction": "任務186重做：依使用者回饋將長按環調整為內徑75px、外徑100px；等待瀏覽器驗收與 Pages 部署結果。",
+  "nextAction": "修正立即更新的靜態資源快取問題；部署與瀏覽器驗收通過後，回到任務186長按環尺寸確認。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
