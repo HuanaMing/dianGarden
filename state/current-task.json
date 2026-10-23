@@ -1,9 +1,7 @@
 {
   "name": "任務178：花卉頭像點陣圖與地塊移動操作調整",
-  "status": "in_progress",
-  "pendingApprovals": [
-    "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
-  ],
-  "nextAction": "等待 GitHub Actions Playwright browser-smoke 驗收，檢查頭像 PNG、長按環尺寸、移動模式即時拖曳與箭頭去重。",
-  "result": "已修改頭像選花格狀按鈕、長按環 SVG/CSS、地塊移動模式 pointerdown 與重複箭頭繪製；已更新瀏覽器驗收腳本，尚待 workflow 結果。"
+  "status": "completed",
+  "pendingApprovals": [],
+  "nextAction": "任務178已完成並通過 Playwright 驗收；等待使用者指定下一項工作。",
+  "result": "設定頁 11 種花卉頭像 PNG 格狀選擇、自動／手動切換與存檔通過；長按環半徑放大三倍且 CSS 線寬維持 3；移動模式 pointerdown 即開始拖曳，移除拖曳預覽重複十字箭頭。GitHub Actions run 39895672169 成功，browserErrors 為空，截圖產物約 2.91 MB。"
 }
