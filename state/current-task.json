@@ -2,6 +2,6 @@
   "name": "任務171：清理反覆修改遺留的無用程式碼",
   "status": "active",
   "pendingApprovals": [],
-  "nextAction": "第13段已通過 Playwright run 39886812190。下一段檢查沒有現行 DOM 對應的 footer 樣式，並從共用 CSS 選擇器群組中移除未使用的 textarea 選擇器，同時保留 input、select、contenteditable 樣式。",
-  "result": "第1至13段均已提交並通過 Playwright 驗收。第11段移除空 CSS @media 區塊（run 39886341458）；第12段清理 game.js 與 sky-world.js 的未使用 JS 片段（run 39886538682）；第13段移除 styles.css 中未引用的 .soil、.plot-pixel-icon（commit b3c9fb6c12fbe6bc74f8431f83d967544773cd9a，run 39886812190）。任務172已建立於 tasks/inbox，等待任務171完成後執行。"
+  "nextAction": "第14段已通過 Playwright run 39887064077。下一段檢查花園名稱編輯器內不存在的 button 樣式，以及已移入設定面板的 save-status 舊定位樣式，清除不再匹配現行 DOM 的 CSS 選擇器。",
+  "result": "第1至14段均已提交並通過 Playwright 驗收。第11段移除空 CSS @media 區塊（run 39886341458）；第12段清理 game.js 與 sky-world.js 的未使用 JS 片段（run 39886538682）；第13段移除未引用 .soil、.plot-pixel-icon（run 39886812190）；第14段移除不存在的 footer 樣式及未使用的 textarea CSS 選擇器（run 39887064077）。任務172已建立於 tasks/inbox，等待任務171完成後執行。"
 }
