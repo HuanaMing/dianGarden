@@ -4,6 +4,7 @@
 
   const versionUrl = new URL('version.json', scriptUrl);
   const storageKey = 'diangarden-seen-version-v1';
+  const validVersionPattern = /^\d{6},\d{2}$/;
   const checkIntervalMs = 5 * 60 * 1000;
   let latestVersion = '';
   let dismissedVersion = '';
@@ -21,17 +22,24 @@
   function setSeenVersion(version) {
     try { localStorage.setItem(storageKey, version); } catch (_) {}
   }
+  function getCurrentVersion() {
+    const buildVersion = window.__DIANGARDEN_BUILD_VERSION__;
+    if (typeof buildVersion === 'string' && validVersionPattern.test(buildVersion)) return buildVersion;
+    return getSeenVersion();
+  }
   function renderVersionInfo(statusOverride = '') {
-    if (currentVersionElement) currentVersionElement.textContent = getSeenVersion() || '未知';
+    const currentVersion = getCurrentVersion();
+    if (currentVersion) setSeenVersion(currentVersion);
+    if (currentVersionElement) currentVersionElement.textContent = currentVersion || '未知';
     if (latestVersionElement) latestVersionElement.textContent = latestVersion || '無法取得';
     if (!statusElement) return;
     statusElement.textContent = statusOverride || (
       !latestVersion ? '目前無法取得最新版本，請檢查網路後重試。' :
-      getSeenVersion() !== latestVersion ? '有新版本可用，建議立即更新。' :
+      currentVersion !== latestVersion ? '有新版本可用，建議立即更新。' :
       '目前已是最新版本。'
     );
     statusElement.classList.toggle('has-version-error', !latestVersion);
-    statusElement.classList.toggle('has-version-update', Boolean(latestVersion && getSeenVersion() !== latestVersion));
+    statusElement.classList.toggle('has-version-update', Boolean(latestVersion && currentVersion !== latestVersion));
   }
   async function fetchLatestVersion() {
     const url = new URL(versionUrl.href);
@@ -94,12 +102,12 @@
       const html = await response.text();
       const parsedDocument = new DOMParser().parseFromString(html, 'text/html');
       if (!parsedDocument.querySelector('script[src$="game.js"], script[src*="game.js?"]') ||
+          !parsedDocument.querySelector('script[src$="build-version.js"], script[src*="build-version.js?"]') ||
           !parsedDocument.querySelector('script[src$="version-check.js"], script[src*="version-check.js?"]')) {
         throw new Error('取得的頁面內容不完整，已保留目前遊戲');
       }
       const cacheToken = freshVersion.replace(',', '-') + '-' + requestToken;
       addCacheBuster(parsedDocument, response.url || pageUrl.href, cacheToken);
-      setSeenVersion(freshVersion);
       dismissedVersion = '';
       renderVersionInfo('已取得最新檔案，正在重新載入…');
       // Run the existing pagehide save handler before replacing the document.
@@ -162,14 +170,11 @@
   async function checkVersion() {
     try {
       latestVersion = await fetchLatestVersion();
-      let seenVersion = getSeenVersion();
-      if (!seenVersion) {
-        setSeenVersion(latestVersion);
-        seenVersion = latestVersion;
-      }
+      const currentVersion = getCurrentVersion();
+      if (!currentVersion) setSeenVersion(latestVersion);
       renderVersionInfo();
-      if (seenVersion !== latestVersion && dismissedVersion !== latestVersion) createUpdateBanner(latestVersion);
-      else if (banner && seenVersion === latestVersion) { banner.remove(); banner = null; }
+      if (currentVersion && currentVersion !== latestVersion && dismissedVersion !== latestVersion) createUpdateBanner(latestVersion);
+      else if (banner && currentVersion === latestVersion) { banner.remove(); banner = null; }
     } catch (_) {
       latestVersion = '';
       renderVersionInfo();
