@@ -104,7 +104,7 @@ function addLilyOfTheValleyStemLeafGeometry(positions, colors, x, z, height, sta
   }
 
   function addLilyOfTheValleyBloom({
-    positions, colors, x, z, height, headColor, environmentState, stemModel, stage, stage,
+    positions, colors, x, z, height, headColor, environmentState, stemModel, stage,
   }) {
     const bloomY = 0.055 + height;
     const dedicatedStemLeafModel = stemModel;
