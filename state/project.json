@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 174,
-  "nextAction": "任務174第一輪實作已提交，Playwright 正在安裝／啟動測試環境；取得結果後先修正失敗，再驗收農地管理、成熟植物切換、手機免捲動刪除按鈕與省電模式恢復。",
+  "activeTask": 171,
+  "nextAction": "任務171已恢復；第3段 hero-cloud CSS 清理的 GitHub Actions 已確認成功。盤點最新 CSS／HTML／JavaScript 引用，選定第4段候選後單段修改並執行瀏覽器驗收。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
