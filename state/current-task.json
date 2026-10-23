@@ -1,9 +1,9 @@
 {
   "name": "任務180：日夜天氣漸變與點擊回饋時序",
-  "status": "planned",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "開始前先檢查 sky-environment.js、game.js、sky-world.js 與相關樣式，確認日夜／天氣切換及指標手勢的現行實作，再依任務180驗收條件修改。",
-  "result": "任務175已通過使用者視覺驗收並歸檔；任務180已建立於 tasks/inbox。"
+  "nextAction": "確認 GitHub Actions Playwright 驗收；若失敗，依錯誤修正並重跑。成功後補齊執行紀錄與任務驗收狀態。",
+  "result": "已更新 sky-environment.js、sky-world.js、styles.css 與 browser-smoke.mjs，加入日夜每秒線性進度、晴雨交替前五秒視覺漸變、#9CC9D9 半透明點擊回饋與長按環延遲 200ms 顯示；瀏覽器驗收執行中。"
 }
