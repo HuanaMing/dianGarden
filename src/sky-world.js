@@ -199,7 +199,7 @@
       const rad = angle * Math.PI / 180;
       const cx = 60 + Math.cos(rad) * 17;
       const cy = 60 + Math.sin(rad) * 17;
-      leaves.push(makeLeaf(cx, cy, angle + 90));
+      leaves.push(makeLeaf(cx, cy, angle));
     }
     svg.append(...leaves);
     svg.append(makeFlower(42, 60, 0.92), makeFlower(78, 60, 0.92), makeFlower(60, 42, 0.82), makeFlower(60, 78, 0.82));
