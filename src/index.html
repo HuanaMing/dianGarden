@@ -16,7 +16,7 @@
         <div class="world-frame">
           <canvas id="sky-canvas" aria-label="可用滑鼠與鍵盤探索並選取土地的空中農場 3D 場景"></canvas>
           <header class="world-topbar" id="world-topbar">
-            <div class="world-brand"><span aria-hidden="true">🌼</span><h1><button class="garden-name-display" id="garden-name-display" type="button" aria-label="編輯花園名稱">花明摸魚花園</button></h1><form class="garden-name-editor" id="garden-name-editor" hidden><input id="garden-name-input" type="text" maxlength="24" aria-label="花園名稱" autocomplete="off" required></form></div>
+            <div class="world-brand"><span id="garden-avatar" aria-label="花園頭像" aria-hidden="false">🌼</span><h1><button class="garden-name-display" id="garden-name-display" type="button" aria-label="編輯花園名稱">花明摸魚花園</button></h1><form class="garden-name-editor" id="garden-name-editor" hidden><input id="garden-name-input" type="text" maxlength="24" aria-label="花園名稱" autocomplete="off" required></form></div>
             <div class="world-status">
               <span class="world-wallet" aria-live="polite">🪙 <strong id="coins">120</strong><span>金幣</span></span>
               
@@ -32,6 +32,13 @@
           </header>
           <section class="settings-panel" id="settings-panel" aria-label="設定" hidden>
             <h2>設定</h2>
+            <section class="avatar-settings" aria-label="自訂頭像">
+              <h3>自訂頭像</h3>
+              <label for="avatar-mode">頭像來源</label>
+              <select id="avatar-mode"><option value="auto">自動（種植最多的花）</option><option value="manual">手動選擇</option></select>
+              <label for="avatar-flower">指定花種</label>
+              <select id="avatar-flower" disabled></select>
+            </section>
             <button class="camera-mode" id="camera-mode" type="button" aria-pressed="false">2D模式</button>
             <button class="reset-progress-button" id="reset-progress" type="button">重置進度</button>
             <button class="power-save-toggle" id="power-save-toggle" type="button" aria-pressed="false">省電模式：關</button>
