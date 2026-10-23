@@ -1358,7 +1358,7 @@
 - 完成任務 171 共 15 段清理，涉及舊首頁 CSS、孤立選擇器、空白 media query、無效 footer／textarea 樣式、與現行 DOM 不匹配的後代選擇器，以及 `src/game.js`、`src/sky-world.js` 中可證實未使用的宣告與空字串佔位。
 - 最後五段提交與 Playwright 驗收均成功：第11段 run 39886341458、第12段 run 39886538682、第13段 run 39886812190、第14段 run 39887064077、第15段 run 39887236576。
 - 最終靜態盤點未再找到可確認未引用的 CSS class／id／純元素選擇器，或僅宣告未使用的 JS 變數／函式；正式遊戲程式也未找到可確認未使用的函式參數。未做猜測性刪除。
-- 任務文件已歸檔至 `tasks/done/171-code-cleanup.md`。任務 172「縮短 Playwright 瀏覽器驗收流程」保留於 `tasks/inbox/172-playwright-workflow-performance.md`，等待使用者確認是否開始。
+- 任務文件已歸檔至 `tasks/done/171-code-cleanup.md`。當時任務 172 尚在 inbox；後續已經使用者確認、完成實作與驗收，詳見本紀錄下方任務 172 條目。
 
 
 ## 2026-10-23 — 任務 172：縮短 Playwright 瀏覽器驗收流程
