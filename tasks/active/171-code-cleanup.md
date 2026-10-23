@@ -18,11 +18,13 @@
 - 驗收流程改善：因 Playwright 安裝步驟反覆耗時，已在 `.github/workflows/browser-check.yml` 加入 npm／Playwright 瀏覽器快取，並拆分套件、系統依賴與 Chromium 安裝步驟。
 - 驗收流程改善提交：`1e6bfef3d173a8f2787f321e45d338d6fb682a54`
 - 第 5 段：移除手機版 media query 中的 `.cloud-a{left:4%}`；盤點 `src/index.html`、`src/game.js`、`src/sky-world.js`、`src/sky-environment.js`、`src/encyclopedia.html`、`src/flower-catalog.js` 均無 `.cloud-a` 引用，只有 `src/styles.css` 存在該規則。提交：`64cb71774009a97030aed6f910230d40a27d2b4e`。Playwright run `39879376599` 已通過（conclusion: success）。
-- 第 6 段（待驗收）：移除舊首頁 `.hero-copy` 的三個 CSS 規則（一般版及兩個手機版斷點）；確認 `src/index.html`、`src/game.js`、`src/sky-world.js`、`src/sky-environment.js`、`src/encyclopedia.html`、`src/flower-catalog.js` 均無 `.hero-copy` 引用。提交：`2a8444a115a195eac66971387fa778935b240e67`。Playwright run `39880800563` 尚待完成。
+- 第 6 段：移除舊首頁 `.hero-copy` 的三個 CSS 規則（一般版及兩個手機版斷點）；檢查現行頁面與腳本均無引用。提交：`2a8444a115a195eac66971387fa778935b240e67`。Playwright run `39880800563` 通過。
+- 第 7 段：移除兩條無引用的 `.hero-description` 規則；檢查現行頁面與腳本均無引用。提交：`d4ac99da93d50c7c4ac35d5faa0ee7cb836b0a69`。Playwright run `39882579773` 通過。
+- 第 8 段：一次清理舊首頁與舊農地卡片的孤立樣式，移除 `.topbar`、`.brand`、`.wallet`、`.hero`、`.hero-stats`、`.hero-art`、`.sun`、`.bird`、`.bird-one`、`.bird-two`、`.hero-island`、`.farm-section`、`.section-heading`、`.primary-button`、`.farm-grid`、`.plot-card`、`.plot-top`、`.plot-number`、`.plot-visual`、`.empty-sprout`、`.plot-actions`、`.plot-timer`、`.growing-card`、`.empty-plot`、`.empty-icon` 等 63 條 CSS 選擇器（約 4.6 KB）。逐一確認上述 class 在現行來源檔（包含 `src/flower-encyclopedia.js`）中無引用，並保留共用 `.action-button` 規則。提交：`6d956fe39f366a8e4a95666de76a5b0a41d5b111`。Playwright run `39883971650` 通過。
 - 新版流程驗證：[GitHub Actions run 39879113329](https://github.com/HuanaMing/dianGarden/actions/runs/39879113329) 已完成，整體瀏覽器驗收成功。
 
 ## 下一步
-等待第 6 段 Playwright run 39880800563 完成；成功後再盤點下一段無引用 CSS，失敗則先調查並修復或還原。
+第 1–8 段均已完成並通過對應 Playwright 驗收。繼續盤點其他孤立樣式時，需把 `src/flower-encyclopedia.js` 與所有現行來源納入引用檢查，尤其留意動態 class 組合；每批修改仍須獨立驗收。
 
 ## 原則
 - 不以「看起來沒用」作為刪除依據；先查詢宣告、引用、事件綁定、跨模組介面與動態呼叫。
