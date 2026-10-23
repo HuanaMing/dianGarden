@@ -59,11 +59,11 @@ body{background:#d9f0f7}
 .camera-mode,.encyclopedia-link{position:absolute;z-index:6;left:16px;display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 11px;border:1px solid #ffffffb5;border-radius:11px;background:#fffdf2ed;color:#527866;font-size:10px;font-weight:900;text-decoration:none;box-shadow:0 4px 14px #426e6618;cursor:pointer}.camera-mode{top:91px}.camera-mode[aria-pressed="true"]{background:#547f65;color:#fff}.encyclopedia-link{top:134px}.camera-mode:focus-visible,.encyclopedia-link:focus-visible{outline:3px solid #547f65;outline-offset:2px}
 .drone-jobs{position:absolute;z-index:4;top:86px;right:16px;width:min(255px,42vw);max-height:34vh;overflow:auto;padding:9px 11px;border:1px solid #ffffffa8;border-radius:13px;background:#fffdf2df;color:#5b786b;font-size:10px;box-shadow:0 4px 14px #426e6618}.drone-jobs strong{font-size:10px}.drone-jobs ol{display:grid;gap:4px;margin:6px 0 0;padding:0;list-style:none}.drone-jobs li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:4px;border-top:1px solid #e6ecdf;color:#829487}.drone-jobs li.is-running{color:#557d65;font-weight:800}.drone-jobs button{border:0;border-radius:6px;padding:3px 6px;background:#f4e8dd;color:#a26f56;font-size:9px;font-weight:800;cursor:pointer}
 .drone-jobs .auto-mode{margin-top:7px;margin-left:8px;padding:5px 8px;background:#e9f1e3;color:#58805f}.drone-jobs .auto-mode[aria-pressed="true"]{background:#6c9c71;color:#fff}
-.world-brand{display:flex;align-items:center;gap:8px;color:#31594f;text-decoration:none;font-size:15px;font-weight:900;white-space:nowrap}.world-brand>span{font-size:22px}.world-brand h1{margin:0;font-size:inherit;font-weight:inherit}.garden-name-display{padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer}.garden-name-display:focus-visible,.garden-name-editor input:focus-visible,.garden-name-editor button:focus-visible{outline:2px solid #78a982;outline-offset:2px}.garden-name-editor{display:flex;align-items:center;gap:4px}.garden-name-editor[hidden]{display:none}.garden-name-editor input{width:140px;min-width:0;padding:5px 7px;border:1px solid #d8e7d6;border-radius:7px;color:#31594f;font:inherit;font-size:12px}.garden-name-editor button{padding:5px 7px;border:0;border-radius:7px;background:#e8f1e5;color:#52765e;font:inherit;font-size:10px;font-weight:800;cursor:pointer}.garden-name-editor button[type=submit]{background:#6c9c71;color:#fff}
+.world-brand{display:flex;align-items:center;gap:8px;color:#31594f;text-decoration:none;font-size:15px;font-weight:900;white-space:nowrap}.world-brand>span{font-size:22px}.world-brand h1{margin:0;font-size:inherit;font-weight:inherit}.garden-name-display{padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer}.garden-name-display:focus-visible,.garden-name-editor input:focus-visible{outline:2px solid #78a982;outline-offset:2px}.garden-name-editor{display:flex;align-items:center;gap:4px}.garden-name-editor[hidden]{display:none}.garden-name-editor input{width:140px;min-width:0;padding:5px 7px;border:1px solid #d8e7d6;border-radius:7px;color:#31594f;font:inherit;font-size:12px}
 .world-status{display:flex;align-items:center;justify-content:flex-end;gap:14px;color:#628375;font-size:11px;font-weight:800}
 .reset-progress-button{position:absolute;z-index:6;top:52px;right:16px;padding:6px 9px;border:1px solid #efdcd3;border-radius:9px;background:#fff6f1;color:#9b6b5b;font-size:9px;font-weight:900;white-space:nowrap;cursor:pointer}.reset-progress-button:hover{background:#fcebe4}.reset-progress-button:focus-visible,.reset-confirm-button:focus-visible{outline:2px solid #a86d59;outline-offset:2px}
 .world-wallet{display:flex;align-items:center;gap:5px;white-space:nowrap}.world-wallet strong{color:#836b31;font-size:11px}.world-wallet>span:last-child{color:#9c9270;font-size:10px}
-.world-topbar .save-status{max-width:180px;margin:0;color:#729788;font-size:9px;white-space:normal}
+
 .world-plots{position:absolute;z-index:4;left:16px;right:210px;bottom:16px;display:flex;gap:8px;overflow-x:auto;padding:4px 3px 8px;scrollbar-width:thin}
 .world-plot-button{position:relative;flex:0 0 76px;min-height:69px;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto 1fr auto;align-items:center;gap:1px 5px;padding:7px 8px;border:1px solid #ffffffb8;border-radius:14px;background:#fffdf2e8;color:#527364;text-align:left;box-shadow:0 4px 14px #426e6618;cursor:pointer;transition:transform .15s,border-color .15s,background .15s}
 .world-plot-button:hover{transform:translateY(-2px);background:#fffefa}.world-plot-button.is-selected{border-color:#d2ad48;background:#fff8df;box-shadow:0 0 0 2px #d2ad4852,0 5px 16px #426e6620}.world-plot-button:focus-visible,.world-expand:focus-visible{outline:3px solid #547f65;outline-offset:2px}
@@ -82,7 +82,7 @@ body{background:#d9f0f7}
   .world-status{flex-wrap:wrap;gap:3px 9px;font-size:9px}
   .reset-progress-button{top:42px;right:8px;padding:4px 6px;font-size:8px}
   .world-wallet strong{font-size:10px}
-  .world-topbar .save-status{flex-basis:100%;max-width:170px;margin:1px 0 0 auto;text-align:right}
+  
   .world-plots{right:8px;bottom:70px;gap:6px;padding:3px 2px 7px}
   .world-plot-button{flex-basis:67px;min-height:62px;padding:6px 7px}
   .world-plot-icon{font-size:20px}
@@ -164,7 +164,7 @@ body{background:#d9f0f7}
   .world-topbar .world-brand{max-width:46%;min-width:0}
   .world-brand h1{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .world-status{min-width:0;justify-content:flex-end;gap:3px 8px}
-  .world-topbar .save-status{max-width:145px}
+  
   .hud-toggle{top:69px;right:8px;min-height:36px;padding:8px 10px;border-radius:11px;font-size:10px;box-shadow:0 3px 10px #456f5118}
   .reset-progress-button{top:72px;right:calc(8px + 100px);padding:7px 8px;font-size:9px}
   .camera-mode,.encyclopedia-link{left:8px;min-height:40px;padding:9px 11px;border-radius:12px;font-size:11px;box-shadow:0 3px 10px #456f5118}
@@ -185,7 +185,7 @@ body{background:#d9f0f7}
   .world-topbar{align-items:flex-start}
   .world-topbar .world-brand{max-width:42%}
   .world-status{font-size:8px}
-  .world-topbar .save-status{max-width:110px}
+  
   .reset-progress-button{right:calc(8px + 94px)}
   .world-plot-button{flex-basis:62px;min-height:62px}
 }
@@ -293,7 +293,7 @@ input, [contenteditable="true"]{
   .world-brand{font-size:11px;gap:5px}
   .world-brand>span{font-size:16px}
   .world-status{gap:3px 6px}
-  .world-topbar .save-status{display:none}
+  
   .topbar-actions{gap:4px}
   .topbar-actions .drone-panel-toggle,.topbar-actions .settings-toggle,.topbar-actions .encyclopedia-link,.topbar-actions .hud-toggle{width:32px;height:32px;min-height:32px;flex-basis:32px;border-radius:9px;font-size:16px}
   .topbar-actions .hud-toggle{font-size:14px}
