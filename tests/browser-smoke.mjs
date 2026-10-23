@@ -58,6 +58,16 @@ try {
   await page.locator('#settings-toggle').click();
   if (!(await page.locator('#settings-panel').isVisible())) throw new Error('設定按鈕未能開啟設定面板');
   if (!(await page.locator('.operation-help').isVisible())) throw new Error('操作說明未移至設定面板');
+  if (!(await page.locator('#avatar-mode').isVisible()) || !(await page.locator('#avatar-flower').isVisible())) throw new Error('設定中未顯示自訂頭像控制');
+  await page.locator('#avatar-mode').selectOption('manual');
+  await page.locator('#avatar-flower').selectOption('3');
+  if (await page.locator('#garden-avatar').innerText() !== '🌹') throw new Error('手動頭像未顯示所選花卉 emoji');
+  await page.reload({ waitUntil: 'networkidle', timeout: 30000 });
+  await page.locator('#settings-toggle').click();
+  if (await page.locator('#avatar-mode').inputValue() !== 'manual' || await page.locator('#avatar-flower').inputValue() !== '3' || await page.locator('#garden-avatar').innerText() !== '🌹') throw new Error('自訂花卉頭像未在重新載入後保存');
+  await page.locator('#avatar-mode').selectOption('auto');
+  if (await page.locator('#avatar-flower').isEnabled()) throw new Error('自動頭像模式仍允許指定花種');
+  checks.push('自訂花卉頭像可切換、顯示並在重新載入後保存');
   await page.locator('#power-save-toggle').click();
   if (await page.locator('#power-save-toggle').getAttribute('aria-pressed') !== 'true') throw new Error('省電模式未能開啟');
   if (!(await page.locator('.world-frame').evaluate(element => element.classList.contains('is-power-save')))) throw new Error('省電模式未切換畫布清空樣式');
@@ -102,6 +112,9 @@ try {
   await page.screenshot({ path: `${outputDir}/garden-mobile-landscape.png`, fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(500);
+  if (await page.locator('#zoom-in, #zoom-out, .mobile-zoom-controls').count() !== 0) throw new Error('手機版仍顯示場景＋／−縮放按鈕');
+  const mainViewport = await page.locator('meta[name="viewport"]').getAttribute('content');
+  if (!mainViewport?.includes('user-scalable=no') || !mainViewport.includes('maximum-scale=1')) throw new Error('主畫面 viewport 未限制瀏覽器頁面縮放');
   await page.screenshot({ path: `${outputDir}/garden-mobile.png`, fullPage: true });
   await page.locator('#farm-management-toggle').click();
   await page.locator('[data-plot-button="0"]').click();
@@ -132,6 +145,7 @@ try {
     }));
   });
   await maturePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  if (await maturePage.locator('#garden-avatar').innerText() !== '🌻') throw new Error('舊存檔未使用自動花卉頭像預設值');
   await maturePage.locator('#farm-management-toggle').click();
   await maturePage.locator('[data-plot-button="2"]').click();
   const matureSwitch = maturePage.locator('#farm-dialog [data-plot-mode-switch]');
@@ -165,6 +179,8 @@ try {
   await immaturePage.close();
 
   await page.goto(`${baseURL}/encyclopedia.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  const galleryViewport = await page.locator('meta[name="viewport"]').getAttribute('content');
+  if (!galleryViewport?.includes('user-scalable=no') || !galleryViewport.includes('maximum-scale=1')) throw new Error('花卉圖鑑 viewport 未限制瀏覽器頁面縮放');
   await page.locator('.encyclopedia-card').first().waitFor({ state: 'visible' });
   const cardCount = await page.locator('.encyclopedia-card').count();
   if (cardCount !== 11) throw new Error(`花卉圖鑑應有 11 種花卉，實際為 ${cardCount} 種`);
