@@ -39,6 +39,19 @@ try {
   if (!gameCanvas.webgl) throw new Error('遊戲首頁未能建立 WebGL context');
   if (gameCanvas.width < 100 || gameCanvas.height < 100) throw new Error('遊戲畫布尺寸異常');
   checks.push('遊戲 WebGL 畫布已建立');
+
+  const mouseCanvasBounds = await page.locator('#sky-canvas').boundingBox();
+  if (!mouseCanvasBounds) throw new Error('無法取得 PC 畫布位置');
+  await page.mouse.move(mouseCanvasBounds.x + 24, mouseCanvasBounds.y + mouseCanvasBounds.height * 0.15);
+  await page.mouse.down();
+  await page.waitForTimeout(100);
+  const mouseRing = page.locator('.touch-hold-ring');
+  if (await mouseRing.count() !== 1) throw new Error('PC 滑鼠按住時未顯示長按計時環');
+  const mouseRingStyle = await mouseRing.locator('.touch-hold-progress').evaluate(element => ({ width: Number.parseFloat(getComputedStyle(element.closest('.touch-hold-ring')).width), strokeWidth: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-width')) }));
+  if (mouseRingStyle.width !== 120 || mouseRingStyle.strokeWidth !== 6) throw new Error('PC 長按環尺寸或線寬錯誤：' + JSON.stringify(mouseRingStyle));
+  await page.mouse.up();
+  checks.push('PC 滑鼠長按環尺寸 120px、線寬 6px');
+
   if (await page.evaluate(() => window.dianGardenFlowerModels?.count) !== 11) throw new Error('花卉模型模組未完整註冊 11 種花');
   checks.push('11 種花卉模型模組已完整註冊');
 
