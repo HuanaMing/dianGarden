@@ -283,7 +283,7 @@ try {
   if (!worldSource.includes('plotWasInMoveModeAtPointerDown') || !worldSource.includes('!plotWasInMoveModeAtPointerDown')) throw new Error('地塊移動模式短按切換高度模式的修正未包含');
   if (!worldSource.includes('rotateHoldGesture') || worldSource.includes('rotateTouchGesture') || !worldSource.includes('if (pointerPlotIndex === null && dockHitAtPointer === null)')) throw new Error('PC 與手機的相機手勢尚未統一');
   const styleSource = await fs.readFile(new URL('../src/styles.css', import.meta.url), 'utf8');
-  if (!styleSource.includes('.touch-hold-ring::before{content:\'\';position:absolute;left:50%;top:50%;width:30px;height:30px;border-radius:50%;background:rgba(93,129,199,.5)') || !styleSource.includes('@keyframes touch-ring-fill{from{transform:translate(-50%,-50%) scale(0)}to{transform:translate(-50%,-50%) scale(1)}}') || !styleSource.includes('@keyframes touch-ring-rise{from{transform:translate(-50%,-50%) translateY(0)}to{transform:translate(-50%,-50%) translateY(-50px)}}')) throw new Error('長按環上升時內孔未逐步填滿，或頂端實心圓動畫／50px 位移未設定');
+  if (!styleSource.includes('@keyframes touch-ring-rise{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}99%{transform:translate(-50%,-50%) translateY(-49.5px) scale(.55)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}}')) throw new Error('長按環上升縮小、頂端恢復原尺寸的動畫未設定');
   checks.push('長按環上升時內徑逐漸縮小，頂端填滿成為實心圓');
   if (!worldSource.includes("heightEdit?.kind === 'dock' && heightEdit.index === pressedDock && heightEdit.mode === 'move'") || !worldSource.includes('screenToGround(pointerStartX, pointerStartY, 1.36 + getDockHeight(pressedDock))')) throw new Error('無人機坪台移動模式未支援直接拖曳或未使用坪台高度平面');
   if (worldSource.includes('if (dragPreview && Number.isInteger(dragPreview.index))')) throw new Error('拖曳預覽仍保留重複十字箭頭');
