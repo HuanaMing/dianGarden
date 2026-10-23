@@ -1429,4 +1429,14 @@
 
 - 已建立 active 任務文件，要求設定面板顯示目前／最新版本號，並提供接近 Ctrl+F5 的立即更新流程。
 - 設計以 `cache: no-store` 重新取得 HTML，為同源 CSS、JavaScript 及圖片等資源加入唯一 query，再替換文件；替換前觸發現有 pagehide 存檔處理。瀏覽器無法由 JavaScript 直接呼叫原生 Ctrl+F5，故此為可實作的近似流程。
-- 目前程式、樣式、測試及文件修改尚在進行，未取得驗收結果。
+- 當時程式、樣式、測試及文件修改尚在進行；後續完成結果記錄於下方任務183完成條目。
+
+
+## 2026-10-23 — 任務 183 完成：設定版本資訊與立即更新
+
+- 設定面板新增目前版本號、最新版本號、版本檢查狀態及「立即更新」按鈕；目前版本由部署時產生的 `build-version.js` 提供，最新版本來自 `version.json`。
+- Pages 工作流程 run 39953488795 成功；部署時同步產生版本 JSON 與目前版本識別腳本。
+- 立即更新採用 `cache: no-store` 重新取得 HTML，為同源 CSS、JavaScript、圖片等資源加入唯一 query，再替換文件；替換前呼叫既有 pagehide 存檔處理。更新提示中的重新載入按鈕共用此流程。
+- Playwright 驗收 run 39953660007 成功，設定版本資訊、舊版本更新提示、立即更新 cache-busting 資源請求與既有遊戲回歸測試均通過。
+- 任務文件已歸檔至 `tasks/done/183-settings-version-info-and-force-update.md`。
+- 限制：瀏覽器不允許 JavaScript 直接呼叫原生 Ctrl+F5；目前使用 no-store 重新取得 HTML 加同源資源 cache-busting，達成近似強制更新效果。任務182雲端存檔仍在 inbox，尚未開始。
