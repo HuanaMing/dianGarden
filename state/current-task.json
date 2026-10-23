@@ -2,6 +2,6 @@
   "name": "任務171：清理反覆修改遺留的無用程式碼",
   "status": "active",
   "pendingApprovals": [],
-  "nextAction": "等待 Playwright run 39887236576 驗收第15段（移除不存在的花園名稱編輯器 button 樣式與失效的 .world-topbar .save-status 選擇器）。若成功，繼續盤點現行 DOM 結構與 CSS 選擇器，並檢查 JS 死碼。",
-  "result": "第1至14段均已提交並通過 Playwright 驗收。第15段 commit 9710c000841f52f4ccad5eea096dccd6a254a9f4 移除 .garden-name-editor button、button[type=submit]、對應 focus-visible selector，以及 5 條 .world-topbar .save-status 規則；run 39887236576 等待驗收。任務172已建立於 tasks/inbox，等待任務171完成後執行。"
+  "nextAction": "第15段已通過 Playwright run 39887236576。下一步進行更深的 JS 靜態檢查（函式參數與重複邏輯），並再次核對 CSS 選擇器的實際 DOM 結構；沒有充分證據的候選項不刪除。",
+  "result": "第1至15段均已提交並通過 Playwright 驗收。第11段移除空 CSS @media（run 39886341458）；第12段清理 game.js、sky-world.js 未使用 JS 片段（run 39886538682）；第13段移除 .soil、.plot-pixel-icon（run 39886812190）；第14段移除 footer 樣式與 textarea 選擇器（run 39887064077）；第15段移除不存在的花園名稱編輯器 button 樣式與 5 條失效的 .world-topbar .save-status 規則（run 39887236576）。任務172已建立於 tasks/inbox，等待任務171完成後執行。"
 }
