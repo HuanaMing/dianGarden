@@ -60,20 +60,23 @@ try {
   await page.locator('#settings-toggle').click();
   if (!(await page.locator('#settings-panel').isVisible())) throw new Error('設定按鈕未能開啟設定面板');
   if (!(await page.locator('.operation-help').isVisible())) throw new Error('操作說明未移至設定面板');
-  if (!(await page.locator('#avatar-mode').isVisible()) || !(await page.locator('#avatar-flower-options').isVisible())) throw new Error('設定中未顯示自訂頭像控制');
+  if (!(await page.locator('#avatar-mode').isVisible())) throw new Error('設定中未顯示自訂頭像控制');
+  if (await page.locator('#avatar-flower-picker').isVisible()) throw new Error('自動頭像模式未隱藏花卉選擇介面');
   const avatarOptions = page.locator('.avatar-flower-option');
   if (await avatarOptions.count() !== 11) throw new Error('頭像選擇清單未顯示 11 種花卉');
   const avatarImages = await page.locator('.avatar-flower-image').evaluateAll(images => images.map(image => ({ loaded: image.complete && image.naturalWidth > 0, pixelated: getComputedStyle(image).imageRendering === 'pixelated' })));
   if (avatarImages.length !== 11 || avatarImages.some(image => !image.loaded || !image.pixelated)) throw new Error('頭像選擇中的花卉點陣圖未全部載入或未使用 pixelated');
   await page.locator('#avatar-mode').selectOption('manual');
+  if (!(await page.locator('#avatar-flower-picker').isVisible())) throw new Error('手動頭像模式未顯示花卉選擇介面');
   await page.locator('[data-avatar-crop="3"]').click();
-  if (await page.locator('#garden-avatar').innerText() !== '🌹' || await page.locator('[data-avatar-crop="3"]').getAttribute('aria-pressed') !== 'true') throw new Error('手動頭像未更新為所選花卉');
+  const avatarImage = page.locator('#garden-avatar img');
+  if (!(await avatarImage.isVisible()) || !(await avatarImage.getAttribute('src')).endsWith('玫瑰.png') || await avatarImage.evaluate(image => getComputedStyle(image).imageRendering) !== 'pixelated' || await page.locator('[data-avatar-crop="3"]').getAttribute('aria-pressed') !== 'true') throw new Error('花園名稱左側頭像未顯示所選點陣圖素材');
   await page.reload({ waitUntil: 'networkidle', timeout: 30000 });
   await page.locator('#settings-toggle').click();
-  if (await page.locator('#avatar-mode').inputValue() !== 'manual' || await page.locator('[data-avatar-crop="3"]').getAttribute('aria-pressed') !== 'true' || await page.locator('#garden-avatar').innerText() !== '🌹') throw new Error('自訂花卉頭像未在重新載入後保存');
+  if (await page.locator('#avatar-mode').inputValue() !== 'manual' || await page.locator('#avatar-flower-picker').isHidden() || await page.locator('[data-avatar-crop="3"]').getAttribute('aria-pressed') !== 'true' || !(await page.locator('#garden-avatar img').getAttribute('src')).endsWith('玫瑰.png')) throw new Error('自訂花卉頭像未在重新載入後保存');
   await page.locator('#avatar-mode').selectOption('auto');
-  if (!(await page.locator('.avatar-flower-option').first().isDisabled())) throw new Error('自動頭像模式仍允許指定花種');
-  checks.push('自訂花卉頭像點陣圖、切換、顯示並在重新載入後保存');
+  if (await page.locator('#avatar-flower-picker').isVisible() || !(await page.locator('.avatar-flower-option').first().isDisabled())) throw new Error('自動頭像模式未隱藏或仍允許指定花種');
+  checks.push('自訂頭像點陣圖、來源切換、選花介面顯示規則與存檔通過');
   await page.locator('#power-save-toggle').click();
   if (await page.locator('#power-save-toggle').getAttribute('aria-pressed') !== 'true') throw new Error('省電模式未能開啟');
   if (!(await page.locator('.world-frame').evaluate(element => element.classList.contains('is-power-save')))) throw new Error('省電模式未切換畫布清空樣式');
@@ -151,7 +154,7 @@ try {
     width: Number.parseFloat(getComputedStyle(element.closest('.touch-hold-ring')).width),
     dashOffset: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-dashoffset')),
   }));
-  if (ringGeometry.radius !== 48 || ringGeometry.strokeWidth !== 3 || ringGeometry.viewBox !== '0 0 120 120' || ringGeometry.width !== 120) throw new Error(`長按環未放大三倍或線寬改變：${JSON.stringify(ringGeometry)}`);
+  if (ringGeometry.radius !== 48 || ringGeometry.strokeWidth !== 6 || ringGeometry.viewBox !== '0 0 120 120' || ringGeometry.width !== 120) throw new Error(`長按環尺寸或雙倍線寬不符：${JSON.stringify(ringGeometry)}`);
   if (ringGeometry.dashOffset > 2) throw new Error(`長按環形進度未在 500ms 左右完成：${ringGeometry.dashOffset}`);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: touchX + 28, y: touchY + 12, id: 1 }] });
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
