@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 186,
-  "nextAction": "任務186重做：點擊回饋中心可見度改為30%，長按環內徑維持38px、外徑不變；待自動驗收與部署確認。",
+  "nextAction": "任務186重做已完成：點擊回饋中心可見度30%，長按環內徑38px、外徑不變；Playwright 驗收與 Pages 部署均成功，等待使用者實際確認。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
