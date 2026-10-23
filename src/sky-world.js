@@ -80,7 +80,35 @@
   let plotPositions = galleryMode ? [{ x: 0, z: 0, y: 0 }] : [{ x: -1, z: 0, y: 0 }, { x: 0, z: 0, y: 0 }, { x: 1, z: 0, y: 0 }];
   let galleryFlowerIndex = 0;
   let plotStates = galleryMode ? [{ crop: 0, plantedAt: 0, elapsed: 1, growTime: 1, plantHeight: 1 }] : [];
-  let environmentState = { phase: 'day', isDay: true, isRaining: false, lightLevel: 1, sunflowerYaw: 0 };
+  let environmentState = { phase: 'day', isDay: true, isRaining: false, rainBlend: 0, daylightProgress: 1, phaseProgress: 0, lightLevel: 1, sunflowerYaw: 0 };
+  let environmentBackground = '';
+  const SKY_PALETTES = {
+    day: ['#c9ecfa', '#e6f6f5', '#f2f8e9'],
+    night: ['#14263d', '#273b54', '#526175'],
+    warm: ['#e3bfa7', '#eadac8', '#e5e3d5'],
+    rainDay: ['#a8c5d0', '#c9dada', '#d8e2d1'],
+    rainNight: ['#233749', '#344959', '#586875'],
+  };
+  function mixSkyColor(from, to, amount) {
+    const t = Math.max(0, Math.min(1, amount));
+    const parse = (hex) => [1, 3, 5].map((index) => Number.parseInt(hex.slice(index, index + 2), 16));
+    const a = parse(from), b = parse(to);
+    return '#' + a.map((value, index) => Math.round(value + (b[index] - value) * t).toString(16).padStart(2, '0')).join('');
+  }
+  function getSkyGradient(state) {
+    const daylight = Math.max(0, Math.min(1, Number.isFinite(state.daylightProgress) ? state.daylightProgress : (state.lightLevel - 0.18) / 0.82));
+    const phaseProgress = Math.max(0, Math.min(1, Number.isFinite(state.phaseProgress) ? state.phaseProgress : 0));
+    const warmth = state.phase === 'dawn' || state.phase === 'dusk' ? 0.28 * 4 * phaseProgress * (1 - phaseProgress) : 0;
+    const rainBlend = Math.max(0, Math.min(1, Number.isFinite(state.rainBlend) ? state.rainBlend : (state.isRaining ? 1 : 0)));
+    const colors = SKY_PALETTES.night.map((night, index) => {
+      const dayColor = SKY_PALETTES.day[index];
+      const base = mixSkyColor(night, dayColor, daylight);
+      const warmed = mixSkyColor(base, SKY_PALETTES.warm[index], warmth);
+      const rainy = mixSkyColor(SKY_PALETTES.rainNight[index], SKY_PALETTES.rainDay[index], daylight);
+      return mixSkyColor(warmed, rainy, rainBlend);
+    });
+    return `linear-gradient(180deg, ${colors[0]} 0%, ${colors[1]} 64%, ${colors[2]} 100%)`;
+  }
   let rainStartedAt = null;
   let lastSoilTransitionUploadAt = 0;
   let selectedPlotIndex = null;
@@ -1578,14 +1606,33 @@
       const phaseChanged = environmentState.phase !== state.phase;
       const cycle = window.skyEnvironment?.DAY_CYCLE_MS || 16 * 60_000;
       const cycleTime = Number.isFinite(state.worldTimeMs) ? ((state.worldTimeMs % cycle) + cycle) % cycle : 0;
-      const daylightProgress = Math.min(1, cycleTime / (10 * 60_000));
-      const sunflowerYaw = cycleTime <= 10 * 60_000 ? 0.08 * (1 - Math.cos(daylightProgress * Math.PI * 2)) / 2 : 0;
+      const daylightProgress = Number.isFinite(state.daylightProgress)
+        ? state.daylightProgress
+        : Math.max(0, Math.min(1, (Number.isFinite(state.lightLevel) ? state.lightLevel : 1) - 0.18) / 0.82);
+      const sunflowerProgress = Math.min(1, cycleTime / (10 * 60_000));
+      const sunflowerYaw = cycleTime <= 10 * 60_000 ? 0.08 * (1 - Math.cos(sunflowerProgress * Math.PI * 2)) / 2 : 0;
       const sunflowerTurnChanged = Math.abs(sunflowerYaw - environmentState.sunflowerYaw) >= 0.0005;
-      environmentState = { phase: state.phase || 'day', isDay: state.isDay === true, isRaining: state.isRaining, lightLevel: Number.isFinite(state.lightLevel) ? state.lightLevel : 1, sunflowerYaw };
-      frame.classList.toggle('is-raining', environmentState.isRaining);
+      const rainBlend = Number.isFinite(state.rainBlend) ? Math.max(0, Math.min(1, state.rainBlend)) : (state.isRaining ? 1 : 0);
+      environmentState = {
+        phase: state.phase || 'day',
+        isDay: state.isDay === true,
+        isRaining: state.isRaining,
+        rainBlend,
+        daylightProgress,
+        phaseProgress: Number.isFinite(state.phaseProgress) ? state.phaseProgress : 0,
+        lightLevel: Number.isFinite(state.lightLevel) ? state.lightLevel : 1,
+        sunflowerYaw,
+      };
+      frame.classList.toggle('is-raining', rainBlend > 0);
+      frame.style.setProperty('--rain-blend', String(rainBlend));
       for (const phase of ['dawn', 'day', 'dusk', 'night']) frame.classList.toggle(`is-${phase}`, environmentState.phase === phase);
+      const background = getSkyGradient(environmentState);
+      if (background !== environmentBackground) {
+        frame.style.background = background;
+        environmentBackground = background;
+      }
       canvas.style.filter = `brightness(${0.84 + environmentState.lightLevel * 0.16})`;
-      // Rebuild the soil geometry on the rain edge itself, without waiting for a later plot refresh.
+      // Keep gameplay rain state separate from its five-second visual blend.
       if (rainChanged || phaseChanged || sunflowerTurnChanged) uploadWorld();
     },
     selectGalleryFlower(index, customColor = null) {
