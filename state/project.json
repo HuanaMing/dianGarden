@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": null,
-  "nextAction": "任務178已完成並通過 GitHub Actions Playwright browser-smoke 驗收；等待使用者指定下一項工作。",
+  "activeTask": "175-collapsed-ui-and-manual-plot-visuals",
+  "nextAction": "任務178已完成並通過 Playwright 驗收；既有任務175仍待使用者確認桌面／手機視覺效果。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
