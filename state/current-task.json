@@ -1,7 +1,7 @@
 {
-  "name": "任務176：花園頭像、觸控操作與花卉模型模組化",
-  "status": "completed",
+  "name": "任務177：依六層皺褶花瓣邏輯重做牡丹花頭",
+  "status": "in_progress",
   "pendingApprovals": [],
-  "nextAction": "任務176已完成並歸檔。任務172（縮短 Playwright 驗收流程）仍在 tasks/inbox，等待使用者決定是否開始。",
-  "result": "7 項頭像與觸控需求已完成，並依使用者確認的方案 A 將 11 種花卉的莖葉與花頭模型拆至 src/model/；主畫面與圖鑑共用模型模組。Playwright run 39892706658 成功，11 種模型在主場景與圖鑑的檢查均通過，browserErrors 為空。"
+  "nextAction": "以使用者提供的六層花瓣網格邏輯替換牡丹成熟花頭，保留莖葉與模型註冊架構，並等待 Playwright 完整驗收。",
+  "result": "已確認任務172已完成並歸檔；目前開始任務177。"
 }
