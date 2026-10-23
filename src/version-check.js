@@ -106,16 +106,16 @@
           !parsedDocument.querySelector('script[src$="version-check.js"], script[src*="version-check.js?"]')) {
         throw new Error('取得的頁面內容不完整，已保留目前遊戲');
       }
+      // Do not replace the live document with document.write(): that keeps the
+      // current JavaScript realm alive, so old animation loops can overlap the
+      // newly initialized game and make different crops flicker on the same plot.
       const cacheToken = freshVersion.replace(',', '-') + '-' + requestToken;
-      addCacheBuster(parsedDocument, response.url || pageUrl.href, cacheToken);
       dismissedVersion = '';
-      renderVersionInfo('已取得最新檔案，正在重新載入…');
-      // Run the existing pagehide save handler before replacing the document.
-      window.dispatchEvent(new Event('pagehide'));
-      const freshHtml = '<!doctype html>\n' + parsedDocument.documentElement.outerHTML;
-      document.open();
-      document.write(freshHtml);
-      document.close();
+      renderVersionInfo('已取得最新檔案，正在完整重新載入…');
+      // A real navigation tears down the old game, WebGL renderer, and RAF loops.
+      // The unique URL also forces the browser to request a fresh HTML document.
+      pageUrl.searchParams.set('__dg_force_refresh', cacheToken);
+      window.location.replace(pageUrl.href);
     } catch (_) {
       isRefreshing = false;
       if (forceUpdateButton) {
