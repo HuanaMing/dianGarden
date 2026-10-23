@@ -460,3 +460,18 @@ input, [contenteditable="true"]{
 .touch-feedback-dot{width:76px;height:76px;border:0;background:rgba(156,201,217,.62);box-shadow:none;animation:touch-dot-fade .5s ease-out forwards}
 .touch-hold-ring{visibility:hidden}
 .touch-hold-ring.is-visible{visibility:visible}
+
+
+/* 任務183：設定面板版本資訊與強制更新。 */
+.settings-panel{max-height:min(82vh,620px);overflow-y:auto;overscroll-behavior:contain}
+.version-settings{display:grid;gap:8px;margin:0 0 10px;padding:10px;border:1px solid #e4ecdf;border-radius:10px;background:#f8faf3}
+.version-settings h3{margin:0;color:#527763;font-size:12px}
+.version-details{display:grid;gap:6px;margin:0}
+.version-details>div{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.version-details dt{color:#819588;font-size:10px;font-weight:700}
+.version-details dd{margin:0;color:#426a57;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;text-align:right}
+.version-check-status{margin:0;color:#819588;font-size:10px;line-height:1.5}
+.version-check-status.has-version-update{color:#9b7130}
+.version-check-status.has-version-error{color:#a66450}
+.force-update-button{width:100%;min-height:36px;border:0;border-radius:9px;background:#477451;color:#fff;font-size:11px;font-weight:800;cursor:pointer}
+.force-update-button:disabled{opacity:.65;cursor:wait}
