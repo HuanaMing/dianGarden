@@ -65,8 +65,8 @@ try {
   if (await mouseRing.evaluate(element => getComputedStyle(element).visibility) !== 'hidden') throw new Error('PC 長按環未延遲 200ms 顯示');
   await page.waitForTimeout(120);
   if (await mouseRing.evaluate(element => getComputedStyle(element).visibility) !== 'visible') throw new Error('PC 長按環在按下 200ms 後仍未顯示');
-  const mouseRingStyle = await mouseRing.locator('.touch-hold-progress').evaluate(element => ({ width: Number.parseFloat(getComputedStyle(element.closest('.touch-hold-ring')).width), radius: Number(element.getAttribute('r')), strokeWidth: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-width')), riseDuration: getComputedStyle(element.closest('.touch-hold-ring')).animationDuration }));
-  if (mouseRingStyle.width !== 120 || mouseRingStyle.radius !== 17 || mouseRingStyle.strokeWidth !== 4 || mouseRingStyle.riseDuration !== '0.5s') throw new Error('PC 長按環尺寸、線寬或上移動畫錯誤：' + JSON.stringify(mouseRingStyle));
+  const mouseRingStyle = await mouseRing.locator('.touch-hold-progress').evaluate(element => ({ width: Number.parseFloat(getComputedStyle(element.closest('.touch-hold-ring')).width), radius: Number(element.getAttribute('r')), strokeWidth: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-width')), riseDuration: getComputedStyle(element.closest('.touch-hold-ring')).animationDuration, riseDelay: getComputedStyle(element.closest('.touch-hold-ring')).animationDelay }));
+  if (mouseRingStyle.width !== 120 || mouseRingStyle.radius !== 17 || mouseRingStyle.strokeWidth !== 4 || mouseRingStyle.riseDuration !== '0.3s' || mouseRingStyle.riseDelay !== '0.2s') throw new Error('PC 長按環尺寸、線寬或上移動畫錯誤：' + JSON.stringify(mouseRingStyle));
   await page.mouse.up();
   checks.push('PC 長按環延遲 200ms 顯示、內徑30px／外徑38px，並於500ms上移50px');
 
@@ -283,8 +283,8 @@ try {
   if (!worldSource.includes('plotWasInMoveModeAtPointerDown') || !worldSource.includes('!plotWasInMoveModeAtPointerDown')) throw new Error('地塊移動模式短按切換高度模式的修正未包含');
   if (!worldSource.includes('rotateHoldGesture') || worldSource.includes('rotateTouchGesture') || !worldSource.includes('if (pointerPlotIndex === null && dockHitAtPointer === null)')) throw new Error('PC 與手機的相機手勢尚未統一');
   const styleSource = await fs.readFile(new URL('../src/styles.css', import.meta.url), 'utf8');
-  if (!styleSource.includes('@keyframes touch-ring-rise{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}99%{transform:translate(-50%,-50%) translateY(-49.5px) scale(.55)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}}')) throw new Error('長按環上升縮小、頂端恢復原尺寸的動畫未設定');
-  checks.push('長按環上升時內徑逐漸縮小，頂端填滿成為實心圓');
+  if (!styleSource.includes('@keyframes touch-ring-rise{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}66.666%{transform:translate(-50%,-50%) translateY(-50px) scale(.55)}99.9%{transform:translate(-50%,-50%) translateY(-50px) scale(.35)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}}') || !styleSource.includes('.touch-hold-ring{animation:touch-ring-rise .3s linear .2s forwards}')) throw new Error('長按環延遲200ms後上升、頂端停留縮小並恢復原尺寸的動畫未設定');
+  checks.push('長按環前200ms隱藏，接著200ms上升，最後100ms停留縮小並於結尾恢復原尺寸');
   if (!worldSource.includes("heightEdit?.kind === 'dock' && heightEdit.index === pressedDock && heightEdit.mode === 'move'") || !worldSource.includes('screenToGround(pointerStartX, pointerStartY, 1.36 + getDockHeight(pressedDock))')) throw new Error('無人機坪台移動模式未支援直接拖曳或未使用坪台高度平面');
   if (worldSource.includes('if (dragPreview && Number.isInteger(dragPreview.index))')) throw new Error('拖曳預覽仍保留重複十字箭頭');
   checks.push('手機長按環形進度、內徑30px／外徑38px、放開回饋點及多指獨立回饋通過');
