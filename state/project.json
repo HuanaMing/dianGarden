@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 186,
-  "nextAction": "任務186：調整點擊回饋漸層、長按計時環及無人機坪台拖曳；程式與瀏覽器驗收已更新，待確認 GitHub Actions 部署與測試結果。",
+  "nextAction": "任務186已完成並通過 Playwright 瀏覽器驗收與 Pages 部署；等待使用者確認實際遊玩時的視覺與坪台拖曳手感。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
