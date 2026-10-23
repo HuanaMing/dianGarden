@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 171,
-  "nextAction": "任務171第4段已通過瀏覽器驗收；已改善 GitHub Actions 的 Playwright 安裝流程並加入 npm／瀏覽器快取。等待 run 39879113329 完成驗收，再繼續盤點下一段無引用 CSS。",
+  "nextAction": "繼續完成任務171：清理反覆修改遺留的無用程式碼，逐段提交並通過 Playwright 驗收。任務171全部完成後，再執行 inbox 任務172：量測並優化 GitHub Actions Playwright 瀏覽器驗收流程的耗時。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
