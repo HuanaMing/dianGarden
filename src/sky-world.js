@@ -221,8 +221,7 @@
 
 
 
-  // Dedicated stem/leaf builders are indexed by the flower catalog. Null entries
-  // preserve the existing geometry until each species receives its own model.
+  // Flower-specific geometry lives in src/model/ and is dispatched through the shared registry.
   function addFlowerModel(positions, colors, x, z, flowerIndex, stage, heightMultiplier = 1, customColor = null) {
     const modelPositions = [];
     const modelColors = [];
