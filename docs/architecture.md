@@ -213,4 +213,4 @@ GitHub Pages 工作流程在上傳 `src/` 發布產物前，以 `Asia/Taipei` �
 
 ## 設定中的版本資訊與立即更新
 
-設定面板由 `index.html` 提供目前版本、最新版本與立即更新按鈕；`version-check.js` 從同源 `version.json` 取得最新版本，並使用獨立 localStorage key 顯示目前已載入／已確認版本。立即更新會以 `cache: no-store` 取得最新 HTML，為同源 CSS、JavaScript、圖片及 source 資源 URL 加上唯一查詢參數，再以新文件內容取代目前文件。替換前會觸發既有 `pagehide` 儲存處理。這是網頁端可實作的 Ctrl+F5 近似流程，不是瀏覽器原生的硬重新載入指令；若更新抓取失敗，保留目前遊戲並提示稍後重試。
+部署工作流程同時產生 `version.json` 與 `build-version.js`，後者把實際部署版本嵌入前端，以區分目前載入的程式版本與伺服器最新版本。設定面板由 `index.html` 提供目前版本、最新版本與立即更新按鈕；`version-check.js` 從同源 `version.json` 取得最新版本。立即更新會以 `cache: no-store` 取得最新 HTML，為同源 CSS、JavaScript、圖片及 source 資源 URL 加上唯一查詢參數，再以新文件內容取代目前文件。替換前會觸發既有 `pagehide` 儲存處理。這是網頁端可實作的 Ctrl+F5 近似流程，不是瀏覽器原生的硬重新載入指令；若更新抓取失敗，保留目前遊戲並提示稍後重試。
