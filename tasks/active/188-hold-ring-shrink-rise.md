@@ -11,4 +11,5 @@
 
 ## 驗收條件
 - 自動驗收檢查填充動畫、50px位移與既有環尺寸／進度。
-- GitHub Actions 瀏覽器驗收及 Pages 部署結果待確認。
+- 瀏覽器自動驗收成功：[run 39997966764](https://github.com/HuanaMing/dianGarden/actions/runs/39997966764)。
+- GitHub Pages 部署成功：[run 39997951231](https://github.com/HuanaMing/dianGarden/actions/runs/39997951231)。
