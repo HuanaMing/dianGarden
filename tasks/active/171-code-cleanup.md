@@ -17,10 +17,11 @@
 - 第 4 段驗收：[GitHub Actions run 39878241016](https://github.com/HuanaMing/dianGarden/actions/runs/39878241016) 已確認成功（conclusion: success）。
 - 驗收流程改善：因 Playwright 安裝步驟反覆耗時，已在 `.github/workflows/browser-check.yml` 加入 npm／Playwright 瀏覽器快取，並拆分套件、系統依賴與 Chromium 安裝步驟。
 - 驗收流程改善提交：`1e6bfef3d173a8f2787f321e45d338d6fb682a54`
-- 新版流程驗證：[GitHub Actions run 39879113329](https://github.com/HuanaMing/dianGarden/actions/runs/39879113329) 執行中；快取與 Playwright 套件安裝已完成，正在安裝 Chromium 系統依賴，尚待後續瀏覽器測試結果。
+- 第 5 段（待驗收）：移除手機版 media query 中的 `.cloud-a{left:4%}`；盤點 `src/index.html`、`src/game.js`、`src/sky-world.js`、`src/sky-environment.js`、`src/encyclopedia.html`、`src/flower-catalog.js` 均無 `.cloud-a` 引用，只有 `src/styles.css` 存在該規則。提交：`64cb71774009a97030aed6f910230d40a27d2b4e`。Playwright run `39879376599` 正在驗收，尚未判定通過。
+- 新版流程驗證：[GitHub Actions run 39879113329](https://github.com/HuanaMing/dianGarden/actions/runs/39879113329) 已完成，整體瀏覽器驗收成功。
 
 ## 下一步
-先等待 run 39879113329 完成並確認瀏覽器驗收成功，再盤點下一段無引用 CSS。不要在新版驗收結果出爐前繼續刪除程式碼。
+等待第 5 段 Playwright run 39879376599 完成；成功後再盤點下一段無引用 CSS，失敗則先調查並修復或還原。
 
 ## 原則
 - 不以「看起來沒用」作為刪除依據；先查詢宣告、引用、事件綁定、跨模組介面與動態呼叫。
