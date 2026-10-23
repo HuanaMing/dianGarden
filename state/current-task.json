@@ -2,6 +2,6 @@
   "name": "任務171：清理反覆修改遺留的無用程式碼",
   "status": "active",
   "pendingApprovals": [],
-  "nextAction": "等待新版 Playwright 快取流程 run 39879113329 完成；若瀏覽器驗收成功，再盤點下一段已確認無引用的單一 CSS 規則；若失敗，先調查並修復。",
-  "result": "第1、2段驗收通過；第3段移除 .hero-cloud 且 GitHub Actions 成功。第4段移除無引用的 .cloud-a／.cloud-b 定位規則，run 39878241016 已成功。另於 commit 1e6bfef3d173a8f2787f321e45d338d6fb682a54 為 GitHub Actions 加入 npm／Playwright 瀏覽器快取並拆分安裝步驟；新版 run 39879113329 正在驗證。"
+  "nextAction": "等待 Playwright run 39886538682 驗收任務171第12段（移除無引用的 JS 常數、函式、區域變數與空字串佔位）。若成功，繼續檢查 CSS 與 JS 中有充分證據的無用程式；若失敗，先調查修復或還原。",
+  "result": "第1至10段已通過 Playwright 驗收。第11段移除 styles.css 的空 @media 區塊，run 39886341458 已成功。第12段在 commit c4fd023ffa0c5d5319605d20f9c14898092623db 中清理 src/game.js 的空 rainStatus 宣告與模板插值，以及 src/sky-world.js 中沒有任何引用的 DRONE_ROTOR_RADIUS、hasDroneAnimations() 和 leafBase；run 39886538682 等待驗收。任務172已建立於 tasks/inbox，等待任務171完成後執行。"
 }
