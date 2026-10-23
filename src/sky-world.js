@@ -80,6 +80,24 @@
   let plotPositions = galleryMode ? [{ x: 0, z: 0, y: 0 }] : [{ x: -1, z: 0, y: 0 }, { x: 0, z: 0, y: 0 }, { x: 1, z: 0, y: 0 }];
   let galleryFlowerIndex = 0;
   let plotStates = galleryMode ? [{ crop: 0, plantedAt: 0, elapsed: 1, growTime: 1, plantHeight: 1 }] : [];
+  // A planted crop may only advance visually until its planting identity changes.
+  // This prevents transient stale growth snapshots from swapping a mature flower back to a seed.
+  const plotVisualStages = [];
+  function getPlotVisualStage(plot, index) {
+    if (!plot || !Number.isInteger(plot.crop) || !Number.isFinite(plot.plantedAt)) {
+      plotVisualStages[index] = null;
+      return 0;
+    }
+    const identity = `${plot.crop}:${plot.plantedAt}`;
+    const elapsed = Number.isFinite(plot.elapsed) ? Math.max(0, plot.elapsed) : Math.max(0, Date.now() - plot.plantedAt);
+    const growTime = Number.isFinite(plot.growTime) && plot.growTime > 0 ? plot.growTime : 15_000;
+    const progress = Math.min(1, elapsed / growTime);
+    let stage = progress >= 1 ? 2 : progress >= 0.28 ? 1 : 0;
+    const previous = plotVisualStages[index];
+    if (previous?.identity === identity) stage = Math.max(stage, previous.stage);
+    plotVisualStages[index] = { identity, stage };
+    return stage;
+  }
   let environmentState = { phase: 'day', isDay: true, isRaining: false, rainBlend: 0, daylightProgress: 1, phaseProgress: 0, lightLevel: 1, sunflowerYaw: 0 };
   let environmentBackground = '';
   const SKY_PALETTES = {
@@ -923,10 +941,7 @@
         addBox(positions, colors, x + frameHalf - edge, y, z - frameHalf + edge, x + frameHalf, y + 0.018, z + frameHalf - edge, gold);
       }
       if (plot && Number.isInteger(plot.crop) && Number.isFinite(plot.plantedAt)) {
-        const elapsed = Number.isFinite(plot.elapsed) ? plot.elapsed : Math.max(0, Date.now() - plot.plantedAt);
-        const growTime = Number.isFinite(plot.growTime) && plot.growTime > 0 ? plot.growTime : 15_000;
-        const progress = Math.min(1, elapsed / growTime);
-        const stage = progress >= 1 ? 2 : progress >= 0.28 ? 1 : 0;
+        const stage = getPlotVisualStage(plot, i);
         const flowerVertexStart = positions.length;
         addFlowerModel(positions, colors, x, z, plot.crop, stage, Number.isFinite(plot.plantHeight) ? plot.plantHeight : 1, plot.customColor);
         for (let vertex = flowerVertexStart + 1; vertex < positions.length; vertex += 3) positions[vertex] += plantBaseY;
