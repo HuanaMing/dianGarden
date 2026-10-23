@@ -249,7 +249,7 @@
   const gardenNameDisplay = document.querySelector('#garden-name-display');
   const gardenAvatar = document.querySelector('#garden-avatar');
   const avatarModeSelect = document.querySelector('#avatar-mode');
-  const avatarFlowerSelect = document.querySelector('#avatar-flower');
+  const avatarFlowerOptions = document.querySelector('#avatar-flower-options');
   const gardenNameEditor = document.querySelector('#garden-name-editor');
   const gardenNameInput = document.querySelector('#garden-name-input');
   const resetProgressButton = document.querySelector('#reset-progress');
@@ -598,18 +598,44 @@
     gardenAvatar.textContent = flower.emoji || '🌼';
     gardenAvatar.setAttribute('aria-label', `花園頭像：${flower.name}`);
   }
-  function initializeAvatarSettings() {
-    if (!avatarModeSelect || !avatarFlowerSelect) { updateAvatarDisplay(); return; }
-    avatarFlowerSelect.replaceChildren();
+  function renderAvatarFlowerOptions() {
+    if (!avatarFlowerOptions) return;
+    avatarFlowerOptions.replaceChildren();
     crops.forEach((flower, index) => {
-      const option = document.createElement('option');
-      option.value = String(index);
-      option.textContent = `${flower.emoji || '🌼'} ${flower.name}`;
-      avatarFlowerSelect.append(option);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'avatar-flower-option';
+      button.dataset.avatarCrop = String(index);
+      button.setAttribute('aria-label', flower.name);
+      button.setAttribute('aria-pressed', String(index === game.avatarCrop));
+      button.disabled = game.avatarMode !== 'manual';
+      if (flower.image) {
+        const image = document.createElement('img');
+        image.className = 'avatar-flower-image';
+        image.src = flower.image;
+        image.alt = '';
+        image.width = 32;
+        image.height = 32;
+        image.decoding = 'async';
+        image.style.imageRendering = 'pixelated';
+        button.append(image);
+      } else {
+        const emoji = document.createElement('span');
+        emoji.className = 'avatar-flower-emoji';
+        emoji.textContent = flower.emoji || '🌼';
+        button.append(emoji);
+      }
+      const name = document.createElement('span');
+      name.className = 'avatar-flower-name';
+      name.textContent = flower.name;
+      button.append(name);
+      avatarFlowerOptions.append(button);
     });
+  }
+  function initializeAvatarSettings() {
+    if (!avatarModeSelect || !avatarFlowerOptions) { updateAvatarDisplay(); return; }
     avatarModeSelect.value = game.avatarMode;
-    avatarFlowerSelect.value = String(game.avatarCrop);
-    avatarFlowerSelect.disabled = game.avatarMode !== 'manual';
+    renderAvatarFlowerOptions();
     updateAvatarDisplay();
   }
   function updateGardenName() {
@@ -1006,18 +1032,20 @@
   });
   avatarModeSelect?.addEventListener('change', () => {
     game.avatarMode = avatarModeSelect.value === 'manual' ? 'manual' : 'auto';
-    avatarFlowerSelect.disabled = game.avatarMode !== 'manual';
+    renderAvatarFlowerOptions();
     save();
     updateAvatarDisplay();
     notify(game.avatarMode === 'manual' ? '已切換為自訂花卉頭像。' : '已切換為自動頭像，會依種植數量最多的花更新。');
   });
-  avatarFlowerSelect?.addEventListener('change', () => {
-    const cropIndex = Number(avatarFlowerSelect.value);
+  avatarFlowerOptions?.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-avatar-crop]');
+    if (!button || button.disabled) return;
+    const cropIndex = Number(button.dataset.avatarCrop);
     if (!Number.isInteger(cropIndex) || cropIndex < 0 || cropIndex >= crops.length) return;
     game.avatarCrop = cropIndex;
     game.avatarMode = 'manual';
     avatarModeSelect.value = 'manual';
-    avatarFlowerSelect.disabled = false;
+    renderAvatarFlowerOptions();
     save();
     updateAvatarDisplay();
   });
