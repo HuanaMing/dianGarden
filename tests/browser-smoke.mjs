@@ -406,15 +406,18 @@ try {
   }));
   await forceUpdatePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   await forceUpdatePage.locator('#settings-toggle').click();
+  forceUpdateRequests.length = 0;
   await forceUpdatePage.locator('#force-update-button').click();
   await forceUpdatePage.waitForURL(url => url.searchParams.has('__dg_force_refresh'), { timeout: 10000 });
   await forceUpdatePage.waitForLoadState('domcontentloaded', { timeout: 10000 });
   await forceUpdatePage.locator('#sky-canvas').waitFor({ state: 'visible', timeout: 10000 });
   await forceUpdatePage.waitForTimeout(700);
-  if (!forceUpdateRequests.some(request => request.path.endsWith('/game.js')) ||
-      !forceUpdateRequests.some(request => request.path.endsWith('/version-check.js')) ||
-      !forceUpdateRequests.some(request => request.path.endsWith('/styles.css'))) {
-    throw new Error('立即更新後遊戲頁面或核心資源未重新載入：' + JSON.stringify(forceUpdateRequests));
+  const coreResourcePaths = ['/game.js', '/version-check.js', '/styles.css'];
+  for (const path of coreResourcePaths) {
+    const request = forceUpdateRequests.find(item => item.path.endsWith(path));
+    if (!request || !new URLSearchParams(request.search).has('v')) {
+      throw new Error('立即更新後核心資源沒有使用部署版本參數：' + path + ' ' + JSON.stringify(forceUpdateRequests));
+    }
   }
   if (await forceUpdatePage.evaluate(() => document.querySelectorAll('#sky-canvas').length) !== 1) {
     throw new Error('立即更新後頁面出現重複遊戲畫布');
