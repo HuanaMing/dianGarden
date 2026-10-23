@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 176,
-  "nextAction": "任務176執行中：頭像設定、手機觸控回饋、手機操作手勢、移除縮放按鈕與圖鑑頁面縮放限制已完成，Playwright run 39890619739 通過。花卉模型拆分方案 A 已向使用者確認，等待回覆後再進行架構重構。",
+  "activeTask": null,
+  "nextAction": "任務176已完成並歸檔，包含花園頭像、手機觸控操作及 11 種花卉模型模組化。任務172（縮短 Playwright 驗收流程）仍在 tasks/inbox，等待使用者確認是否開始。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
