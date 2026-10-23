@@ -1,9 +1,9 @@
 {
   "name": "任務179：高度模式、跨裝置操作與點陣頭像修正",
-  "status": "in_progress",
+  "status": "completed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "等待 GitHub Actions Playwright browser-smoke 驗收；若失敗，依 log 修正後重跑。",
-  "result": "已修正移動模式短按切換高度模式；PC 與手機共用長按環、空地長按旋轉與一般拖曳平移；環形線寬增至 6；自動頭像隱藏選花介面，頁首頭像改用 PNG 點陣素材。已更新 browser-smoke，驗收尚未完成。"
+  "nextAction": "任務179已完成；任務175仍在 tasks/inbox，等待使用者決定是否繼續。",
+  "result": "修正移動模式短按切換高度模式；PC 與手機共用長按環、空地長按旋轉與一般拖曳平移；環形線寬增至 6；自動頭像隱藏選花介面，頁首頭像改用花卉 PNG 點陣素材。GitHub Actions run 39897572217 成功，browserErrors 為空，截圖 artifact 約 2.90 MB。"
 }
