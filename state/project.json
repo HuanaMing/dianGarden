@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 187,
-  "nextAction": "任務187長按環內徑30px、外徑38px及上移50px已通過瀏覽器驗收並部署；等待使用者實機確認手感。",
+  "activeTask": 188,
+  "nextAction": "任務187長按環內徑30px、外徑38px及上移50px已通過瀏覽器驗收並部署；任務188縮放動畫已通過瀏覽器驗收並部署；等待使用者實機確認手感。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
