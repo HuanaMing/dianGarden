@@ -36,11 +36,30 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: 產生部署版本檔（台灣時區）
+      - name: 產生部署版本檔並輸出時間診斷
+        env:
+          TZ: Asia/Taipei
         run: |
-          VERSION="$(TZ=Asia/Taipei date +'%y%m%d,%H')"
-          printf '{\n  "version": "%s"\n}\n' "$VERSION" > src/version.json
+          TAIPEI_TIME="$(date '+%y%m%d,%H:%M:%S')"
+          UTC_TIME="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          RUN_ID="${GITHUB_RUN_ID}"
+          RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT}"
+          COMMIT_SHA="${GITHUB_SHA}"
+          VERSION="${TAIPEI_TIME}-r${RUN_ID}a${RUN_ATTEMPT}"
+
+          printf '{\n  "version": "%s",\n  "taipei_time": "%s",\n  "utc_time": "%s",\n  "run_id": "%s",\n  "run_attempt": "%s",\n  "commit_sha": "%s"\n}\n' \
+            "$VERSION" "$TAIPEI_TIME" "$UTC_TIME" "$RUN_ID" "$RUN_ATTEMPT" "$COMMIT_SHA" > src/version.json
           printf "window.__DIANGARDEN_BUILD_VERSION__ = '%s';\n" "$VERSION" > src/build-version.js
+
+          echo "Version diagnostic:"
+          echo "  Taiwan time: $TAIPEI_TIME (Asia/Taipei)"
+          echo "  UTC time: $UTC_TIME"
+          echo "  Version written: $VERSION"
+          echo "  GitHub run ID: $RUN_ID"
+          echo "  GitHub run attempt: $RUN_ATTEMPT"
+          echo "  Commit SHA: $COMMIT_SHA"
+          echo "  version.json content:"
+          cat src/version.json
       - name: 準備花卉像素圖資產
         run: mkdir -p src/assets/flowers && cp assets/flowers/*.png src/assets/flowers/
       - name: Upload artifact
