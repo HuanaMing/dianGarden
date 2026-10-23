@@ -50,40 +50,6 @@
     if (typeof payload.version !== 'string' || !/^(?:\d{6},\d{2}(?::\d{2}:\d{2}-r\d+a\d+)?|\d{6}, \d{3,})$/.test(payload.version)) throw new Error('版本檔格式錯誤');
     return payload.version;
   }
-  function addCacheBuster(documentNode, baseUrl, token) {
-    const selectors = [
-      ['script[src]', 'src'], ['link[rel~="stylesheet"][href]', 'href'],
-      ['img[src]', 'src'], ['source[src]', 'src'], ['video[src]', 'src'], ['audio[src]', 'src'],
-    ];
-    for (const [selector, attribute] of selectors) {
-      documentNode.querySelectorAll(selector).forEach((element) => {
-        const rawUrl = element.getAttribute(attribute);
-        if (!rawUrl || rawUrl.startsWith('data:') || rawUrl.startsWith('blob:')) return;
-        try {
-          const resourceUrl = new URL(rawUrl, baseUrl);
-          if (resourceUrl.origin !== window.location.origin || !['http:', 'https:'].includes(resourceUrl.protocol)) return;
-          resourceUrl.searchParams.set('__dg_force_refresh', token);
-          element.setAttribute(attribute, resourceUrl.href);
-        } catch (_) {}
-      });
-    }
-    documentNode.querySelectorAll('[srcset]').forEach((element) => {
-      const original = element.getAttribute('srcset');
-      if (!original) return;
-      const updated = original.split(',').map((candidate) => {
-        const parts = candidate.trim().split(/\s+/);
-        try {
-          const resourceUrl = new URL(parts[0], baseUrl);
-          if (resourceUrl.origin === window.location.origin && ['http:', 'https:'].includes(resourceUrl.protocol)) {
-            resourceUrl.searchParams.set('__dg_force_refresh', token);
-            parts[0] = resourceUrl.href;
-          }
-        } catch (_) {}
-        return parts.join(' ');
-      }).join(', ');
-      element.setAttribute('srcset', updated);
-    });
-  }
   async function forceRefresh() {
     if (isRefreshing) return;
     isRefreshing = true;
@@ -113,7 +79,8 @@
       dismissedVersion = '';
       renderVersionInfo('已取得最新檔案，正在完整重新載入…');
       // A real navigation tears down the old game, WebGL renderer, and RAF loops.
-      // The unique URL also forces the browser to request a fresh HTML document.
+      // The unique page URL fetches current HTML; deployment-versioned script/style URLs ensure
+      // the browser also requests new JavaScript and CSS instead of reusing old cache entries.
       pageUrl.searchParams.set('__dg_force_refresh', cacheToken);
       window.location.replace(pageUrl.href);
     } catch (_) {
