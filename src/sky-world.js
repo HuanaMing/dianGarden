@@ -151,22 +151,33 @@
   }
   function beginPointerFeedback(event) {
     const point = feedbackPoint(event);
-    const state = { startX: event.clientX, startY: event.clientY, moved: false, ring: null };
+    const state = { startX: event.clientX, startY: event.clientY, moved: false, ring: null, revealTimer: null };
+    // The progress animation begins on pointerdown; only its visibility is delayed.
     state.ring = makeHoldRing(point.x, point.y);
     activePointerFeedback.set(event.pointerId, state);
+    state.revealTimer = setTimeout(() => {
+      if (activePointerFeedback.get(event.pointerId) === state && !state.moved) state.ring?.classList.add('is-visible');
+    }, 200);
+  }
+  function removePointerHoldRing(state) {
+    if (!state) return;
+    clearTimeout(state.revealTimer);
+    state.revealTimer = null;
+    state.ring?.remove();
+    state.ring = null;
   }
   function updatePointerFeedback(event) {
     const state = activePointerFeedback.get(event.pointerId);
     if (!state || state.moved || Math.hypot(event.clientX - state.startX, event.clientY - state.startY) < 5) return;
     state.moved = true;
-    state.ring?.remove(); state.ring = null;
+    removePointerHoldRing(state);
   }
   function clearPointerHoldRings() {
-    for (const state of activePointerFeedback.values()) { state.ring?.remove(); state.ring = null; }
+    for (const state of activePointerFeedback.values()) removePointerHoldRing(state);
   }
   function endPointerFeedback(event) {
     const state = activePointerFeedback.get(event.pointerId);
-    state?.ring?.remove();
+    removePointerHoldRing(state);
     activePointerFeedback.delete(event.pointerId);
     const point = feedbackPoint(event);
     const dot = document.createElement('span');
@@ -177,7 +188,7 @@
   }
   function cancelPointerFeedback(event) {
     const state = activePointerFeedback.get(event.pointerId);
-    state?.ring?.remove();
+    removePointerHoldRing(state);
     activePointerFeedback.delete(event.pointerId);
   }
   let pinchStartDistance = 0;
