@@ -50,15 +50,24 @@ jobs:
 
           # Count successful deployments earlier today in Taipei time.
           # Exclude this run; the current deployment receives the next number.
-          RUNS_JSON="$(curl --fail-with-body --silent --show-error -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GH_TOKEN}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs?branch=main&per_page=100&created=%3E%3D${MIDNIGHT_UTC}")"
           SUCCESSFUL_TODAY=0
-          while IFS= read -r CREATED_AT; do
-            [ -n "$CREATED_AT" ] || continue
-            RUN_DATE="$(date -d "$CREATED_AT" '+%y%m%d')"
-            if [ "$RUN_DATE" = "$TAIPEI_DATE" ]; then
-              SUCCESSFUL_TODAY=$((SUCCESSFUL_TODAY + 1))
-            fi
-          done < <(printf '%s' "$RUNS_JSON" | jq -r --arg current "$RUN_ID" '.workflow_runs[] | select(.workflow_id == 391530417 and (.id | tostring) != $current and .status == "completed" and .conclusion == "success") | .created_at')
+          PAGE=1
+          while :; do
+            RUNS_JSON="$(curl --fail-with-body --silent --show-error -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GH_TOKEN}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs?branch=main&per_page=100&page=${PAGE}&created=%3E%3D${MIDNIGHT_UTC}")"
+            PAGE_COUNT="$(printf '%s' "$RUNS_JSON" | jq '.workflow_runs | length')"
+            [ "$PAGE_COUNT" -gt 0 ] || break
+
+            while IFS= read -r CREATED_AT; do
+              [ -n "$CREATED_AT" ] || continue
+              RUN_DATE="$(date -d "$CREATED_AT" '+%y%m%d')"
+              if [ "$RUN_DATE" = "$TAIPEI_DATE" ]; then
+                SUCCESSFUL_TODAY=$((SUCCESSFUL_TODAY + 1))
+              fi
+            done < <(printf '%s' "$RUNS_JSON" | jq -r --arg current "$RUN_ID" '.workflow_runs[] | select(.workflow_id == 391530417 and (.id | tostring) != $current and .status == "completed" and .conclusion == "success") | .created_at')
+
+            [ "$PAGE_COUNT" -lt 100 ] && break
+            PAGE=$((PAGE + 1))
+          done
 
           UPDATE_NUMBER="$(printf '%03d' "$((SUCCESSFUL_TODAY + 1))")"
           VERSION="${TAIPEI_DATE}, ${UPDATE_NUMBER}"
