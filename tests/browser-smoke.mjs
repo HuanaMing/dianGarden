@@ -353,7 +353,7 @@ try {
   const forceUpdateRequests = [];
   forceUpdatePage.on('request', request => {
     const url = new URL(request.url());
-    if (/\\.(js|css)$/i.test(url.pathname) && url.searchParams.has('__dg_force_refresh')) forceUpdateRequests.push(url.pathname);
+    if (/\.(js|css)$/i.test(url.pathname) && url.searchParams.has('__dg_force_refresh')) forceUpdateRequests.push(url.pathname);
   });
   await forceUpdatePage.route(url => url.pathname.endsWith('/version.json'), route => route.fulfill({
     status: 200, contentType: 'application/json', body: JSON.stringify({ version: '261023,22' }),
@@ -368,6 +368,7 @@ try {
   await forceUpdatePage.locator('#sky-canvas').waitFor({ state: 'visible', timeout: 10000 });
   await forceUpdatePage.waitForTimeout(700);
   if (!forceUpdateRequests.some(path => path.endsWith('/game.js')) ||
+      !forceUpdateRequests.some(path => path.endsWith('/build-version.js')) ||
       !forceUpdateRequests.some(path => path.endsWith('/version-check.js')) ||
       !forceUpdateRequests.some(path => path.endsWith('/styles.css'))) {
     throw new Error('立即更新未為遊戲 JavaScript 與 CSS 加入 cache-busting query：' + JSON.stringify(forceUpdateRequests));
