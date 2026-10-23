@@ -158,7 +158,7 @@
     ring.style.top = `${y}px`;
     const wreath = document.createElement('img');
     wreath.className = 'touch-hold-wreath';
-    wreath.src = '../assets/花草環.webp';
+    wreath.src = '../assets/花草還.webp';
     wreath.alt = '';
     wreath.draggable = false;
     wreath.setAttribute('aria-hidden', 'true');
