@@ -15,6 +15,7 @@
     wrapper.setAttribute('role', 'status');
     wrapper.setAttribute('aria-live', 'polite');
     wrapper.setAttribute('aria-label', '遊戲版本更新');
+    wrapper.className = 'diangarden-version-update';
     Object.assign(wrapper.style, {
       position: 'fixed',
       zIndex: '10000',
