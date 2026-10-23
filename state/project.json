@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 181,
-  "nextAction": "執行任務181：完成 version.json 自動產生、遊戲版本檢查提示與瀏覽器驗收；任務182雲端存檔留在 inbox，待任務181驗收後再開始。",
+  "activeTask": null,
+  "nextAction": "任務181已完成並歸檔，Pages 部署與 Playwright 驗收成功。任務182（匿名遊玩後綁定 Google、自動雙向雲端同步、保留離線遊玩）已列入 inbox；開始前先盤點現有存檔格式與衝突策略，未經批准不建立付費資源。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
