@@ -238,19 +238,26 @@ try {
   const ringGeometry = await touchPage.locator('.touch-hold-progress').evaluate(element => ({
     radius: Number(element.getAttribute('r')),
     strokeWidth: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-width')),
+    stroke: getComputedStyle(element).stroke,
+    strokeOpacity: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-opacity')),
     viewBox: element.ownerSVGElement.getAttribute('viewBox'),
     width: Number.parseFloat(getComputedStyle(element.closest('.touch-hold-ring')).width),
+    dashArray: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-dasharray')),
     dashOffset: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-dashoffset')),
+    mask: getComputedStyle(element).maskImage,
+    trackCount: element.ownerSVGElement.querySelectorAll('.touch-hold-track').length,
   }));
-  if (ringGeometry.radius !== 48 || ringGeometry.strokeWidth !== 6 || ringGeometry.viewBox !== '0 0 120 120' || ringGeometry.width !== 120) throw new Error(`長按環尺寸或雙倍線寬不符：${JSON.stringify(ringGeometry)}`);
+  if (ringGeometry.radius !== 22 || ringGeometry.strokeWidth !== 6 || ringGeometry.viewBox !== '0 0 120 120' || ringGeometry.width !== 120
+    || ringGeometry.stroke.toLowerCase() !== 'rgb(93, 129, 199)' || ringGeometry.strokeOpacity !== 0.5 || ringGeometry.trackCount !== 0
+    || Math.abs(ringGeometry.dashArray - 138.23) > 0.1 || !ringGeometry.mask.includes('radial-gradient')) throw new Error(`長按環顏色、透明漸層、內徑或尺寸不符：${JSON.stringify(ringGeometry)}`);
   if (ringGeometry.dashOffset > 2) throw new Error(`長按環形進度未在 500ms 左右完成：${ringGeometry.dashOffset}`);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: touchX + 28, y: touchY + 12, id: 1 }] });
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await touchPage.waitForTimeout(50);
   const feedbackDot = touchPage.locator('.touch-feedback-dot').first();
   if (await touchPage.locator('.touch-feedback-dot').count() !== 1) throw new Error('觸控放開後未顯示點擊位置回饋');
-  const dotStyle = await feedbackDot.evaluate(element => ({ width: getComputedStyle(element).width, height: getComputedStyle(element).height, color: getComputedStyle(element).backgroundColor, opacity: getComputedStyle(element).opacity, animationDuration: getComputedStyle(element).animationDuration }));
-  if (dotStyle.width !== '76px' || dotStyle.height !== '76px' || !dotStyle.color.startsWith('rgba(156, 201, 217,') || dotStyle.animationDuration !== '0.5s') throw new Error('點擊位置回饋的色彩、大小或淡出時間錯誤：' + JSON.stringify(dotStyle));
+  const dotStyle = await feedbackDot.evaluate(element => ({ width: getComputedStyle(element).width, height: getComputedStyle(element).height, background: getComputedStyle(element).backgroundImage, opacity: getComputedStyle(element).opacity, animationDuration: getComputedStyle(element).animationDuration }));
+  if (dotStyle.width !== '76px' || dotStyle.height !== '76px' || !dotStyle.background.includes('radial-gradient') || !dotStyle.background.includes('0.2') || dotStyle.animationDuration !== '0.5s') throw new Error('點擊位置回饋的 20% 中心、邊緣透明漸層、大小或淡出時間錯誤：' + JSON.stringify(dotStyle));
   await touchPage.waitForTimeout(520);
   if (await touchPage.locator('.touch-feedback-dot').count() !== 0) throw new Error('藍色回饋點沒有在 500ms 後消失');
   const multiPoints = [
@@ -263,7 +270,7 @@ try {
   if (await touchPage.locator('.touch-feedback-dot').count() !== 2) throw new Error('多指觸控放開後沒有各自顯示藍色回饋點');
   await touchPage.close();
   const worldSource = await fs.readFile('src/sky-world.js', 'utf8');
-  if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("track.setAttribute('cx', '60'); track.setAttribute('cy', '60'); track.setAttribute('r', '48');")) throw new Error('移動模式即時拖曳或長按環幾何未包含預期實作');
+  if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("progress.setAttribute('cx', '60'); progress.setAttribute('cy', '60'); progress.setAttribute('r', '22');") || worldSource.includes("track.setAttribute('class', 'touch-hold-track')")) throw new Error('移動模式即時拖曳或無白色底環的長按幾何未包含預期實作');
   if (!worldSource.includes('plotWasInMoveModeAtPointerDown') || !worldSource.includes('!plotWasInMoveModeAtPointerDown')) throw new Error('地塊移動模式短按切換高度模式的修正未包含');
   if (!worldSource.includes('rotateHoldGesture') || worldSource.includes('rotateTouchGesture') || !worldSource.includes('if (pointerPlotIndex === null && dockHitAtPointer === null)')) throw new Error('PC 與手機的相機手勢尚未統一');
   if (!worldSource.includes("heightEdit?.kind === 'dock' && heightEdit.index === pressedDock && heightEdit.mode === 'move'") || !worldSource.includes('screenToGround(pointerStartX, pointerStartY, 1.36 + getDockHeight(pressedDock))')) throw new Error('無人機坪台移動模式未支援直接拖曳或未使用坪台高度平面');
