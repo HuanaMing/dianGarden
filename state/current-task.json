@@ -1,7 +1,9 @@
 {
-  "name": "任務172：縮短 Playwright 瀏覽器驗收流程",
-  "status": "completed",
-  "pendingApprovals": [],
-  "nextAction": "任務172已完成並歸檔；可開始下一項遊戲開發任務。",
-  "result": "移除 Chromium 系統依賴安裝步驟後，GitHub Actions run 39889061910 成功，約45秒；完整瀏覽器檢查 PASS、browserErrors 為空，25張截圖成功保存。修改前正常 run 約47秒，慢速 run約7分24秒，其中系統套件下載花6分38秒。此變更主要避免長時間網路波動，常態耗時改善約2秒。"
+  "name": "任務176：花園頭像、觸控操作與花卉模型模組化",
+  "status": "in_progress",
+  "pendingApprovals": [
+    "確認花卉模型拆分方案：維持原生 classic scripts，以 src/model/general.js 提供共用幾何 API／註冊表，各花種檔案註冊自己的模型，並由主畫面與圖鑑在 sky-world.js 前依序載入。"
+  ],
+  "nextAction": "先通過修正後的 Playwright 驗收並檢查頭像存檔相容性與觸控手勢程式；等待使用者確認模型模組化方案後再拆分花卉模型。",
+  "result": "已實作頭像設定與存檔欄位向後相容、移除手機縮放按鈕、藍色放開回饋點、500ms 長按環形進度與空地長按後旋轉、圖鑑 viewport 禁止頁面縮放。第一次 Actions 發現 patch 誤插入字串造成 JS 語法錯誤，已修正並重新觸發驗收；待最新 run 結果。"
 }
