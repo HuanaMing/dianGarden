@@ -29,10 +29,10 @@
     const lightLevel = 0.18 + 0.82 * daylightProgress;
 
     // Rain visuals blend during the final five seconds before each weather-state boundary.
-    const rainBlend = rainSecond < 8 * 60
+    const rainBlend = rainSecond < 8 * 60 - RAIN_TRANSITION_SECONDS
       ? 0
-      : rainSecond < 8 * 60 + RAIN_TRANSITION_SECONDS
-        ? (rainSecond - 8 * 60) / RAIN_TRANSITION_SECONDS
+      : rainSecond < 8 * 60
+        ? (rainSecond - (8 * 60 - RAIN_TRANSITION_SECONDS)) / RAIN_TRANSITION_SECONDS
         : rainSecond < 10 * 60 - RAIN_TRANSITION_SECONDS
           ? 1
           : rainSecond < 10 * 60
