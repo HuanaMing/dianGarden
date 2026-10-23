@@ -14,6 +14,7 @@ on:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
+  actions: read
   contents: read
   pages: write
   id-token: write
@@ -36,27 +37,43 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: 產生部署版本檔並輸出時間診斷
+      - name: 產生每日更新序號與版本檔
         env:
           TZ: Asia/Taipei
+          GH_TOKEN: ${{ github.token }}
         run: |
-          TAIPEI_TIME="$(date '+%y%m%d,%H:%M:%S')"
+          TAIPEI_DATE="$(date '+%y%m%d')"
           UTC_TIME="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
           RUN_ID="${GITHUB_RUN_ID}"
-          RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT}"
           COMMIT_SHA="${GITHUB_SHA}"
-          VERSION="${TAIPEI_TIME}-r${RUN_ID}a${RUN_ATTEMPT}"
+          MIDNIGHT_UTC="$(TZ=Asia/Taipei date -d 'today 00:00:00' -u '+%Y-%m-%dT%H:%M:%SZ')"
 
-          printf '{\n  "version": "%s",\n  "taipei_time": "%s",\n  "utc_time": "%s",\n  "run_id": "%s",\n  "run_attempt": "%s",\n  "commit_sha": "%s"\n}\n' \
-            "$VERSION" "$TAIPEI_TIME" "$UTC_TIME" "$RUN_ID" "$RUN_ATTEMPT" "$COMMIT_SHA" > src/version.json
+          # Count successful deployments earlier today in Taipei time.
+          # Exclude this run; the current deployment receives the next number.
+          RUNS_JSON="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/static.yml/runs" -f branch=main -f per_page=100 -f "created=>=${MIDNIGHT_UTC}")"
+          SUCCESSFUL_TODAY=0
+          while IFS= read -r CREATED_AT; do
+            [ -n "$CREATED_AT" ] || continue
+            RUN_DATE="$(date -d "$CREATED_AT" '+%y%m%d')"
+            if [ "$RUN_DATE" = "$TAIPEI_DATE" ]; then
+              SUCCESSFUL_TODAY=$((SUCCESSFUL_TODAY + 1))
+            fi
+          done < <(printf '%s' "$RUNS_JSON" | jq -r --arg current "$RUN_ID" '.workflow_runs[] | select((.id | tostring) != $current and .status == "completed" and .conclusion == "success") | .created_at')
+
+          UPDATE_NUMBER="$(printf '%03d' "$((SUCCESSFUL_TODAY + 1))")"
+          VERSION="${TAIPEI_DATE}, ${UPDATE_NUMBER}"
+
+          printf '{\n  "version": "%s",\n  "taipei_date": "%s",\n  "daily_update_number": %s,\n  "utc_time": "%s",\n  "run_id": "%s",\n  "commit_sha": "%s"\n}\n' \
+            "$VERSION" "$TAIPEI_DATE" "$((SUCCESSFUL_TODAY + 1))" "$UTC_TIME" "$RUN_ID" "$COMMIT_SHA" > src/version.json
           printf "window.__DIANGARDEN_BUILD_VERSION__ = '%s';\n" "$VERSION" > src/build-version.js
 
           echo "Version diagnostic:"
-          echo "  Taiwan time: $TAIPEI_TIME (Asia/Taipei)"
+          echo "  Taiwan date: $TAIPEI_DATE (Asia/Taipei)"
           echo "  UTC time: $UTC_TIME"
+          echo "  Previous successful deployments today: $SUCCESSFUL_TODAY"
+          echo "  Daily update number: $((SUCCESSFUL_TODAY + 1))"
           echo "  Version written: $VERSION"
           echo "  GitHub run ID: $RUN_ID"
-          echo "  GitHub run attempt: $RUN_ATTEMPT"
           echo "  Commit SHA: $COMMIT_SHA"
           echo "  version.json content:"
           cat src/version.json
