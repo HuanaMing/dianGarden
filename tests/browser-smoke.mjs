@@ -381,7 +381,7 @@ try {
   const forceUpdateRequests = [];
   forceUpdatePage.on('request', request => {
     const url = new URL(request.url());
-    if (/\.(js|css)$/i.test(url.pathname) && url.searchParams.has('__dg_force_refresh')) forceUpdateRequests.push(url.pathname);
+    if (/\.(js|css)$/i.test(url.pathname)) forceUpdateRequests.push({ path: url.pathname, search: url.search });
   });
   await forceUpdatePage.route(url => url.pathname.endsWith('/version.json'), route => route.fulfill({
     status: 200, contentType: 'application/json', body: JSON.stringify({ version: '261023, 002' }),
@@ -393,15 +393,19 @@ try {
   await forceUpdatePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   await forceUpdatePage.locator('#settings-toggle').click();
   await forceUpdatePage.locator('#force-update-button').click();
+  await forceUpdatePage.waitForURL(url => url.searchParams.has('__dg_force_refresh'), { timeout: 10000 });
+  await forceUpdatePage.waitForLoadState('domcontentloaded', { timeout: 10000 });
   await forceUpdatePage.locator('#sky-canvas').waitFor({ state: 'visible', timeout: 10000 });
   await forceUpdatePage.waitForTimeout(700);
-  if (!forceUpdateRequests.some(path => path.endsWith('/game.js')) ||
-      !forceUpdateRequests.some(path => path.endsWith('/build-version.js')) ||
-      !forceUpdateRequests.some(path => path.endsWith('/version-check.js')) ||
-      !forceUpdateRequests.some(path => path.endsWith('/styles.css'))) {
-    throw new Error('立即更新未為遊戲 JavaScript 與 CSS 加入 cache-busting query：' + JSON.stringify(forceUpdateRequests));
+  if (!forceUpdateRequests.some(request => request.path.endsWith('/game.js')) ||
+      !forceUpdateRequests.some(request => request.path.endsWith('/version-check.js')) ||
+      !forceUpdateRequests.some(request => request.path.endsWith('/styles.css'))) {
+    throw new Error('立即更新後遊戲頁面或核心資源未重新載入：' + JSON.stringify(forceUpdateRequests));
   }
-  checks.push('立即更新重新取得頁面，並為 game.js、version-check.js、styles.css 加入 cache-busting query');
+  if (await forceUpdatePage.evaluate(() => document.querySelectorAll('#sky-canvas').length) !== 1) {
+    throw new Error('立即更新後頁面出現重複遊戲畫布');
+  }
+  checks.push('立即更新使用完整頁面導覽，重新初始化遊戲且只保留一個畫布');
   await forceUpdatePage.close();
 
   if (errors.length) throw new Error(`瀏覽器發現錯誤：\n${errors.join('\n')}`);
