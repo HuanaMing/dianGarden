@@ -14,5 +14,6 @@
 - 動畫結束時透明度為 0，元素仍依既有長按結束／取消邏輯移除。
 
 ## 執行紀錄
-- 已修改 `src/styles.css` 的 `@keyframes touch-ring-rise`：0% 至 80% 維持 opacity 1，80% 至 100% 隨放大復原淡出至 opacity 0。
-- 尚待實際瀏覽器動畫驗收。
+- 已提交 `src/styles.css` 修改，提交：`51c6ac3f35b7bbf3363811ebdcbc3d2d0efa4dda`。
+- 已重新讀取 GitHub 上的 CSS，確認 `touch-ring-rise` 關鍵影格包含 0%～80% 的 `opacity:1` 與 100% 的 `opacity:0`，原本位移及縮放數值不變。
+- 尚未進行實際瀏覽器動畫驗收。
