@@ -1,1 +1,1 @@
-window.__DIANGARDEN_BUILD_VERSION__ = '261023,22';
+window.__DIANGARDEN_BUILD_VERSION__ = '部署流程產生yymmdd,xxx';
