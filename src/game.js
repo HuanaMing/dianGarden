@@ -249,6 +249,7 @@
   const gardenNameDisplay = document.querySelector('#garden-name-display');
   const gardenAvatar = document.querySelector('#garden-avatar');
   const avatarModeSelect = document.querySelector('#avatar-mode');
+  const avatarFlowerPicker = document.querySelector('#avatar-flower-picker');
   const avatarFlowerOptions = document.querySelector('#avatar-flower-options');
   const gardenNameEditor = document.querySelector('#garden-name-editor');
   const gardenNameInput = document.querySelector('#garden-name-input');
@@ -595,10 +596,27 @@
       cropIndex = counts.reduce((best, count, index) => count > counts[best] ? index : best, 0);
     }
     const flower = crops[cropIndex] || crops[0];
-    gardenAvatar.textContent = flower.emoji || '🌼';
+    if (flower.image) {
+      let image = gardenAvatar.querySelector('img');
+      if (!image) {
+        gardenAvatar.replaceChildren();
+        image = document.createElement('img');
+        image.className = 'garden-avatar-image';
+        image.alt = '';
+        image.setAttribute('aria-hidden', 'true');
+        image.width = 28;
+        image.height = 28;
+        image.style.imageRendering = 'pixelated';
+        gardenAvatar.append(image);
+      }
+      if (image.getAttribute('src') !== flower.image) image.src = flower.image;
+    } else if (gardenAvatar.querySelector('img') || gardenAvatar.textContent !== (flower.emoji || '🌼')) {
+      gardenAvatar.textContent = flower.emoji || '🌼';
+    }
     gardenAvatar.setAttribute('aria-label', `花園頭像：${flower.name}`);
   }
   function renderAvatarFlowerOptions() {
+    if (avatarFlowerPicker) avatarFlowerPicker.hidden = game.avatarMode !== 'manual';
     if (!avatarFlowerOptions) return;
     avatarFlowerOptions.replaceChildren();
     crops.forEach((flower, index) => {
