@@ -1385,3 +1385,10 @@
 - 驗證：JavaScript 語法解析通過；GitHub Actions Playwright run `39894024947` 成功，完整 browser-smoke 工作通過，截圖產物成功保存，約 2.91 MB。
 - 程式 commit：`9a7893c176737caee4298dfbef9925ee1bc4de4d`。
 - 任務文件：`tasks/done/177-peony-double-bloom.md`。
+
+## 2026-10-23 — 任務 178：花卉頭像點陣圖與地塊移動操作調整
+
+- 結果：設定頁的 11 種手動花卉頭像改為 PNG 點陣圖格狀按鈕，保留自動／手動模式與既有存檔欄位；長按觸控環半徑由 16 增至 48，SVG 與容器尺寸放大三倍，CSS 線寬維持 3；地塊已在移動模式時按下即可建立拖曳預覽，移除拖曳預覽另外繪製的重複十字箭頭。
+- 驗收：GitHub Actions Playwright run `39895672169` 成功，完整 browser-smoke PASS，browserErrors 為空；桌面／手機與十一種花卉截圖成功上傳，`diangarden-browser-check` artifact 約 2.91 MB。
+- 程式提交：`fd46753f6ba1c896ae9395cad2da90b6bdbffeb1`；驗收腳本修正：`dabafae81dbfcd333407fac295a407b2a8f1bc08`。
+- 任務文件已歸檔至 `tasks/done/178-avatar-pixel-icons-and-plot-move-mode.md`，active 與 inbox 副本已移除。
