@@ -1499,3 +1499,11 @@
 - 依使用者實測回饋，長按環改為內徑75px、外徑100px；圓弧半徑43.75、線寬12.5px，並同步調整徑向透明遮罩與進度周長。
 - 點擊回饋藍點、顏色、中心可見度及淡出動畫保持不變。
 - Playwright 驗收與 GitHub Pages 部署結果待確認。
+
+
+## 2026-10-24 — Bug 修正：立即更新未刷新靜態資源
+
+- 根因：立即更新流程會重新導覽至唯一頁面 URL，但已定義的資源 cache-busting 函式從未被呼叫；HTML 中 JavaScript／CSS URL 沒有改變，瀏覽器可能繼續沿用舊快取。
+- 修正：新增 `scripts/version-assets.py`，在 GitHub Pages 產物階段為每個 JavaScript／CSS URL 加上部署版本參數；更新按鈕維持完整頁面導覽，讓舊遊戲執行環境確實終止。
+- 新增瀏覽器驗收，確認 HTML 中所有 JavaScript／CSS URL 均含部署版本參數，並保留立即更新後只存在一個畫布的既有檢查。
+- 驗收及部署結果待 GitHub Actions 完成後補記。
