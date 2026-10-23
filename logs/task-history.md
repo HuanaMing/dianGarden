@@ -1399,3 +1399,10 @@
 - 驗收：GitHub Actions Playwright run `39897572217` 成功，browser-smoke PASS，`browserErrors` 為空；PC 長按環、手機長按環／多指回饋、頭像模式與舊存檔回歸檢查通過；桌面、手機及 11 種花卉截圖成功上傳，artifact 約 2.90 MB。
 - 主要程式提交：`27555f52a5f8e50edf14438e3e46c62558502068`、`c9f5a298aaa954e4e706aec18a4acea443da4e04`、`0ca9cff7a6117bb3583ebcfdf86627f08ec723b9`、`5704e1dc41219d986042051fe3b4121e06acc5d8`；最後驗收腳本修正：`be696d87265e3d9cb220c096a7d79a189595000b`。
 - 任務文件已歸檔至 `tasks/done/179-pointer-gestures-and-pixel-avatar-fixes.md`。
+
+
+## 2026-10-23 — 任務 180：日夜天氣漸變與點擊回饋時序
+
+- 結果：日出／日落改為 60 秒內逐秒線性漸變，天空色彩與環境亮度同步過渡；晴雨視覺只在交替前最後 5 秒淡入／淡出，且不提前改變遊戲天氣規則。點擊位置提示改為半透明 #9CC9D9、76×76 px 並於 0.5 秒淡出；長按環在按下後 200 ms 才顯示，計時仍從按下瞬間開始。
+- 驗收：GitHub Actions Playwright run 39946725937 成功，涵蓋日夜進度、晴雨過渡、PC／手機長按環顯示時序及點擊提示樣式。
+- 檔案：`src/sky-environment.js`、`src/sky-world.js`、`src/styles.css`、`tests/browser-smoke.mjs`、`tasks/done/180-day-night-weather-and-pointer-feedback.md`。
