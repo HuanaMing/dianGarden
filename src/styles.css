@@ -546,10 +546,7 @@ input, [contenteditable="true"]{
 
 /* 任務187：縮小長按環，並讓環形進度同步上移。 */
 /* 任務188：白色花環配綠葉與白花；上升後停留，再柔和放大復原。 */
+/* 任務188：使用 assets 中的透明花草環素材，整張圖隨圓環上升、縮小並放大復原。 */
 .touch-hold-ring{animation:touch-ring-rise .5s cubic-bezier(.2,.65,.3,1) .2s forwards}
-.touch-hold-ring svg{overflow:visible;mask-image:none;-webkit-mask-image:none}
-.touch-hold-progress{fill:none;stroke:#fff;stroke-opacity:.96;stroke-width:4;stroke-dasharray:none;stroke-dashoffset:0;animation:none;filter:drop-shadow(0 0 2px rgba(255,255,255,.65))}
-.touch-hold-petal{fill:#fff;stroke:#dcebd8;stroke-width:.35}
-.touch-hold-flower-center{fill:#dce9a5;stroke:#fff;stroke-width:.35}
-.touch-hold-leaf{fill:#79b779;stroke:#4d965e;stroke-width:.45}
-@keyframes touch-ring-rise{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}40%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}80%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}}
+.touch-hold-wreath{position:absolute;left:50%;top:50%;display:block;width:46px;height:46px;max-width:none;object-fit:contain;transform:translate(-50%,-50%);pointer-events:none;user-select:none;-webkit-user-drag:none;filter:drop-shadow(0 0 1px rgba(255,255,255,.25))}
+@keyframes touch-ring-rise{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}40%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}80%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}}}
