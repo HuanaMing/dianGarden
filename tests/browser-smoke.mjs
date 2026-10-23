@@ -66,7 +66,7 @@ try {
   await page.waitForTimeout(120);
   if (await mouseRing.evaluate(element => getComputedStyle(element).visibility) !== 'visible') throw new Error('PC 長按環在按下 200ms 後仍未顯示');
   const mouseRingStyle = await mouseRing.locator('.touch-hold-progress').evaluate(element => ({ width: Number.parseFloat(getComputedStyle(element.closest('.touch-hold-ring')).width), radius: Number(element.getAttribute('r')), strokeWidth: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-width')), riseDuration: getComputedStyle(element.closest('.touch-hold-ring')).animationDuration, riseDelay: getComputedStyle(element.closest('.touch-hold-ring')).animationDelay }));
-  if (mouseRingStyle.width !== 120 || mouseRingStyle.radius !== 17 || mouseRingStyle.strokeWidth !== 4 || mouseRingStyle.riseDuration !== '0.3s' || mouseRingStyle.riseDelay !== '0.2s') throw new Error('PC 長按環尺寸、線寬或上移動畫錯誤：' + JSON.stringify(mouseRingStyle));
+  if (mouseRingStyle.width !== 120 || mouseRingStyle.radius !== 17 || mouseRingStyle.strokeWidth !== 4 || mouseRingStyle.riseDuration !== '0.5s' || mouseRingStyle.riseDelay !== '0.2s') throw new Error('PC 長按環尺寸、線寬或上移動畫錯誤：' + JSON.stringify(mouseRingStyle));
   await page.mouse.up();
   checks.push('PC 長按環前200ms隱藏，完整圓環上升50px、逐漸縮小並在結束時復原');
 
@@ -282,9 +282,10 @@ try {
   if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("progress.setAttribute('cx', '60'); progress.setAttribute('cy', '60'); progress.setAttribute('r', '17');") || worldSource.includes("track.setAttribute('class', 'touch-hold-track')")) throw new Error('移動模式即時拖曳或無白色底環的長按幾何未包含預期實作');
   if (!worldSource.includes('plotWasInMoveModeAtPointerDown') || !worldSource.includes('!plotWasInMoveModeAtPointerDown')) throw new Error('地塊移動模式短按切換高度模式的修正未包含');
   if (!worldSource.includes('rotateHoldGesture') || worldSource.includes('rotateTouchGesture') || !worldSource.includes('if (pointerPlotIndex === null && dockHitAtPointer === null)')) throw new Error('PC 與手機的相機手勢尚未統一');
+  if (!worldSource.includes("makeFlower(42, 60, 0.92)") || !worldSource.includes("makeLeaf(43, 43, -45)")) throw new Error('長按圓環缺少白花或綠葉裝飾');
   const styleSource = await fs.readFile(new URL('../src/styles.css', import.meta.url), 'utf8');
-  if (!styleSource.includes('@keyframes touch-ring-rise{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}66.666%{transform:translate(-50%,-50%) translateY(-50px) scale(.55)}99.9%{transform:translate(-50%,-50%) translateY(-50px) scale(.35)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}}') || !styleSource.includes('.touch-hold-ring{animation:touch-ring-rise .3s linear .2s forwards}') || !styleSource.includes('.touch-hold-progress{stroke-width:4;stroke-dasharray:none;stroke-dashoffset:0;animation:none}')) throw new Error('完整圓環的上升、縮小復原動畫或靜態圓環描邊未設定');
-  checks.push('完整圓環無進度條：前200ms隱藏，接著上升50px並縮小，結束時恢復原尺寸');
+  if (!styleSource.includes('@keyframes touch-ring-rise{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}40%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}80%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}}') || !styleSource.includes('.touch-hold-ring{animation:touch-ring-rise .5s cubic-bezier(.2,.65,.3,1) .2s forwards}') || !styleSource.includes('stroke:#fff;stroke-opacity:.96') || !styleSource.includes('.touch-hold-progress{fill:none;stroke:#fff;stroke-opacity:.96;stroke-width:4;stroke-dasharray:none;stroke-dashoffset:0;animation:none;filter:drop-shadow(0 0 2px rgba(255,255,255,.65))}')) throw new Error('花草圓環的上升、停留、放大復原動畫或白色靜態描邊未設定');
+  checks.push('白色花草圓環無進度條：上升50px、停留0.2秒並於0.1秒放大復原');
   if (!worldSource.includes("heightEdit?.kind === 'dock' && heightEdit.index === pressedDock && heightEdit.mode === 'move'") || !worldSource.includes('screenToGround(pointerStartX, pointerStartY, 1.36 + getDockHeight(pressedDock))')) throw new Error('無人機坪台移動模式未支援直接拖曳或未使用坪台高度平面');
   if (worldSource.includes('if (dragPreview && Number.isInteger(dragPreview.index))')) throw new Error('拖曳預覽仍保留重複十字箭頭');
   checks.push('手機長按環形進度、內徑30px／外徑38px、放開回饋點及多指獨立回饋通過');
