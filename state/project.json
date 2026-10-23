@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "178-avatar-pixel-icons-and-plot-move-mode",
-  "nextAction": "任務178實作已提交；等待 GitHub Actions Playwright browser-smoke 驗收，通過後再完成歸檔。",
+  "activeTask": null,
+  "nextAction": "任務178已完成並通過 GitHub Actions Playwright browser-smoke 驗收；等待使用者指定下一項工作。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
