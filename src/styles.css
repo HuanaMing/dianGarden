@@ -545,10 +545,8 @@ input, [contenteditable="true"]{
 }
 
 /* 任務187：縮小長按環，並讓環形進度同步上移。 */
-/* 任務188重做：上升時逐步填滿環的內孔，頂端成為實心圓。 */
+/* 任務188：長按環上升時逐漸縮小，抵達頂端恢復原尺寸。 */
 .touch-hold-ring{animation:touch-ring-rise .5s linear forwards}
-.touch-hold-ring::before{content:'';position:absolute;left:50%;top:50%;width:30px;height:30px;border-radius:50%;background:rgba(93,129,199,.5);transform:translate(-50%,-50%) scale(0);transform-origin:center;animation:touch-ring-fill .5s linear forwards;pointer-events:none}
 .touch-hold-ring svg{mask-image:radial-gradient(circle 19px at center,transparent 15px,#000 16px,#000 18px,transparent 19px)}
 .touch-hold-progress{stroke-width:4;stroke-dasharray:106.81;stroke-dashoffset:106.81}
-@keyframes touch-ring-rise{from{transform:translate(-50%,-50%) translateY(0)}to{transform:translate(-50%,-50%) translateY(-50px)}}
-@keyframes touch-ring-fill{from{transform:translate(-50%,-50%) scale(0)}to{transform:translate(-50%,-50%) scale(1)}}
+@keyframes touch-ring-rise{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}99%{transform:translate(-50%,-50%) translateY(-49.5px) scale(.55)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}}
