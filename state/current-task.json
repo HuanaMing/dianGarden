@@ -1,9 +1,9 @@
 {
-  "name": "任務181：version.json 版本檢查與更新提示",
-  "status": "completed",
+  "name": "任務183：設定版本資訊與立即更新",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務181已完成並歸檔；任務182在 inbox，待開始時先檢查現有存檔格式、匿名帳號綁定與自動雙向同步的衝突策略。",
-  "result": "Pages 部署 run 39951151594 成功；Playwright 瀏覽器驗收 run 39951257421 成功，version.json 同源讀取、格式檢查、版本差異提示及稍後按鈕通過。首次驗收的正規表示式錯誤已修正，後續驗收通過。版本值同一小時內不具部署唯一性；本次未能直接外部讀取線上 version.json。"
+  "nextAction": "完成設定版本資訊 UI、強制更新流程與 Playwright 驗收；保留任務182在 inbox。",
+  "result": "已建立任務183 active 文件；正在實作，尚未驗收。"
 }
