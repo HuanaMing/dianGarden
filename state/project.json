@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 171,
-  "nextAction": "任務171已恢復；第3段 hero-cloud CSS 清理的 GitHub Actions 已確認成功。盤點最新 CSS／HTML／JavaScript 引用，選定第4段候選後單段修改並執行瀏覽器驗收。",
+  "nextAction": "任務171第4段已提交：移除無引用的 .cloud-a／.cloud-b 舊首頁 CSS 定位規則；等待 GitHub Actions run 39878241016 完成，若成功再盤點下一段候選，若失敗先修正或還原。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
