@@ -340,6 +340,7 @@ try {
     contentType: 'application/json',
     body: JSON.stringify({ version: '261023,22' }),
   }));
+  await versionPage.route(url => url.pathname.endsWith('/build-version.js'), route => route.fulfill({ status: 200, contentType: 'application/javascript', body: "window.__DIANGARDEN_BUILD_VERSION__ = '000000,00';" }));
   await versionPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   const updateBanner = versionPage.locator('.diangarden-version-update');
   await updateBanner.waitFor({ state: 'visible', timeout: 5000 });
