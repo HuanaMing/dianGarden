@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 172,
-  "nextAction": "任務172執行中：已量測近期 Playwright workflow，確認 APT 系統依賴下載速度是主要波動來源；接著以最小變更驗證省略 install-deps 是否仍能通過完整瀏覽器驗收。",
+  "activeTask": null,
+  "nextAction": "任務172已完成並歸檔。Playwright workflow 修改後完整瀏覽器驗收成功，約45秒，25張截圖已保存。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
