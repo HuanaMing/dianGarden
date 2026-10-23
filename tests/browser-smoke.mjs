@@ -39,6 +39,8 @@ try {
   if (!gameCanvas.webgl) throw new Error('遊戲首頁未能建立 WebGL context');
   if (gameCanvas.width < 100 || gameCanvas.height < 100) throw new Error('遊戲畫布尺寸異常');
   checks.push('遊戲 WebGL 畫布已建立');
+  if (await page.evaluate(() => window.dianGardenFlowerModels?.count) !== 11) throw new Error('花卉模型模組未完整註冊 11 種花');
+  checks.push('11 種花卉模型模組已完整註冊');
 
   const topbarBounds = await page.locator('#world-topbar').boundingBox();
   const frameBounds = await page.locator('.world-frame').boundingBox();
