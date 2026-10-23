@@ -209,3 +209,8 @@
 GitHub Pages 工作流程在上傳 `src/` 發布產物前，以 `Asia/Taipei` 時區產生 `version.json`，版本值格式為 `YYMMDD,HH`。`version-check.js` 透過同源 `fetch`、`cache: no-store` 與查詢參數避免沿用快取；頁面載入時、每五分鐘及切回前景時檢查。發現已知版本不同時顯示重新載入／稍後提示。檢查失敗不影響遊戲啟動，且版本提示使用獨立的 localStorage key，不更動遊戲存檔。
 
 版本值只有小時精度，同一小時內多次部署會共用相同值，可能無法辨識該時段後續部署；如未來需要更細的辨識，可在不改變顯示格式的前提下加入獨立部署識別碼。
+
+
+## 設定中的版本資訊與立即更新
+
+設定面板由 `index.html` 提供目前版本、最新版本與立即更新按鈕；`version-check.js` 從同源 `version.json` 取得最新版本，並使用獨立 localStorage key 顯示目前已載入／已確認版本。立即更新會以 `cache: no-store` 取得最新 HTML，為同源 CSS、JavaScript、圖片及 source 資源 URL 加上唯一查詢參數，再以新文件內容取代目前文件。替換前會觸發既有 `pagehide` 儲存處理。這是網頁端可實作的 Ctrl+F5 近似流程，不是瀏覽器原生的硬重新載入指令；若更新抓取失敗，保留目前遊戲並提示稍後重試。
