@@ -188,11 +188,20 @@
       return flower;
     };
     const makeLeaf = (cx, cy, rotation) => {
-      const leaf = makePetal(cx, cy, 2.2, 4.2, rotation);
+      // 葉片中心貼著半徑17的圓環，長軸沿切線排列，避免向外凸出。
+      const leaf = makePetal(cx, cy, 1.25, 2.5, rotation);
       leaf.setAttribute('class', 'touch-hold-leaf');
       return leaf;
     };
-    svg.append(makeLeaf(43, 43, -45), makeLeaf(77, 77, 135), makeLeaf(78, 42, 45), makeLeaf(42, 78, -135));
+    const leaves = [];
+    for (let i = 0; i < 8; i++) {
+      const angle = -67.5 + i * 45;
+      const rad = angle * Math.PI / 180;
+      const cx = 60 + Math.cos(rad) * 17;
+      const cy = 60 + Math.sin(rad) * 17;
+      leaves.push(makeLeaf(cx, cy, angle + 90));
+    }
+    svg.append(...leaves);
     svg.append(makeFlower(42, 60, 0.92), makeFlower(78, 60, 0.92), makeFlower(60, 42, 0.82), makeFlower(60, 78, 0.82));
     ring.append(svg); touchFeedbackLayer.append(ring);
     return ring;
