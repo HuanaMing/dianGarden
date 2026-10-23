@@ -1,9 +1,9 @@
 {
   "name": "任務183：設定版本資訊與立即更新",
-  "status": "in_progress",
+  "status": "completed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "完成設定版本資訊 UI、強制更新流程與 Playwright 驗收；保留任務182在 inbox。",
-  "result": "已建立任務183 active 文件；正在實作，尚未驗收。"
+  "nextAction": "任務183已完成並歸檔。下一項排程為 inbox 任務182：開始前檢查目前存檔格式，規劃匿名帳號綁定 Google、自動雙向同步、離線佇列與衝突解決；未經批准不建立付費資源。",
+  "result": "設定面板已顯示目前版本號、最新版本號及立即更新按鈕；Pages 部署 run 39953488795 成功，Playwright 瀏覽器驗收 run 39953660007 成功，包含更新提示、cache-busting 資源刷新及既有回歸測試。瀏覽器不允許 JavaScript 原生觸發 Ctrl+F5，採取 no-store HTML 重取與同源資源 query-busting 的近似強制更新流程。"
 }
