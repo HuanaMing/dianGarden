@@ -257,7 +257,7 @@ try {
   }));
   if (ringGeometry.radius !== 17 || ringGeometry.strokeWidth !== 4 || ringGeometry.viewBox !== '0 0 120 120' || ringGeometry.width !== 120
     || ringGeometry.stroke.toLowerCase() !== 'rgb(93, 129, 199)' || ringGeometry.strokeOpacity !== 0.5 || ringGeometry.trackCount !== 0
-    || ringGeometry.dashArray !== 'none' || !['0px', '0'].includes(ringGeometry.dashOffset) || ringGeometry.animationName !== 'none' || !ringGeometry.mask.includes('radial-gradient') || !ringGeometry.mask.includes('18px') || !ringGeometry.mask.includes('19px')) throw new Error(`長按環顏色、透明漸層、內徑或尺寸不符：${JSON.stringify(ringGeometry)}`);
+    || ringGeometry.dashArray !== 'none' || !['0px', '0'].includes(ringGeometry.dashOffset) || ringGeometry.animationName !== 'none' || ringGeometry.mask !== 'none') throw new Error(`長按環顏色、透明漸層、內徑或尺寸不符：${JSON.stringify(ringGeometry)}`);
   const riseMatrix = ringGeometry.ringTransform.match(/matrix\(([^)]+)\)/);
   if (!riseMatrix || Math.abs(Number(riseMatrix[1].split(',')[5]) + (60 + 50)) > 1) throw new Error(`長按環未隨進度上移50px：${ringGeometry.ringTransform}`);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: touchX + 28, y: touchY + 12, id: 1 }] });
