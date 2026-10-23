@@ -46,11 +46,14 @@ try {
   await page.mouse.down();
   await page.waitForTimeout(100);
   const mouseRing = page.locator('.touch-hold-ring');
-  if (await mouseRing.count() !== 1) throw new Error('PC 滑鼠按住時未顯示長按計時環');
+  if (await mouseRing.count() !== 1) throw new Error('PC 滑鼠按下時未建立長按計時環');
+  if (await mouseRing.evaluate(element => getComputedStyle(element).visibility) !== 'hidden') throw new Error('PC 長按環未延遲 200ms 顯示');
+  await page.waitForTimeout(120);
+  if (await mouseRing.evaluate(element => getComputedStyle(element).visibility) !== 'visible') throw new Error('PC 長按環在按下 200ms 後仍未顯示');
   const mouseRingStyle = await mouseRing.locator('.touch-hold-progress').evaluate(element => ({ width: Number.parseFloat(getComputedStyle(element.closest('.touch-hold-ring')).width), strokeWidth: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-width')) }));
   if (mouseRingStyle.width !== 120 || mouseRingStyle.strokeWidth !== 6) throw new Error('PC 長按環尺寸或線寬錯誤：' + JSON.stringify(mouseRingStyle));
   await page.mouse.up();
-  checks.push('PC 滑鼠長按環尺寸 120px、線寬 6px');
+  checks.push('PC 長按環延遲 200ms 顯示、尺寸 120px、線寬 6px');
 
   if (await page.evaluate(() => window.dianGardenFlowerModels?.count) !== 11) throw new Error('花卉模型模組未完整註冊 11 種花');
   checks.push('11 種花卉模型模組已完整註冊');
@@ -155,11 +158,40 @@ try {
   if (!touchCanvas) throw new Error('無法取得手機觸控畫布位置');
   const touchX = Math.round(touchCanvas.x + 24);
   const touchY = Math.round(touchCanvas.y + touchCanvas.height * 0.72);
+  const environmentCheck = await touchPage.evaluate(() => {
+    const at = worldTimeMs => window.skyEnvironment.getState({ worldTimeMs, worldTimeAnchor: 0 }, 0);
+    return {
+      dawnStart: at(0).daylightProgress,
+      dawnHalf: at(30000).daylightProgress,
+      dawnEnd: at(60000).daylightProgress,
+      duskHalf: at(630000).daylightProgress,
+      nightStart: at(660000).daylightProgress,
+      rainBefore: at(475000).rainBlend,
+      rainMid: at(477000).rainBlend,
+      rainStart: at(480000).rainBlend,
+      rainEndStart: at(595000).rainBlend,
+      rainEndMid: at(597000).rainBlend,
+      clearStart: at(600000).rainBlend,
+      logicalRainBefore: at(477000).isRaining,
+      logicalRainStart: at(480000).isRaining,
+      logicalRainEnd: at(600000).isRaining,
+    };
+  });
+  if (environmentCheck.dawnStart !== 0 || environmentCheck.dawnHalf !== 0.5 || environmentCheck.dawnEnd !== 1
+    || environmentCheck.duskHalf !== 0.5 || environmentCheck.nightStart !== 0) throw new Error('日夜漸變未依每秒線性進度計算：' + JSON.stringify(environmentCheck));
+  if (environmentCheck.rainBefore !== 0 || Math.abs(environmentCheck.rainMid - 0.4) > 0.001 || environmentCheck.rainStart !== 1
+    || environmentCheck.rainEndStart !== 1 || Math.abs(environmentCheck.rainEndMid - 0.6) > 0.001 || environmentCheck.clearStart !== 0
+    || environmentCheck.logicalRainBefore !== false || environmentCheck.logicalRainStart !== true || environmentCheck.logicalRainEnd !== false) throw new Error('晴雨視覺漸變應只在交替前五秒且不應提前改變遊戲天氣狀態：' + JSON.stringify(environmentCheck));
+  checks.push('日夜漸變每秒線性進度、晴雨交替前 5 秒視覺過渡通過');
   const cdp = await touchPage.context().newCDPSession(touchPage);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: touchX, y: touchY, id: 1 }] });
   await touchPage.waitForTimeout(100);
-  if (await touchPage.locator('.touch-hold-ring').count() !== 1) throw new Error('單指按下時未顯示長按環形進度');
-  await touchPage.waitForTimeout(450);
+  const touchRing = touchPage.locator('.touch-hold-ring');
+  if (await touchRing.count() !== 1) throw new Error('單指按下時未建立長按環形進度');
+  if (await touchRing.evaluate(element => getComputedStyle(element).visibility) !== 'hidden') throw new Error('手機長按環未延遲 200ms 顯示');
+  await touchPage.waitForTimeout(120);
+  if (await touchRing.evaluate(element => getComputedStyle(element).visibility) !== 'visible') throw new Error('手機長按環在按下 200ms 後仍未顯示');
+  await touchPage.waitForTimeout(330);
   const ringGeometry = await touchPage.locator('.touch-hold-progress').evaluate(element => ({
     radius: Number(element.getAttribute('r')),
     strokeWidth: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-width')),
@@ -172,7 +204,10 @@ try {
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: touchX + 28, y: touchY + 12, id: 1 }] });
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await touchPage.waitForTimeout(50);
-  if (await touchPage.locator('.touch-feedback-dot').count() !== 1) throw new Error('觸控放開後未顯示藍色回饋點');
+  const feedbackDot = touchPage.locator('.touch-feedback-dot').first();
+  if (await touchPage.locator('.touch-feedback-dot').count() !== 1) throw new Error('觸控放開後未顯示點擊位置回饋');
+  const dotStyle = await feedbackDot.evaluate(element => ({ width: getComputedStyle(element).width, height: getComputedStyle(element).height, color: getComputedStyle(element).backgroundColor, opacity: getComputedStyle(element).opacity, animationDuration: getComputedStyle(element).animationDuration }));
+  if (dotStyle.width !== '76px' || dotStyle.height !== '76px' || !dotStyle.color.startsWith('rgba(156, 201, 217,') || dotStyle.animationDuration !== '0.5s') throw new Error('點擊位置回饋的色彩、大小或淡出時間錯誤：' + JSON.stringify(dotStyle));
   await touchPage.waitForTimeout(520);
   if (await touchPage.locator('.touch-feedback-dot').count() !== 0) throw new Error('藍色回饋點沒有在 500ms 後消失');
   const multiPoints = [
