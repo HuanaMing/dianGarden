@@ -45,6 +45,9 @@ jobs:
       - name: 準備花卉像素圖資產
         run: mkdir -p src/assets/flowers && cp assets/flowers/*.png src/assets/flowers/
 
+      - name: 模擬部署版本化資源網址
+        run: python3 scripts/version-assets.py src/index.html src/version.json
+
       - name: 啟動遊戲靜態伺服器
         run: |
           python3 -m http.server 4173 --directory . > /tmp/diangarden-http.log 2>&1 &
