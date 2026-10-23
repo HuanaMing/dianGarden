@@ -1368,3 +1368,12 @@
 - 驗收：修改後 Actions 成功；完整瀏覽器檢查 PASS、browser errors 為空，25 張截圖成功上傳為 `diangarden-browser-check` artifact（約 2.9 MB，保留 14 天）。
 - 取捨：常態耗時只改善約 2 秒，主要收益是避免 APT 鏡像造成數分鐘延遲；未引入 Docker 或其他新依賴。若未來 GitHub runner 的系統函式庫變動導致測試失敗，再評估固定版本的官方 Playwright container。
 - 涉及：`.github/workflows/browser-check.yml`、`tasks/done/172-playwright-workflow-performance.md`、`state/project.json`、`state/current-task.json`。
+
+
+## 2026-10-23：任務 176 完成 — 頭像、觸控操作與花卉模型模組化
+
+- 完成自訂／自動花卉頭像、手機觸控藍點與 500ms 長按環形進度、手機平移／長按空地旋轉、移除手機縮放按鈕及限制圖鑑頁面縮放；保留舊存檔相容性。
+- 依使用者確認的方案 A，新增 `src/model/general.js` 與 11 個花種模型檔案；主畫面與圖鑑共用相同模組載入順序，`sky-world.js` 改為透過模型註冊表繪製花卉。
+- 更新 README、架構文件與瀏覽器測試；自動測試確認 11 種模型完整註冊，主場景／圖鑑各花種模型測試通過。
+- 驗收：GitHub Actions Playwright run `39892706658` 成功；完整 checks PASS，browserErrors 為空。
+- 任務文件已歸檔至 `tasks/done/176-avatar-touch-and-model-modules.md`，active 副本已移除。
