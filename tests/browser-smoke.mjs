@@ -252,7 +252,7 @@ try {
     return { imageSrc: image?.getAttribute('src'), imageWidth: imageStyle?.width, ringTransform: style.transform, animationDuration: style.animationDuration, animationDelay: style.animationDelay };
   });
   if (ringGeometry.imageSrc !== '../assets/花草還.webp' || ringGeometry.imageWidth !== '46px' || ringGeometry.animationDuration !== '0.5s' || ringGeometry.animationDelay !== '0.2s') throw new Error(`花草環素材或動畫時序錯誤：${JSON.stringify(ringGeometry)}`);
-  const riseMatrix = ringGeometry.ringTransform.match(/matrix\\(([^)]+)\\)/);
+  const riseMatrix = ringGeometry.ringTransform.match(/matrix\(([^)]+)\)/);
   if (!riseMatrix || Math.abs(Number(riseMatrix[1].split(',')[5]) + (60 + 50)) > 1) throw new Error(`花草環未上升50px：${ringGeometry.ringTransform}`);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: touchX + 28, y: touchY + 12, id: 1 }] });
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
