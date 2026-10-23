@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "180",
-  "nextAction": "任務180執行中：實作日夜每秒漸變、晴雨交替前5秒漸變，以及點擊回饋與長按環顯示時序；等待 GitHub Actions 瀏覽器驗收結果。",
+  "activeTask": null,
+  "nextAction": "任務180已完成並通過 GitHub Actions Playwright 驗收，完成紀錄已歸檔；請依任務佇列選擇下一項工作。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
