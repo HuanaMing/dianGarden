@@ -158,13 +158,10 @@
     ring.style.top = `${y}px`;
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 120 120');
-    const track = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    track.setAttribute('cx', '60'); track.setAttribute('cy', '60'); track.setAttribute('r', '48');
-    track.setAttribute('class', 'touch-hold-track');
     const progress = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    progress.setAttribute('cx', '60'); progress.setAttribute('cy', '60'); progress.setAttribute('r', '48');
+    progress.setAttribute('cx', '60'); progress.setAttribute('cy', '60'); progress.setAttribute('r', '22');
     progress.setAttribute('class', 'touch-hold-progress');
-    svg.append(track, progress); ring.append(svg); touchFeedbackLayer.append(ring);
+    svg.append(progress); ring.append(svg); touchFeedbackLayer.append(ring);
     return ring;
   }
   function beginPointerFeedback(event) {
@@ -1277,10 +1274,18 @@
         const [x, z] = getDockPosition(pressedDock); const baseY = 1.36 + getDockHeight(pressedDock);
         const low = projectPoint([x, baseY, z]), high = projectPoint([x, baseY + 1, z]);
         heightDrag = { kind: 'dock', index: pressedDock, startY: event.clientY, original: getDockHeight(pressedDock), pixelStep: low && high ? Math.max(1, Math.abs(high.y - low.y)) : 48 };
+      } else if (heightEdit?.kind === 'dock' && heightEdit.index === pressedDock && heightEdit.mode === 'move') {
+        dockPressReady = true;
+        dragDock = true;
+        const worldPoint = screenToGround(pointerStartX, pointerStartY, 1.36 + getDockHeight(pressedDock));
+        const [dockX, dockZ] = getDockPosition(pressedDock);
+        dockDragOffset = worldPoint ? [dockX - worldPoint[0], dockZ - worldPoint[1]] : [0, 0];
+        dockPreview = { index: pressedDock, x: dockX, z: dockZ, y: getDockHeight(pressedDock) };
+        uploadWorld();
       } else dockPressTimer = setTimeout(() => {
         if (!dragging || dockHitAtPointer !== pressedDock) return;
         dragDock = dockPressReady = true;
-        const worldPoint = screenToGround(pointerStartX, pointerStartY);
+        const worldPoint = screenToGround(pointerStartX, pointerStartY, 1.36 + getDockHeight(pressedDock));
         const [dockX, dockZ] = getDockPosition(pressedDock);
         dockDragOffset = worldPoint ? [dockX - worldPoint[0], dockZ - worldPoint[1]] : [0, 0];
         dockPreview = { index: pressedDock, x: dockX, z: dockZ, y: getDockHeight(pressedDock) };
@@ -1372,7 +1377,7 @@
       plotPressIndex = null;
     }
     if (dragDock) {
-      const worldPoint = screenToGround(event.clientX, event.clientY);
+      const worldPoint = screenToGround(event.clientX, event.clientY, 1.36 + getDockHeight(dockHitAtPointer));
       if (worldPoint) {
         dockPreview = { ...dockPreview, index: dockHitAtPointer, x: Math.round(worldPoint[0] + dockDragOffset[0]), z: Math.round(worldPoint[1] + dockDragOffset[1]) };
         uploadWorld();
