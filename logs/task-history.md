@@ -1406,3 +1406,10 @@
 - 結果：日出／日落改為 60 秒內逐秒線性漸變，天空色彩與環境亮度同步過渡；晴雨視覺只在交替前最後 5 秒淡入／淡出，且不提前改變遊戲天氣規則。點擊位置提示改為半透明 #9CC9D9、76×76 px 並於 0.5 秒淡出；長按環在按下後 200 ms 才顯示，計時仍從按下瞬間開始。
 - 驗收：GitHub Actions Playwright run 39946725937 成功，涵蓋日夜進度、晴雨過渡、PC／手機長按環顯示時序及點擊提示樣式。
 - 檔案：`src/sky-environment.js`、`src/sky-world.js`、`src/styles.css`、`tests/browser-smoke.mjs`、`tasks/done/180-day-night-weather-and-pointer-feedback.md`。
+
+
+## 2026-10-23 — 任務 181 開始：版本檢查與更新提示
+
+- 已建立任務181並開始實作；Pages 部署工作流程將在發布前以台灣時區產生 `version.json`，遊戲新增獨立版本檢查腳本及更新提示。
+- 已建立任務182並加入 `tasks/inbox/`：匿名遊玩後綁定 Google、自動雙向雲端同步，保留離線遊玩；明確等待任務181驗收後再開始。
+- 目前僅為實作中紀錄，尚未取得本次修改的 GitHub Actions 驗收結果，不可標記任務181完成。
