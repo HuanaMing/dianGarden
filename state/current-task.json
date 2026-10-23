@@ -1,7 +1,7 @@
 {
-  "name": "任務174：農地管理與省電模式整理",
+  "name": "任務171：清理反覆修改遺留的無用程式碼",
   "status": "active",
   "pendingApprovals": [],
-  "nextAction": "任務174第一輪實作已提交；等待最新 Playwright 驗收結果，依失敗項目修正，通過後再檢查土壤漸變起點與省電恢復的邊界情況。",
-  "result": "已實作地塊切換規則、成熟植物保留、精簡選種介面、灑水開始時才啟動土壤漸變、省電模式清空／恢復畫布、操作提示移入設定及農地管理整合入口。瀏覽器驗收仍在執行，尚未結案。"
+  "nextAction": "盤點最新 CSS、HTML、JavaScript 中候選規則的宣告與引用；第4段只移除一個經確認無用的 CSS 規則，獨立提交並等待 Playwright 驗收。",
+  "result": "已恢復執行。第1、2段 Playwright 驗收通過；第3段移除 .hero-cloud 規則，GitHub Actions run 39791960715 已確認成功。"
 }
