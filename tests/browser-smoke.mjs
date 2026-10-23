@@ -282,6 +282,9 @@ try {
   if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("progress.setAttribute('cx', '60'); progress.setAttribute('cy', '60'); progress.setAttribute('r', '17');") || worldSource.includes("track.setAttribute('class', 'touch-hold-track')")) throw new Error('移動模式即時拖曳或無白色底環的長按幾何未包含預期實作');
   if (!worldSource.includes('plotWasInMoveModeAtPointerDown') || !worldSource.includes('!plotWasInMoveModeAtPointerDown')) throw new Error('地塊移動模式短按切換高度模式的修正未包含');
   if (!worldSource.includes('rotateHoldGesture') || worldSource.includes('rotateTouchGesture') || !worldSource.includes('if (pointerPlotIndex === null && dockHitAtPointer === null)')) throw new Error('PC 與手機的相機手勢尚未統一');
+  const styleSource = await fs.readFile(new URL('../src/styles.css', import.meta.url), 'utf8');
+  if (!styleSource.includes('99%{transform:translate(-50%,-50%) translateY(-49.5px) scale(.55)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}')) throw new Error('長按環上升時縮小、到頂端瞬間恢復原尺寸的動畫未設定');
+  checks.push('長按環上升時逐漸縮小，頂端恢復原尺寸');
   if (!worldSource.includes("heightEdit?.kind === 'dock' && heightEdit.index === pressedDock && heightEdit.mode === 'move'") || !worldSource.includes('screenToGround(pointerStartX, pointerStartY, 1.36 + getDockHeight(pressedDock))')) throw new Error('無人機坪台移動模式未支援直接拖曳或未使用坪台高度平面');
   if (worldSource.includes('if (dragPreview && Number.isInteger(dragPreview.index))')) throw new Error('拖曳預覽仍保留重複十字箭頭');
   checks.push('手機長按環形進度、內徑30px／外徑38px、放開回饋點及多指獨立回饋通過');
