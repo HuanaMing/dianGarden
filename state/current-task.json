@@ -1,9 +1,9 @@
 {
-  "name": "任務185：修正植物成熟階段來回閃爍",
+  "name": "任務186：調整指標回饋與無人機坪台拖曳",
   "status": "completed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "等待使用者確認實際遊玩時成熟花不再閃爍；若仍可重現，需進一步擷取作物的成長快照與場景階段診斷。",
-  "result": "已修改 src/sky-world.js，按花種索引與 plantedAt 記錄同一株植物的最高視覺階段，避免短暫舊成長快照讓成熟花退回種子模型。GitHub Pages 部署 run 39966963133 成功；Playwright 瀏覽器自動驗收 run 39966963160 成功。"
+  "nextAction": "確認 GitHub Actions 部署與 Playwright 驗收結果；若拖曳仍與地塊不一致，收集實際互動錄影或指標座標診斷。",
+  "result": "已修改 src/sky-world.js、src/styles.css 與 tests/browser-smoke.mjs：點擊回饋點中心透明度 20% 並向邊緣漸隱，放開後淡出；長按環移除白色底環，進度色 #5D81C7、中心可見度 50%、內外緣透明，內徑 38px；無人機坪台在移動模式下直接拖曳並依坪台高度平面計算位置。"
 }
