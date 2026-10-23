@@ -24,10 +24,10 @@
 - 保留原本 500 ms 長按判定，延遲只影響視覺顯示，不影響操作計時。
 
 ## 修改檔案
-- `src/sky-environment.js)：日夜與晴雨漸變進度。
-- `src/sky-world.js)：依環境進度混合天空色彩、控制雨景淡入淡出，以及長按環延遲顯示。
-- `src/styles.css)：點擊回饋色彩／尺寸、淡出與計時環顯示狀態。
-- `tests/browser-smoke.mjs)：新增日夜進度、晴雨五秒窗口、點擊回饋外觀與計時環延遲的自動驗收。
+- `src/sky-environment.js`：日夜與晴雨漸變進度。
+- `src/sky-world.js`：依環境進度混合天空色彩、控制雨景淡入淡出，以及長按環延遲顯示。
+- `src/styles.css`：點擊回饋色彩／尺寸、淡出與計時環顯示狀態。
+- `tests/browser-smoke.mjs`：新增日夜進度、晴雨五秒窗口、點擊回饋外觀與計時環延遲的自動驗收。
 
 ## 驗收紀錄
 - GitHub Actions Playwright 瀏覽器驗收 run [39946725937](https://github.com/HuanaMing/dianGarden/actions/runs/39946725937) 成功。
