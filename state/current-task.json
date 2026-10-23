@@ -2,6 +2,6 @@
   "name": "任務171：清理反覆修改遺留的無用程式碼",
   "status": "active",
   "pendingApprovals": [],
-  "nextAction": "等待第4段 GitHub Actions run 39878241016；成功後再挑選下一個已確認無引用的單一 CSS 規則，失敗則先調查、修復或還原。",
-  "result": "第1、2段驗收通過；第3段移除 .hero-cloud 且 GitHub Actions 成功。第4段已移除無引用的 .cloud-a／.cloud-b 定位規則，提交 e7324f2842af5c00591338b9f5eb8123a0a22a75，瀏覽器驗收進行中。"
+  "nextAction": "等待新版 Playwright 快取流程 run 39879113329 完成；若瀏覽器驗收成功，再盤點下一段已確認無引用的單一 CSS 規則；若失敗，先調查並修復。",
+  "result": "第1、2段驗收通過；第3段移除 .hero-cloud 且 GitHub Actions 成功。第4段移除無引用的 .cloud-a／.cloud-b 定位規則，run 39878241016 已成功。另於 commit 1e6bfef3d173a8f2787f321e45d338d6fb682a54 為 GitHub Actions 加入 npm／Playwright 瀏覽器快取並拆分安裝步驟；新版 run 39879113329 正在驗證。"
 }
