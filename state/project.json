@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 188,
-  "nextAction": "驗收任務188透明花草環素材與長按動畫，確認 GitHub Actions / Pages 部署。",
+  "nextAction": "已修正花草環圖片路徑大小寫／字形不一致，等待驗收與 Pages 部署。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
