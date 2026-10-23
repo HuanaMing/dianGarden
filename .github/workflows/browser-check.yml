@@ -39,9 +39,6 @@ jobs:
       - name: 安裝 Playwright 套件
         run: npm install --no-save --no-package-lock playwright
 
-      - name: 安裝 Chromium 系統依賴
-        run: npx playwright install-deps chromium
-
       - name: 安裝 Chromium 瀏覽器
         run: npx playwright install chromium
 
