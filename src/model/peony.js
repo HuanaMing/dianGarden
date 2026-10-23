@@ -131,7 +131,7 @@ function addPeonyStemLeafGeometry(positions, colors, x, z, height, stage) {
   }
 
   function addPeonyBloom({
-    positions, colors, x, z, height, headColor, environmentState, stemModel,
+    positions, colors, x, z, height, headColor, environmentState, stemModel, stage,
   }) {
     const bloomY = 0.055 + height;
     const dedicatedStemLeafModel = stemModel;
