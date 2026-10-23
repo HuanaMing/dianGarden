@@ -35,10 +35,10 @@ try {
     const response = await fetch(new URL('version.json', window.location.href), { cache: 'no-store' });
     return response.ok ? response.json() : null;
   });
-  if (!publishedVersion || typeof publishedVersion.version !== 'string' || !/^[0-9]{6},[0-9]{2}$/.test(publishedVersion.version)) {
+  if (!publishedVersion || typeof publishedVersion.version !== 'string' || !/^[0-9]{6},[0-9]{2}(?::[0-9]{2}:[0-9]{2}-r[0-9]+a[0-9]+)?$/.test(publishedVersion.version)) {
     throw new Error('version.json 無法讀取或版本格式錯誤');
   }
-  checks.push('version.json 可同源讀取且符合 YYMMDD,HH 格式');
+  checks.push('version.json 可同源讀取且符合舊版或精確部署版本格式');
 
   const gameCanvas = await page.locator('#sky-canvas').evaluate(canvas => ({
     width: canvas.width,
