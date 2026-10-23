@@ -1511,4 +1511,4 @@
 
 ## 2026-10-24 — 任務187
 - 長按環內徑改為30px、外徑38px；環形進度於500ms內同步上移50px。
-- 瀏覽器驗收與部署結果待確認。
+- 瀏覽器驗收通過：[run 39992230218](https://github.com/HuanaMing/dianGarden/actions/runs/39992230218)；GitHub Pages 部署成功：[run 39991755788](https://github.com/HuanaMing/dianGarden/actions/runs/39991755788)。
