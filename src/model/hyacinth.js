@@ -109,7 +109,7 @@ function addHyacinthStemLeafGeometry(positions, colors, x, z, height, stage) {
   }
 
   function addHyacinthBloom({
-    positions, colors, x, z, height, headColor, environmentState, stemModel, stage, stage,
+    positions, colors, x, z, height, headColor, environmentState, stemModel, stage,
   }) {
     const bloomY = 0.055 + height;
     const dedicatedStemLeafModel = stemModel;
