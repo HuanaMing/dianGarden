@@ -259,7 +259,7 @@ try {
     || Math.abs(ringGeometry.dashArray - 106.81) > 0.1 || !ringGeometry.mask.includes('radial-gradient') || !ringGeometry.mask.includes('18px') || !ringGeometry.mask.includes('19px')) throw new Error(`長按環顏色、透明漸層、內徑或尺寸不符：${JSON.stringify(ringGeometry)}`);
   if (ringGeometry.dashOffset > 2) throw new Error(`長按環形進度未在 500ms 左右完成：${ringGeometry.dashOffset}`);
   const riseMatrix = ringGeometry.ringTransform.match(/matrix\(([^)]+)\)/);
-  if (!riseMatrix || Math.abs(Number(riseMatrix[1].split(',')[5]) + 50) > 1) throw new Error(`長按環未隨進度上移50px：${ringGeometry.ringTransform}`);
+  if (!riseMatrix || Math.abs(Number(riseMatrix[1].split(',')[5]) + (60 + 50)) > 1) throw new Error(`長按環未隨進度上移50px：${ringGeometry.ringTransform}`);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: touchX + 28, y: touchY + 12, id: 1 }] });
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await touchPage.waitForTimeout(50);
