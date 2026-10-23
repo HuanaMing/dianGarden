@@ -100,7 +100,7 @@
   function createFreshGame() {
     const plots = defaultPlotPositions(3).map(({ x, z }) => ({ crop: null, plantedAt: null, manual: false, grassOnly: false, x, z, y: 0 }));
     const dockPosition = { x: 0, z: 1.55, y: 0 };
-    return { coins: STARTING_COINS, cropCatalogVersion: CROP_CATALOG_VERSION, gardenName: '花明摸魚花園', hudCollapsed: false, autoMode: false, autoCropSelection: [0], flowerVariants: [], worldTimeMs: 60_000, worldTimeAnchor: Date.now(), lastObservedRaining: false, droneCount: 1, deploymentSequence: 1, drones: [{ dockPosition, deployed: true, deploymentOrder: 1, battery: 100, batteryUpdatedAt: Date.now() }], lastOnlineAt: null, lastOfflineReturnAt: null, dockPosition, plots };
+    return { coins: STARTING_COINS, cropCatalogVersion: CROP_CATALOG_VERSION, gardenName: '花明摸魚花園', avatarMode: 'auto', avatarCrop: 0, hudCollapsed: false, autoMode: false, autoCropSelection: [0], flowerVariants: [], worldTimeMs: 60_000, worldTimeAnchor: Date.now(), lastObservedRaining: false, droneCount: 1, deploymentSequence: 1, drones: [{ dockPosition, deployed: true, deploymentOrder: 1, battery: 100, batteryUpdatedAt: Date.now() }], lastOnlineAt: null, lastOfflineReturnAt: null, dockPosition, plots };
   }
   function isValidVariantList(variants) {
     return Array.isArray(variants) && variants.length <= MAX_FLOWER_VARIANTS
@@ -123,6 +123,8 @@
     if (saved.autoMode !== undefined && typeof saved.autoMode !== 'boolean') return false;
     if (saved.autoCropSelection !== undefined && (!Array.isArray(saved.autoCropSelection) || saved.autoCropSelection.some((index) => !Number.isInteger(index) || index < 0 || index >= crops.length) || new Set(saved.autoCropSelection).size !== saved.autoCropSelection.length)) return false;
     if (saved.gardenName !== undefined && (typeof saved.gardenName !== 'string' || saved.gardenName.trim().length < 1 || saved.gardenName.trim().length > 24)) return false;
+    if (saved.avatarMode !== undefined && !['auto', 'manual'].includes(saved.avatarMode)) return false;
+    if (saved.avatarCrop !== undefined && (!Number.isInteger(saved.avatarCrop) || saved.avatarCrop < 0 || saved.avatarCrop >= crops.length)) return false;
     if (saved.hudCollapsed !== undefined && typeof saved.hudCollapsed !== 'boolean') return false;
     if (saved.droneCount !== undefined && (!Number.isInteger(saved.droneCount) || saved.droneCount < 1 || saved.droneCount > MAX_DRONES)) return false;
     if (saved.deploymentSequence !== undefined && (!Number.isInteger(saved.deploymentSequence) || saved.deploymentSequence < 0)) return false;
@@ -183,7 +185,7 @@
     // Preserve their coordinates and adapt the lower plots to the new surface rule on load.
     const deployedDocks = drones.filter((drone) => drone.deployed !== false).map((drone) => drone.dockPosition);
     plots.forEach((plot) => { if (plotHasSupportAbove(plot, plots, deployedDocks)) plot.grassOnly = true; });
-    return { ...saved, cropCatalogVersion: CROP_CATALOG_VERSION, gardenName: saved.gardenName || '花明摸魚花園', hudCollapsed: saved.hudCollapsed === true, autoMode: saved.autoMode === true, autoCropSelection: Array.isArray(saved.autoCropSelection) ? saved.autoCropSelection : [0], flowerVariants, worldTimeMs: Number.isFinite(saved.worldTimeMs) ? saved.worldTimeMs : 60_000, worldTimeAnchor: Number.isFinite(saved.worldTimeAnchor) ? saved.worldTimeAnchor : Date.now(), lastObservedRaining: typeof saved.lastObservedRaining === 'boolean' ? saved.lastObservedRaining : window.skyEnvironment.getState(saved).isRaining, droneCount: drones.length, deploymentSequence, drones, dockPosition, plots };
+    return { ...saved, cropCatalogVersion: CROP_CATALOG_VERSION, gardenName: saved.gardenName || '花明摸魚花園', avatarMode: saved.avatarMode === 'manual' ? 'manual' : 'auto', avatarCrop: Number.isInteger(saved.avatarCrop) && saved.avatarCrop >= 0 && saved.avatarCrop < crops.length ? saved.avatarCrop : 0, hudCollapsed: saved.hudCollapsed === true, autoMode: saved.autoMode === true, autoCropSelection: Array.isArray(saved.autoCropSelection) ? saved.autoCropSelection : [0], flowerVariants, worldTimeMs: Number.isFinite(saved.worldTimeMs) ? saved.worldTimeMs : 60_000, worldTimeAnchor: Number.isFinite(saved.worldTimeAnchor) ? saved.worldTimeAnchor : Date.now(), lastObservedRaining: typeof saved.lastObservedRaining === 'boolean' ? saved.lastObservedRaining : window.skyEnvironment.getState(saved).isRaining, droneCount: drones.length, deploymentSequence, drones, dockPosition, plots };
   }
   const game = loadGame();
   let rainStartedAt = game.lastObservedRaining ? Date.now() : null;
@@ -245,6 +247,9 @@
   const hudCollapsedSummary = document.querySelector('#hud-collapsed-summary');
   const environmentStatus = document.querySelector('#environment-status');
   const gardenNameDisplay = document.querySelector('#garden-name-display');
+  const gardenAvatar = document.querySelector('#garden-avatar');
+  const avatarModeSelect = document.querySelector('#avatar-mode');
+  const avatarFlowerSelect = document.querySelector('#avatar-flower');
   const gardenNameEditor = document.querySelector('#garden-name-editor');
   const gardenNameInput = document.querySelector('#garden-name-input');
   const resetProgressButton = document.querySelector('#reset-progress');
@@ -348,7 +353,7 @@
     });
   }
   function updateHud() {
-    coinsDisplay.textContent = game.coins; updateSaveStatus();
+    coinsDisplay.textContent = game.coins; updateSaveStatus(); updateAvatarDisplay();
     const environment = window.skyEnvironment.getState(game);
     updateEnvironmentDisplay(environment);
     window.skyWorld?.setPlotPositions(game.plots.map(({ x, z, y }) => ({ x, z, y })));
@@ -580,6 +585,32 @@
     hudToggle.setAttribute('aria-label', game.hudCollapsed ? '展開介面' : '收合介面');
     hudToggle.setAttribute('title', game.hudCollapsed ? '展開介面' : '收合介面');
     hudToggle.setAttribute('aria-expanded', String(!game.hudCollapsed));
+  }
+  function updateAvatarDisplay() {
+    if (!gardenAvatar) return;
+    let cropIndex = game.avatarCrop;
+    if (game.avatarMode !== 'manual') {
+      const counts = Array(crops.length).fill(0);
+      game.plots.forEach((plot) => { if (Number.isInteger(plot.crop) && plot.crop >= 0 && plot.crop < counts.length) counts[plot.crop] += 1; });
+      cropIndex = counts.reduce((best, count, index) => count > counts[best] ? index : best, 0);
+    }
+    const flower = crops[cropIndex] || crops[0];
+    gardenAvatar.textContent = flower.emoji || '🌼';
+    gardenAvatar.setAttribute('aria-label', `花園頭像：${flower.name}`);
+  }
+  function initializeAvatarSettings() {
+    if (!avatarModeSelect || !avatarFlowerSelect) { updateAvatarDisplay(); return; }
+    avatarFlowerSelect.replaceChildren();
+    crops.forEach((flower, index) => {
+      const option = document.createElement('option');
+      option.value = String(index);
+      option.textContent = `${flower.emoji || '🌼'} ${flower.name}`;
+      avatarFlowerSelect.append(option);
+    });
+    avatarModeSelect.value = game.avatarMode;
+    avatarFlowerSelect.value = String(game.avatarCrop);
+    avatarFlowerSelect.disabled = game.avatarMode !== 'manual';
+    updateAvatarDisplay();
   }
   function updateGardenName() {
     gardenNameDisplay.textContent = game.gardenName;
@@ -973,6 +1004,23 @@
     document.querySelector('.world-frame')?.classList.toggle('is-power-save', enabled);
     notify(enabled ? '省電模式已開啟：清空場景畫布並暫停 GPU 繪圖，遊戲邏輯持續運作。' : '省電模式已關閉：恢復場景繪圖。');
   });
+  avatarModeSelect?.addEventListener('change', () => {
+    game.avatarMode = avatarModeSelect.value === 'manual' ? 'manual' : 'auto';
+    avatarFlowerSelect.disabled = game.avatarMode !== 'manual';
+    save();
+    updateAvatarDisplay();
+    notify(game.avatarMode === 'manual' ? '已切換為自訂花卉頭像。' : '已切換為自動頭像，會依種植數量最多的花更新。');
+  });
+  avatarFlowerSelect?.addEventListener('change', () => {
+    const cropIndex = Number(avatarFlowerSelect.value);
+    if (!Number.isInteger(cropIndex) || cropIndex < 0 || cropIndex >= crops.length) return;
+    game.avatarCrop = cropIndex;
+    game.avatarMode = 'manual';
+    avatarModeSelect.value = 'manual';
+    avatarFlowerSelect.disabled = false;
+    save();
+    updateAvatarDisplay();
+  });
   settingsToggle?.addEventListener('click', () => {
     const open = settingsPanel?.hidden !== false;
     if (settingsPanel) settingsPanel.hidden = !open;
@@ -1127,6 +1175,7 @@
     const heightStep = kind === 'plot' ? '0.5' : '1';
     notify(mode === 'height' ? `${objectName}高度調整模式：上下拖曳，每格 ${heightStep} 個土地單位。` : `已進入${objectName}移動模式；再次短按可調整高度。`);
   };
+  initializeAvatarSettings();
   render();
   updateGardenName();
   if (offlineReport && offlineReport.rawDuration >= 60_000) {
