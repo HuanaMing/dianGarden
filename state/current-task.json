@@ -2,8 +2,8 @@
   "name": "任務176：花園頭像、觸控操作與花卉模型模組化",
   "status": "in_progress",
   "pendingApprovals": [
-    "確認花卉模型拆分方案：維持原生 classic scripts，以 src/model/general.js 提供共用幾何 API／註冊表，各花種檔案註冊自己的模型，並由主畫面與圖鑑在 sky-world.js 前依序載入。"
+    "確認花卉模型拆分方案 A：維持原生 classic scripts，以 src/model/general.js 提供共用幾何 API／模型註冊表，各花種檔案註冊模型，主畫面與圖鑑在 sky-world.js 前依序載入。"
   ],
-  "nextAction": "先通過修正後的 Playwright 驗收並檢查頭像存檔相容性與觸控手勢程式；等待使用者確認模型模組化方案後再拆分花卉模型。",
-  "result": "已實作頭像設定與存檔欄位向後相容、移除手機縮放按鈕、藍色放開回饋點、500ms 長按環形進度與空地長按後旋轉、圖鑑 viewport 禁止頁面縮放。第一次 Actions 發現 patch 誤插入字串造成 JS 語法錯誤，已修正並重新觸發驗收；待最新 run 結果。"
+  "nextAction": "非架構部分已完成，最新 GitHub Actions run 39890619739 通過（包含頭像保存、舊存檔預設、手機縮放按鈕／viewport、長按環形回饋及多指藍點測試）。等待使用者確認花卉模型拆分方案 A 後，再執行模型模組化並做 11 種模型回歸驗收。",
+  "result": "已實作並驗收頭像設定、手機縮放按鈕移除、觸控藍點與長按環形進度、手機拖曳平移／長按空地旋轉、圖鑑頁禁止瀏覽器縮放。Playwright run 39890619739 成功，測試結果 PASS，browserErrors 為空。花卉模型拆分屬主要架構重構，尚待使用者確認方案。"
 }
