@@ -21,10 +21,11 @@
 - 第 6 段：移除舊首頁 `.hero-copy` 的三個 CSS 規則（一般版及兩個手機版斷點）；檢查現行頁面與腳本均無引用。提交：`2a8444a115a195eac66971387fa778935b240e67`。Playwright run `39880800563` 通過。
 - 第 7 段：移除兩條無引用的 `.hero-description` 規則；檢查現行頁面與腳本均無引用。提交：`d4ac99da93d50c7c4ac35d5faa0ee7cb836b0a69`。Playwright run `39882579773` 通過。
 - 第 8 段：一次清理舊首頁與舊農地卡片的孤立樣式，移除 `.topbar`、`.brand`、`.wallet`、`.hero`、`.hero-stats`、`.hero-art`、`.sun`、`.bird`、`.bird-one`、`.bird-two`、`.hero-island`、`.farm-section`、`.section-heading`、`.primary-button`、`.farm-grid`、`.plot-card`、`.plot-top`、`.plot-number`、`.plot-visual`、`.empty-sprout`、`.plot-actions`、`.plot-timer`、`.growing-card`、`.empty-plot`、`.empty-icon` 等 63 條 CSS 選擇器（約 4.6 KB）。逐一確認上述 class 在現行來源檔（包含 `src/flower-encyclopedia.js`）中無引用，並保留共用 `.action-button` 規則。提交：`6d956fe39f366a8e4a95666de76a5b0a41d5b111`。Playwright run `39883971650` 通過。
+- 第 9 段（驗收中）：移除 `.world-heading`、`.world-help`、`.world-badge`、`.seed-option-arrow`、`.manual-plot-switch`、`.crop-flower-meaning`、`.plot-select`、`.rain-status`、`.settings-save-status` 等 30 條未引用的舊 CSS 選擇器（約 2.7 KB）。確認現行 HTML、遊戲／場景／圖鑑程式及瀏覽器測試均無對應 class 引用。提交：`542c3d46ddabb11122dd7f9cb53e5c9755159aec`。Playwright run `39884183837` 仍在執行，當前停在「安裝 Chromium 系統依賴」，尚未完成瀏覽器驗收。
 - 新版流程驗證：[GitHub Actions run 39879113329](https://github.com/HuanaMing/dianGarden/actions/runs/39879113329) 已完成，整體瀏覽器驗收成功。
 
 ## 下一步
-第 1–8 段均已完成並通過對應 Playwright 驗收。繼續盤點其他孤立樣式時，需把 `src/flower-encyclopedia.js` 與所有現行來源納入引用檢查，尤其留意動態 class 組合；每批修改仍須獨立驗收。
+第 1–8 段均已完成並通過對應 Playwright 驗收；第 9 段等待 run `39884183837` 完成。驗收通過後再考慮移除已確認未使用的 CSS 自訂屬性（`:root` 中 `--green`、`--dark`、`--muted`、`--cream`、`--line`）；先確認第 9 段結果，再進行下一批。
 
 ## 原則
 - 不以「看起來沒用」作為刪除依據；先查詢宣告、引用、事件綁定、跨模組介面與動態呼叫。
