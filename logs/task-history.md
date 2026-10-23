@@ -1485,3 +1485,10 @@
 - 結果：點擊位置改為中心 20%、邊緣透明的藍色徑向漸層並在放開後 500ms 淡出；長按計時環移除白色底環，進度改為 #5D81C7、中心可見度 50% 並讓內外緣漸隱，內徑對齊點擊藍點半徑；無人機坪台在移動模式下可直接拖曳，並以坪台高度平面計算拖曳偏移。
 - 驗收：Playwright 瀏覽器自動驗收成功（[run 39983008337](https://github.com/HuanaMing/dianGarden/actions/runs/39983008337)）；GitHub Pages 部署成功（[run 39983008203](https://github.com/HuanaMing/dianGarden/actions/runs/39983008203)）。
 - 檔案：`src/sky-world.js`、`src/styles.css`、`tests/browser-smoke.mjs`、`docs/architecture.md`、`tasks/done/186-pointer-feedback-and-dock-drag.md`、`state/project.json`、`state/current-task.json`
+
+
+## 2026-10-24 — 任務186重做：提高點擊回饋透明度並確認長按環內徑
+
+- 點擊位置藍色徑向漸層中心可見度由 20% 調整為 30%，邊緣仍為 0%；保留放開後 500ms 淡出，使中心由 30% 降至 0%。
+- 長按環內徑維持 38px（對應 76px 點擊藍點的半徑），外徑維持原設定，不改動環的色彩、透明度或線寬。
+- 更新 Playwright 樣式檢查與架構文件；等待自動驗收及部署完成後補記結果。
