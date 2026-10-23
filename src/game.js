@@ -643,10 +643,6 @@
         emoji.textContent = flower.emoji || '🌼';
         button.append(emoji);
       }
-      const name = document.createElement('span');
-      name.className = 'avatar-flower-name';
-      name.textContent = flower.name;
-      button.append(name);
       avatarFlowerOptions.append(button);
     });
   }
