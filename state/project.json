@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 188,
-  "nextAction": "已修正花草環圖片路徑大小寫／字形不一致，等待驗收與 Pages 部署。",
+  "nextAction": "部署流程已補上花草環圖片資產複製步驟，等待 GitHub Actions 驗收與 Pages 部署。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
