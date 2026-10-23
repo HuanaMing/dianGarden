@@ -1,0 +1,32 @@
+# 任務 178：花卉頭像點陣圖與地塊移動操作調整
+
+## 狀態
+**Completed（已完成）**
+
+## 需求
+1. 設定中「手動選擇花卉頭像」的選花介面改用 `assets/flowers/*.png` 點陣圖圖示，不再只用花卉 emoji。
+2. 長按觸控環形進度條半徑增加至目前的 3 倍，線條粗細維持不變。
+3. 地塊處於移動模式時，不需長按即可直接拖動地塊。
+4. 移除長按地塊後才出現的那一組十字箭頭；改為在移動模式下直接顯示原本表示移動模式的十字箭頭，避免同時出現兩組移動提示。上下箭頭仍應只用於高度模式。
+
+## 初步檢查與建議實作
+- 頭像設定使用原生 `select#avatar-flower`，選項由 `src/game.js` 動態產生。改用原生 HTML/CSS 自訂花卉格狀按鈕，使用 `src/flower-catalog.js` 的 `image` 路徑與 `image-rendering: pixelated`；保留既有 `avatarMode`、`avatarCrop` 存檔相容性。
+- 長按環由 `src/sky-world.js` 的 `makeHoldRing()` 產生，SVG 目前為 40×40、半徑 16、CSS 線寬 3。半徑及 SVG 容器視覺尺寸放大 3 倍，避免裁切，線寬維持 3。
+- 已選取地塊且處於 `heightEdit.kind === 'plot' && heightEdit.mode === 'move'` 時，pointerdown 立即開始拖曳；一般模式仍保留長按進入移動模式。
+- 檢查 `uploadWorld()` 內 `dragPreview` 與 `heightEdit` 的箭頭繪製條件，避免重複移動箭頭並保留高度模式上下箭頭。
+- 不改變碰撞、網格吸附、無人機停靠平台操作、存檔格式或一般相機手勢。
+
+## 驗收條件
+1. 11 種花卉頭像選擇皆顯示正確 PNG 點陣圖，圖片成功載入並保持像素風格。
+2. 自動／手動頭像切換、手動選花、頭像顯示及重整後存檔行為通過回歸測試。
+3. 長按環半徑為原本 3 倍、線寬仍為 3，500ms 動畫、多指觸控及回饋點正常。
+4. 移動模式按下後直接拖動，預覽及提交正常；一般模式長按進入移動模式仍正常。
+5. 移動模式只顯示一組十字方向提示；高度模式仍顯示上下箭頭，沒有重複十字箭頭。
+6. GitHub Actions Playwright browser-smoke 通過，browserErrors 為空，截圖產物成功保存。
+7. 更新任務執行紀錄、專案狀態與工作歷史。
+
+## 執行紀錄
+- 2026-10-23：使用者確認開始；已檢查 `AGENTS.md`、`README.md`、專案狀態、相關程式、架構文件與 Playwright 測試，進入實作階段。
+- 2026-10-23：已完成頭像 PNG 格狀選擇、長按環半徑放大三倍、移動模式按下即拖曳及箭頭去重；browser-smoke 已更新，等待最新 Actions 結果。
+- 驗收結果：run `39895672169` 成功，完整 browser-smoke PASS，browserErrors 為空；`diangarden-browser-check` artifact 成功保存（約 2.91 MB）。自訂頭像 11 張 PNG、模式切換／存檔、長按環半徑與線寬、多指觸控及箭頭去重檢查通過。移動模式即時拖曳分支與箭頭繪製條件已納入程式及驗收腳本檢查。
+- 主要程式提交：`fd46753f6ba1c896ae9395cad2da90b6bdbffeb1`；瀏覽器測試修正提交：`dabafae81dbfcd333407fac295a407b2a8f1bc08`。
