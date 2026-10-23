@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Noto+Sans+TC:wght@400;500;600;700;800;900&display=swap');
 
 :root{font-family:'Nunito','Noto Sans TC',sans-serif;color:#31524d;background:#e8f6fb;font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;font-optical-sizing:auto;font-weight:500}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 76% 19%,#f7fcff 0,transparent 36%),linear-gradient(180deg,#e4f4fc 0,#f0f8f6 48%,#f6f7ee 100%)}button{font:inherit}.game-shell{width:min(100% - 48px,1050px);margin:0 auto}.eyebrow{margin:0 0 9px;color:#80a898;font-size:10px;letter-spacing:2px;font-weight:900}.action-button{border:0;border-radius:12px;cursor:pointer;font-weight:800;transition:transform .15s,filter .15s,box-shadow .15s}.action-button:hover{transform:translateY(-2px);filter:brightness(1.03)}.action-button:active{transform:translateY(0)}.crop{position:relative;z-index:1;font-size:42px;line-height:1;filter:drop-shadow(0 3px 2px #78875525);animation:bob 2.4s ease-in-out infinite}.action-button{padding:8px 15px;color:#fff;background:#70a77b;font-size:11px;box-shadow:0 3px 8px #62966c24}.action-button.harvest{background:#e4a947;box-shadow:0 3px 8px #d39c3b2b}.progress-track{position:absolute;bottom:0;left:0;height:4px;width:100%;background:#edf2e9}.progress-fill{height:100%;background:linear-gradient(90deg,#85c78b,#d5c965);transition:width .5s}footer{padding:24px 0 27px;text-align:center;color:#92a49a;font-size:11px}footer span{margin-right:4px}.toast{position:fixed;left:50%;bottom:24px;z-index:5;transform:translate(-50%,18px);padding:11px 18px;border-radius:999px;background:#365a4e;color:white;font-size:12px;font-weight:800;opacity:0;pointer-events:none;transition:all .25s;box-shadow:0 6px 20px #31594f33}.toast.show{transform:translate(-50%,0);opacity:1}@keyframes bob{0%,100%{transform:translateY(1px)}50%{transform:translateY(-3px)}}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 76% 19%,#f7fcff 0,transparent 36%),linear-gradient(180deg,#e4f4fc 0,#f0f8f6 48%,#f6f7ee 100%)}button{font:inherit}.game-shell{width:min(100% - 48px,1050px);margin:0 auto}.eyebrow{margin:0 0 9px;color:#80a898;font-size:10px;letter-spacing:2px;font-weight:900}.action-button{border:0;border-radius:12px;cursor:pointer;font-weight:800;transition:transform .15s,filter .15s,box-shadow .15s}.action-button:hover{transform:translateY(-2px);filter:brightness(1.03)}.action-button:active{transform:translateY(0)}.crop{position:relative;z-index:1;font-size:42px;line-height:1;filter:drop-shadow(0 3px 2px #78875525);animation:bob 2.4s ease-in-out infinite}.action-button{padding:8px 15px;color:#fff;background:#70a77b;font-size:11px;box-shadow:0 3px 8px #62966c24}.action-button.harvest{background:#e4a947;box-shadow:0 3px 8px #d39c3b2b}.progress-track{position:absolute;bottom:0;left:0;height:4px;width:100%;background:#edf2e9}.progress-fill{height:100%;background:linear-gradient(90deg,#85c78b,#d5c965);transition:width .5s}.toast{position:fixed;left:50%;bottom:24px;z-index:5;transform:translate(-50%,18px);padding:11px 18px;border-radius:999px;background:#365a4e;color:white;font-size:12px;font-weight:800;opacity:0;pointer-events:none;transition:all .25s;box-shadow:0 6px 20px #31594f33}.toast.show{transform:translate(-50%,0);opacity:1}@keyframes bob{0%,100%{transform:translateY(1px)}50%{transform:translateY(-3px)}}
 @media(max-width:700px){.game-shell{width:min(100% - 28px,500px)}}
 
 /* Interactive WebGL island */
@@ -251,7 +251,7 @@ body, body *{
   -webkit-touch-callout:none;
 }
 /* 輸入欄位仍允許選取、複製及編輯文字。 */
-input, textarea, [contenteditable="true"]{
+input, [contenteditable="true"]{
   -webkit-user-select:text;
   user-select:text;
   -webkit-touch-callout:default;
@@ -261,7 +261,6 @@ input, textarea, [contenteditable="true"]{
    Use !important because several editor-specific rules set smaller font sizes. */
 @media (max-width: 700px) {
   input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]),
-  textarea,
   select,
   [contenteditable="true"] {
     font-size: 16px !important;
