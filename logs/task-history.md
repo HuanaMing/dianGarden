@@ -1444,5 +1444,5 @@
 ## 2026-10-23 — 任務 184：精簡設定面板
 
 - 結果：設定面板縮窄並減少內距、卡片間距、按鈕高度與操作說明留白；11 種花卉頭像改為 6 欄緊湊選擇器，保留版本資訊、立即更新、2D、省電、重置及存檔狀態功能。
-- 驗證：新增 Playwright 檢查面板尺寸、卡片內距及頭像選項數量／高度；等待自動驗收與 GitHub Pages 部署完成。
+- 驗證：Playwright 瀏覽器驗收 run 39955495271 成功；GitHub Pages 部署 run 39955488568 成功。
 - 檔案：`src/styles.css`、`tests/browser-smoke.mjs`、`tasks/active/184-compact-settings-panel.md`、`state/project.json`、`state/current-task.json`、`logs/task-history.md`。
