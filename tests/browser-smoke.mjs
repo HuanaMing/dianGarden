@@ -127,6 +127,36 @@ try {
   await page.locator('#farm-management-close').click();
   checks.push('桌面版、手機直向與橫向版截圖及手機免捲動刪除按鈕檢查完成');
 
+  const touchPage = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
+  await touchPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  const touchCanvas = await touchPage.locator('#sky-canvas').boundingBox();
+  if (!touchCanvas) throw new Error('無法取得手機觸控畫布位置');
+  const touchX = Math.round(touchCanvas.x + 24);
+  const touchY = Math.round(touchCanvas.y + touchCanvas.height * 0.72);
+  const cdp = await touchPage.context().newCDPSession(touchPage);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: touchX, y: touchY, id: 1 }] });
+  await touchPage.waitForTimeout(100);
+  if (await touchPage.locator('.touch-hold-ring').count() !== 1) throw new Error('單指按下時未顯示長按環形進度');
+  await touchPage.waitForTimeout(450);
+  const ringOffset = Number(await touchPage.locator('.touch-hold-progress').evaluate(element => getComputedStyle(element).strokeDashoffset));
+  if (ringOffset > 2) throw new Error(`長按環形進度未在 500ms 左右完成：${ringOffset}`);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: touchX + 28, y: touchY + 12, id: 1 }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await touchPage.waitForTimeout(50);
+  if (await touchPage.locator('.touch-feedback-dot').count() !== 1) throw new Error('觸控放開後未顯示藍色回饋點');
+  await touchPage.waitForTimeout(520);
+  if (await touchPage.locator('.touch-feedback-dot').count() !== 0) throw new Error('藍色回饋點沒有在 500ms 後消失');
+  const multiPoints = [
+    { x: touchX + 18, y: touchY - 20, id: 2 },
+    { x: touchX + 66, y: touchY - 20, id: 3 },
+  ];
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: multiPoints });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await touchPage.waitForTimeout(50);
+  if (await touchPage.locator('.touch-feedback-dot').count() !== 2) throw new Error('多指觸控放開後沒有各自顯示藍色回饋點');
+  await touchPage.close();
+  checks.push('手機單指長按環形進度、放開回饋點及多指獨立回饋通過');
+
   const maturePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await maturePage.addInitScript(() => {
     const now = Date.now();
