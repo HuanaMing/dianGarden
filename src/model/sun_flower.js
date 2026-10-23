@@ -78,7 +78,7 @@ function addSunflowerStemLeafGeometry(positions, colors, x, z, height, stage) {
   }
 
   function addSunFlowerBloom({
-    positions, colors, x, z, height, headColor, environmentState, stemModel, stage,
+    positions, colors, x, z, height, headColor, environmentState, stemModel, stage, stage,
   }) {
     const bloomY = 0.055 + height;
     const dedicatedStemLeafModel = stemModel;
