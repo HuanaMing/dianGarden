@@ -475,3 +475,68 @@ input, [contenteditable="true"]{
 .version-check-status.has-version-error{color:#a66450}
 .force-update-button{width:100%;min-height:36px;border:0;border-radius:9px;background:#477451;color:#fff;font-size:11px;font-weight:800;cursor:pointer}
 .force-update-button:disabled{opacity:.65;cursor:wait}
+
+
+/* 任務184：壓縮設定面板內的卡片、按鈕與頭像選擇器。 */
+.settings-panel{
+  width:min(232px,calc(100% - 16px));
+  max-height:calc(100dvh - 68px);
+  padding:8px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+}
+.settings-panel h2{margin:0 0 6px;font-size:12px}
+.settings-panel .camera-mode,
+.settings-panel .reset-progress-button,
+.settings-panel .power-save-toggle{
+  min-height:28px;
+  margin:0 0 5px;
+  padding:5px 8px;
+  border-radius:7px;
+  font-size:10px;
+}
+.settings-panel .version-settings,
+.settings-panel .avatar-settings{
+  gap:5px;
+  margin:0 0 6px;
+  padding:7px;
+  border-radius:8px;
+}
+.settings-panel .version-settings h3,
+.settings-panel .avatar-settings h3{font-size:10px}
+.settings-panel .version-details{gap:3px}
+.settings-panel .version-details dt{font-size:9px}
+.settings-panel .version-details dd{font-size:10px}
+.settings-panel .version-check-status{font-size:9px;line-height:1.35}
+.settings-panel .force-update-button{
+  min-height:28px;
+  border-radius:7px;
+  font-size:10px;
+}
+.settings-panel .avatar-settings label,
+.settings-panel .avatar-settings .avatar-flower-label{font-size:9px}
+.settings-panel .avatar-settings select{min-height:27px;padding:3px 6px;border-radius:6px;font-size:10px}
+.settings-panel .avatar-flower-picker{gap:4px}
+.settings-panel .avatar-flower-options{grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+.settings-panel .avatar-flower-option{
+  min-height:40px;
+  gap:1px;
+  padding:3px 1px;
+  border-radius:6px;
+  font-size:8px;
+}
+.settings-panel .avatar-flower-image{width:22px;height:22px}
+.settings-panel .avatar-flower-emoji{font-size:17px;line-height:22px}
+.settings-panel .operation-help{margin:5px 0;padding:6px 7px;border-radius:7px}
+.settings-panel .operation-help h3{margin:0 0 3px;font-size:9px}
+.settings-panel .operation-help p{font-size:9px;line-height:1.4}
+.settings-panel .save-status{margin:3px 0 0;font-size:9px;line-height:1.35}
+@media(max-width:700px){
+  .settings-panel{width:min(224px,calc(100% - 16px));max-height:calc(100dvh - 64px);padding:7px}
+  .settings-panel .avatar-flower-options{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+@media(max-height:480px){
+  .settings-panel{max-height:calc(100dvh - 52px)}
+  .settings-panel .operation-help{display:none}
+}
