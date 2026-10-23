@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": null,
-  "nextAction": "任務172已完成並歸檔。Playwright workflow 修改後完整瀏覽器驗收成功，約45秒，25張截圖已保存。",
+  "activeTask": 176,
+  "nextAction": "任務176執行中：已加入可持久保存的自訂／自動花卉頭像、移除手機縮放按鈕、加入觸控藍點與長按環形回饋、更新手機相機手勢並限制圖鑑頁面縮放。花卉模型拆分屬主要架構重構，待使用者確認模組註冊／載入方案後再處理。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
