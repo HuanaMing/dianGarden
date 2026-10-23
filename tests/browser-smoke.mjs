@@ -70,7 +70,7 @@ try {
     const style = getComputedStyle(element);
     return { imageSrc: image?.getAttribute('src'), imageWidth: image && getComputedStyle(image).width, riseDuration: style.animationDuration, riseDelay: style.animationDelay };
   });
-  if (mouseRingStyle.imageSrc !== '../assets/花草還.webp' || mouseRingStyle.imageWidth !== '46px' || mouseRingStyle.riseDuration !== '0.5s' || mouseRingStyle.riseDelay !== '0.2s') throw new Error('PC 花草環素材或上升動畫錯誤：' + JSON.stringify(mouseRingStyle));
+  if (mouseRingStyle.imageSrc !== '../assets/wreath.webp' || mouseRingStyle.imageWidth !== '46px' || mouseRingStyle.riseDuration !== '0.5s' || mouseRingStyle.riseDelay !== '0.2s') throw new Error('PC 花草環素材或上升動畫錯誤：' + JSON.stringify(mouseRingStyle));
   await page.mouse.up();
   checks.push('PC 長按環前200ms隱藏，完整圓環上升50px、逐漸縮小並在結束時復原');
 
@@ -251,7 +251,7 @@ try {
     const imageStyle = image && getComputedStyle(image);
     return { imageSrc: image?.getAttribute('src'), imageWidth: imageStyle?.width, ringTransform: style.transform, animationDuration: style.animationDuration, animationDelay: style.animationDelay };
   });
-  if (ringGeometry.imageSrc !== '../assets/花草還.webp' || ringGeometry.imageWidth !== '46px' || ringGeometry.animationDuration !== '0.5s' || ringGeometry.animationDelay !== '0.2s') throw new Error(`花草環素材或動畫時序錯誤：${JSON.stringify(ringGeometry)}`);
+  if (ringGeometry.imageSrc !== '../assets/wreath.webp' || ringGeometry.imageWidth !== '46px' || ringGeometry.animationDuration !== '0.5s' || ringGeometry.animationDelay !== '0.2s') throw new Error(`花草環素材或動畫時序錯誤：${JSON.stringify(ringGeometry)}`);
   const riseMatrix = ringGeometry.ringTransform.match(/matrix\(([^)]+)\)/);
   if (!riseMatrix || Math.abs(Number(riseMatrix[1].split(',')[5]) + (60 + 50)) > 1) throw new Error(`花草環未上升50px：${ringGeometry.ringTransform}`);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: touchX + 28, y: touchY + 12, id: 1 }] });
@@ -273,10 +273,10 @@ try {
   if (await touchPage.locator('.touch-feedback-dot').count() !== 2) throw new Error('多指觸控放開後沒有各自顯示藍色回饋點');
   await touchPage.close();
   const worldSource = await fs.readFile('src/sky-world.js', 'utf8');
-  if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("wreath.src = '../assets/花草還.webp';") || worldSource.includes('touch-hold-progress')) throw new Error('移動模式即時拖曳或花草環素材實作不符');
+  if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("wreath.src = '../assets/wreath.webp';") || worldSource.includes('touch-hold-progress')) throw new Error('移動模式即時拖曳或花草環素材實作不符');
   if (!worldSource.includes('plotWasInMoveModeAtPointerDown') || !worldSource.includes('!plotWasInMoveModeAtPointerDown')) throw new Error('地塊移動模式短按切換高度模式的修正未包含');
   if (!worldSource.includes('rotateHoldGesture') || worldSource.includes('rotateTouchGesture') || !worldSource.includes('if (pointerPlotIndex === null && dockHitAtPointer === null)')) throw new Error('PC 與手機的相機手勢尚未統一');
-  if (!worldSource.includes("wreath.src = '../assets/花草還.webp';") || !worldSource.includes("className = 'touch-hold-wreath'")) throw new Error('長按花草環未使用 assets 內的透明圖片素材');
+  if (!worldSource.includes("wreath.src = '../assets/wreath.webp';") || !worldSource.includes("className = 'touch-hold-wreath'")) throw new Error('長按花草環未使用 assets 內的透明圖片素材');
   const styleSource = await fs.readFile(new URL('../src/styles.css', import.meta.url), 'utf8');
   if (!styleSource.includes('@keyframes touch-ring-rise{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}40%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}80%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}}') || !styleSource.includes('.touch-hold-ring{animation:touch-ring-rise .5s cubic-bezier(.2,.65,.3,1) .2s forwards}') || !styleSource.includes('width:46px;height:46px')) throw new Error('花草環圖片的上升、停留、放大復原動畫未設定');
   checks.push('白色花草圓環無進度條：上升50px、停留0.2秒並於0.1秒放大復原');
