@@ -451,3 +451,5 @@ input, [contenteditable="true"]{
 @media(max-width:700px){
   .farm-management-panel,.settings-panel,.drone-jobs{top:56px!important}
 }
+
+.avatar-settings{display:grid;gap:6px;margin:0 0 10px;padding:10px;border:1px solid #e4ecdf;border-radius:10px;background:#f8faf3}.avatar-settings h3{margin:0 0 2px;color:#527763;font-size:12px}.avatar-settings label{color:#819588;font-size:10px;font-weight:800}.avatar-settings select{width:100%;min-height:32px;padding:5px 8px;border:1px solid #dfe9db;border-radius:8px;background:#fffef8;color:#426a57;font:inherit;font-size:11px}.avatar-settings select:disabled{opacity:.55}
