@@ -244,7 +244,7 @@ try {
     width: Number.parseFloat(getComputedStyle(element.closest('.touch-hold-ring')).width),
     dashArray: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-dasharray')),
     dashOffset: Number.parseFloat(getComputedStyle(element).getPropertyValue('stroke-dashoffset')),
-    mask: getComputedStyle(element).maskImage,
+    mask: getComputedStyle(element.ownerSVGElement).maskImage,
     trackCount: element.ownerSVGElement.querySelectorAll('.touch-hold-track').length,
   }));
   if (ringGeometry.radius !== 22 || ringGeometry.strokeWidth !== 6 || ringGeometry.viewBox !== '0 0 120 120' || ringGeometry.width !== 120
