@@ -60,16 +60,20 @@ try {
   await page.locator('#settings-toggle').click();
   if (!(await page.locator('#settings-panel').isVisible())) throw new Error('設定按鈕未能開啟設定面板');
   if (!(await page.locator('.operation-help').isVisible())) throw new Error('操作說明未移至設定面板');
-  if (!(await page.locator('#avatar-mode').isVisible()) || !(await page.locator('#avatar-flower').isVisible())) throw new Error('設定中未顯示自訂頭像控制');
+  if (!(await page.locator('#avatar-mode').isVisible()) || !(await page.locator('#avatar-flower-options').isVisible())) throw new Error('設定中未顯示自訂頭像控制');
+  const avatarOptions = page.locator('.avatar-flower-option');
+  if (await avatarOptions.count() !== 11) throw new Error('頭像選擇清單未顯示 11 種花卉');
+  const avatarImages = await page.locator('.avatar-flower-image').evaluateAll(images => images.map(image => ({ loaded: image.complete && image.naturalWidth > 0, pixelated: getComputedStyle(image).imageRendering === 'pixelated' })));
+  if (avatarImages.length !== 11 || avatarImages.some(image => !image.loaded || !image.pixelated)) throw new Error('頭像選擇中的花卉點陣圖未全部載入或未使用 pixelated');
   await page.locator('#avatar-mode').selectOption('manual');
-  await page.locator('#avatar-flower').selectOption('3');
-  if (await page.locator('#garden-avatar').innerText() !== '🌹') throw new Error('手動頭像未顯示所選花卉 emoji');
+  await page.locator('[data-avatar-crop="3"]').click();
+  if (await page.locator('#garden-avatar').innerText() !== '🌹' || await page.locator('[data-avatar-crop="3"]').getAttribute('aria-pressed') !== 'true') throw new Error('手動頭像未更新為所選花卉');
   await page.reload({ waitUntil: 'networkidle', timeout: 30000 });
   await page.locator('#settings-toggle').click();
-  if (await page.locator('#avatar-mode').inputValue() !== 'manual' || await page.locator('#avatar-flower').inputValue() !== '3' || await page.locator('#garden-avatar').innerText() !== '🌹') throw new Error('自訂花卉頭像未在重新載入後保存');
+  if (await page.locator('#avatar-mode').inputValue() !== 'manual' || await page.locator('[data-avatar-crop="3"]').getAttribute('aria-pressed') !== 'true' || await page.locator('#garden-avatar').innerText() !== '🌹') throw new Error('自訂花卉頭像未在重新載入後保存');
   await page.locator('#avatar-mode').selectOption('auto');
-  if (await page.locator('#avatar-flower').isEnabled()) throw new Error('自動頭像模式仍允許指定花種');
-  checks.push('自訂花卉頭像可切換、顯示並在重新載入後保存');
+  if (!(await page.locator('.avatar-flower-option').first().isDisabled())) throw new Error('自動頭像模式仍允許指定花種');
+  checks.push('自訂花卉頭像點陣圖、切換、顯示並在重新載入後保存');
   await page.locator('#power-save-toggle').click();
   if (await page.locator('#power-save-toggle').getAttribute('aria-pressed') !== 'true') throw new Error('省電模式未能開啟');
   if (!(await page.locator('.world-frame').evaluate(element => element.classList.contains('is-power-save')))) throw new Error('省電模式未切換畫布清空樣式');
@@ -140,8 +144,15 @@ try {
   await touchPage.waitForTimeout(100);
   if (await touchPage.locator('.touch-hold-ring').count() !== 1) throw new Error('單指按下時未顯示長按環形進度');
   await touchPage.waitForTimeout(450);
-  const ringOffset = Number(await touchPage.locator('.touch-hold-progress').evaluate(element => getComputedStyle(element).strokeDashoffset));
-  if (ringOffset > 2) throw new Error(`長按環形進度未在 500ms 左右完成：${ringOffset}`);
+  const ringGeometry = await touchPage.locator('.touch-hold-progress').evaluate(element => ({
+    radius: Number(element.getAttribute('r')),
+    strokeWidth: Number(getComputedStyle(element).strokeWidth),
+    viewBox: element.ownerSVGElement.getAttribute('viewBox'),
+    width: Number.parseFloat(getComputedStyle(element.closest('.touch-hold-ring')).width),
+    dashOffset: Number(getComputedStyle(element).strokeDashoffset),
+  }));
+  if (ringGeometry.radius !== 48 || ringGeometry.strokeWidth !== 3 || ringGeometry.viewBox !== '0 0 120 120' || ringGeometry.width !== 120) throw new Error(`長按環未放大三倍或線寬改變：${JSON.stringify(ringGeometry)}`);
+  if (ringGeometry.dashOffset > 2) throw new Error(`長按環形進度未在 500ms 左右完成：${ringGeometry.dashOffset}`);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: touchX + 28, y: touchY + 12, id: 1 }] });
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await touchPage.waitForTimeout(50);
@@ -157,7 +168,11 @@ try {
   await touchPage.waitForTimeout(50);
   if (await touchPage.locator('.touch-feedback-dot').count() !== 2) throw new Error('多指觸控放開後沒有各自顯示藍色回饋點');
   await touchPage.close();
-  checks.push('手機單指長按環形進度、放開回饋點及多指獨立回饋通過');
+  const worldSource = await fs.readFile('src/sky-world.js', 'utf8');
+  if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("track.setAttribute('cx', '60'); track.setAttribute('cy', '60'); track.setAttribute('r', '48');")) throw new Error('移動模式即時拖曳或長按環幾何未包含預期實作');
+  if (worldSource.includes('if (dragPreview && Number.isInteger(dragPreview.index))')) throw new Error('拖曳預覽仍保留重複十字箭頭');
+  checks.push('手機長按環形進度、放大三倍且線寬不變、放開回饋點及多指獨立回饋通過');
+  checks.push('地塊移動模式即時拖曳分支存在，拖曳預覽不再繪製第二組十字箭頭');
 
   const maturePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
   maturePage.on('pageerror', error => errors.push(`mature pageerror: ${error.message}`));
