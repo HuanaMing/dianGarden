@@ -93,10 +93,65 @@
   let cameraMode = '3d';
   let savedCameraPose = null;
   const touchPoints = new Map();
+  const activePointerFeedback = new Map();
   let pinchActive = false;
   let suppressTouchTap = false;
-  let lastEmptyTouchAt = 0;
   let rotateTouchGesture = false;
+  let emptyTouchRotateTimer = null;
+  const touchFeedbackLayer = document.createElement('div');
+  touchFeedbackLayer.className = 'touch-feedback-layer';
+  frame.append(touchFeedbackLayer);
+  function feedbackPoint(event) {
+    const rect = frame.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  }
+  function makeHoldRing(x, y) {
+    const ring = document.createElement('div');
+    ring.className = 'touch-hold-ring';
+    ring.style.left = `${x}px`;
+    ring.style.top = `${y}px`;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 40 40');
+    const track = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    track.setAttribute('cx', '20'); track.setAttribute('cy', '20'); track.setAttribute('r', '16');
+    track.setAttribute('class', 'touch-hold-track');
+    const progress = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    progress.setAttribute('cx', '20'); progress.setAttribute('cy', '20'); progress.setAttribute('r', '16');
+    progress.setAttribute('class', 'touch-hold-progress');
+    svg.append(track, progress); ring.append(svg); touchFeedbackLayer.append(ring);
+    return ring;
+  }
+  function beginPointerFeedback(event) {
+    const point = feedbackPoint(event);
+    const state = { startX: event.clientX, startY: event.clientY, moved: false, ring: null };
+    if (event.pointerType === 'touch') state.ring = makeHoldRing(point.x, point.y);
+    activePointerFeedback.set(event.pointerId, state);
+  }
+  function updatePointerFeedback(event) {
+    const state = activePointerFeedback.get(event.pointerId);
+    if (!state || state.moved || Math.hypot(event.clientX - state.startX, event.clientY - state.startY) < 6) return;
+    state.moved = true;
+    state.ring?.remove(); state.ring = null;
+  }
+  function clearPointerHoldRings() {
+    for (const state of activePointerFeedback.values()) { state.ring?.remove(); state.ring = null; }
+  }
+  function endPointerFeedback(event) {
+    const state = activePointerFeedback.get(event.pointerId);
+    state?.ring?.remove();
+    activePointerFeedback.delete(event.pointerId);
+    const point = feedbackPoint(event);
+    const dot = document.createElement('span');
+    dot.className = 'touch-feedback-dot';
+    dot.style.left = `${point.x}px`; dot.style.top = `${point.y}px`;
+    touchFeedbackLayer.append(dot);
+    setTimeout(() => dot.remove(), 500);
+  }
+  function cancelPointerFeedback(event) {
+    const state = activePointerFeedback.get(event.pointerId);
+    state?.ring?.remove();
+    activePointerFeedback.delete(event.pointerId);
+  }
   let pinchStartDistance = 0;
   let pinchStartZoom = 0;
   function currentZoom() { return cameraMode === '2d' ? topDownHeight : distance; }
@@ -104,12 +159,7 @@
     if (cameraMode === '2d') topDownHeight = Math.max(3, Math.min(50, value));
     else distance = Math.max(1.5, Math.min(24, value));
   }
-  function zoomBy(direction) {
-    applyZoom(currentZoom() + direction * (cameraMode === '2d' ? -1.4 : -0.65));
-  }
-  document.querySelector('#zoom-in')?.addEventListener('click', () => zoomBy(1));
-  document.querySelector('#zoom-out')?.addEventListener('click', () => zoomBy(-1));
-  const cameraModeButton = document.querySelector('#camera-mode');
+remove mobile zoom controls logic  const cameraModeButton = document.querySelector('#camera-mode');
   cameraModeButton?.addEventListener('click', () => {
     if (cameraMode === '3d') {
       savedCameraPose = { yaw, pitch, distance, targetX, targetZ };
@@ -3111,9 +3161,13 @@
   }
 
   canvas.addEventListener('pointerdown', (event) => {
+    beginPointerFeedback(event);
     if (event.pointerType === 'touch') {
       touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (touchPoints.size === 2) {
+        clearTimeout(emptyTouchRotateTimer);
+        rotateTouchGesture = false;
+        clearPointerHoldRings();
         pinchActive = true;
         suppressTouchTap = true;
         const points = [...touchPoints.values()];
@@ -3140,9 +3194,8 @@
       }
     }
     clearTimeout(plotPressTimer);
-    rotateTouchGesture = event.pointerType === 'touch'
-      && window.matchMedia?.('(max-width: 700px)').matches === true
-      && Date.now() - lastEmptyTouchAt <= 500;
+    clearTimeout(emptyTouchRotateTimer);
+    rotateTouchGesture = false;
     dragging = true;
     pointerMoved = false;
     dragPreview = null;
@@ -3193,9 +3246,18 @@
         uploadWorld();
       }, 500);
     }
+    if (event.pointerType === 'touch' && window.matchMedia?.('(max-width: 700px)').matches === true
+      && pointerPlotIndex === null && dockHitAtPointer === null) {
+      const pressPointerId = event.pointerId;
+      emptyTouchRotateTimer = setTimeout(() => {
+        if (dragging && touchPoints.has(pressPointerId) && !pointerMoved && touchPoints.size === 1
+          && pointerPlotIndex === null && dockHitAtPointer === null) rotateTouchGesture = true;
+      }, 500);
+    }
     canvas.setPointerCapture(event.pointerId);
   });
   canvas.addEventListener('pointermove', (event) => {
+    updatePointerFeedback(event);
     if (event.pointerType === 'touch' && touchPoints.has(event.pointerId)) {
       touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (pinchActive && touchPoints.size >= 2) {
@@ -3209,6 +3271,7 @@
     if (!dragging) return;
     if (!pointerMoved && Math.hypot(event.clientX - pointerStartX, event.clientY - pointerStartY) < 5) return;
     pointerMoved = true;
+    if (!rotateTouchGesture) clearTimeout(emptyTouchRotateTimer);
     if (heightDrag) {
       const stepCount = Math.round((heightDrag.startY - event.clientY) / heightDrag.pixelStep);
       const value = heightDrag.kind === 'plot'
@@ -3288,8 +3351,11 @@
     lastPointerY = event.clientY;
   });
   canvas.addEventListener('pointerup', (event) => {
+    endPointerFeedback(event);
     if (event.pointerType === 'touch') touchPoints.delete(event.pointerId);
     if (suppressTouchTap) {
+      clearTimeout(emptyTouchRotateTimer);
+      rotateTouchGesture = false;
       pinchActive = false;
       dragging = false;
       clearTimeout(plotPressTimer);
@@ -3358,10 +3424,6 @@
       heightEdit.mode = heightEdit.mode === 'height' ? 'move' : 'height';
       window.onSkyHeightEditMode?.('plot', plotPressIndex, heightEdit.mode);
     } else if (!pointerMoved) {
-      if (event.pointerType === 'touch' && window.matchMedia?.('(max-width: 700px)').matches === true
-        && pointerPlotIndex === null && dockHitAtPointer === null) {
-        lastEmptyTouchAt = Date.now();
-      }
       if (heightEdit) window.onSkyHeightEditMode?.('exit');
       heightEdit = null;
       dockSelected = false;
@@ -3378,9 +3440,11 @@
     dockPressReady = false;
     dockPreview = null;
     dragPreview = null;
+    clearTimeout(emptyTouchRotateTimer);
+    rotateTouchGesture = false;
     uploadWorld();
   });
-  canvas.addEventListener('pointercancel', (event) => { if (event.pointerType === 'touch') touchPoints.delete(event.pointerId); if (touchPoints.size === 0) { pinchActive = false; suppressTouchTap = false; } clearTimeout(plotPressTimer); clearTimeout(dockPressTimer); dragging = false; dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null; dockPreview = null; pointerPlotIndex = null; plotPressIndex = null; plotPressReady = false; dockPressReady = false; uploadWorld(); });
+  canvas.addEventListener('pointercancel', (event) => { cancelPointerFeedback(event); if (event.pointerType === 'touch') touchPoints.delete(event.pointerId); if (touchPoints.size === 0) { pinchActive = false; suppressTouchTap = false; } clearTimeout(emptyTouchRotateTimer); rotateTouchGesture = false; clearTimeout(plotPressTimer); clearTimeout(dockPressTimer); dragging = false; dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null; dockPreview = null; pointerPlotIndex = null; plotPressIndex = null; plotPressReady = false; dockPressReady = false; uploadWorld(); });
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     if (cameraMode === '2d') topDownHeight = Math.max(3, Math.min(50, topDownHeight + event.deltaY * 0.02));
