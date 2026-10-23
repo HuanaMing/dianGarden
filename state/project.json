@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 171,
-  "nextAction": "任務171第1至12段均已通過 Playwright 驗收。繼續盤點 CSS／JS 中有充分證據的無用程式碼，特別檢查動態 class、DOM 事件與跨模組 API；每批獨立提交並驗收。任務171完成後再執行任務172的 Playwright workflow 效能優化。",
+  "nextAction": "任務171第1至13段均已通過 Playwright 驗收。繼續盤點 CSS／JS 中有充分證據的無用程式碼，尤其清除沒有對應 DOM 的舊 footer 樣式與未使用的表單元素選擇器；每批獨立提交並驗收。任務171完成後再執行任務172的 Playwright workflow 效能優化。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
