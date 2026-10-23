@@ -1392,3 +1392,10 @@
 - 驗收：GitHub Actions Playwright run `39895672169` 成功，完整 browser-smoke PASS，browserErrors 為空；桌面／手機與十一種花卉截圖成功上傳，`diangarden-browser-check` artifact 約 2.91 MB。
 - 程式提交：`fd46753f6ba1c896ae9395cad2da90b6bdbffeb1`；驗收腳本修正：`dabafae81dbfcd333407fac295a407b2a8f1bc08`。
 - 任務文件已歸檔至 `tasks/done/178-avatar-pixel-icons-and-plot-move-mode.md`，active 與 inbox 副本已移除。
+
+## 2026-10-23 — 任務 179：高度模式、跨裝置操作與點陣頭像修正
+
+- 結果：修正地塊在移動模式下短按無法切換高度模式的判斷；長按環套用於滑鼠、觸控筆與觸控，半徑 48、尺寸 120×120，線寬由 3 加倍至 6；PC 相機操作改為直接拖曳平移、空地長按 500ms 後拖曳旋轉，與手機單指一致；自動頭像隱藏選花介面，手動模式才顯示；頁首頭像改用所選花卉 PNG 點陣圖。
+- 驗收：GitHub Actions Playwright run `39897572217` 成功，browser-smoke PASS，`browserErrors` 為空；PC 長按環、手機長按環／多指回饋、頭像模式與舊存檔回歸檢查通過；桌面、手機及 11 種花卉截圖成功上傳，artifact 約 2.90 MB。
+- 主要程式提交：`27555f52a5f8e50edf14438e3e46c62558502068`、`c9f5a298aaa954e4e706aec18a4acea443da4e04`、`0ca9cff7a6117bb3583ebcfdf86627f08ec723b9`、`5704e1dc41219d986042051fe3b4121e06acc5d8`；最後驗收腳本修正：`be696d87265e3d9cb220c096a7d79a189595000b`。
+- 任務文件已歸檔至 `tasks/done/179-pointer-gestures-and-pixel-avatar-fixes.md`。
