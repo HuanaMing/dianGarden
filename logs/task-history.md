@@ -1423,3 +1423,10 @@
 - 任務文件歸檔至 `tasks/done/181-version-check-and-update-prompt.md`。
 - 任務182「匿名遊玩後綁定 Google、自動雙向雲端同步、保留離線遊玩」留在 `tasks/inbox/182-anonymous-google-cloud-save-sync.md`，尚未開始。
 - 限制：版本值只有小時精度，同一小時內多次部署可能無法區分；本次未能透過外部瀏覽工具直接讀取線上 version.json。
+
+
+## 2026-10-23 — 任務 183 開始：設定版本資訊與立即更新
+
+- 已建立 active 任務文件，要求設定面板顯示目前／最新版本號，並提供接近 Ctrl+F5 的立即更新流程。
+- 設計以 `cache: no-store` 重新取得 HTML，為同源 CSS、JavaScript 及圖片等資源加入唯一 query，再替換文件；替換前觸發現有 pagehide 存檔處理。瀏覽器無法由 JavaScript 直接呼叫原生 Ctrl+F5，故此為可實作的近似流程。
+- 目前程式、樣式、測試及文件修改尚在進行，未取得驗收結果。
