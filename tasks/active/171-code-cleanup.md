@@ -28,7 +28,7 @@
 第 1–10 段均已完成，最新第 10 段 Playwright run `39885207346` 已成功。第 11 段：移除 `src/styles.css` 中完全空白的 `@media(max-width:370px){}`，該區塊沒有任何規則，不會改變版面。提交：`be9391d2b673518316d52a7077fc2d4eb1e1e75a`；Playwright run `39886341458` 已成功。
 - 第 12 段：清理可證實未使用的 JS：`src/game.js` 移除永遠為空字串的 `rainStatus` 宣告及模板插值；`src/sky-world.js` 移除只有宣告、沒有引用的 `DRONE_ROTOR_RADIUS` 常數、`hasDroneAnimations()` 函式與 `leafBase` 區域變數。提交：`c4fd023ffa0c5d5319605d20f9c14898092623db`。Playwright run `39886538682` 已成功。
 - 第 13 段：依照 HTML class、JS 動態 class、classList 與選擇器字串重新盤點後，確認 `.soil`、`.plot-pixel-icon` 在所有現行頁面、腳本及測試中均沒有實際 class 引用，且不是共用選擇器群組；已移除這兩條孤立 CSS 規則。提交：`b3c9fb6c12fbe6bc74f8431f83d967544773cd9a`。Playwright run `39886812190` 已成功。
-- 第 14 段已提交：移除目前不存在任何對應 DOM 的 `footer`、`footer span` 舊樣式，並從共用輸入樣式與手機版字級規則中移除未使用的 `textarea` 選擇器；保留仍適用的 `input`、`select` 與 `[contenteditable="true"]` 規則。等待 Playwright 驗收。後續繼續盤點 JS 中可證實未使用的常數、函式、空字串佔位及重複邏輯；不因識別字出現次數少就直接刪除，會先確認動態呼叫、跨模組 API 與事件綁定。
+- 第 14 段：移除目前不存在任何對應 DOM 的 `footer`、`footer span` 舊樣式，並從共用輸入樣式與手機版字級規則中移除未使用的 `textarea` 選擇器；保留仍適用的 `input`、`select` 與 `[contenteditable="true"]` 規則。提交：`7cb069c4f8fbcbf19a4cd764be50da6a0b058d6f`。Playwright run `39887064077` 已成功。後續繼續盤點 JS 中可證實未使用的常數、函式、空字串佔位及重複邏輯；不因識別字出現次數少就直接刪除，會先確認動態呼叫、跨模組 API 與事件綁定。
 
 ## 原則
 - 不以「看起來沒用」作為刪除依據；先查詢宣告、引用、事件綁定、跨模組介面與動態呼叫。
