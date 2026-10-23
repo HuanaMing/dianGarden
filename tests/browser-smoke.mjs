@@ -256,7 +256,7 @@ try {
     trackCount: element.ownerSVGElement.querySelectorAll('.touch-hold-track').length,
   }));
   if (ringGeometry.radius !== 17 || ringGeometry.strokeWidth !== 4 || ringGeometry.viewBox !== '0 0 120 120' || ringGeometry.width !== 120
-    || ringGeometry.stroke.toLowerCase() !== 'rgb(93, 129, 199)' || ringGeometry.strokeOpacity !== 0.5 || ringGeometry.trackCount !== 0
+    || ringGeometry.stroke.toLowerCase() !== 'rgb(255, 255, 255)' || ringGeometry.strokeOpacity !== 0.96 || ringGeometry.trackCount !== 0
     || ringGeometry.dashArray !== 'none' || !['0px', '0'].includes(ringGeometry.dashOffset) || ringGeometry.animationName !== 'none' || ringGeometry.mask !== 'none') throw new Error(`長按環顏色、透明漸層、內徑或尺寸不符：${JSON.stringify(ringGeometry)}`);
   const riseMatrix = ringGeometry.ringTransform.match(/matrix\(([^)]+)\)/);
   if (!riseMatrix || Math.abs(Number(riseMatrix[1].split(',')[5]) + (60 + 50)) > 1) throw new Error(`長按環未隨進度上移50px：${ringGeometry.ringTransform}`);
@@ -282,7 +282,7 @@ try {
   if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("progress.setAttribute('cx', '60'); progress.setAttribute('cy', '60'); progress.setAttribute('r', '17');") || worldSource.includes("track.setAttribute('class', 'touch-hold-track')")) throw new Error('移動模式即時拖曳或無白色底環的長按幾何未包含預期實作');
   if (!worldSource.includes('plotWasInMoveModeAtPointerDown') || !worldSource.includes('!plotWasInMoveModeAtPointerDown')) throw new Error('地塊移動模式短按切換高度模式的修正未包含');
   if (!worldSource.includes('rotateHoldGesture') || worldSource.includes('rotateTouchGesture') || !worldSource.includes('if (pointerPlotIndex === null && dockHitAtPointer === null)')) throw new Error('PC 與手機的相機手勢尚未統一');
-  if (!worldSource.includes("makeFlower(42, 60, 0.92)") || !worldSource.includes("i < 8; i++") || !worldSource.includes("Math.cos(rad) * 17") || !worldSource.includes("makePetal(cx, cy, 1.25, 2.5, rotation)")) throw new Error('長按圓環缺少白花或八片貼合圓環的綠葉裝飾');
+  if (!worldSource.includes("makeFlower(42, 60, 0.92)") || !worldSource.includes("i < 8; i++") || !worldSource.includes("Math.cos(rad) * 17") || !worldSource.includes("makePetal(cx, cy, 1.25, 2.5, rotation)") || !worldSource.includes("leaves.push(makeLeaf(cx, cy, angle));") || worldSource.includes("makeLeaf(cx, cy, angle + 90)")) throw new Error('長按圓環缺少白花或八片貼合圓環的綠葉裝飾');
   const styleSource = await fs.readFile(new URL('../src/styles.css', import.meta.url), 'utf8');
   if (!styleSource.includes('@keyframes touch-ring-rise{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}40%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}80%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}}') || !styleSource.includes('.touch-hold-ring{animation:touch-ring-rise .5s cubic-bezier(.2,.65,.3,1) .2s forwards}') || !styleSource.includes('stroke:#fff;stroke-opacity:.96') || !styleSource.includes('.touch-hold-progress{fill:none;stroke:#fff;stroke-opacity:.96;stroke-width:4;stroke-dasharray:none;stroke-dashoffset:0;animation:none;filter:drop-shadow(0 0 2px rgba(255,255,255,.65))}')) throw new Error('花草圓環的上升、停留、放大復原動畫或白色靜態描邊未設定');
   checks.push('白色花草圓環無進度條：上升50px、停留0.2秒並於0.1秒放大復原');
