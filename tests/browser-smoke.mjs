@@ -168,14 +168,14 @@ try {
       lastOfflineReturnAt: null, dockPosition,
       drones: [{ dockPosition, deployed: true, deploymentOrder: 1, battery: 100, batteryUpdatedAt: now }],
       plots: [
-        { crop: null, plantedAt: null, manual: false, grassOnly: false, x: -1, z: 0, y: 0 },
-        { crop: null, plantedAt: null, manual: false, grassOnly: false, x: 0, z: 0, y: 0 },
+        { crop: 3, plantedAt: now, manual: false, grassOnly: false, x: -1, z: 0, y: 0, plantHeight: 1, watered: false },
+        { crop: 3, plantedAt: now, manual: false, grassOnly: false, x: 0, z: 0, y: 0, plantHeight: 1, watered: false },
         { crop: 0, plantedAt: 1, manual: true, grassOnly: false, x: 1, z: 0, y: 0, plantHeight: 1, watered: false }
       ]
     }));
   });
   await maturePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
-  if (await maturePage.locator('#garden-avatar').innerText() !== '🌻') throw new Error('舊存檔未使用自動花卉頭像預設值');
+  if (await maturePage.locator('#garden-avatar').innerText() !== '🌹') throw new Error('舊存檔未預設為自動頭像，或未依種植數量最多的花種選擇頭像');
   await maturePage.locator('#farm-management-toggle').click();
   await maturePage.locator('[data-plot-button="2"]').click();
   const matureSwitch = maturePage.locator('#farm-dialog [data-plot-mode-switch]');
