@@ -160,6 +160,8 @@ try {
   checks.push('手機單指長按環形進度、放開回饋點及多指獨立回饋通過');
 
   const maturePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  maturePage.on('pageerror', error => errors.push(`mature pageerror: ${error.message}`));
+  maturePage.on('console', message => { if (message.type() === 'error') errors.push(`mature console: ${message.text()}`); });
   await maturePage.addInitScript(() => {
     const now = Date.now();
     const dockPosition = { x: 0, z: 1.55, y: 0 };
