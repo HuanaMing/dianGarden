@@ -2,6 +2,6 @@
   "name": "任務171：清理反覆修改遺留的無用程式碼",
   "status": "active",
   "pendingApprovals": [],
-  "nextAction": "等待 Playwright run 39886538682 驗收任務171第12段（移除無引用的 JS 常數、函式、區域變數與空字串佔位）。若成功，繼續檢查 CSS 與 JS 中有充分證據的無用程式；若失敗，先調查修復或還原。",
-  "result": "第1至10段已通過 Playwright 驗收。第11段移除 styles.css 的空 @media 區塊，run 39886341458 已成功。第12段在 commit c4fd023ffa0c5d5319605d20f9c14898092623db 中清理 src/game.js 的空 rainStatus 宣告與模板插值，以及 src/sky-world.js 中沒有任何引用的 DRONE_ROTOR_RADIUS、hasDroneAnimations() 和 leafBase；run 39886538682 等待驗收。任務172已建立於 tasks/inbox，等待任務171完成後執行。"
+  "nextAction": "第12段已通過 Playwright run 39886538682。繼續靜態盤點 JS 函式／變數及 CSS 選擇器與宣告；只清理有充分證據的無用項目，並逐批執行瀏覽器驗收。",
+  "result": "第1至12段均已提交並通過 Playwright 驗收。第11段移除空 CSS @media 區塊（run 39886341458）。第12段 commit c4fd023ffa0c5d5319605d20f9c14898092623db 移除 game.js 中空 rainStatus 佔位，以及 sky-world.js 中未使用的 DRONE_ROTOR_RADIUS、hasDroneAnimations()、leafBase（run 39886538682 success）。任務172已建立於 tasks/inbox，等待任務171完成後執行。"
 }
