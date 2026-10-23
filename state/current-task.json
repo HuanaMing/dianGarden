@@ -1,9 +1,9 @@
 {
-  "name": "任務184重做：頭像選擇僅顯示像素圖",
+  "name": "任務185：修正植物成熟階段來回閃爍",
   "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "等待本次頭像純像素圖選擇器的 Playwright 驗收與 Pages 部署；完成後補記結果並歸檔狀態。",
-  "result": "已修改 src/game.js 移除花名文字、src/styles.css 將選項壓縮至27px並隱藏「指定花種」標籤，tests/browser-smoke.mjs 新增純像素圖檢查；待 GitHub Actions 結果。"
+  "nextAction": "等待 GitHub Actions 執行瀏覽器自動驗收與 GitHub Pages 部署；成功後補記結果並歸檔。",
+  "result": "已修改 src/sky-world.js：同一株植物依花種索引與種植時間維持單向成長階段，避免短暫舊成長快照讓成熟花退回種子模型；尚待自動驗收。"
 }
