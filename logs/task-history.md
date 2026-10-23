@@ -1525,4 +1525,4 @@
 
 - 依最新要求取消整個環先縮小再恢復的方案；改以中央半透明填充圓從0擴大至30px直徑，隨環上升逐步縮小內孔，抵達頂端時成為外徑約38px的實心圓。
 - 保留500ms上移50px、環形進度、顏色、200ms顯示延遲及拖曳取消行為。
-- 更新瀏覽器 smoke test，檢查填充動畫與上移關鍵影格；自動驗收與 Pages 部署待確認。
+- 更新瀏覽器 smoke test，檢查填充動畫與上移關鍵影格；瀏覽器自動驗收成功（[run 39997966764](https://github.com/HuanaMing/dianGarden/actions/runs/39997966764)），GitHub Pages 部署成功（[run 39997951231](https://github.com/HuanaMing/dianGarden/actions/runs/39997951231)）。
