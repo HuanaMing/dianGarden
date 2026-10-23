@@ -1446,3 +1446,10 @@
 - 結果：設定面板縮窄並減少內距、卡片間距、按鈕高度與操作說明留白；11 種花卉頭像改為 6 欄緊湊選擇器，保留版本資訊、立即更新、2D、省電、重置及存檔狀態功能。
 - 驗證：Playwright 瀏覽器驗收 run 39955495271 成功；GitHub Pages 部署 run 39955488568 成功。
 - 檔案：`src/styles.css`、`tests/browser-smoke.mjs`、`tasks/done/184-compact-settings-panel.md`、`state/project.json`、`state/current-task.json`、`logs/task-history.md`。
+
+
+## 2026-10-23 — 任務184重做：頭像選擇只顯示像素圖
+
+- 移除頭像選擇按鈕內的花名文字，隱藏「指定花種」標籤；每朵花仍保留 aria-label，維持輔助技術可辨識性。
+- 頭像選項高度由40px縮至27px，像素圖維持22×22px；新增瀏覽器測試，驗證11個選項只顯示像素圖、沒有文字且所有圖片均載入。
+- 驗收與部署結果待 Actions 完成後補記。
