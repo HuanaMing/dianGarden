@@ -1,9 +1,9 @@
 {
-  "name": "任務183：設定版本資訊與立即更新",
-  "status": "completed",
+  "name": "任務184：精簡設定面板",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務183已完成並歸檔。下一項排程為 inbox 任務182：開始前檢查目前存檔格式，規劃匿名帳號綁定 Google、自動雙向同步、離線佇列與衝突解決；未經批准不建立付費資源。",
-  "result": "設定面板已顯示目前版本號、最新版本號及立即更新按鈕；Pages 部署 run 39953488795 成功，Playwright 瀏覽器驗收 run 39953660007 成功，包含更新提示、cache-busting 資源刷新及既有回歸測試。瀏覽器不允許 JavaScript 原生觸發 Ctrl+F5，採取 no-store HTML 重取與同源資源 query-busting 的近似強制更新流程。"
+  "nextAction": "已縮小設定面板與卡片留白、按鈕高度，頭像選擇改為 6 欄緊湊格狀排列；正在等待 Playwright 瀏覽器驗收與 Pages 部署結果。",
+  "result": "已更新 src/styles.css，並在 tests/browser-smoke.mjs 加入面板寬度、內距、11 種頭像數量與頭像選項高度檢查。"
 }
