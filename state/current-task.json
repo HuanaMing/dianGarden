@@ -4,6 +4,6 @@
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "修正圖片檔名並驗證花草環素材可載入、動畫時序及 GitHub Pages 部署。",
-  "result": "改用 assets/花草環.webp 作為單一花草環圖片，移除程式繪製的 SVG 花葉與進度環；保留前200ms隱藏、上升50px並縮小、最高點停留0.2秒、最後0.1秒放大復原。"
+  "nextAction": "已修正程式中的圖片路徑以符合 assets/花草還.webp；接著確認 Actions 驗收與 Pages 部署。",
+  "result": "改用 assets/花草還.webp 作為單一花草環圖片，移除程式繪製的 SVG 花葉與進度環；保留前200ms隱藏、上升50px並縮小、最高點停留0.2秒、最後0.1秒放大復原。"
 }
