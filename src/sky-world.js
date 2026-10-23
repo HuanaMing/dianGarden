@@ -277,7 +277,7 @@
     }
 
     if (model?.bloom) {
-      model.bloom({ positions, colors, x, z, height, headColor, environmentState, stemModel });
+      model.bloom({ positions, colors, x, z, height, headColor, environmentState, stemModel, stage });
       return;
     }
 
