@@ -31,6 +31,15 @@ try {
   if (!gameTitle.includes('花明摸魚花園')) throw new Error(`遊戲標題不符：${gameTitle}`);
   checks.push('遊戲首頁可正常開啟');
 
+  const publishedVersion = await page.evaluate(async () => {
+    const response = await fetch(new URL('version.json', window.location.href), { cache: 'no-store' });
+    return response.ok ? response.json() : null;
+  });
+  if (!publishedVersion || typeof publishedVersion.version !== 'string' || !/^\\d{6},\\d{2}$/.test(publishedVersion.version)) {
+    throw new Error('version.json 無法讀取或版本格式錯誤');
+  }
+  checks.push('version.json 可同源讀取且符合 YYMMDD,HH 格式');
+
   const gameCanvas = await page.locator('#sky-canvas').evaluate(canvas => ({
     width: canvas.width,
     height: canvas.height,
@@ -316,6 +325,22 @@ try {
     await page.screenshot({ path: `${outputDir}/${prefix}-gallery.png`, fullPage: true });
     checks.push(`${flowerName}（索引 ${index}）可選取並產生模型截圖`);
   }
+
+  const versionPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await versionPage.addInitScript(() => localStorage.setItem('diangarden-seen-version-v1', '000000,00'));
+  await versionPage.route('**/version.json*', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ version: '261023,22' }),
+  }));
+  await versionPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  const updateBanner = versionPage.locator('.diangarden-version-update');
+  await updateBanner.waitFor({ state: 'visible', timeout: 5000 });
+  if (!(await updateBanner.innerText()).includes('花園有新版本')) throw new Error('版本更新提示文字異常');
+  await updateBanner.getByRole('button', { name: '稍後' }).click();
+  if (await updateBanner.count() !== 0) throw new Error('版本更新提示的稍後按鈕未能關閉提示');
+  checks.push('偵測到版本差異時顯示更新提示，稍後按鈕可延後處理');
+  await versionPage.close();
 
   if (errors.length) throw new Error(`瀏覽器發現錯誤：\n${errors.join('\n')}`);
   console.log(JSON.stringify({ result: 'PASS', checks, screenshots: [
