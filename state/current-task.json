@@ -2,6 +2,6 @@
   "name": "任務171：清理反覆修改遺留的無用程式碼",
   "status": "active",
   "pendingApprovals": [],
-  "nextAction": "盤點最新 CSS、HTML、JavaScript 中候選規則的宣告與引用；第4段只移除一個經確認無用的 CSS 規則，獨立提交並等待 Playwright 驗收。",
-  "result": "已恢復執行。第1、2段 Playwright 驗收通過；第3段移除 .hero-cloud 規則，GitHub Actions run 39791960715 已確認成功。"
+  "nextAction": "等待第4段 GitHub Actions run 39878241016；成功後再挑選下一個已確認無引用的單一 CSS 規則，失敗則先調查、修復或還原。",
+  "result": "第1、2段驗收通過；第3段移除 .hero-cloud 且 GitHub Actions 成功。第4段已移除無引用的 .cloud-a／.cloud-b 定位規則，提交 e7324f2842af5c00591338b9f5eb8123a0a22a75，瀏覽器驗收進行中。"
 }
