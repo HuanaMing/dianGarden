@@ -240,7 +240,7 @@ try {
   if (await touchRing.evaluate(element => getComputedStyle(element).visibility) !== 'hidden') throw new Error('手機長按環未延遲 200ms 顯示');
   await touchPage.waitForTimeout(120);
   if (await touchRing.evaluate(element => getComputedStyle(element).visibility) !== 'visible') throw new Error('手機長按環在按下 200ms 後仍未顯示');
-  await touchPage.waitForTimeout(330);
+  await touchPage.waitForTimeout(480);
   const ringGeometry = await touchPage.locator('.touch-hold-progress').evaluate(element => ({
     radius: Number(element.getAttribute('r')),
     ringTransform: getComputedStyle(element.closest('.touch-hold-ring')).transform,
