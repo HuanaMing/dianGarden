@@ -22,3 +22,8 @@
 
 ## 執行紀錄
 - 2026-10-23：讀取 AGENTS.md、README、牡丹模型、共用幾何 API、Playwright 驗收腳本與專案狀態。確認舊牡丹花頭位於 src/model/peony.js，目前為五層花瓣；新邏輯將只替換花頭函式，保留莖葉與註冊介面。
+
+### 實作紀錄
+- 以 commit `9a7893c176737caee4298dfbef9925ee1bc4de4d` 更新 `src/model/peony.js`：用提供的六層花瓣參數、可重現隨機皺褶、杯狀曲面、由內深外亮的色彩處理，以及綠色花萼杯和五片萼片，完整取代舊五層花瓣花頭。
+- 保留牡丹莖葉函式、索引 9 的註冊方式及共用幾何 API；以 JavaScript parser 檢查新檔案語法成功。
+- GitHub Actions Playwright run `39894024947` 已由程式提交自動觸發，目前等待完整 browser-smoke 結果。
