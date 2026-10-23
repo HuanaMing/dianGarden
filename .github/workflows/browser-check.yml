@@ -26,10 +26,24 @@ jobs:
         with:
           node-version: '22'
 
-      - name: 安裝 Playwright
-        run: |
-          npm install --no-save --no-package-lock playwright
-          npx playwright install --with-deps chromium
+      - name: 快取 npm 套件與 Playwright 瀏覽器
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('.github/workflows/browser-check.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: 安裝 Playwright 套件
+        run: npm install --no-save --no-package-lock playwright
+
+      - name: 安裝 Chromium 系統依賴
+        run: npx playwright install-deps chromium
+
+      - name: 安裝 Chromium 瀏覽器
+        run: npx playwright install chromium
 
       - name: 準備花卉像素圖資產
         run: mkdir -p src/assets/flowers && cp assets/flowers/*.png src/assets/flowers/
