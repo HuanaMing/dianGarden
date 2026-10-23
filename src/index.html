@@ -44,14 +44,10 @@
             <button class="power-save-toggle" id="power-save-toggle" type="button" aria-pressed="false">省電模式：關</button>
             <section class="operation-help" aria-label="操作說明">
               <h3>操作說明</h3>
-              <p>點一下選取；選取後短按查看、長按拖曳拼接。拖曳天空旋轉視角，WASD 移動，滾輪縮放。</p>
+              <p>手機：直接拖曳平移；長按空地半秒後拖曳旋轉，雙指縮放。長按地塊可移動。電腦：拖曳旋轉，WASD 移動，滾輪縮放。</p>
             </section>
             <p class="save-status" id="save-status" role="status" aria-live="polite"></p>
           </section>
-          <div class="mobile-zoom-controls" role="group" aria-label="場景縮放">
-            <button id="zoom-in" type="button" aria-label="放大場景">＋</button>
-            <button id="zoom-out" type="button" aria-label="縮小場景">−</button>
-          </div>
           <aside class="drone-jobs" id="drone-jobs" aria-label="無人機工作佇列"><strong id="job-status" role="status" aria-live="polite">無人機待命</strong><button class="auto-mode" id="auto-mode" type="button" aria-pressed="false">自動模式：關</button><button class="buy-drone" id="buy-drone" type="button">購買無人機 · 150 🪙 (1/8)</button><div class="drone-fleet" id="drone-fleet" aria-label="無人機部署管理"></div><ol id="job-queue"></ol></aside>
           <div class="hud-collapsed-summary" id="hud-collapsed-summary" role="status" aria-live="polite"></div>
           <div class="world-message" id="world-message" role="status">正在載入空中島嶼…</div>
