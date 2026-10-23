@@ -249,7 +249,7 @@ try {
   }));
   if (ringGeometry.radius !== 22 || ringGeometry.strokeWidth !== 6 || ringGeometry.viewBox !== '0 0 120 120' || ringGeometry.width !== 120
     || ringGeometry.stroke.toLowerCase() !== 'rgb(93, 129, 199)' || ringGeometry.strokeOpacity !== 0.5 || ringGeometry.trackCount !== 0
-    || Math.abs(ringGeometry.dashArray - 138.23) > 0.1 || !ringGeometry.mask.includes('radial-gradient')) throw new Error(`長按環顏色、透明漸層、內徑或尺寸不符：${JSON.stringify(ringGeometry)}`);
+    || Math.abs(ringGeometry.dashArray - 138.23) > 0.1 || !ringGeometry.mask.includes('radial-gradient') || !ringGeometry.mask.includes('29.5px') || !ringGeometry.mask.includes('32.5px')) throw new Error(`長按環顏色、透明漸層、內徑或尺寸不符：${JSON.stringify(ringGeometry)}`);
   if (ringGeometry.dashOffset > 2) throw new Error(`長按環形進度未在 500ms 左右完成：${ringGeometry.dashOffset}`);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: touchX + 28, y: touchY + 12, id: 1 }] });
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
