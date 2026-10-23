@@ -111,12 +111,12 @@
     ring.style.left = `${x}px`;
     ring.style.top = `${y}px`;
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 40 40');
+    svg.setAttribute('viewBox', '0 0 120 120');
     const track = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    track.setAttribute('cx', '20'); track.setAttribute('cy', '20'); track.setAttribute('r', '16');
+    track.setAttribute('cx', '60'); track.setAttribute('cy', '60'); track.setAttribute('r', '48');
     track.setAttribute('class', 'touch-hold-track');
     const progress = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    progress.setAttribute('cx', '20'); progress.setAttribute('cy', '20'); progress.setAttribute('r', '16');
+    progress.setAttribute('cx', '60'); progress.setAttribute('cy', '60'); progress.setAttribute('r', '48');
     progress.setAttribute('class', 'touch-hold-progress');
     svg.append(track, progress); ring.append(svg); touchFeedbackLayer.append(ring);
     return ring;
@@ -923,18 +923,6 @@
         }
       }
     }
-    if (dragPreview && Number.isInteger(dragPreview.index)) {
-      const [x, z] = getPlotPosition(dragPreview.index);
-      const y = 1.18;
-      const shaft = { top: [0.98, 0.78, 0.3], front: [0.86, 0.62, 0.2], right: [0.82, 0.58, 0.18], back: [0.92, 0.69, 0.23], left: [0.84, 0.6, 0.19], bottom: [0.75, 0.5, 0.16] };
-      const tipColor = [1, 0.82, 0.3];
-      addBox(positions, colors, x - 0.34, y, z - 0.025, x + 0.34, y + 0.025, z + 0.025, shaft);
-      addTriangle(positions, colors, [x - 0.49, y + 0.026, z], [x - 0.27, y + 0.026, z - 0.11], [x - 0.27, y + 0.026, z + 0.11], tipColor);
-      addTriangle(positions, colors, [x + 0.49, y + 0.026, z], [x + 0.27, y + 0.026, z + 0.11], [x + 0.27, y + 0.026, z - 0.11], tipColor);
-      addBox(positions, colors, x - 0.025, y + 0.035, z - 0.34, x + 0.025, y + 0.06, z + 0.34, shaft);
-      addTriangle(positions, colors, [x, y + 0.061, z - 0.49], [x - 0.11, y + 0.061, z - 0.27], [x + 0.11, y + 0.061, z - 0.27], tipColor);
-      addTriangle(positions, colors, [x, y + 0.061, z + 0.49], [x + 0.11, y + 0.061, z + 0.27], [x - 0.11, y + 0.061, z + 0.27], tipColor);
-    }
     vertexCount = positions.length / 3;
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
@@ -1253,6 +1241,14 @@
         const [x, z] = getPlotPosition(pressedPlot); const baseY = getPlotHeight(pressedPlot) + 0.08;
         const low = projectPoint([x, baseY, z]), high = projectPoint([x, baseY + 0.5, z]);
         heightDrag = { kind: 'plot', index: pressedPlot, startY: event.clientY, original: getPlotHeight(pressedPlot), pixelStep: low && high ? Math.max(1, Math.abs(high.y - low.y)) : 48 };
+      } else if (heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move') {
+        plotPressReady = true;
+        dragPlotIndex = pressedPlot;
+        const worldPoint = screenToGround(pointerStartX, pointerStartY, getPlotHeight(pressedPlot) + 0.08);
+        const [plotX, plotZ] = getPlotPosition(pressedPlot);
+        dragOffset = worldPoint ? [plotX - worldPoint[0], plotZ - worldPoint[1]] : [0, 0];
+        dragPreview = { index: pressedPlot, x: plotX, z: plotZ };
+        uploadWorld();
       } else plotPressTimer = setTimeout(() => {
         if (!dragging || plotPressIndex !== pressedPlot) return;
         plotPressReady = true;
