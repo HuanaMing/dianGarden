@@ -31,3 +31,14 @@
 ## 執行紀錄
 - 2026-10-23：檢查目前 HTML、CSS、game.js、sky-world.js、flower-catalog.js 及共用圖鑑載入流程。確認頭像尚未有設定欄位；主畫面已限制頁面縮放，圖鑑 viewport 尚未限制；縮放按鈕由 HTML 提供，相機與觸控邏輯位於 sky-world.js。
 - 2026-10-23：待處理項目 2 的架構方案已標記為需使用者確認；其餘項目可先獨立實作。
+
+### 已完成的實作與驗收（2026-10-23）
+- src/game.js：加入可向後相容的 avatarMode（auto／manual）與 avatarCrop 存檔欄位；設定可選自動／手動頭像。自動模式統計目前已種植的花種數量，平手時選花卉目錄索引較前者。
+- src/index.html、src/styles.css：新增自訂頭像設定 UI，將原本固定 🌼 改為由遊戲狀態更新的花卉 emoji；移除手機左下角縮放按鈕及其舊樣式。
+- src/sky-world.js、src/styles.css：加入指標放開後 500ms 藍色回饋點、多指各自回饋，以及 500ms 環形長按進度；手機直接拖曳平移，只有長按空地 500ms 後才進入旋轉手勢；移除「點一下再拖曳」的舊手勢判斷。
+- src/encyclopedia.html：viewport 加入 maximum-scale=1、user-scalable=no；主畫面原本已有同樣限制。
+- tests/browser-smoke.mjs：新增頭像切換與重載保存、舊存檔預設、手機縮放按鈕、兩頁 viewport，以及真實 CDP 觸控事件的長按環、藍點消失時間、多指各自顯示測試。
+- docs/architecture.md：更新頭像存檔欄位及手機手勢說明。
+- 驗收 run 39890619739 成功（commit 9d8d29eae6c485f3ec2b57c1b88ac6ea3081e990）。測試結果 PASS；頭像在重載後保存、單指長按環形進度、多指回饋點與 11 種圖鑑模型檢查均通過，browserErrors 為空。
+- 前一次 run 因移除縮放程式時的字串修改錯誤而失敗，已修正；修正後 run 39890322040 與包含新增觸控測試的最新 run 39890619739 均成功。早期失敗不代表目前 main 的驗收狀態。
+- 花卉模型拆分仍未執行，等待使用者確認方案 A（classic scripts＋共用幾何 API／模型註冊表），以避免未經確認的大幅架構重構。
