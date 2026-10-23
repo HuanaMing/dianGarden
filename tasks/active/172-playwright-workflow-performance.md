@@ -1,7 +1,7 @@
 # 任務 172：縮短 Playwright 瀏覽器驗收流程
 
 ## 狀態
-**Active（執行中）**
+**Completed（已完成）**
 
 ## 背景
 任務 171「清理反覆修改遺留的無用程式碼」已完成，最後一段 Playwright run `39887236576` 成功。先前 run `39885207346` 約耗時 7 分鐘；目前 workflow 已快取 npm 套件與 Playwright 瀏覽器，但仍需安裝 Chromium 的 Linux 系統依賴。此任務尚未開始實作，等待使用者確認。
@@ -42,3 +42,11 @@
 - Run `39885207346`：成功，約 7 分 24 秒；`npx playwright install-deps chromium` 中 APT 下載 24.9 MB 花費 6 分 38 秒，速度約 62.7 kB/s。
 - Run `39887236576`：成功，約 47 秒；相同 24.9 MB 套件下載約 1 秒，速度約 17.7 MB/s。
 - 判斷：主要耗時來自 APT 套件鏡像速度波動，而非 Playwright 測試本身。需以最小風險方案驗證能否移除這個不穩定依賴。
+
+### 實作與驗收結果
+- 方案：移除 Chromium 系統依賴安裝步驟；保留瀏覽器安裝、完整 browser-smoke、截圖上傳及 14 天保存，不引入 Docker 映像或新依賴。
+- Workflow commit：`32362119b051d33c4355d0bf39c4a6be2a0ad351`。
+- 修改後 run `39889061910` 成功，約 45 秒；所有瀏覽器檢查通過，沒有 browser errors，25 張截圖成功上傳（約 2.9 MB）。
+- 修改前正常 run `39887236576` 約 47 秒，常態只快約 2 秒；慢速 run `39885207346` 約 7 分 24 秒，其中 APT 下載花 6 分 38 秒。本次主要收益是避開系統套件鏡像造成的長時間波動，而非大幅降低常態耗時。
+- 官方 Playwright container 可預裝瀏覽器與系統依賴，但需同步固定 image 與 npm 套件版本；本次先採用不增加依賴且已完整驗收的最小變更。
+- 限制：目前依賴 GitHub `ubuntu-latest` runner 的既有系統函式庫；若未來 runner 或 Chromium 依賴變更導致測試失敗，再評估固定版本的官方 Playwright container。
