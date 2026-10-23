@@ -1,9 +1,9 @@
 {
-  "name": "任務186：調整指標回饋與無人機坪台拖曳",
-  "status": "completed",
+  "name": "任務186重做：點擊回饋30%與長按環內徑",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "等待使用者確認實際遊玩時點擊回饋、長按環與無人機坪台拖曳手感；若有落差，依實際操作補充修正。",
-  "result": "已修改 src/sky-world.js、src/styles.css 與 tests/browser-smoke.mjs：點擊回饋點中心透明度 20% 並向邊緣漸隱，放開後淡出；長按環移除白色底環，進度色 #5D81C7、中心可見度 50%、內外緣透明，內徑 38px；無人機坪台在移動模式下直接拖曳並依坪台高度平面計算位置。 GitHub Pages 部署 run 39983008203 成功；Playwright 瀏覽器自動驗收 run 39983008337 成功。"
+  "nextAction": "確認 GitHub Actions 瀏覽器驗收及 Pages 部署結果；完成後同步歸檔任務記錄。",
+  "result": "點擊回饋中心透明度由20%調整為30%，邊緣仍漸層至0%，放開後500ms淡出；長按環內徑維持38px、外徑不變。"
 }
