@@ -1377,3 +1377,11 @@
 - 更新 README、架構文件與瀏覽器測試；自動測試確認 11 種模型完整註冊，主場景／圖鑑各花種模型測試通過。
 - 驗收：GitHub Actions Playwright run `39892706658` 成功；完整 checks PASS，browserErrors 為空。
 - 任務文件已歸檔至 `tasks/done/176-avatar-touch-and-model-modules.md`，active 副本已移除。
+
+
+## 2026-10-23 — 任務 177：依六層皺褶花瓣邏輯重做牡丹花頭
+
+- 結果：將 `src/model/peony.js` 舊五層花瓣花頭替換為使用者提供的六層曲面網格邏輯；加入可重現的細皺隨機變化、杯狀花瓣、由內深外亮的色彩漸層、綠色花萼杯及五片萼片。保留牡丹莖葉與模型註冊介面。
+- 驗證：JavaScript 語法解析通過；GitHub Actions Playwright run `39894024947` 成功，完整 browser-smoke 工作通過，截圖產物成功保存，約 2.91 MB。
+- 程式 commit：`9a7893c176737caee4298dfbef9925ee1bc4de4d`。
+- 任務文件：`tasks/done/177-peony-double-bloom.md`。
