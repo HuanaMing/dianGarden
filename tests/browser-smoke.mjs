@@ -86,6 +86,13 @@ try {
   if (!(await page.locator('#settings-panel').isVisible())) throw new Error('設定按鈕未能開啟設定面板');
   if (!(await page.locator('.operation-help').isVisible())) throw new Error('操作說明未移至設定面板');
   if (!(await page.locator('#avatar-mode').isVisible())) throw new Error('設定中未顯示自訂頭像控制');
+  for (const selector of ['#current-version', '#latest-version', '#force-update-button']) {
+    if (!(await page.locator(selector).isVisible())) throw new Error('設定面板缺少版本資訊或立即更新按鈕：' + selector);
+  }
+  if ((await page.locator('#current-version').innerText()).trim() === '' || (await page.locator('#latest-version').innerText()).trim() === '') {
+    throw new Error('設定面板版本號沒有顯示內容');
+  }
+  checks.push('設定面板顯示目前版本、最新版本與立即更新按鈕');
   if (await page.locator('#avatar-flower-picker').isVisible()) throw new Error('自動頭像模式未隱藏花卉選擇介面');
   const avatarOptions = page.locator('.avatar-flower-option');
   if (await avatarOptions.count() !== 11) throw new Error('頭像選擇清單未顯示 11 種花卉');
@@ -341,6 +348,32 @@ try {
   if (await updateBanner.count() !== 0) throw new Error('版本更新提示的稍後按鈕未能關閉提示');
   checks.push('偵測到版本差異時顯示更新提示，稍後按鈕可延後處理');
   await versionPage.close();
+
+  const forceUpdatePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  const forceUpdateRequests = [];
+  forceUpdatePage.on('request', request => {
+    const url = new URL(request.url());
+    if (/\\.(js|css)$/i.test(url.pathname) && url.searchParams.has('__dg_force_refresh')) forceUpdateRequests.push(url.pathname);
+  });
+  await forceUpdatePage.route(url => url.pathname.endsWith('/version.json'), route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ version: '261023,22' }),
+  }));
+  const freshIndexHtml = await fs.readFile('src/index.html', 'utf8');
+  await forceUpdatePage.route(url => url.pathname.endsWith('/index.html') && url.searchParams.has('__dg_update'), route => route.fulfill({
+    status: 200, contentType: 'text/html; charset=utf-8', body: freshIndexHtml,
+  }));
+  await forceUpdatePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await forceUpdatePage.locator('#settings-toggle').click();
+  await forceUpdatePage.locator('#force-update-button').click();
+  await forceUpdatePage.locator('#sky-canvas').waitFor({ state: 'visible', timeout: 10000 });
+  await forceUpdatePage.waitForTimeout(700);
+  if (!forceUpdateRequests.some(path => path.endsWith('/game.js')) ||
+      !forceUpdateRequests.some(path => path.endsWith('/version-check.js')) ||
+      !forceUpdateRequests.some(path => path.endsWith('/styles.css'))) {
+    throw new Error('立即更新未為遊戲 JavaScript 與 CSS 加入 cache-busting query：' + JSON.stringify(forceUpdateRequests));
+  }
+  checks.push('立即更新重新取得頁面，並為 game.js、version-check.js、styles.css 加入 cache-busting query');
+  await forceUpdatePage.close();
 
   if (errors.length) throw new Error(`瀏覽器發現錯誤：\n${errors.join('\n')}`);
   console.log(JSON.stringify({ result: 'PASS', checks, screenshots: [
