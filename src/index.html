@@ -32,6 +32,15 @@
           </header>
           <section class="settings-panel" id="settings-panel" aria-label="設定" hidden>
             <h2>設定</h2>
+            <section class="version-settings" aria-label="遊戲版本資訊">
+              <h3>遊戲版本</h3>
+              <dl class="version-details">
+                <div><dt>目前版本號</dt><dd id="current-version">讀取中…</dd></div>
+                <div><dt>最新版本號</dt><dd id="latest-version">檢查中…</dd></div>
+              </dl>
+              <p id="version-check-status" class="version-check-status" role="status" aria-live="polite">正在檢查版本…</p>
+              <button id="force-update-button" class="force-update-button" type="button">立即更新</button>
+            </section>
             <section class="avatar-settings" aria-label="自訂頭像">
               <h3>自訂頭像</h3>
               <label for="avatar-mode">頭像來源</label>
