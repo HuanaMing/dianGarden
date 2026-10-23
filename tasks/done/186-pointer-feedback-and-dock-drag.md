@@ -16,3 +16,9 @@
 - 長按環不建立白色 track，進度色為 #5D81C7、stroke opacity 0.5，圓弧半徑 22、線寬 6，內徑 38px，內外緣以徑向遮罩淡至透明。
 - 坪台在 move mode 按下即可開始預覽拖曳，放開後沿用既有移動驗證與回呼。
 - Playwright 瀏覽器 smoke test 與 Pages 部署均成功。
+
+## 執行結果
+- 實作提交：`d5fde269d9f4c3a0fd53da63f94b4d5765c6cb94`（場景拖曳）、`972ce25bd572f18a13a3eb9972684899bf628691`（最終回饋視覺）。
+- 瀏覽器驗收：[Playwright run 39983008337](https://github.com/HuanaMing/dianGarden/actions/runs/39983008337) 成功。
+- 部署：[GitHub Pages run 39983008203](https://github.com/HuanaMing/dianGarden/actions/runs/39983008203) 成功。
+- 實際裝置上的視覺手感仍由使用者確認。
