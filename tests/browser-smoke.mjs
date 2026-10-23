@@ -92,7 +92,11 @@ try {
   if ((await page.locator('#current-version').innerText()).trim() === '' || (await page.locator('#latest-version').innerText()).trim() === '') {
     throw new Error('設定面板版本號沒有顯示內容');
   }
-  checks.push('設定面板顯示目前版本、最新版本與立即更新按鈕');
+  const displayedVersions = await page.evaluate(() => ({ current: document.querySelector('#current-version')?.textContent?.trim(), latest: document.querySelector('#latest-version')?.textContent?.trim() }));
+  if (!/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.current || '') || !/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.latest || '')) {
+    throw new Error('設定面板版本號未使用每日更新序號格式：' + JSON.stringify(displayedVersions));
+  }
+  checks.push('設定面板顯示目前版本、最新版本與立即更新按鈕，版本號符合每日更新序號格式');
 
   const settingsPanelSize = await page.locator('#settings-panel').evaluate(element => {
     const rect = element.getBoundingClientRect();
