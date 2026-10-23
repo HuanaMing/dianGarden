@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": null,
-  "nextAction": "任務179已完成並通過 Playwright browser-smoke；任務175仍在 tasks/inbox，等待使用者決定是否繼續。",
+  "nextAction": "任務175已通過使用者視覺驗收並歸檔至 tasks/done；任務180已建立於 tasks/inbox，待開始執行。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
