@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 188,
-  "nextAction": "任務188重做的分段動畫已通過 Playwright 瀏覽器驗收，CSS 版本已成功部署；等待使用者實機確認手感。",
+  "nextAction": "任務188已改為完整靜態圓環上升並縮小復原；等待瀏覽器驗收與 Pages 部署結果。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
