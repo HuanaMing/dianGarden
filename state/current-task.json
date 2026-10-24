@@ -1,9 +1,9 @@
 {
   "name": "任務196：修正農地坡面草皮與植物中心附著",
-  "status": "in_progress",
+  "status": "completed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "執行 Playwright smoke test 與 JavaScript 語法檢查，確認地表顏色、土壤床中心高度與植物附著規則。",
-  "result": "已修改 src/sky-world.js，並新增 tests/browser-smoke.mjs 回歸測試；尚待 CI 驗收。"
+  "nextAction": "任務196已完成並歸檔；Playwright 自動驗收通過，實際遊戲畫面尚未人工檢查。等待下一項任務。",
+  "result": "農地坡面改用土色頂面且不繪製草地斑紋；土壤床中心、土壤紋理與植物根部基準均依坡面中心高度計算，種子模型同步貼地。GitHub Actions Playwright 通過 run 40065297350。"
 }
