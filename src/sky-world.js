@@ -456,48 +456,42 @@
     },
   });
   function addGrassRamp(positions, colors, index, x, z, half, y) {
-    const source = plotPositions[index];
-    const heightAtCorner = (cornerX, cornerZ) => {
-      const relevant = plotPositions.map((position, neighborIndex) => ({ position, neighborIndex }))
-        .filter(({ position, neighborIndex }) => {
-          if (neighborIndex === index) return false;
-          const dx = position.x - source.x;
-          const dz = position.z - source.z;
-          const oneTileCardinal = ((Math.abs(Math.abs(dx) - TILE) <= 1e-8) && Math.abs(dz) <= 1e-8)
-            || ((Math.abs(Math.abs(dz) - TILE) <= 1e-8) && Math.abs(dx) <= 1e-8);
-          return oneTileCardinal
-            && Math.abs((position.y || 0) - (source.y || 0)) <= 0.5 + 1e-8
-            && Math.abs(position.x - cornerX) <= half + 1e-8
-            && Math.abs(position.z - cornerZ) <= half + 1e-8;
-        });
-      if (!relevant.length) return y;
-      return relevant.reduce((sum, { position }) => sum + (position.y || 0), 0) / relevant.length;
-    };
+    const connections = window.dianGardenGrassRampLogic.getConnections(plotPositions, plotStates, index, TILE, 0.5);
     const corners = [
-      { x: x - half, z: z - half, side: [0.55, 0.39, 0.28] },
-      { x: x + half, z: z - half, side: [0.48, 0.33, 0.25] },
-      { x: x + half, z: z + half, side: [0.57, 0.4, 0.29] },
-      { x: x - half, z: z + half, side: [0.5, 0.35, 0.26] },
+      { x: x - half, z: z - half, side: [0.55, 0.39, 0.28], u: 0, v: 0 },
+      { x: x + half, z: z - half, side: [0.48, 0.33, 0.25], u: 1, v: 0 },
+      { x: x + half, z: z + half, side: [0.57, 0.4, 0.29], u: 1, v: 1 },
+      { x: x - half, z: z + half, side: [0.5, 0.35, 0.26], u: 0, v: 1 },
     ];
-    corners.forEach((corner) => { corner.y = heightAtCorner(corner.x, corner.z); corner.top = [corner.x, corner.y, corner.z]; });
-    const bottomY = y - 0.5;
+    const edges = [
+      { side: 'north', indices: [0, 1], color: corners[0].side },
+      { side: 'east', indices: [1, 2], color: corners[1].side },
+      { side: 'south', indices: [2, 3], color: corners[2].side },
+      { side: 'west', indices: [3, 0], color: corners[3].side },
+    ].map((edge) => {
+      const edgeY = connections[edge.side]?.edgeHeight ?? y;
+      return { ...edge, points: edge.indices.map((cornerIndex) => {
+        const corner = corners[cornerIndex];
+        return { ...corner, y: edgeY, top: [corner.x, edgeY, corner.z] };
+      }) };
+    });
+    const center = { x, z, y, u: 0.5, v: 0.5, top: [x, y, z] };
+    const bottomY = Math.min(y, ...edges.flatMap((edge) => edge.points.map((point) => point.y))) - 0.5;
     const grass = [0.43, 0.68, 0.39];
-    const diagonalA = Math.abs(corners[0].y - corners[2].y);
-    const diagonalB = Math.abs(corners[1].y - corners[3].y);
-    const useDiagonalA = diagonalA <= diagonalB;
-    if (diagonalA <= diagonalB) {
-      addTriangle(positions, colors, corners[0].top, corners[1].top, corners[2].top, grass);
-      addTriangle(positions, colors, corners[0].top, corners[2].top, corners[3].top, grass);
-    } else {
-      addTriangle(positions, colors, corners[0].top, corners[1].top, corners[3].top, grass);
-      addTriangle(positions, colors, corners[1].top, corners[2].top, corners[3].top, grass);
+    edges.forEach((edge) => addTriangle(positions, colors, edge.points[0].top, edge.points[1].top, center.top, grass));
+    for (let cornerIndex = 0; cornerIndex < 4; cornerIndex += 1) {
+      const previousEdge = edges[(cornerIndex + 3) % 4], nextEdge = edges[cornerIndex];
+      const previousPoint = previousEdge.points[1], nextPoint = nextEdge.points[0];
+      if (Math.abs(previousPoint.y - nextPoint.y) > 1e-8) {
+        addTriangle(positions, colors, previousPoint.top, nextPoint.top, center.top, grass);
+      }
     }
-    for (let edgeIndex = 0; edgeIndex < corners.length; edgeIndex += 1) {
-      const first = corners[edgeIndex], second = corners[(edgeIndex + 1) % corners.length];
+    edges.forEach((edge) => {
+      const first = edge.points[0], second = edge.points[1];
       const firstBottom = [first.x, bottomY, first.z], secondBottom = [second.x, bottomY, second.z];
-      addTriangle(positions, colors, firstBottom, secondBottom, second.top, first.side);
-      addTriangle(positions, colors, firstBottom, second.top, first.top, first.side);
-    }
+      addTriangle(positions, colors, firstBottom, secondBottom, second.top, edge.color);
+      addTriangle(positions, colors, firstBottom, second.top, first.top, edge.color);
+    })
     addBox(positions, colors, x - half, bottomY - 0.01, z - half, x + half, bottomY, z + half, {
       top: [0.4, 0.28, 0.24], front: [0.4, 0.28, 0.24], right: [0.4, 0.28, 0.24], back: [0.4, 0.28, 0.24], left: [0.4, 0.28, 0.24], bottom: [0.4, 0.28, 0.24],
     });
@@ -509,16 +503,16 @@
       const wb = ((c.u - a.u) * (v - c.v) + (a.v - c.v) * (u - c.u)) / denominator;
       return wa * a.y + wb * b.y + (1 - wa - wb) * c.y;
     };
-    const unitCoords = [[0, 0], [1, 0], [1, 1], [0, 1]];
-    const unitCorners = corners.map((corner, cornerIndex) => ({ ...corner, u: unitCoords[cornerIndex][0], v: unitCoords[cornerIndex][1] }));
+    const edgeTriangles = edges.map((edge) => ({ side: edge.side, a: edge.points[0], b: edge.points[1], c: center }));
     const surfaceHeightAt = (px, pz) => {
       const [u, v] = toUnit(px, pz);
-      if (useDiagonalA) return v <= u
-        ? triangleHeight(px, pz, unitCorners[0], unitCorners[1], unitCorners[2])
-        : triangleHeight(px, pz, unitCorners[0], unitCorners[2], unitCorners[3]);
-      return u + v <= 1
-        ? triangleHeight(px, pz, unitCorners[0], unitCorners[1], unitCorners[3])
-        : triangleHeight(px, pz, unitCorners[1], unitCorners[2], unitCorners[3]);
+      let side;
+      if (v <= u && v <= 1 - u) side = 'north';
+      else if (u >= v && u >= 1 - v) side = 'east';
+      else if (v >= u && v >= 1 - u) side = 'south';
+      else side = 'west';
+      const triangle = edgeTriangles.find((item) => item.side === side);
+      return triangleHeight(px, pz, triangle.a, triangle.b, triangle.c);
     };
     return surfaceHeightAt;
   }
