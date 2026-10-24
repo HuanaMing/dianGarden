@@ -88,12 +88,12 @@ try {
   const plantBaseHeights = await page.evaluate(() => {
     const getBase = window.dianGardenGrassRampLogic.getPlantBaseHeight;
     const ramp = (x, z) => 0.3 + 0.2 * x - 0.1 * z;
-    const grass = getBase(ramp, 0, 0, true);
-    const farm = getBase(ramp, 0, 0, false);
-    return { grass, farm, expectedFarm: ramp(0, 0) + 0.056 };
+    const grassRoot = getBase(ramp, 0, 0, true) + 0.055;
+    const farmRoot = getBase(ramp, 0, 0, false) + 0.055;
+    return { grassRoot, farmRoot, expectedGrass: ramp(0, 0), expectedFarm: ramp(0, 0) + 0.056 };
   });
-  if (Math.abs(plantBaseHeights.grass - 0.3) > 1e-8
-    || Math.abs(plantBaseHeights.farm - plantBaseHeights.expectedFarm) > 1e-8) {
+  if (Math.abs(plantBaseHeights.grassRoot - plantBaseHeights.expectedGrass) > 1e-8
+    || Math.abs(plantBaseHeights.farmRoot - plantBaseHeights.expectedFarm) > 1e-8) {
     throw new Error('植物根部沒有依草地中心或農田土壤床中心高度定位：' + JSON.stringify(plantBaseHeights));
   }
   checks.push('草地植物附著於坡面中心，農田植物附著於土壤床中心高度');
