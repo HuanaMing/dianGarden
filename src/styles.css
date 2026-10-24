@@ -569,3 +569,20 @@ input, [contenteditable="true"]{
 .garden-menu-wheel button.is-selected span,.garden-menu-wheel button.is-selected small{color:#244d34;text-shadow:0 0 3px #fff,0 1px 2px #fff}
 .garden-menu-wheel button.is-mode-active{filter:drop-shadow(0 0 5px rgba(57,112,70,.65))}
 @media(max-width:700px){.garden-menu-wheel{width:204px;height:204px}.garden-menu-wheel button{width:204px;height:204px}.garden-menu-wheel button span{top:28px;font-size:21px}.garden-menu-wheel .wheel-icon-overlay{transform:rotate(var(--wheel-angle,0deg)) translateY(-100px)}.garden-menu-wheel .wheel-icon-overlay .wheel-button-image{width:32px;height:32px}.garden-menu-wheel button[data-wheel-action="drone"]{--icon-outward:42px}.garden-menu-wheel button[data-wheel-action="farm"]{--icon-outward:42px}.garden-menu-wheel button[data-wheel-action="settings"]{--icon-outward:42px}.garden-menu-wheel button[data-wheel-action="catalog"]{--icon-outward:42px}.garden-menu-wheel button small{top:51px;font-size:9px}}
+
+
+/* Cross-device cloud save settings */
+.cloud-save-settings{margin:14px 0;padding:12px;border:1px solid rgba(83,126,92,.28);border-radius:12px;background:rgba(244,250,241,.92)}
+.cloud-save-settings h3{margin:0 0 7px;color:#315d3b;font-size:14px}
+.cloud-save-description,.cloud-save-note{margin:6px 0;color:#5c6e5d;font-size:12px;line-height:1.5}
+.cloud-save-signin{min-height:40px;margin:9px 0}
+.cloud-save-status{margin:8px 0;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.78);color:#425447;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.cloud-save-status[data-state="success"]{background:#e7f5e8;color:#245b30}
+.cloud-save-status[data-state="warning"]{background:#fff1df;color:#85501c}
+.cloud-save-status[data-state="choice"]{background:#edf2ff;color:#344f82}
+.cloud-save-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.cloud-save-actions[hidden]{display:none}
+.cloud-save-actions button{flex:1 1 135px;min-height:34px;padding:7px 10px;border:1px solid #b4c9b2;border-radius:8px;background:#fff;color:#315d3b;font:inherit;font-size:12px;cursor:pointer}
+.cloud-save-actions button:hover:not(:disabled){background:#e8f4e6}
+.cloud-save-actions button:disabled{opacity:.55;cursor:wait}
+@media(max-width:700px){.cloud-save-settings{padding:10px}.cloud-save-actions button{flex-basis:100%}}
