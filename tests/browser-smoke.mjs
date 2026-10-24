@@ -99,6 +99,8 @@ try {
   checks.push('草地植物附著於坡面中心，農田植物附著於土壤床中心高度');
   const rampRenderingRules = await fs.readFile('src/sky-world.js', 'utf8');
   if (!rampRenderingRules.includes('const topColor = [0.43, 0.68, 0.39];')
+    || !rampRenderingRules.includes('addGrassTexture(positions, colors, x, z, half, plotY, [0.43, 0.68, 0.39], surfaceHeightAt);')
+    || !rampRenderingRules.includes('const half = bed / 2, bottomOffset = 0.001, thickness = 0.055;')
     || !rampRenderingRules.includes('const centerY = surfaceHeightAt(x, z) + bottomOffset + thickness;')
     || !rampRenderingRules.includes('surfaceHeightAt(px, pz) + 0.057')) {
     throw new Error('農地坡面頂色、土壤床中心或紋理坡面附著規則缺失');
