@@ -1,9 +1,9 @@
 {
-  "name": "任務190：長按花環復原放大時淡出消失",
+  "name": "任務191：悠閒型經濟平衡與離線自動生產模擬",
   "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "已提交長按花環復原階段淡出 CSS；下一步確認瀏覽器中淡出時機與長按取消流程。",
-  "result": "已提交 src/styles.css：touch-ring-rise 在 0%～80% 維持 opacity 1，100% 降至 opacity 0；CSS 回讀確認成功，尚未進行瀏覽器驗收。"
+  "nextAction": "盤點 src/game.js、src/flower-catalog.js、src/sky-environment.js 與 src/sky-world.js 的經濟、成熟計時、派工、電量和離線存檔流程；建立基準與回本模擬後再決定公式。",
+  "result": "已依 AGENTS.md 將任務文件由 inbox 移至 active，並回讀驗證 active 版本包含完整需求與驗收條件。遊戲程式尚未修改。"
 }
