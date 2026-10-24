@@ -6,7 +6,7 @@
 
 以 Cloudflare Workers + D1 + Google Identity Services 為優先候選，符合本遊戲的輕量靜態網站、低維護與跨裝置需求。D1 可在 Workers Free 與 Paid 方案使用，沒有依資料庫閒置天數自動暫停的規則；官方定價說明採查詢用量與儲存量計費，閒置時不收資料庫運算費。Workers Free 仍有每日請求上限，因此「不會因閒置暫停」不等於沒有服務配額限制。
 
-已在 repository 加入尚未部署的 Worker API 原型、D1 migration、Wrangler 設定範本與冒煙測試。這些檔案不代表已建立 Cloudflare 資源、OAuth 用戶端或部署 API。
+已在 repository 加入尚未部署的 Worker API 原型、D1 migration、Wrangler 設定範本、冒煙測試，以及遊戲前端的登入／同步 UI。這些檔案不代表已建立 Cloudflare 資源、OAuth 用戶端或部署 API。
 
 ## 官方費用與限制（查閱日期：2026-10-24）
 
@@ -71,13 +71,16 @@ CREATE TABLE IF NOT EXISTS player_saves (
 ## 已建立的原型（尚未部署）
 
 - `cloudflare/worker.js`：`GET /api/save` 與 `PUT /api/save`，使用 Google ID token 的簽章、issuer、audience、expiry 驗證，並以已驗證的 `sub` 隔離玩家資料；使用 revision 條件更新避免靜默覆蓋；限制 body 大小及 origin。
+- `src/cloud-save-config.js`：公開設定範本，只包含 Google Web Client ID 與 Worker API URL 的空值；未設定時雲端登入維持停用。
+- `src/cloud-save.js`：設定面板中的 Google 登入、讀取雲端存檔、由使用者選擇本機或雲端版本、上傳與 revision 衝突處理；本機存檔更新事件會觸發延遲同步。
+- `src/index.html`、`src/styles.css`：加入雲端存檔設定區及樣式；`src/game.js` 在本機成功存檔後發出同步事件。
 - `cloudflare/migrations/0001_create_player_saves.sql`：D1 初始資料表 migration。
 - `cloudflare/schema.sql`：同一資料表 schema 參考。
 - `cloudflare/wrangler.toml`：部署設定範本，資料庫 ID、Google Client ID、允許來源都是未配置的 placeholder，不能直接部署。
 - `tests/cloudflare-worker-smoke.mjs`：用本機 mock D1 與測試 RSA key 驗證 CORS、登入驗證、玩家隔離、存檔讀寫、版本衝突及輸入大小限制。
 - `.github/workflows/browser-check.yml`：已加入此冒煙測試步驟，並在 `cloudflare/**` 變更時觸發測試 workflow。
 
-此原型目前未接入 `src/game.js` 或遊戲登入 UI；尚未有正式 Google Client ID，也未在 Cloudflare 建立 D1／Worker，因此跨裝置功能尚未可供玩家使用。
+前端模組已接入遊戲設定面板，但正式登入／同步尚未啟用：`src/cloud-save-config.js` 的 Client ID 與 API URL 仍為空值。尚未在 Cloudflare 建立 D1／Worker，因此跨裝置功能目前尚不能供玩家實際使用。
 
 ## 實作前仍需確認
 
@@ -85,7 +88,7 @@ CREATE TABLE IF NOT EXISTS player_saves (
 - Cloudflare 帳戶目前的 plan／付款設定；本次研究未連線或變更任何 Cloudflare 設定。
 - 使用者需要自行建立或批准建立 Google OAuth Web Client，並確認允許的 origin。
 - 使用者需另行明確批准建立 D1、Worker、部署外部 API 等會改變外部系統的操作。免費也要先批准建立資源；任何付費服務需另外批准。
-- 完成上述確認後，才開始跨模組整合；此之前可先完善文件、schema 草案及本機測試設計。
+- 完成上述確認後，才填入公開 Client ID／API URL 並進行真實服務整合測試；本機前端整合原型已建立，但尚未連接線上服務。
 
 ## 驗收方向
 
