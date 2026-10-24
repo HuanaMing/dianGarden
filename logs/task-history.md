@@ -1568,3 +1568,12 @@
 - 驗證：GitHub Actions Playwright 瀏覽器自動驗收通過，包含四邊高度差 -0.5、0、+0.5 的 81 種排列、側面角點 81 種組合、無效鄰居限制與既有回歸測試。工作流程：https://github.com/HuanaMing/dianGarden/actions/runs/40063305945
 - 限制：未人工逐像素檢查所有地形截圖，故不宣稱人工視覺驗收完成。
 - 檔案：`src/sky-world.js`、`tests/browser-smoke.mjs`、`docs/architecture.md`、`tasks/done/192-grass-ramp-side-mesh-redo.md`、狀態紀錄。
+
+
+## 2026-10-24 — 任務194：修正草地與農地交界
+
+- 根因：共用角點計算只收集純草地，草地與農地相鄰時未對齊農地平坦頂面。
+- 修正：共用角點納入全部接觸頂點的地塊，沿正交相鄰且高度差不超過 0.5 的連通群組計算；群組含農地時以農地頂面高度為錨點，純草地群組維持一致平均高度。
+- 驗收：新增混合交界回歸測試，GitHub Actions Playwright 通過：https://github.com/HuanaMing/dianGarden/actions/runs/40064288882
+- 限制：尚未人工檢查實際遊戲畫面截圖。
+- 檔案：`src/sky-world.js`、`tests/browser-smoke.mjs`、`docs/architecture.md`、`tasks/done/194-grass-farm-seam-fix.md`、狀態紀錄。
