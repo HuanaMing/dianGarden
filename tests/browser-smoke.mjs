@@ -105,7 +105,7 @@ try {
     || !rampRenderingRules.includes('surfaceHeightAt(px, pz) + 0.057')) {
     throw new Error('農地坡面頂色、土壤床中心或紋理坡面附著規則缺失');
   }
-  checks.push('農地坡面使用土色頂面，土壤紋理跟隨坡面');
+  checks.push('農地保留草皮與草皮紋理，土壤床高於草皮且土壤紋理跟隨坡面');
 
 
   const offlineCheck = await page.evaluate(() => {
