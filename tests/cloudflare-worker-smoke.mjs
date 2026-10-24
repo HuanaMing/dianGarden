@@ -92,7 +92,7 @@ async function call(method, { token, body, origin = "https://example.test", path
     if (method === "GET" || method === "PUT") headers.set("X-DianGarden-Opened-At", String(testSessionOpenedAt));
   }
   if (body !== undefined) headers.set("Content-Type", "application/json");
-  const payload = body === undefined ? undefined : { ...body, openedAt: body.openedAt ?? testSessionOpenedAt };
+  const payload = body === undefined ? undefined : { ...body, openedAt: body.openedAt ?? testSessionOpenedAt, savedAt: body.savedAt ?? testSessionOpenedAt };
   return worker.fetch(new Request("https://worker.example" + path, {
     method,
     headers,
