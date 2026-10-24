@@ -32,6 +32,7 @@
   let cloudRevision = 0;
   let cloudSave = null;
   let syncEnabled = false;
+  let sessionExpired = false;
   let syncBusy = false;
   let pendingSyncTimer = null;
   let lastUploadedSignature = '';
@@ -40,6 +41,18 @@
   function setStatus(message, state = 'normal') {
     statusNode.textContent = message;
     statusNode.dataset.state = state;
+  }
+
+  function setSessionExpired(expired) {
+    sessionExpired = expired;
+    if (expired) {
+      syncEnabled = false;
+      clearTimeout(pendingSyncTimer);
+      setStatus('帳號已在他處登入，花園進入離線模式。', 'warning');
+    }
+    window.dispatchEvent(new CustomEvent('diangarden:cloud-session-state', {
+      detail: { expired, message: expired ? '帳號已在他處登入，花園進入離線模式。' : '' },
+    }));
   }
 
   function readMeta() {
@@ -128,7 +141,7 @@
     if (error.message === 'cloud_api_not_configured') return '雲端 API 尚未設定；目前仍使用本機自動存檔。';
     if (error.message === 'login_required') return '請先登入 Google。';
     if (error.message === 'revision_conflict') return '雲端存檔版本已更新，已停止這次上傳。請重新載入最新雲端存檔。';
-    if (error.message === 'stale_session') return '這個瀏覽器工作階段已過期；為避免覆蓋新進度，已停止雲端同步，請重新載入頁面。';
+    if (error.message === 'stale_session') return '帳號已在他處登入，花園進入離線模式。';
     if (error.message === 'invalid_google_id_token' || error.message === 'authentication_required') return 'Google 登入已失效，請重新登入。';
     if (error.message === 'storage_unavailable') return '雲端資料庫暫時無法使用；本機進度仍安全保留。';
     if (error.message === 'origin_not_allowed') return '目前網站網址尚未加入雲端 API 允許清單。';
@@ -148,12 +161,13 @@
   }
 
   async function checkCloud({ quiet = false } = {}) {
-    if (!idToken) return;
+    if (!idToken || (sessionExpired && !quiet)) return;
     syncBusy = true;
     updateButtons(true);
     if (!quiet) setStatus('正在檢查雲端存檔…');
     try {
       const result = await apiRequest('GET');
+      setSessionExpired(false);
       cloudSave = result.status === 'ok' ? result.save : null;
       cloudRevision = cloudSave ? cloudSave.revision : 0;
       const local = readLocalSave();
@@ -191,7 +205,11 @@
     } catch (error) {
       finishStartupCloud();
       syncEnabled = false;
-      setStatus(messageForError(error), 'warning');
+      if (error.message === 'stale_session') {
+        setSessionExpired(true);
+      } else {
+        setStatus(messageForError(error), 'warning');
+      }
       if (error.message === 'invalid_google_id_token') {
         idToken = null;
         currentSub = null;
@@ -204,7 +222,7 @@
   }
 
   async function uploadLocal({ automatic = false } = {}) {
-    if (!idToken || syncBusy) return;
+    if (!idToken || syncBusy || sessionExpired) return;
     const local = readLocalSave();
     if (!local) {
       setStatus('目前沒有可用的本機存檔；請先開始遊玩。', 'warning');
@@ -224,7 +242,13 @@
       setStatus('花園已同步到雲端；這台裝置仍會保留本機存檔。', 'success');
     } catch (error) {
       syncEnabled = false;
-      setStatus(messageForError(error), 'warning');
+      if (error.message === 'stale_session') {
+        setSessionExpired(true);
+        // Read-only in intent: the stale timestamp is rejected by the Worker before ownership can change.
+        await checkCloud({ quiet: true });
+      } else {
+        setStatus(messageForError(error), 'warning');
+      }
       if (error.message === 'revision_conflict') await checkCloud({ quiet: true });
     } finally {
       syncBusy = false;
@@ -281,6 +305,7 @@
     }
     idToken = response.credential;
     currentSub = claims.sub;
+    setSessionExpired(false);
     // Claim session ownership when login succeeds, not when this tab first opened.
     sessionOpenedAt = Date.now();
     syncEnabled = false;
@@ -338,6 +363,12 @@
     window.setTimeout(finishStartupCloud, 3500);
   }
 
+  const sessionBanner = document.querySelector('#cloud-session-banner');
+  window.addEventListener('diangarden:cloud-session-state', (event) => {
+    if (!sessionBanner) return;
+    sessionBanner.hidden = !event.detail?.expired;
+  });
+
   uploadButton.addEventListener('click', () => uploadLocal());
   downloadButton.addEventListener('click', downloadCloud);
   refreshButton.addEventListener('click', () => checkCloud());
@@ -347,13 +378,14 @@
     cloudSave = null;
     cloudRevision = 0;
     syncEnabled = false;
+    setSessionExpired(false);
     if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect();
     setStatus('已登出雲端存檔；本機花園仍會自動儲存。');
     updateButtons(false);
   });
 
   window.addEventListener('diangarden:save', () => {
-    if (!syncEnabled || !idToken || syncBusy) return;
+    if (!syncEnabled || !idToken || syncBusy || sessionExpired) return;
     clearTimeout(pendingSyncTimer);
     pendingSyncTimer = setTimeout(() => {
       const local = readLocalSave();
