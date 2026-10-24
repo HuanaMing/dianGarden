@@ -1,9 +1,9 @@
 {
-  "name": "任務195：讓農田地塊跟隨坡面變形",
-  "status": "completed",
+  "name": "任務196：修正農地坡面草皮與植物中心附著",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務195已完成並歸檔；草地、農地與種植土壤床均使用共用坡面高度。Playwright 驗收通過，實際遊戲畫面尚未人工檢查。等待下一項任務。",
-  "result": "草地與農地共用正交連通群組平均角點高度；農地基底、種植土壤床及土壤紋理都跟隨坡面變形。GitHub Actions Playwright 通過，run 40064598730。"
+  "nextAction": "執行 Playwright smoke test 與 JavaScript 語法檢查，確認地表顏色、土壤床中心高度與植物附著規則。",
+  "result": "已修改 src/sky-world.js，並新增 tests/browser-smoke.mjs 回歸測試；尚待 CI 驗收。"
 }
