@@ -5,6 +5,25 @@
   const VARIANTS_KEY = 'sky-garden-flower-variants-v1';
   const AUTO_CROPS_KEY = 'sky-garden-auto-crops-v1';
   const SYNC_META_KEY = 'sky-garden-cloud-sync-v1';
+  const BROWSER_ID_KEY = 'sky-garden-browser-id-v1';
+  const sessionOpenedAt = Date.now();
+  function getBrowserId() {
+    let id = localStorage.getItem(BROWSER_ID_KEY);
+    if (!id) {
+      id = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), (v) => v.toString(16).padStart(2, '0')).join('');
+      localStorage.setItem(BROWSER_ID_KEY, id);
+    }
+    return id;
+  }
+  const browserId = getBrowserId();
+  let hasResolvedStartupCloud = false;
+  let resolveStartupCloud;
+  window.diangardenCloudReady = new Promise((resolve) => { resolveStartupCloud = resolve; });
+  function finishStartupCloud() {
+    if (hasResolvedStartupCloud) return;
+    hasResolvedStartupCloud = true;
+    resolveStartupCloud();
+  }
   const config = window.DIANGARDEN_CLOUD_SAVE_CONFIG || {};
   const statusNode = document.querySelector('#cloud-save-status');
   const signinNode = document.querySelector('#cloud-save-signin');
@@ -96,7 +115,7 @@
       method,
       headers: {
         Authorization: 'Bearer ' + idToken,
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        ...(body ? { 'Content-Type': 'application/json' } : {}),\n        'X-DianGarden-Browser-Id': browserId,\n        'X-DianGarden-Opened-At': String(sessionOpenedAt),
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
       cache: 'no-store',
@@ -115,7 +134,7 @@
   function messageForError(error) {
     if (error.message === 'cloud_api_not_configured') return '雲端 API 尚未設定；目前仍使用本機自動存檔。';
     if (error.message === 'login_required') return '請先登入 Google。';
-    if (error.message === 'revision_conflict') return '另一台裝置的雲端存檔已更新。請重新檢查，再選擇要保留的版本。';
+    if (error.message === 'revision_conflict') return '雲端存檔版本已更新，已停止這次上傳。請重新載入最新雲端存檔。';\n    if (error.message === 'stale_session') return '這個瀏覽器工作階段已過期；為避免覆蓋新進度，已停止雲端同步，請重新載入頁面。';
     if (error.message === 'invalid_google_id_token' || error.message === 'authentication_required') return 'Google 登入已失效，請重新登入。';
     if (error.message === 'storage_unavailable') return '雲端資料庫暫時無法使用；本機進度仍安全保留。';
     if (error.message === 'origin_not_allowed') return '目前網站網址尚未加入雲端 API 允許清單。';
@@ -142,15 +161,26 @@
       cloudSave = result.status === 'ok' ? result.save : null;
       cloudRevision = cloudSave ? cloudSave.revision : 0;
       const local = readLocalSave();
-      const meta = readMeta();
-      const localSignature = signatureOf(local);
-      if (cloudSave && meta.userSub === currentSub && meta.revision === cloudRevision
-        && meta.localSignature === localSignature) {
+      if (cloudSave) {
+        // Cloud is authoritative: restore it before allowing automatic uploads.
+        const cloudSignature = signatureOf(cloudSave);
+        const localSignature = signatureOf(local);
+        if (cloudSignature !== localSignature) {
+          localStorage.setItem(STORAGE_KEY, cloudSave.saveData);
+          localStorage.setItem(VARIANTS_KEY, cloudSave.variantsData);
+          localStorage.setItem(AUTO_CROPS_KEY, cloudSave.autoCropsData);
+          writeMeta({ userSub: currentSub, revision: cloudRevision, localSignature: cloudSignature, updatedAt: cloudSave.updatedAt || null });
+          syncEnabled = false;
+          setStatus('已先載入雲端花園，正在重新載入並恢復離線進度…', 'success');
+          window.dispatchEvent(new Event('diangarden:restore-cloud-save'));
+          finishStartupCloud();
+          window.location.reload();
+          return;
+        }
+        writeMeta({ userSub: currentSub, revision: cloudRevision, localSignature: cloudSignature, updatedAt: cloudSave.updatedAt || null });
+        lastUploadedSignature = cloudSignature;
         syncEnabled = true;
-        setStatus('已連結 Google 帳號，雲端與這台裝置的存檔一致。', 'success');
-      } else if (cloudSave) {
-        syncEnabled = false;
-        setStatus('找到雲端花園。請選擇要保留這台裝置的花園，或載入雲端花園；不會自動覆蓋。', 'choice');
+        setStatus('已載入最新雲端花園；這台瀏覽器取得目前同步權。', 'success');
       } else {
         syncEnabled = false;
         setStatus(local
@@ -158,6 +188,7 @@
           : '雲端還沒有存檔；先開始遊玩，再將目前花園上傳。', 'choice');
       }
       updateButtons(true);
+      finishStartupCloud();
     } catch (error) {
       syncEnabled = false;
       setStatus(messageForError(error), 'warning');
@@ -293,9 +324,9 @@
     script.async = true;
     script.defer = true;
     script.onload = initializeGoogle;
-    script.onerror = () => setStatus('無法載入 Google 登入服務；本機遊戲仍可使用。', 'warning');
+    script.onerror = () => { finishStartupCloud(); setStatus('無法載入 Google 登入服務；本機遊戲仍可使用。', 'warning'); };
     document.head.appendChild(script);
-    setStatus('正在載入 Google 登入…');
+    setStatus('正在載入 Google 登入…');\n    window.setTimeout(finishStartupCloud, 3500);
   }
 
   uploadButton.addEventListener('click', () => uploadLocal());
