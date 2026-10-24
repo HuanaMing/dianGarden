@@ -434,6 +434,27 @@
   }
 
   function getPlotHeight(index) { return plotPositions[index]?.y || 0; }
+  window.dianGardenGrassRampLogic = Object.freeze({
+    getConnections(positions, states, index, tileSize = 1, maxHeightDifference = 0.5) {
+      const sides = { north: null, east: null, south: null, west: null };
+      if (!Array.isArray(positions) || !Number.isInteger(index) || !positions[index]) return sides;
+      const source = positions[index], sourceY = source.y || 0, epsilon = 1e-8;
+      positions.forEach((position, neighborIndex) => {
+        if (neighborIndex === index || !position) return;
+        const dx = position.x - source.x, dz = position.z - source.z;
+        const side = Math.abs(dx) <= epsilon && Math.abs(dz + tileSize) <= epsilon ? 'north'
+          : Math.abs(dx - tileSize) <= epsilon && Math.abs(dz) <= epsilon ? 'east'
+          : Math.abs(dx) <= epsilon && Math.abs(dz - tileSize) <= epsilon ? 'south'
+          : Math.abs(dx + tileSize) <= epsilon && Math.abs(dz) <= epsilon ? 'west' : null;
+        if (!side) return;
+        const neighborY = position.y || 0, heightDifference = neighborY - sourceY;
+        if (Math.abs(heightDifference) > maxHeightDifference + epsilon) return;
+        const edgeHeight = states[neighborIndex]?.grassOnly === true ? Math.min(sourceY, neighborY) : neighborY;
+        sides[side] = { index: neighborIndex, y: neighborY, edgeHeight, heightDifference };
+      });
+      return sides;
+    },
+  });
   function addGrassRamp(positions, colors, index, x, z, half, y) {
     const source = plotPositions[index];
     const heightAtCorner = (cornerX, cornerZ) => {
