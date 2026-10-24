@@ -540,9 +540,7 @@
     const center = { x, z, y, u: 0.5, v: 0.5, top: [x, y, z] };
     const bottomY = Math.min(y, ...edges.flatMap((edge) => edge.points.map((point) => point.y))) - 0.5;
     // Farm plots must not expose green turf around or above the raised soil bed.
-    const topColor = plotStates[index]?.grassOnly
-      ? [0.43, 0.68, 0.39]
-      : [0.58, 0.39, 0.28];
+    const topColor = [0.43, 0.68, 0.39];
     edges.forEach((edge) => addTriangle(positions, colors, edge.points[0].top, edge.points[1].top, center.top, topColor));
     for (let cornerIndex = 0; cornerIndex < 4; cornerIndex += 1) {
       const previousEdge = edges[(cornerIndex + 3) % 4], nextEdge = edges[cornerIndex];
