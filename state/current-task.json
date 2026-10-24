@@ -1,9 +1,9 @@
 {
   "name": "任務192重做：草地斜坡側面跟隨頂面變形",
-  "status": "in_progress",
+  "status": "completed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "修正草地斜坡四周側面網格，並以 Playwright 驗證四側高度組合、頂面與側面共用角點高度及既有遊戲回歸。",
-  "result": "已調整 src/sky-world.js：四周側面上緣改與頂面共用四個角點高度，角點高度由相鄰兩側邊緣高度推導。已新增瀏覽器測試覆蓋 81 種角點組合；等待 GitHub Actions 執行結果，尚未完成人工逐像素視覺驗收。"
+  "nextAction": "任務192重做已完成並歸檔。Playwright 自動驗收通過；人工逐像素視覺檢查尚未執行。等待下一項任務。",
+  "result": "草地斜坡頂面與四周側面共用角點高度。Playwright 驗證四邊高度差 -0.5、0、+0.5 的81種排列、側面角點81種組合及既有回歸測試通過。"
 }
