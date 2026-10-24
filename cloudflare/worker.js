@@ -12,10 +12,7 @@ function jsonResponse(body, status = 200, headers = {}) {
 }
 
 function allowedOrigins(env) {
-  return String(env.ALLOWED_ORIGINS || "")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean);
+  return String(env.ALLOWED_ORIGINS || "").split(",").map((origin) => origin.trim()).filter(Boolean);
 }
 
 function corsHeaders(request, env) {
@@ -24,7 +21,6 @@ function corsHeaders(request, env) {
   return {
     "access-control-allow-origin": origin,
     "access-control-allow-methods": "GET, PUT, OPTIONS",
-    "access-control-allow-headers": "Authorization, Content-Type, X-DianGarden-Browser-Id, X-DianGarden-Opened-At",
     "access-control-allow-headers": "Authorization, Content-Type",
     "access-control-max-age": "86400",
     "vary": "Origin",
@@ -59,7 +55,6 @@ async function verifyGoogleIdToken(token, expectedAudience) {
   if (!expectedAudience) throw new Error("Google sign-in is not configured");
   const parts = token.split(".");
   if (parts.length !== 3) throw new Error("Malformed ID token");
-
   const header = decodeJsonPart(parts[0]);
   const claims = decodeJsonPart(parts[1]);
   if (header.alg !== "RS256" || typeof header.kid !== "string") throw new Error("Unsupported token signature");
@@ -77,17 +72,10 @@ async function verifyGoogleIdToken(token, expectedAudience) {
     cachedJwksExpiresAt = 0;
     throw new Error("Unknown Google signing key");
   }
-  const publicKey = await crypto.subtle.importKey(
-    "jwk",
-    jwk,
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["verify"],
-  );
+  const publicKey = await crypto.subtle.importKey("jwk", jwk, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
   const signature = decodeBase64Url(parts[2]);
   const signedContent = new TextEncoder().encode(parts[0] + "." + parts[1]);
-  const validSignature = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", publicKey, signature, signedContent);
-  if (!validSignature) throw new Error("Invalid ID token signature");
+  if (!await crypto.subtle.verify("RSASSA-PKCS1-v1_5", publicKey, signature, signedContent)) throw new Error("Invalid ID token signature");
   return claims.sub;
 }
 
@@ -95,9 +83,8 @@ function parseJsonComponent(value, name, acceptedTypes) {
   if (typeof value !== "string" || value.length > MAX_BODY_BYTES) throw new Error(name + " must be a JSON string");
   let parsed;
   try { parsed = JSON.parse(value); } catch (_) { throw new Error(name + " is not valid JSON"); }
-  if (!acceptedTypes.includes(parsed === null ? "null" : Array.isArray(parsed) ? "array" : typeof parsed)) {
-    throw new Error(name + " has an invalid JSON type");
-  }
+  const type = parsed === null ? "null" : Array.isArray(parsed) ? "array" : typeof parsed;
+  if (!acceptedTypes.includes(type)) throw new Error(name + " has an invalid JSON type");
   return value;
 }
 
@@ -105,14 +92,15 @@ function validateSavePayload(payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new Error("Expected a save object");
   if (payload.schemaVersion !== SCHEMA_VERSION) throw new Error("Unsupported save schema version");
   if (!Number.isSafeInteger(payload.baseRevision) || payload.baseRevision < 0) throw new Error("baseRevision must be a non-negative integer");
+  if (!Number.isSafeInteger(payload.openedAt) || payload.openedAt <= 0) throw new Error("openedAt must be a positive integer timestamp");
+  if (!Number.isSafeInteger(payload.savedAt) || payload.savedAt <= 0) throw new Error("savedAt must be a positive integer timestamp");
   return {
     baseRevision: payload.baseRevision,
+    openedAt: payload.openedAt,
+    savedAt: payload.savedAt,
     saveData: parseJsonComponent(payload.saveData, "saveData", ["object"]),
     variantsData: parseJsonComponent(payload.variantsData, "variantsData", ["array"]),
     autoCropsData: parseJsonComponent(payload.autoCropsData, "autoCropsData", ["array"]),
-    browserId: typeof payload.browserId === "string" && payload.browserId.length <= 128 ? payload.browserId : "",
-    openedAt: Number.isSafeInteger(payload.openedAt) && payload.openedAt > 0 ? payload.openedAt : 0,
-    savedAt: Number.isSafeInteger(payload.savedAt) && payload.savedAt > 0 ? payload.savedAt : 0,
   };
 }
 
@@ -124,23 +112,24 @@ async function readRequestJson(request) {
   try { return JSON.parse(text); } catch (_) { throw new Error("Request body must be valid JSON"); }
 }
 
-async function handleGetSave(userId, request, env) {
-  const browserId = request.headers.get("X-DianGarden-Browser-Id") || "";
-  const openedAt = Number(request.headers.get("X-DianGarden-Opened-At") || 0);
-  if (!/^[a-zA-Z0-9-]{16,128}$/.test(browserId) || !Number.isSafeInteger(openedAt) || openedAt <= 0) {
-    return jsonResponse({ error: "invalid_session" }, 400);
-  }
+// A server-issued, monotonically increasing timestamp makes the newest GET session the owner,
+// without storing a browser/device identifier. The accepted timestamp is returned to that session.
+async function handleGetSave(userId, env) {
   const row = await env.DB.prepare(
-    "SELECT save_data, variants_data, auto_crops_data, schema_version, revision, updated_at, browser_id, opened_at, saved_at FROM player_saves WHERE user_id = ?",
+    "SELECT save_data, variants_data, auto_crops_data, schema_version, revision, updated_at, opened_at, saved_at FROM player_saves WHERE user_id = ?",
   ).bind(userId).first();
-  if (!row) return jsonResponse({ status: "not_found", revision: 0 });
-  if (row.opened_at != null && openedAt < row.opened_at) return jsonResponse({ error: "stale_session" }, 409);
+
+  if (!row) return jsonResponse({ status: "not_found", revision: 0, openedAt: Date.now() });
+
+  const openedAt = Math.max(Date.now(), Number(row.opened_at || 0) + 1);
   const claimed = await env.DB.prepare(
-    "UPDATE player_saves SET browser_id = ?, opened_at = ? WHERE user_id = ? AND (opened_at IS NULL OR opened_at <= ?)",
-  ).bind(browserId, openedAt, userId, openedAt).run();
-  if (claimed.meta?.changes !== 1) return jsonResponse({ error: "stale_session" }, 409);
+    "UPDATE player_saves SET opened_at = ? WHERE user_id = ? AND (opened_at IS NULL OR opened_at < ?)",
+  ).bind(openedAt, userId, openedAt).run();
+  if (claimed.meta?.changes !== 1) return jsonResponse({ error: "session_claim_failed" }, 409);
+
   return jsonResponse({
     status: "ok",
+    openedAt,
     save: {
       saveData: row.save_data,
       variantsData: row.variants_data,
@@ -149,7 +138,7 @@ async function handleGetSave(userId, request, env) {
       revision: row.revision,
       updatedAt: row.updated_at,
       savedAt: row.saved_at,
-      openedAt: row.opened_at,
+      openedAt,
     },
   });
 }
@@ -159,31 +148,27 @@ async function handlePutSave(userId, request, env) {
   try { payload = validateSavePayload(await readRequestJson(request)); }
   catch (error) { return jsonResponse({ error: error.message }, 400); }
 
-  if (!payload.browserId || !payload.openedAt || !payload.savedAt) return jsonResponse({ error: "invalid_session_or_save_time" }, 400);
-  const sessionBrowserId = request.headers.get("X-DianGarden-Browser-Id") || "";
-  const sessionOpenedAt = Number(request.headers.get("X-DianGarden-Opened-At") || 0);
-  if (payload.browserId !== sessionBrowserId || payload.openedAt !== sessionOpenedAt) return jsonResponse({ error: "invalid_session" }, 400);
   const now = new Date().toISOString();
   if (payload.baseRevision === 0) {
     const result = await env.DB.prepare(
-      "INSERT OR IGNORE INTO player_saves (user_id, save_data, variants_data, auto_crops_data, schema_version, revision, updated_at, browser_id, opened_at, saved_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, ?)",
-    ).bind(userId, payload.saveData, payload.variantsData, payload.autoCropsData, SCHEMA_VERSION, now, payload.browserId, payload.openedAt, payload.savedAt).run();
+      "INSERT OR IGNORE INTO player_saves (user_id, save_data, variants_data, auto_crops_data, schema_version, revision, updated_at, opened_at, saved_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?)",
+    ).bind(userId, payload.saveData, payload.variantsData, payload.autoCropsData, SCHEMA_VERSION, now, payload.openedAt, payload.savedAt).run();
     if (result.meta?.changes !== 1) {
-      const current = await env.DB.prepare("SELECT revision FROM player_saves WHERE user_id = ?").bind(userId).first();
-      return jsonResponse({ error: "revision_conflict", revision: current?.revision ?? 0 }, 409);
+      const current = await env.DB.prepare("SELECT revision, opened_at FROM player_saves WHERE user_id = ?").bind(userId).first();
+      return jsonResponse({ error: current?.opened_at !== payload.openedAt ? "stale_session" : "revision_conflict", revision: current?.revision ?? 0 }, 409);
     }
-    return jsonResponse({ status: "saved", revision: 1, updatedAt: now }, 201);
+    return jsonResponse({ status: "saved", revision: 1, updatedAt: now, savedAt: payload.savedAt }, 201);
   }
 
   const result = await env.DB.prepare(
-    "UPDATE player_saves SET save_data = ?, variants_data = ?, auto_crops_data = ?, schema_version = ?, revision = revision + 1, updated_at = ?, saved_at = ? WHERE user_id = ? AND revision = ? AND browser_id = ? AND opened_at = ?",
-  ).bind(payload.saveData, payload.variantsData, payload.autoCropsData, SCHEMA_VERSION, now, payload.savedAt, userId, payload.baseRevision, payload.browserId, payload.openedAt).run();
+    "UPDATE player_saves SET save_data = ?, variants_data = ?, auto_crops_data = ?, schema_version = ?, revision = revision + 1, updated_at = ?, saved_at = ? WHERE user_id = ? AND revision = ? AND opened_at = ?",
+  ).bind(payload.saveData, payload.variantsData, payload.autoCropsData, SCHEMA_VERSION, now, payload.savedAt, userId, payload.baseRevision, payload.openedAt).run();
 
   if (result.meta?.changes !== 1) {
-    const current = await env.DB.prepare("SELECT revision FROM player_saves WHERE user_id = ?").bind(userId).first();
-    return jsonResponse({ error: "revision_conflict", revision: current?.revision ?? 0 }, 409);
+    const current = await env.DB.prepare("SELECT revision, opened_at FROM player_saves WHERE user_id = ?").bind(userId).first();
+    return jsonResponse({ error: current?.opened_at !== payload.openedAt ? "stale_session" : "revision_conflict", revision: current?.revision ?? 0 }, 409);
   }
-  return jsonResponse({ status: "saved", revision: payload.baseRevision + 1, updatedAt: now });
+  return jsonResponse({ status: "saved", revision: payload.baseRevision + 1, updatedAt: now, savedAt: payload.savedAt });
 }
 
 export default {
@@ -192,31 +177,22 @@ export default {
     const origins = allowedOrigins(env);
     const headers = corsHeaders(request, env);
     if (origin && !origins.includes(origin)) return jsonResponse({ error: "origin_not_allowed" }, 403);
-
     const url = new URL(request.url);
     if (url.pathname !== "/api/save") return jsonResponse({ error: "not_found" }, 404, headers);
-
-    if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers });
-    }
-    if (!["GET", "PUT"].includes(request.method)) {
-      return jsonResponse({ error: "method_not_allowed" }, 405, { allow: "GET, PUT, OPTIONS", ...headers });
-    }
+    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
+    if (!["GET", "PUT"].includes(request.method)) return jsonResponse({ error: "method_not_allowed" }, 405, { allow: "GET, PUT, OPTIONS", ...headers });
     if (!env.DB) return jsonResponse({ error: "database_not_configured" }, 503, headers);
     if (!env.GOOGLE_CLIENT_ID) return jsonResponse({ error: "google_sign_in_not_configured" }, 503, headers);
 
     const authorization = request.headers.get("Authorization") || "";
     const match = authorization.match(/^Bearer\s+(.+)$/i);
     if (!match) return jsonResponse({ error: "authentication_required" }, 401, headers);
-
     let userId;
     try { userId = await verifyGoogleIdToken(match[1], env.GOOGLE_CLIENT_ID); }
     catch (_) { return jsonResponse({ error: "invalid_google_id_token" }, 401, headers); }
 
     try {
-      const response = request.method === "GET"
-        ? await handleGetSave(userId, request, env)
-        : await handlePutSave(userId, request, env);
+      const response = request.method === "GET" ? await handleGetSave(userId, env) : await handlePutSave(userId, request, env);
       const responseHeaders = new Headers(response.headers);
       for (const [key, value] of Object.entries(headers)) responseHeaders.set(key, value);
       return new Response(response.body, { status: response.status, headers: responseHeaders });
