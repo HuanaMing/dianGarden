@@ -1,9 +1,9 @@
 {
   "name": "任務182：Cloudflare D1 跨裝置雲端存檔",
-  "status": "in_progress",
+  "status": "completed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "使用者已驗收本輪 stale_session 工作階段失效提示，確認無問題。接下來僅追蹤雲端原型尚未配置／部署的範圍；建立 Cloudflare D1／Worker、Google OAuth Client 與部署 API 仍須另行批准。",
-  "result": "已配置 Worker／D1、Google OAuth 與前端 API。跨裝置可登入並找到雲端存檔，但首次載入時舊頁面的離頁自動存檔可能覆蓋剛寫入的雲端資料。已在 game.js 加入還原事件保護，cloud-save.js 在重新載入前發出該事件，避免 pagehide／visibilitychange 再寫入舊進度。尚待 Pages 部署及使用者跨裝置實測。 2026-10-24：為改善重新整理後需要再次登入，已將 Google auto_select 設為 true，並在初始化後呼叫 Google One Tap prompt。未將 ID token 寫入 localStorage。尚待 Pages 部署與實機驗證。 2026-10-24：依使用者確認不保存瀏覽器識別碼，已更新 GitHub 的 cloudflare/worker.js、cloudflare/migrations/0002_save_session_ownership.sql、src/cloud-save.js 與 src/game.js。Worker 以工作階段開啟時間戳記判斷存檔擁有權，前端上傳 openedAt／savedAt，遊戲啟動先等待雲端檢查再載入本機存檔與模擬離線進度；修正先前寫入的字面換行錯誤。尚未部署或完成線上端到端驗收。 2026-10-25：任務182增補跨裝置工作階段失效處理。PUT/GET 回傳 stale_session 時關閉自動雲端同步、清除待上傳計時器並顯示主畫面常駐提示「帳號已在他處登入，花園進入離線模式。」；舊工作階段嘗試重新檢查時不會在 Worker 拒絕 stale timestamp 的情況下取得同步權，登入成功後可清除失效狀態。保留原本本機存檔，不修改登入流程。已更新 src/cloud-save.js、src/index.html、src/styles.css；使用者已明確確認並驗收本輪提示功能，畫面與行為均無問題。這項驗收不代表雲端 API 已部署：真實 Client ID／API URL 尚未配置，Worker 未部署。"
+  "nextAction": "任務182已由使用者確認整體驗收完成，並回報 Cloudflare Worker／D1 已成功部署。完成紀錄位於 tasks/done/182-cloud-save-sync.md。下一步選擇其他 active／inbox 任務。",
+  "result": "已配置 Worker／D1、Google OAuth 與前端 API。跨裝置可登入並找到雲端存檔，但首次載入時舊頁面的離頁自動存檔可能覆蓋剛寫入的雲端資料。已在 game.js 加入還原事件保護，cloud-save.js 在重新載入前發出該事件，避免 pagehide／visibilitychange 再寫入舊進度。尚待 Pages 部署及使用者跨裝置實測。 2026-10-24：為改善重新整理後需要再次登入，已將 Google auto_select 設為 true，並在初始化後呼叫 Google One Tap prompt。未將 ID token 寫入 localStorage。尚待 Pages 部署與實機驗證。 2026-10-24：依使用者確認不保存瀏覽器識別碼，已更新 GitHub 的 cloudflare/worker.js、cloudflare/migrations/0002_save_session_ownership.sql、src/cloud-save.js 與 src/game.js。Worker 以工作階段開啟時間戳記判斷存檔擁有權，前端上傳 openedAt／savedAt，遊戲啟動先等待雲端檢查再載入本機存檔與模擬離線進度；修正先前寫入的字面換行錯誤。尚未部署或完成線上端到端驗收。 2026-10-25：任務182增補跨裝置工作階段失效處理。PUT/GET 回傳 stale_session 時關閉自動雲端同步、清除待上傳計時器並顯示主畫面常駐提示「帳號已在他處登入，花園進入離線模式。」；舊工作階段嘗試重新檢查時不會在 Worker 拒絕 stale timestamp 的情況下取得同步權，登入成功後可清除失效狀態。保留原本本機存檔，不修改登入流程。已更新 src/cloud-save.js、src/index.html、src/styles.css；使用者已明確確認並驗收本輪提示功能，畫面與行為均無問題。這項驗收不代表雲端 API 已部署：真實 Client ID／API URL 尚未配置，Worker 未部署。 2026-10-25：使用者確認任務182整體驗收通過，並回報 Cloudflare 已成功部署；已建立 tasks/done/182-cloud-save-sync.md 完成紀錄。本次未獨立重跑 CI 或探測線上 API。"
 }
