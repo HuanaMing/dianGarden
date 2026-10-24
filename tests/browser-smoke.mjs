@@ -85,6 +85,26 @@ try {
   });
   if (!farmRampGeometry) throw new Error('農地共用坡面邏輯未載入');
   checks.push('農地與草地共用坡面角點邏輯已載入');
+  const plantBaseHeights = await page.evaluate(() => {
+    const getBase = window.dianGardenGrassRampLogic.getPlantBaseHeight;
+    const ramp = (x, z) => 0.3 + 0.2 * x - 0.1 * z;
+    const grass = getBase(ramp, 0, 0, true);
+    const farm = getBase(ramp, 0, 0, false);
+    return { grass, farm, expectedFarm: ramp(0, 0) + 0.056 };
+  });
+  if (Math.abs(plantBaseHeights.grass - 0.3) > 1e-8
+    || Math.abs(plantBaseHeights.farm - plantBaseHeights.expectedFarm) > 1e-8) {
+    throw new Error('植物根部沒有依草地中心或農田土壤床中心高度定位：' + JSON.stringify(plantBaseHeights));
+  }
+  checks.push('草地植物附著於坡面中心，農田植物附著於土壤床中心高度');
+  const rampRenderingRules = await fs.readFile('src/sky-world.js', 'utf8');
+  if (!rampRenderingRules.includes('const topColor = plotStates[index]?.grassOnly')
+    || !rampRenderingRules.includes('const centerY = surfaceHeightAt(x, z) + bottomOffset + thickness;')
+    || !rampRenderingRules.includes('surfaceHeightAt(px, pz) + 0.057')) {
+    throw new Error('農地坡面頂色、土壤床中心或紋理坡面附著規則缺失');
+  }
+  checks.push('農地坡面使用土色頂面，土壤紋理跟隨坡面');
+
 
   const offlineCheck = await page.evaluate(() => {
     const now=Date.now(), sim=window.gardenEconomy.simulateOfflineProgress, env=window.skyEnvironment, crops=window.flowerCatalog;
