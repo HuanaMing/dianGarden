@@ -449,29 +449,53 @@
         if (!side) return;
         const neighborY = position.y || 0, heightDifference = neighborY - sourceY;
         if (Math.abs(heightDifference) > maxHeightDifference + epsilon) return;
-        const edgeHeight = states[neighborIndex]?.grassOnly === true ? Math.min(sourceY, neighborY) : neighborY;
+        const bothGrass = states[index]?.grassOnly === true && states[neighborIndex]?.grassOnly === true;
+        const edgeHeight = bothGrass ? (sourceY + neighborY) / 2 : neighborY;
         sides[side] = { index: neighborIndex, y: neighborY, edgeHeight, heightDifference };
       });
       return sides;
     },
-    getCornerHeights(edgeHeights, centerY) {
-      const north = Number.isFinite(edgeHeights.north) ? edgeHeights.north : centerY;
-      const east = Number.isFinite(edgeHeights.east) ? edgeHeights.east : centerY;
-      const south = Number.isFinite(edgeHeights.south) ? edgeHeights.south : centerY;
-      const west = Number.isFinite(edgeHeights.west) ? edgeHeights.west : centerY;
-      return [(north + west) / 2, (north + east) / 2, (south + east) / 2, (south + west) / 2];
+    getSharedCornerHeight(positions, states, index, cornerX, cornerZ, tileSize = 1, maxHeightDifference = 0.5) {
+      const source = positions?.[index];
+      if (!source || !Array.isArray(positions)) return 0;
+      const half = tileSize / 2, epsilon = 1e-8;
+      const touching = [];
+      positions.forEach((position, plotIndex) => {
+        if (!position || states?.[plotIndex]?.grassOnly !== true) return;
+        if (Math.abs(Math.abs(position.x - cornerX) - half) > epsilon
+          || Math.abs(Math.abs(position.z - cornerZ) - half) > epsilon) return;
+        touching.push({ index: plotIndex, x: position.x, z: position.z, y: position.y || 0 });
+      });
+      const sourceNode = touching.find((plot) => plot.index === index);
+      if (!sourceNode) return source.y || 0;
+      const connected = new Set([index]);
+      const queue = [sourceNode];
+      while (queue.length) {
+        const current = queue.shift();
+        for (const candidate of touching) {
+          if (connected.has(candidate.index)) continue;
+          const dx = Math.abs(candidate.x - current.x), dz = Math.abs(candidate.z - current.z);
+          const cardinallyAdjacent = (Math.abs(dx - tileSize) <= epsilon && dz <= epsilon)
+            || (Math.abs(dz - tileSize) <= epsilon && dx <= epsilon);
+          if (!cardinallyAdjacent || Math.abs(candidate.y - current.y) > maxHeightDifference + epsilon) continue;
+          connected.add(candidate.index);
+          queue.push(candidate);
+        }
+      }
+      const heights = touching.filter((plot) => connected.has(plot.index)).map((plot) => plot.y);
+      return heights.reduce((sum, height) => sum + height, 0) / heights.length;
     },
   });
   function addGrassRamp(positions, colors, index, x, z, half, y) {
-    const connections = window.dianGardenGrassRampLogic.getConnections(plotPositions, plotStates, index, TILE, 0.5);
-    const edgeHeights = Object.fromEntries(['north', 'east', 'south', 'west'].map((side) => [side, connections[side]?.edgeHeight ?? y]));
-    const cornerHeights = window.dianGardenGrassRampLogic.getCornerHeights(edgeHeights, y);
     const corners = [
       { x: x - half, z: z - half, side: [0.55, 0.39, 0.28], u: 0, v: 0 },
       { x: x + half, z: z - half, side: [0.48, 0.33, 0.25], u: 1, v: 0 },
       { x: x + half, z: z + half, side: [0.57, 0.4, 0.29], u: 1, v: 1 },
       { x: x - half, z: z + half, side: [0.5, 0.35, 0.26], u: 0, v: 1 },
-    ].map((corner, cornerIndex) => ({ ...corner, y: cornerHeights[cornerIndex], top: [corner.x, cornerHeights[cornerIndex], corner.z] }));
+    ].map((corner) => {
+      const cornerY = window.dianGardenGrassRampLogic.getSharedCornerHeight(plotPositions, plotStates, index, corner.x, corner.z, TILE, 0.5);
+      return { ...corner, y: cornerY, top: [corner.x, cornerY, corner.z] };
+    });
     const edges = [
       { side: 'north', indices: [0, 1], color: corners[0].side },
       { side: 'east', indices: [1, 2], color: corners[1].side },
