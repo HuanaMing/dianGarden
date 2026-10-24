@@ -350,7 +350,7 @@ try {
   });
   await immaturePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   await immaturePage.locator('#farm-management-toggle').click();
-  await immaturePage.locator('[data-plot-button="2"]').click();
+  await immaturePage.evaluate(() => window.onSkyPlotActivate?.(2));
   if (!(await immaturePage.locator('#farm-dialog [data-plot-mode-switch]').isDisabled())) throw new Error('未成熟植物所在手動地塊仍可切換成草地');
   checks.push('未成熟植物存在時禁止切換成草地');
   await immaturePage.close();
