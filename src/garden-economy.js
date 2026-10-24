@@ -2,9 +2,14 @@
   const LAND_BASE_COST = 75;
   const LAND_EARLY_GROWTH = 0.2;
   const LAND_EARLY_EXPONENT = 1.8;
-  const LAND_STAGE_SPLIT = 10;
-  const LAND_LATE_GROWTH = 0.03;
-  const LAND_LATE_EXPONENT = 1.2;
+  const LAND_EARLY_STAGE_END = 8;
+  const LAND_MID_STAGE_END = 20;
+  const LAND_EARLY_START_MULTIPLIER = 2;
+  const LAND_EARLY_END_MULTIPLIER = 1.6;
+  const LAND_MID_GROWTH = 0.14;
+  const LAND_MID_EXPONENT = 1.5;
+  const LAND_LATE_GROWTH = 0.08;
+  const LAND_LATE_EXPONENT = 1.5;
   const DRONE_BASE_COST = 300;
   const DRONE_GROWTH = 0.15;
   const DRONE_EXPONENT = 1.5;
@@ -20,19 +25,36 @@
   const RAIN_CYCLE_MS = 10 * 60 * 1000;
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
-  function getLandCost(plotCount) {
+  function getBaseLandCost(plotCount) {
     const count = Math.max(3, Number.isFinite(plotCount) ? plotCount : 3);
     const earlyCost = LAND_BASE_COST * (1 + LAND_EARLY_GROWTH * Math.max(0, count - 3)) ** LAND_EARLY_EXPONENT;
-    if (count <= LAND_STAGE_SPLIT) return Math.min(Number.MAX_SAFE_INTEGER, Math.round(earlyCost));
-    const costAtSplit = LAND_BASE_COST * (1 + LAND_EARLY_GROWTH * (LAND_STAGE_SPLIT - 3)) ** LAND_EARLY_EXPONENT;
-    return Math.min(Number.MAX_SAFE_INTEGER, Math.round(costAtSplit * (1 + LAND_LATE_GROWTH * (count - LAND_STAGE_SPLIT)) ** LAND_LATE_EXPONENT));
+    if (count <= 10) return Math.min(Number.MAX_SAFE_INTEGER, Math.round(earlyCost));
+    const costAtSplit = LAND_BASE_COST * (1 + LAND_EARLY_GROWTH * (10 - 3)) ** LAND_EARLY_EXPONENT;
+    return Math.min(Number.MAX_SAFE_INTEGER, Math.round(costAtSplit * (1 + 0.03 * (count - 10)) ** 1.2));
+  }
+  function getLandCost(plotCount) {
+    const count = Math.max(3, Number.isFinite(plotCount) ? plotCount : 3);
+    if (count <= LAND_EARLY_STAGE_END) {
+      const progress = (count - 3) / (LAND_EARLY_STAGE_END - 3);
+      const multiplier = LAND_EARLY_START_MULTIPLIER + (LAND_EARLY_END_MULTIPLIER - LAND_EARLY_START_MULTIPLIER) * progress;
+      return Math.min(Number.MAX_SAFE_INTEGER, Math.round(getBaseLandCost(count) * multiplier));
+    }
+    const costAtEight = getBaseLandCost(LAND_EARLY_STAGE_END) * LAND_EARLY_END_MULTIPLIER;
+    if (count <= LAND_MID_STAGE_END) {
+      return Math.min(Number.MAX_SAFE_INTEGER, Math.round(costAtEight * (1 + LAND_MID_GROWTH * (count - LAND_EARLY_STAGE_END)) ** LAND_MID_EXPONENT));
+    }
+    const costAtTwenty = costAtEight * (1 + LAND_MID_GROWTH * (LAND_MID_STAGE_END - LAND_EARLY_STAGE_END)) ** LAND_MID_EXPONENT;
+    return Math.min(Number.MAX_SAFE_INTEGER, Math.round(costAtTwenty * (1 + LAND_LATE_GROWTH * (count - LAND_MID_STAGE_END)) ** LAND_LATE_EXPONENT));
   }
   function getDroneCost(droneCount) {
     const count = clamp(Number.isInteger(droneCount) ? droneCount : 1, 1, MAX_DRONES);
     return Math.min(Number.MAX_SAFE_INTEGER, Math.round(DRONE_BASE_COST * (1 + DRONE_GROWTH * (count - 1)) ** DRONE_EXPONENT));
   }
+  function getAutomaticPlotCount(plots) {
+    return Array.isArray(plots) ? plots.filter((plot) => plot && plot.manual !== true).length : 0;
+  }
   function getPlantablePlotCount(plots) {
-    return plots.filter((plot) => plot && plot.grassOnly !== true).length;
+    return Array.isArray(plots) ? plots.filter((plot) => plot && plot.grassOnly !== true).length : 0;
   }
   function getProfitMultiplier(plantablePlotCount) {
     return Math.min(3.5, 1 + 0.08 * Math.max(0, plantablePlotCount - 3));
@@ -318,6 +340,7 @@
   window.gardenEconomy = {
     getLandCost,
     getDroneCost,
+    getAutomaticPlotCount,
     getPlantablePlotCount,
     getProfitMultiplier,
     getHarvestReward,
