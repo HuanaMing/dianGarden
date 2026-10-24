@@ -592,3 +592,19 @@ input, [contenteditable="true"]{
 .cloud-session-banner{position:absolute;z-index:9;top:76px;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 28px);padding:10px 16px;border:1px solid #e8b4a5;border-radius:12px;background:#fff1ebf2;color:#9b4638;font-size:12px;font-weight:900;text-align:center;box-shadow:0 5px 18px #633b2a24;pointer-events:none}
 .cloud-session-banner[hidden]{display:none}
 @media(max-width:700px){.cloud-session-banner{top:72px;font-size:11px;padding:9px 12px}}
+
+
+/* Task 200: gate game startup until Google login or an explicit guest choice. */
+.startup-garden-dialog{width:min(460px,calc(100% - 28px));display:none;gap:14px;padding:22px}
+.startup-garden-dialog[open]{display:grid}
+.startup-garden-dialog .seed-dialog-description{margin:0}
+.startup-own-garden,.startup-guest-garden{padding:13px;border:1px solid #e1eadc;border-radius:14px;background:#ffffffb8}
+.startup-own-garden h3,.startup-guest-garden h3{margin:0 0 5px;color:#315d3b;font-size:13px}
+.startup-own-garden p,.startup-guest-garden p{margin:5px 0;color:#71887b;font-size:11px;line-height:1.6}
+.startup-own-garden .cloud-save-signin{min-height:40px;margin:10px 0 4px}
+.startup-login-hint{overflow-wrap:anywhere}
+.startup-guest-button,.guest-return-button{min-height:38px;padding:9px 13px;border:1px solid #b8d0b6;border-radius:10px;background:#5e9270;color:#fff;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
+.startup-guest-button{width:100%;margin-top:8px}
+.startup-guest-button:hover,.guest-return-button:hover{background:#4c805f}
+.guest-return-button{margin:6px 0 8px}
+.guest-return-button[hidden],#guest-garden-notice[hidden]{display:none}
