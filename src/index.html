@@ -15,6 +15,13 @@
       <section class="world-section" aria-label="空中農場 3D 場景">
         <div class="world-frame">
           <canvas id="sky-canvas" aria-label="可用滑鼠與鍵盤探索並選取土地的空中農場 3D 場景"></canvas>
+          <div class="garden-menu-wheel" id="garden-menu-wheel" role="menu" aria-label="花園快捷輪盤" hidden>
+            <button type="button" role="menuitem" data-wheel-action="drone" aria-label="無人機"><span>🚁</span><small>無人機</small></button>
+            <button type="button" role="menuitem" data-wheel-action="farm" aria-label="農地管理"><span>🌱</span><small>農地管理</small></button>
+            <button type="button" role="menuitem" data-wheel-action="settings" aria-label="設定"><span>⚙️</span><small>設定</small></button>
+            <button type="button" role="menuitem" data-wheel-action="catalog" aria-label="圖鑑"><span>📖</span><small>圖鑑</small></button>
+            <button type="button" role="menuitem" data-wheel-action="collapse" aria-label="收合或展開介面"><span>🔼</span><small>收合介面</small></button>
+          </div>
           <header class="world-topbar" id="world-topbar">
             <div class="world-brand"><span id="garden-avatar" aria-label="花園頭像" aria-hidden="false">🌼</span><h1><button class="garden-name-display" id="garden-name-display" type="button" aria-label="編輯花園名稱">花明摸魚花園</button></h1><form class="garden-name-editor" id="garden-name-editor" hidden><input id="garden-name-input" type="text" maxlength="24" aria-label="花園名稱" autocomplete="off" required></form></div>
             <div class="world-status">
