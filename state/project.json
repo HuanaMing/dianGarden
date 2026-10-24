@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 199,
-  "nextAction": "任務199：等候 Playwright 桌面／手機輪盤圖示驗收結果與截圖；測試已補上圖示尺寸、裁切、白框、無障礙及手機徑向位置檢查。任務197動態互動驗收仍待處理。",
+  "nextAction": "任務197與199均已通過 Playwright 桌面／手機瀏覽器驗收並歸檔。下一步盤點 tasks/active 中仍保留的 174、175、180、188、189、190，依任務依賴決定下一項；任務109的 Xcode／付費雲端 Mac 批准仍待處理。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
