@@ -143,6 +143,7 @@
   let pinchActive = false;
   let suppressTouchTap = false;
   let rotateHoldGesture = false;
+  let rotateModeEnabled = false;
   let emptyTouchRotateTimer = null;
   const touchFeedbackLayer = document.createElement('div');
   touchFeedbackLayer.className = 'touch-feedback-layer';
@@ -1312,6 +1313,9 @@
     activePointerFeedback.delete(pointerId);
     touchPoints.delete(pointerId);
   });
+  window.addEventListener('garden-camera-rotate-toggle', (event) => {
+    rotateModeEnabled = event.detail?.enabled === true;
+  });
   canvas.addEventListener('pointerdown', (event) => {
     beginPointerFeedback(event);
     plotWasInMoveModeAtPointerDown = false;
@@ -1419,14 +1423,14 @@
       }, 500);
     }
     if (pointerPlotIndex === null && dockHitAtPointer === null) {
+      rotateHoldGesture = rotateModeEnabled;
       const pressPointerId = event.pointerId;
       const isTouchPointer = event.pointerType === 'touch';
       emptyTouchRotateTimer = setTimeout(() => {
         const singleTouchStillHeld = !isTouchPointer || (touchPoints.has(pressPointerId) && touchPoints.size === 1);
         if (dragging && singleTouchStillHeld && !pointerMoved
           && pointerPlotIndex === null && dockHitAtPointer === null) {
-          const openedWheel = window.gardenMenuWheel?.openAt?.(pointerStartX, pointerStartY, pressPointerId);
-          if (!openedWheel) rotateHoldGesture = true;
+          window.gardenMenuWheel?.openAt?.(pointerStartX, pointerStartY, pressPointerId);
         }
       }, 500);
     }
