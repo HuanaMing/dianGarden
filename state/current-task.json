@@ -1,10 +1,10 @@
 {
-  "name": "任務200：Google 登入提示與獨立訪客花園",
-  "status": "awaiting_user_acceptance",
+  "name": "任務201：管理介面擴展為全畫面覆蓋層",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務200程式與自動化驗收已完成；請使用者實際開啟遊戲確認未自動登入時的入口、訪客花園存檔隔離，以及設定中的返回自己的花園流程。使用者驗收前保留在 tasks/active/。",
-  "taskFile": "tasks/active/200-google-login-and-guest-garden.md",
-  "result": "已新增登入入口閘門、獨立訪客存檔命名空間與返回自己的花園控制；GitHub Actions 瀏覽器驗收及 Cloudflare Worker smoke test 通過。前端來源提交的 Pages 部署成功。等待使用者實際遊玩驗收，不移入 done。"
+  "nextAction": "檢查最新 GitHub Actions 瀏覽器 smoke test；確認桌面與手機尺寸、面板互斥及關閉操作。測試通過後回報使用者驗收。",
+  "taskFile": "tasks/active/201-fullscreen-management-panels.md",
+  "result": "已修改 src/styles.css 使無人機管理、農地管理、設定覆蓋整個遊戲畫面；更新 tests/browser-smoke.mjs 驗收尺寸與互斥行為。GitHub Actions 驗收待確認。"
 }
