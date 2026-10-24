@@ -1,10 +1,10 @@
 {
   "name": "任務201：管理介面擴展為全畫面覆蓋層",
-  "status": "in_progress",
+  "status": "awaiting_user_acceptance",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "檢查最新 GitHub Actions 瀏覽器 smoke test；確認桌面與手機尺寸、面板互斥及關閉操作。測試通過後回報使用者驗收。",
+  "nextAction": "請使用者實際開啟遊戲，確認無人機管理、農地管理與設定會覆蓋整個遊戲畫面，並測試頂部切換控制、面板內捲動及手機版操作。驗收通過前保留在 tasks/active/。",
   "taskFile": "tasks/active/201-fullscreen-management-panels.md",
-  "result": "已修改 src/styles.css 使無人機管理、農地管理、設定覆蓋整個遊戲畫面；更新 tests/browser-smoke.mjs 驗收尺寸與互斥行為。GitHub Actions 驗收待確認。"
+  "result": "已修改 src/styles.css，三個管理介面覆蓋整個 .world-frame，設定面板桌面雙欄、手機單欄，保留頂部控制列與面板內捲動。tests/browser-smoke.mjs 新增全畫面尺寸及互斥驗收。GitHub Actions Playwright 驗收 run 40122950792 通過，GitHub Pages 部署 run 40122950794 成功；等待使用者實際遊玩驗收。"
 }
