@@ -1,6 +1,6 @@
 (() => {
   const LAND_BASE_COST = 75;
-  const LAND_EARLY_GROWTH = 0.22;
+  const LAND_EARLY_GROWTH = 0.21;
   const LAND_EARLY_EXPONENT = 1.8;
   const LAND_STAGE_SPLIT = 10;
   const LAND_LATE_GROWTH = 0.05;
