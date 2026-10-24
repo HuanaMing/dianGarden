@@ -1577,3 +1577,11 @@
 - 驗收：新增混合交界回歸測試，GitHub Actions Playwright 通過：https://github.com/HuanaMing/dianGarden/actions/runs/40064288882
 - 限制：尚未人工檢查實際遊戲畫面截圖。
 - 檔案：`src/sky-world.js`、`tests/browser-smoke.mjs`、`docs/architecture.md`、`tasks/done/194-grass-farm-seam-fix.md`、狀態紀錄。
+
+
+## 2026-10-24 — 任務195：讓農田地塊跟隨坡面變形
+
+- 修改：農地與草地都使用共用坡面幾何；角點依正交連通地塊群組計算一致平均高度。農地種植土壤床及土壤紋理同步依坡面高度變形。
+- 驗收：GitHub Actions Playwright 通過（[run 40064598730](https://github.com/HuanaMing/dianGarden/actions/runs/40064598730)）。
+- 限制：尚未人工檢查實際遊戲截圖。
+- 檔案：`src/sky-world.js`、`tests/browser-smoke.mjs`、`docs/architecture.md`、`tasks/done/195-farm-plot-ramp-deformation.md`、狀態紀錄。
