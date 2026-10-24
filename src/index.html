@@ -54,6 +54,19 @@
               <p id="version-check-status" class="version-check-status" role="status" aria-live="polite">正在檢查版本…</p>
               <button id="force-update-button" class="force-update-button" type="button">立即更新</button>
             </section>
+            <section class="cloud-save-settings" aria-label="跨裝置雲端存檔">
+              <h3>跨裝置存檔</h3>
+              <p class="cloud-save-description">登入 Google 後，可在其他裝置找回同一座花園。本機存檔仍會保留。</p>
+              <div id="cloud-save-signin" class="cloud-save-signin" aria-label="Google 登入"></div>
+              <p id="cloud-save-status" class="cloud-save-status" role="status" aria-live="polite">雲端存檔尚未設定；目前仍使用本機自動存檔。</p>
+              <div id="cloud-save-actions" class="cloud-save-actions" hidden>
+                <button id="cloud-save-upload" type="button">使用這台裝置的花園</button>
+                <button id="cloud-save-download" type="button">載入雲端花園</button>
+                <button id="cloud-save-refresh" type="button">重新檢查雲端</button>
+                <button id="cloud-save-signout" type="button">登出雲端存檔</button>
+              </div>
+              <p class="cloud-save-note">雲端同步需要網路。同步失敗不會阻止遊玩；重置本機進度不會刪除雲端備份。</p>
+            </section>
             <section class="avatar-settings" aria-label="自訂頭像">
               <h3>自訂頭像</h3>
               <label for="avatar-mode">頭像來源</label>
