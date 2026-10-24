@@ -1,9 +1,9 @@
 {
-  "name": "任務197：輪盤即時旋轉與花草環選取效果",
+  "name": "任務198：按鈕素材替換輪盤與頂部介面 emoji",
   "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "確認 GitHub Actions 結果並驗證：滑到旋轉立即進入、放開退出、局部花草環放大與素材100%可見。",
-  "result": "已更新輪盤控制器、CSS、瀏覽器回歸測試與架構／任務文件。長按空地只開輪盤；滑到旋轉方向立即收起並開始拖曳旋轉，放開或取消退出。選項無可見底板，花草環局部放大且 opacity=1。尚待 CI／瀏覽器驗收。"
+  "nextAction": "確認 Pages workflow 是否成功部署，並在可用瀏覽器驗收八張按鈕素材、輪盤操作及面板互斥；另完成任務197的動態互動驗收。",
+  "result": "已更新 src/index.html、src/styles.css、.github/workflows/static.yml、tests/browser-smoke.mjs、docs/architecture.md，並建立 tasks/active/198-button-assets.md。四種 assets/btn PNG 用於輪盤與頂部介面，共八個 img；部署流程新增素材複製及資產變更觸發。尚未執行瀏覽器測試或確認部署。任務197靜態檢查完成，但動態驗收仍待可用瀏覽器。"
 }
