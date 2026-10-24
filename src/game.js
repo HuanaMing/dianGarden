@@ -4,9 +4,11 @@
   const DRONE_BATTERY_DRAIN_PER_SECOND = 0.32;
   const DRONE_BATTERY_CHARGE_PER_SECOND = 0.44;
   const DRONE_MIN_JOB_BATTERY = 8;
-  const STORAGE_KEY = 'sky-garden-save-v1';
-  const AUTO_CROP_KEY = 'sky-garden-auto-crops-v1';
-  const FLOWER_VARIANTS_KEY = 'sky-garden-flower-variants-v1';
+  const GUEST_MODE_KEY = 'sky-garden-guest-mode-v1';
+  const IS_GUEST_GARDEN = (() => { try { return localStorage.getItem(GUEST_MODE_KEY) === 'true'; } catch (_) { return false; } })();
+  const STORAGE_KEY = IS_GUEST_GARDEN ? 'sky-garden-guest-save-v1' : 'sky-garden-save-v1';
+  const AUTO_CROP_KEY = IS_GUEST_GARDEN ? 'sky-garden-guest-auto-crops-v1' : 'sky-garden-auto-crops-v1';
+  const FLOWER_VARIANTS_KEY = IS_GUEST_GARDEN ? 'sky-garden-guest-flower-variants-v1' : 'sky-garden-flower-variants-v1';
   const MAX_FLOWER_VARIANTS = 30;
   const CROP_CATALOG_VERSION = 4;
   const WATER_DURATION = 30_000;
@@ -187,7 +189,8 @@
     return { ...saved, cropCatalogVersion: CROP_CATALOG_VERSION, gardenName: saved.gardenName || '花明摸魚花園', avatarMode: saved.avatarMode === 'manual' ? 'manual' : 'auto', avatarCrop: Number.isInteger(saved.avatarCrop) && saved.avatarCrop >= 0 && saved.avatarCrop < crops.length ? saved.avatarCrop : 0, hudCollapsed: saved.hudCollapsed === true, autoMode: saved.autoMode === true, autoCropSelection: Array.isArray(saved.autoCropSelection) ? saved.autoCropSelection : [0], flowerVariants, worldTimeMs: Number.isFinite(saved.worldTimeMs) ? saved.worldTimeMs : 60_000, worldTimeAnchor: Number.isFinite(saved.worldTimeAnchor) ? saved.worldTimeAnchor : Date.now(), lastObservedRaining: typeof saved.lastObservedRaining === 'boolean' ? saved.lastObservedRaining : window.skyEnvironment.getState(saved).isRaining, droneCount: drones.length, deploymentSequence, drones, dockPosition, plots };
   }
   if (window.diangardenCloudReady) {
-    await Promise.race([window.diangardenCloudReady, new Promise((resolve) => setTimeout(resolve, 5000))]);
+    // Startup is explicitly gated by cloud-save.js: only a resolved login flow or guest choice may start the game.
+    await window.diangardenCloudReady;
   }
   const game = loadGame();
   let rainStartedAt = game.lastObservedRaining ? Date.now() : null;
