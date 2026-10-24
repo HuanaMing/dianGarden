@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 200,
-  "nextAction": "執行任務200：新增 Google 登入入口提示與獨立訪客花園；訪客資料使用獨立儲存命名空間，不覆寫原本本機／帳號花園。",
+  "nextAction": "任務200已完成程式實作與自動化瀏覽器驗收，等待使用者實際遊玩驗收；驗收通過後再依規範歸檔至 tasks/done/。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
