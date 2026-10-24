@@ -1081,6 +1081,11 @@
   });
   settingsToggle?.addEventListener('click', () => {
     const open = settingsPanel?.hidden !== false;
+    if (open) {
+      ensureHudExpanded();
+      setDronePanelOpen(false);
+      setFarmPanelOpen(false);
+    }
     if (settingsPanel) settingsPanel.hidden = !open;
     settingsToggle.setAttribute('aria-expanded', String(open));
   });
