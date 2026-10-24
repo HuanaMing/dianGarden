@@ -24,6 +24,7 @@ function corsHeaders(request, env) {
   return {
     "access-control-allow-origin": origin,
     "access-control-allow-methods": "GET, PUT, OPTIONS",
+    "access-control-allow-headers": "Authorization, Content-Type, X-DianGarden-Browser-Id, X-DianGarden-Opened-At",
     "access-control-allow-headers": "Authorization, Content-Type",
     "access-control-max-age": "86400",
     "vary": "Origin",
@@ -109,6 +110,9 @@ function validateSavePayload(payload) {
     saveData: parseJsonComponent(payload.saveData, "saveData", ["object"]),
     variantsData: parseJsonComponent(payload.variantsData, "variantsData", ["array"]),
     autoCropsData: parseJsonComponent(payload.autoCropsData, "autoCropsData", ["array"]),
+    browserId: typeof payload.browserId === "string" && payload.browserId.length <= 128 ? payload.browserId : "",
+    openedAt: Number.isSafeInteger(payload.openedAt) && payload.openedAt > 0 ? payload.openedAt : 0,
+    savedAt: Number.isSafeInteger(payload.savedAt) && payload.savedAt > 0 ? payload.savedAt : 0,
   };
 }
 
@@ -120,11 +124,21 @@ async function readRequestJson(request) {
   try { return JSON.parse(text); } catch (_) { throw new Error("Request body must be valid JSON"); }
 }
 
-async function handleGetSave(userId, env) {
+async function handleGetSave(userId, request, env) {
+  const browserId = request.headers.get("X-DianGarden-Browser-Id") || "";
+  const openedAt = Number(request.headers.get("X-DianGarden-Opened-At") || 0);
+  if (!/^[a-zA-Z0-9-]{16,128}$/.test(browserId) || !Number.isSafeInteger(openedAt) || openedAt <= 0) {
+    return jsonResponse({ error: "invalid_session" }, 400);
+  }
   const row = await env.DB.prepare(
-    "SELECT save_data, variants_data, auto_crops_data, schema_version, revision, updated_at FROM player_saves WHERE user_id = ?",
+    "SELECT save_data, variants_data, auto_crops_data, schema_version, revision, updated_at, browser_id, opened_at, saved_at FROM player_saves WHERE user_id = ?",
   ).bind(userId).first();
   if (!row) return jsonResponse({ status: "not_found", revision: 0 });
+  if (row.opened_at != null && openedAt < row.opened_at) return jsonResponse({ error: "stale_session" }, 409);
+  const claimed = await env.DB.prepare(
+    "UPDATE player_saves SET browser_id = ?, opened_at = ? WHERE user_id = ? AND (opened_at IS NULL OR opened_at <= ?)",
+  ).bind(browserId, openedAt, userId, openedAt).run();
+  if (claimed.meta?.changes !== 1) return jsonResponse({ error: "stale_session" }, 409);
   return jsonResponse({
     status: "ok",
     save: {
@@ -134,6 +148,8 @@ async function handleGetSave(userId, env) {
       schemaVersion: row.schema_version,
       revision: row.revision,
       updatedAt: row.updated_at,
+      savedAt: row.saved_at,
+      openedAt: row.opened_at,
     },
   });
 }
@@ -143,11 +159,15 @@ async function handlePutSave(userId, request, env) {
   try { payload = validateSavePayload(await readRequestJson(request)); }
   catch (error) { return jsonResponse({ error: error.message }, 400); }
 
+  if (!payload.browserId || !payload.openedAt || !payload.savedAt) return jsonResponse({ error: "invalid_session_or_save_time" }, 400);
+  const sessionBrowserId = request.headers.get("X-DianGarden-Browser-Id") || "";
+  const sessionOpenedAt = Number(request.headers.get("X-DianGarden-Opened-At") || 0);
+  if (payload.browserId !== sessionBrowserId || payload.openedAt !== sessionOpenedAt) return jsonResponse({ error: "invalid_session" }, 400);
   const now = new Date().toISOString();
   if (payload.baseRevision === 0) {
     const result = await env.DB.prepare(
-      "INSERT OR IGNORE INTO player_saves (user_id, save_data, variants_data, auto_crops_data, schema_version, revision, updated_at) VALUES (?, ?, ?, ?, ?, 1, ?)",
-    ).bind(userId, payload.saveData, payload.variantsData, payload.autoCropsData, SCHEMA_VERSION, now).run();
+      "INSERT OR IGNORE INTO player_saves (user_id, save_data, variants_data, auto_crops_data, schema_version, revision, updated_at, browser_id, opened_at, saved_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, ?)",
+    ).bind(userId, payload.saveData, payload.variantsData, payload.autoCropsData, SCHEMA_VERSION, now, payload.browserId, payload.openedAt, payload.savedAt).run();
     if (result.meta?.changes !== 1) {
       const current = await env.DB.prepare("SELECT revision FROM player_saves WHERE user_id = ?").bind(userId).first();
       return jsonResponse({ error: "revision_conflict", revision: current?.revision ?? 0 }, 409);
@@ -156,8 +176,8 @@ async function handlePutSave(userId, request, env) {
   }
 
   const result = await env.DB.prepare(
-    "UPDATE player_saves SET save_data = ?, variants_data = ?, auto_crops_data = ?, schema_version = ?, revision = revision + 1, updated_at = ? WHERE user_id = ? AND revision = ?",
-  ).bind(payload.saveData, payload.variantsData, payload.autoCropsData, SCHEMA_VERSION, now, userId, payload.baseRevision).run();
+    "UPDATE player_saves SET save_data = ?, variants_data = ?, auto_crops_data = ?, schema_version = ?, revision = revision + 1, updated_at = ?, saved_at = ? WHERE user_id = ? AND revision = ? AND browser_id = ? AND opened_at = ?",
+  ).bind(payload.saveData, payload.variantsData, payload.autoCropsData, SCHEMA_VERSION, now, payload.savedAt, userId, payload.baseRevision, payload.browserId, payload.openedAt).run();
 
   if (result.meta?.changes !== 1) {
     const current = await env.DB.prepare("SELECT revision FROM player_saves WHERE user_id = ?").bind(userId).first();
@@ -195,7 +215,7 @@ export default {
 
     try {
       const response = request.method === "GET"
-        ? await handleGetSave(userId, env)
+        ? await handleGetSave(userId, request, env)
         : await handlePutSave(userId, request, env);
       const responseHeaders = new Headers(response.headers);
       for (const [key, value] of Object.entries(headers)) responseHeaders.set(key, value);
