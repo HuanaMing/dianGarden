@@ -221,7 +221,7 @@
     let time = departureAt;
     let previousWeather = weatherAt(time);
     let previousTime = time;
-    if (simulatedDuration === 0 && weatherAt(departureAt).isRaining && state.lastObservedRaining !== true) applyRain(departureAt);
+    if (state.lastObservedRaining === true && !previousWeather.isRaining) applyRain(departureAt);
     if (state.autoMode === true && simulatedDuration > 0) {
       while (time <= simulationEnd) {
         for (let index = queue.length - 1; index >= 0; index -= 1) {
@@ -230,7 +230,7 @@
           if (!plot || excluded(plot) || (job.kind === 'water' && (plot.crop === null || plot.watered || growthElapsed(plot, time) >= (crops[plot.crop]?.growTime || 0)))) queue.splice(index, 1);
         }
         const weather = weatherAt(time);
-        if (!previousWeather.isRaining && weather.isRaining) applyRain(time);
+        if (previousWeather.isRaining && !weather.isRaining) applyRain(time);
         state.plots.forEach((plot) => settleWater(plot, time));
         updateBatteries(time, previousTime);
         drones.forEach((drone) => {
@@ -272,7 +272,7 @@
     if (rawDuration > simulatedDuration) {
       const startWorld = worldTimeAt(simulationEnd);
       const phase = ((startWorld % RAIN_CYCLE_MS) + RAIN_CYCLE_MS) % RAIN_CYCLE_MS;
-      const nextRainDelay = phase < RAIN_START_MS ? RAIN_START_MS - phase : RAIN_CYCLE_MS - phase + RAIN_START_MS;
+      const nextRainDelay = phase === 0 ? RAIN_CYCLE_MS : RAIN_CYCLE_MS - phase;
       const nextRainAt = simulationEnd + nextRainDelay;
       if (nextRainAt <= now) {
         state.plots.forEach((plot) => {
