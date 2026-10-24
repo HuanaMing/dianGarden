@@ -23,4 +23,6 @@
 - 已更新 `src/styles.css`：三個面板改為覆蓋整個 `.world-frame`，內容可在面板內捲動；頂部控制列保持在面板上層。設定改為較寬敞的雙欄桌面配置，手機版回到單欄；農地清單與無人機工作區同步擴展。
 - 已更新 `tests/browser-smoke.mjs`：加入三個面板的全畫面尺寸與互斥行為驗收，並更新設定面板尺寸預期。
 - GitHub 提交：樣式 `97b242dc797fd693367a9faaa211d6a3ce908678`；測試 `9cf89b7cc0c56bd2fb885d2f82e76364683e95c8`。
-- 狀態：程式與測試已提交，等待 GitHub Actions 瀏覽器驗收結果。
+- 驗收：GitHub Actions Playwright 瀏覽器驗收通過（[run 40122950792](https://github.com/HuanaMing/dianGarden/actions/runs/40122950792)）；GitHub Pages 部署工作流程成功（[run 40122950794](https://github.com/HuanaMing/dianGarden/actions/runs/40122950794)）。
+- 驗收過程修正：第一次尺寸檢查受到舊浮窗縮放動畫影響；已移除全畫面面板的縮放動畫，重新執行後通過。
+- 狀態：程式、自動化驗收與部署工作流程已完成，**等待使用者實際遊玩驗收**；使用者驗收前保留在 `tasks/active/`。
