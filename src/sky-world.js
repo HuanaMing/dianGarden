@@ -1888,6 +1888,15 @@
       const y = Math.max(margin, Math.min(rect.height - margin, clientY - rect.top));
       wheel.style.left = `${x}px`;
       wheel.style.top = `${y}px`;
+      const collapseItem = wheel.querySelector('[data-wheel-action="collapse"]');
+      const isCollapsed = document.querySelector('#hud-toggle')?.textContent?.trim() === '🔽';
+      if (collapseItem) {
+        const icon = collapseItem.querySelector('span');
+        const label = collapseItem.querySelector('small');
+        if (icon) icon.textContent = isCollapsed ? '🔽' : '🔼';
+        if (label) label.textContent = isCollapsed ? '展開介面' : '收合介面';
+        collapseItem.setAttribute('aria-label', isCollapsed ? '展開介面' : '收合介面');
+      }
       wheel.hidden = false;
       wheel.classList.add('is-active');
       pointerId = id;
