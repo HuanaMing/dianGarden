@@ -107,6 +107,7 @@
       method,
       headers: {
         Authorization: 'Bearer ' + idToken,
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
       cache: 'no-store',
@@ -114,7 +115,7 @@
     let result;
     try { result = await response.json(); } catch (_) { result = {}; }
     if (response.status === 409) {
-      const error = new Error('revision_conflict');
+      const error = new Error(result.error || 'revision_conflict');
       error.revision = Number.isSafeInteger(result.revision) ? result.revision : null;
       throw error;
     }
@@ -185,6 +186,7 @@
       updateButtons(true);
       finishStartupCloud();
     } catch (error) {
+      finishStartupCloud();
       syncEnabled = false;
       setStatus(messageForError(error), 'warning');
       if (error.message === 'invalid_google_id_token') {
