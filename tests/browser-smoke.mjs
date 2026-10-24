@@ -254,6 +254,7 @@ try {
     document.querySelector('#sky-canvas').dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, pointerType: 'mouse', clientX: x - 70, clientY: y - 40, bubbles: true, cancelable: true }));
   }, { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
   if (await page.locator('#garden-menu-wheel [data-wheel-action="rotate"]').getAttribute('aria-pressed') !== 'false') throw new Error('放開指標後未退出旋轉模式');
+  await page.locator('#settings-toggle').click();
   if (!(await page.locator('.operation-help').isVisible())) throw new Error('操作說明未移至設定面板');
   if (!(await page.locator('#avatar-mode').isVisible())) throw new Error('設定中未顯示自訂頭像控制');
   for (const selector of ['#current-version', '#latest-version', '#force-update-button']) {
