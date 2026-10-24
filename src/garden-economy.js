@@ -85,7 +85,7 @@
       queue.some((job) => job.kind === kind && job.index === index)
       || drones.some((drone) => drone.job && drone.job.kind === kind && drone.job.index === index);
     const autoSelection = Array.isArray(state.autoCropSelection) ? state.autoCropSelection : [0];
-    let randomSeed = ((Math.floor(departureAt) >>> 0) ^ (state.plots.length * 2654435761)) >>> 0;
+    let randomSeed = Math.floor(departureAt) >>> 0;
     const random = () => {
       randomSeed = (1664525 * randomSeed + 1013904223) >>> 0;
       return randomSeed / 4294967296;
