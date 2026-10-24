@@ -546,6 +546,12 @@
   }
   function setDronePanelOpen(open) {
     if (!droneJobsPanel || !dronePanelToggle) return;
+    if (open) {
+      ensureHudExpanded();
+      setFarmPanelOpen(false);
+      if (settingsPanel) settingsPanel.hidden = true;
+      settingsToggle?.setAttribute('aria-expanded', 'false');
+    }
     window.clearTimeout(dronePanelTimeout);
     dronePanelTimeout = null;
     droneJobsPanel.classList.toggle('is-open', open);
