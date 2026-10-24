@@ -437,12 +437,18 @@
   function addGrassRamp(positions, colors, index, x, z, half, y) {
     const source = plotPositions[index];
     const heightAtCorner = (cornerX, cornerZ) => {
-      const touching = plotPositions.map((position, neighborIndex) => ({ position, neighborIndex }))
-        .filter(({ position, neighborIndex }) => neighborIndex !== index
-          && Math.abs(position.x - cornerX) <= half + 1e-8
-          && Math.abs(position.z - cornerZ) <= half + 1e-8);
-      const cardinal = touching.filter(({ position }) => Math.abs(position.x - source.x) + Math.abs(position.z - source.z) < 1.5);
-      const relevant = cardinal.length ? cardinal : touching;
+      const relevant = plotPositions.map((position, neighborIndex) => ({ position, neighborIndex }))
+        .filter(({ position, neighborIndex }) => {
+          if (neighborIndex === index) return false;
+          const dx = position.x - source.x;
+          const dz = position.z - source.z;
+          const oneTileCardinal = ((Math.abs(Math.abs(dx) - TILE) <= 1e-8) && Math.abs(dz) <= 1e-8)
+            || ((Math.abs(Math.abs(dz) - TILE) <= 1e-8) && Math.abs(dx) <= 1e-8);
+          return oneTileCardinal
+            && Math.abs((position.y || 0) - (source.y || 0)) <= 0.5 + 1e-8
+            && Math.abs(position.x - cornerX) <= half + 1e-8
+            && Math.abs(position.z - cornerZ) <= half + 1e-8;
+        });
       if (!relevant.length) return y;
       return relevant.reduce((sum, { position }) => sum + (position.y || 0), 0) / relevant.length;
     };
