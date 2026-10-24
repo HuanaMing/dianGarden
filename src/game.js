@@ -337,6 +337,7 @@
   }
   function updateHud() {
     coinsDisplay.textContent = game.coins; updateSaveStatus(); updateAvatarDisplay();
+    if (manualLandButton) { manualLandButton.textContent = `手動地塊 · ${getLandCost()} 🪙`; manualLandButton.setAttribute('aria-label', `購買手動地塊，花費 ${getLandCost()} 金幣`); }
     const environment = window.skyEnvironment.getState(game);
     updateEnvironmentDisplay(environment);
     window.skyWorld?.setPlotPositions(game.plots.map(({ x, z, y }) => ({ x, z, y })));
