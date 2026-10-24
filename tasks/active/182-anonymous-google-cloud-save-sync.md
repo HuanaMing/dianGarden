@@ -39,11 +39,18 @@
 - `.github/workflows/browser-check.yml`：將 Worker 冒煙測試加入 CI，並把 `cloudflare/**` 納入觸發條件。
 - `docs/cloud-save-architecture.md`：補上原型檔案與尚未部署的限制。
 
+## 已完成的前端整合原型
+- `src/index.html`：設定面板新增跨裝置存檔區，提供 Google 登入容器、同步狀態、上傳本機花園、載入雲端花園、重新檢查及登出操作。
+- `src/cloud-save-config.js`：公開設定 placeholder，未填入真實 Client ID 或 API URL，避免尚未配置時誤發請求。
+- `src/cloud-save.js`：整合 Google Identity Services，登入後讀取雲端 revision；第一次綁定或本機／雲端版本不同時要求玩家明確選擇，不會自動覆蓋；上傳使用 baseRevision，偵測 409 衝突；雲端下載前再次確認會取代本機存檔；同步失敗時保留本機遊戲。
+- `src/game.js`：本機成功存檔後發出 `diangarden:save` 事件，供雲端模組延遲同步；補上同步期間本機有新變更時的後續補傳。
+- `src/styles.css`：新增設定區樣式。
+- `src/index.html` 已載入設定與雲端存檔模組。
+
 ## 下一步
-1. 等待 GitHub Actions 執行並檢查 Worker 冒煙測試結果；若失敗先修正。
-2. 核對 GitHub Pages 正式 origin 及部署 workflow，確認 OAuth 允許來源。
-3. 前端整合前，需取得實際 Google Web Client ID；不得猜測或提交秘密。
-4. 外部資源建立、OAuth client 建立及 Worker 部署仍需使用者另行明確批准；本階段不建立線上資源、不部署。
+1. 確認 GitHub Actions 的 Worker 冒煙測試與瀏覽器驗收結果；目前無法從已連接的工具直接讀取完整 Actions run 清單，因此不能宣稱已通過。
+2. 確認 GitHub Pages 正式 origin，並取得實際 Google Web Client ID 與 Worker API URL。
+3. 只有在使用者另行明確批准後，才建立免費 D1／Worker 資源、建立 Google OAuth Web Client 或部署 API；本階段沒有建立外部資源或部署 Worker。
 
 ## 建議資料與 API 設計
 - D1 先用一張 `player_saves` 表，每位玩家一筆，存放主存檔 JSON、花卉變種 JSON、自動選花偏好 JSON、schema version、revision、updated_at。
