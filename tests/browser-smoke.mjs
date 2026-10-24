@@ -171,11 +171,15 @@ try {
   const wheelActions = await page.locator('#garden-menu-wheel [data-wheel-action]').evaluateAll(nodes => nodes.map(node => node.dataset.wheelAction));
   if (wheelActions.join(',') !== 'drone,farm,settings,catalog,collapse,rotate') throw new Error('快捷輪盤選項不完整或順序錯誤：' + wheelActions.join(','));
   if (await page.locator('#garden-menu-wheel .garden-menu-wreath').getAttribute('src') !== 'assets/wreath.webp') throw new Error('快捷輪盤未沿用花草環素材');
-  const wheelGeometry = await page.evaluate(() => {
+  const wheelGeometry = await page.evaluate(async () => {
     const wheel = document.querySelector('#garden-menu-wheel');
     const sector = wheel.querySelector('[data-wheel-action="drone"]');
     const wreath = wheel.querySelector('.garden-menu-wreath');
     const style = getComputedStyle(sector);
+    sector.classList.add('is-selected');
+    await new Promise(resolve => setTimeout(resolve, 180));
+    const selectedScale = new DOMMatrixReadOnly(getComputedStyle(sector).transform).a;
+    sector.classList.remove('is-selected');
     return {
       centerContent: getComputedStyle(wheel, '::before').content,
       sectorClip: style.clipPath,
@@ -183,15 +187,10 @@ try {
       sectorBorder: style.borderWidth,
       wreathOpacity: getComputedStyle(wreath).opacity,
       wreathVisibility: getComputedStyle(wreath).visibility,
-      selectedTransform: (() => {
-        sector.classList.add('is-selected');
-        const value = getComputedStyle(sector).transform;
-        sector.classList.remove('is-selected');
-        return value;
-      })(),
+      selectedScale,
     };
   });
-  if (wheelGeometry.centerContent !== 'none' || !wheelGeometry.sectorClip.startsWith('polygon(') || wheelGeometry.sectorBackground !== 'rgba(0, 0, 0, 0)' || wheelGeometry.sectorBorder !== '0px' || wheelGeometry.wreathOpacity !== '1' || wheelGeometry.wreathVisibility !== 'visible' || wheelGeometry.selectedTransform === 'none') throw new Error('花草環需無底板、透明中心、選中區放大且可見度 100%');
+  if (wheelGeometry.centerContent !== 'none' || !wheelGeometry.sectorClip.startsWith('polygon(') || wheelGeometry.sectorBackground !== 'rgba(0, 0, 0, 0)' || wheelGeometry.sectorBorder !== '0px' || wheelGeometry.wreathOpacity !== '1' || wheelGeometry.wreathVisibility !== 'visible' || wheelGeometry.selectedScale < 1.1) throw new Error('花草環需無底板、透明中心、選中區放大且可見度 100%');
   const frameBox = await page.locator('.world-frame').boundingBox();
   const wheelOpened = await page.evaluate(({ x, y }) => window.gardenMenuWheel.openAt(x, y, 1), { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
   if (!wheelOpened || !(await page.locator('#garden-menu-wheel').isVisible())) throw new Error('長按快捷輪盤未能顯示');
