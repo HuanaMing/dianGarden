@@ -1,9 +1,9 @@
 {
-  "name": "任務196：修正農地坡面草皮與植物中心附著",
-  "status": "completed",
+  "name": "任務197：長按快捷輪盤與介面互斥",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務196已完成並歸檔；Playwright 自動驗收通過，實際遊戲畫面尚未人工檢查。已恢復農地草皮與草地紋理，等待最新回歸測試完成。",
-  "result": "農地坡面改用土色頂面且不繪製草地斑紋；土壤床中心、土壤紋理與植物根部基準均依坡面中心高度計算，種子模型同步貼地。GitHub Actions Playwright 通過 run 40065297350。"
+  "nextAction": "執行 GitHub Actions Playwright smoke test；確認五項輪盤滑動選取、面板互斥及原有地塊長按／雙指縮放行為。",
+  "result": "已加入輪盤 DOM 與樣式；空白場景長按約500ms會開啟輪盤，並取消相機旋轉手勢。無人機、農地管理與設定面板已改為互斥；自動回歸測試已加入，結果待 CI 確認。"
 }
