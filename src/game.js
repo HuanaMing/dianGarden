@@ -295,7 +295,8 @@
     return Math.max(DRONE_MIN_JOB_BATTERY, estimatedSeconds * DRONE_BATTERY_DRAIN_PER_SECOND + 3);
   }
   function save() {
-    if (isResetting) return true;
+    // Cloud restore is replacing this page's in-memory state; never persist it over the restored save.
+    if (skipSaveOnExit || isResetting) return true;
     if (!persistenceAvailable) return false;
     game.lastOnlineAt = Date.now();
     try {
