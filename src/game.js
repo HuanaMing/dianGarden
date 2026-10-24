@@ -1,7 +1,5 @@
 ﻿(() => {
   const STARTING_COINS = 120;
-  const LAND_COST = 75;
-  const DRONE_COST = 150;
   const MAX_DRONES = 8;
   const DRONE_BATTERY_DRAIN_PER_SECOND = 0.32;
   const DRONE_BATTERY_CHARGE_PER_SECOND = 0.44;
@@ -381,7 +379,7 @@
       const isManual = dialogContext.type === 'manual-expansion';
       const cost = getLandCost();
       dialogTitle.textContent = isManual ? '購買手動地塊' : '購買自動地塊';
-      const description = isManual ? '手動地塊依現有土地數量計價，不會由無人機自動播種、澆水或收成。' : '自動地塊依現有土地數量計價，可由無人機執行自動工作。';
+      const description = isManual ? '手動地塊依目前可見土地總數計價，不會由無人機自動播種、澆水或收成。' : '自動地塊依目前可見土地總數計價，可由無人機執行自動工作。';
       dialogContent.innerHTML = `<p class="seed-dialog-description">${description} 需要 ${cost} 枚金幣。你目前有 ${game.coins} 枚。</p><div class="dialog-actions"><button class="dialog-cancel" type="button" data-dialog-cancel>再想想</button><button class="action-button" type="button" data-confirm-expansion ${game.coins < cost ? 'disabled' : ''}>確認購買　${cost} 🪙</button></div>`;
       dialogContent.querySelector('[data-dialog-cancel]').addEventListener('click', () => dialog.close());
       dialogContent.querySelector('[data-confirm-expansion]').addEventListener('click', () => { if (game.coins >= cost) { dialog.close(); if (isManual) buyManualLand(); else buyLand(); } });
