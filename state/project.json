@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": null,
-  "nextAction": "任務191已完成並歸檔至 tasks/done；下一次繼續時，先依 AGENTS.md 檢查 tasks/active 與 tasks/inbox，再選擇下一項任務。任務191的瀏覽器驗收限制已記錄。",
+  "activeTask": 192,
+  "nextAction": "任務192執行中：將手工地塊排除於農地管理列表與自動地塊價格計數之外，保留手工地塊對可種植地塊淨利倍率的影響，並調整自動地塊回本節奏。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
