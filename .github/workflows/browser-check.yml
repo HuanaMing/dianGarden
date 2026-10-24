@@ -7,6 +7,7 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
+      - 'cloudflare/**'
       - '.github/workflows/browser-check.yml'
 
 permissions:
@@ -38,6 +39,9 @@ jobs:
 
       - name: 安裝 Playwright 套件
         run: npm install --no-save --no-package-lock playwright
+
+      - name: 執行 Cloudflare Worker 存檔 API 測試
+        run: node tests/cloudflare-worker-smoke.mjs
 
       - name: 安裝 Chromium 瀏覽器
         run: npx playwright install chromium
