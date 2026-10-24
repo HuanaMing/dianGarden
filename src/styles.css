@@ -586,3 +586,9 @@ input, [contenteditable="true"]{
 .cloud-save-actions button:hover:not(:disabled){background:#e8f4e6}
 .cloud-save-actions button:disabled{opacity:.55;cursor:wait}
 @media(max-width:700px){.cloud-save-settings{padding:10px}.cloud-save-actions button{flex-basis:100%}}
+
+
+/* Persistent notice when another device owns cloud-save sync. */
+.cloud-session-banner{position:absolute;z-index:9;top:76px;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 28px);padding:10px 16px;border:1px solid #e8b4a5;border-radius:12px;background:#fff1ebf2;color:#9b4638;font-size:12px;font-weight:900;text-align:center;box-shadow:0 5px 18px #633b2a24;pointer-events:none}
+.cloud-session-banner[hidden]{display:none}
+@media(max-width:700px){.cloud-session-banner{top:72px;font-size:11px;padding:9px 12px}}
