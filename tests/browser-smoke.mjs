@@ -313,7 +313,7 @@ try {
   await maturePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   if (!(await maturePage.locator('#garden-avatar img').getAttribute('src')).endsWith('玫瑰.png')) throw new Error('舊存檔未預設為自動頭像，或未依種植數量最多的花種顯示點陣圖');
   await maturePage.locator('#farm-management-toggle').click();
-  await maturePage.locator('[data-plot-button="2"]').click();
+  await maturePage.evaluate(() => window.onSkyPlotActivate?.(2));
   const matureSwitch = maturePage.locator('#farm-dialog [data-plot-mode-switch]');
   if (!(await matureSwitch.isEnabled())) throw new Error('成熟植物所在手動地塊不能切換為草地');
   await matureSwitch.click();
