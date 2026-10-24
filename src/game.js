@@ -13,7 +13,6 @@
   const CROP_CATALOG_VERSION = 4;
   const WATER_DURATION = 30_000;
   const WATER_GROWTH_RATE = 1.2;
-  const MAX_OFFLINE_SIMULATION = 24 * 60 * 60 * 1000;
   const crops = (window.flowerCatalog || []).map((flower) => ({
     ...flower, icon: flower.emoji, seedIcon: '🌱', meaning: flower.meaning,
   }));
@@ -189,8 +188,10 @@
   }
   const game = loadGame();
   let rainStartedAt = game.lastObservedRaining ? Date.now() : null;
-  function getLandCost() { return Math.min(Number.MAX_SAFE_INTEGER, Math.round(LAND_COST * (2 ** Math.max(0, game.plots.length - 3)))); }
-  function getDroneCost() { return Math.min(Number.MAX_SAFE_INTEGER, DRONE_COST * (8 ** game.droneCount)); }
+  function getLandCost() { return window.gardenEconomy.getLandCost(game.plots.length); }
+  function getDroneCost() { return window.gardenEconomy.getDroneCost(game.droneCount); }
+  function getPlantablePlotCount() { return window.gardenEconomy.getPlantablePlotCount(game.plots); }
+  function getHarvestReward(crop) { return window.gardenEconomy.getHarvestReward(crop, getPlantablePlotCount()); }
   try {
     const savedSelection = JSON.parse(localStorage.getItem(AUTO_CROP_KEY) || 'null');
     if (Array.isArray(savedSelection) && savedSelection.every((index) => Number.isInteger(index) && index >= 0 && index < crops.length)
@@ -207,24 +208,7 @@
       : base;
   }
   function simulateOfflineProgress(state, now = Date.now()) {
-    const departureAt = state.lastOnlineAt;
-    const rawDuration = Number.isFinite(departureAt) ? Math.max(0, now - departureAt) : 0;
-    const simulatedDuration = Math.min(rawDuration, MAX_OFFLINE_SIMULATION);
-    const simulationStart = now - simulatedDuration;
-    const overflow = rawDuration - simulatedDuration;
-    if (overflow > 0) state.plots.forEach((plot) => {
-      if (plot.crop !== null && Number.isFinite(plot.plantedAt)) plot.plantedAt = Math.max(plot.plantedAt, simulationStart);
-    });
-    // Offline time only advances the existing plantedAt-based maturity countdown.
-    // Freeze virtual weather and drone clocks at the moment the player returns.
-    state.worldTimeMs = window.skyEnvironment.getWorldTime(state, Number.isFinite(departureAt) ? departureAt : now);
-    state.worldTimeAnchor = now;
-    state.lastObservedRaining = window.skyEnvironment.getState(state, now).isRaining;
-    state.drones.forEach((drone) => { drone.batteryUpdatedAt = now; });
-    state.lastOfflineReturnAt = now;
-    state.lastOnlineAt = now;
-    if (rawDuration <= 0) return null;
-    return { departureAt, returnAt: now, rawDuration, simulatedDuration };
+    return window.gardenEconomy.simulateOfflineProgress(state, now, crops, window.skyEnvironment);
   }
   const offlineReport = simulateOfflineProgress(game);
   const plotSelector = document.querySelector('#plot-selector');
@@ -395,9 +379,9 @@
     dialog.classList.remove('has-variant-panel', 'has-seed-picker');
     if (dialogContext.type === 'expansion' || dialogContext.type === 'manual-expansion') {
       const isManual = dialogContext.type === 'manual-expansion';
-      const cost = isManual ? LAND_COST : getLandCost();
+      const cost = getLandCost();
       dialogTitle.textContent = isManual ? '購買手動地塊' : '購買自動地塊';
-      const description = isManual ? '手動地塊固定價格為 75 金幣，不會由無人機自動播種、澆水或收成。' : '自動地塊依現有擴建價格規則計價，可由無人機執行自動工作。';
+      const description = isManual ? '手動地塊依現有土地數量計價，不會由無人機自動播種、澆水或收成。' : '自動地塊依現有土地數量計價，可由無人機執行自動工作。';
       dialogContent.innerHTML = `<p class="seed-dialog-description">${description} 需要 ${cost} 枚金幣。你目前有 ${game.coins} 枚。</p><div class="dialog-actions"><button class="dialog-cancel" type="button" data-dialog-cancel>再想想</button><button class="action-button" type="button" data-confirm-expansion ${game.coins < cost ? 'disabled' : ''}>確認購買　${cost} 🪙</button></div>`;
       dialogContent.querySelector('[data-dialog-cancel]').addEventListener('click', () => dialog.close());
       dialogContent.querySelector('[data-confirm-expansion]').addEventListener('click', () => { if (game.coins >= cost) { dialog.close(); if (isManual) buyManualLand(); else buyLand(); } });
@@ -420,7 +404,7 @@
       else crops.forEach((crop, cropIndex) => {
         const row = document.createElement('div'); row.className = 'seed-choice-row';
         const option = document.createElement('button'); option.className = 'seed-option'; option.type = 'button';
-        option.innerHTML = `<span class="seed-option-icon">${flowerIconMarkup(crop, 'flower-pixel-icon seed-pixel-icon')}</span><span class="seed-option-copy"><strong>${crop.name}</strong><small>種子 ${crop.seedCost} 🪙 · 生長約 ${crop.growTime / 1000} 秒 · 收成 ${crop.harvestReward} 🪙</small></span>`;
+        option.innerHTML = `<span class="seed-option-icon">${flowerIconMarkup(crop, 'flower-pixel-icon seed-pixel-icon')}</span><span class="seed-option-copy"><strong>${crop.name}</strong><small>種子 ${crop.seedCost} 🪙 · 生長約 ${crop.growTime / 1000} 秒 · 收成 ${getHarvestReward(crop)} 🪙</small></span>`;
         option.disabled = game.coins < crop.seedCost;
         option.addEventListener('click', () => { if (game.plots[index]?.crop === null && game.coins >= crop.seedCost) { dialog.close(); plant(index, cropIndex); } });
         const variantTrigger = document.createElement('button'); variantTrigger.className = 'seed-variant-trigger'; variantTrigger.type = 'button'; variantTrigger.textContent = '▷';
@@ -443,7 +427,7 @@
             const swatch = document.createElement('span'); swatch.className = 'variant-seed-swatch'; swatch.style.backgroundColor = variant.color; swatch.setAttribute('aria-label', `自訂花色 ${variant.color}`);
             const copy = document.createElement('span'); copy.className = 'variant-seed-copy';
             const name = document.createElement('strong'); name.textContent = variant.name;
-            const details = document.createElement('small'); details.textContent = `${crop.name} · 種子 ${crop.seedCost} 🪙 · 生長約 ${crop.growTime / 1000} 秒 · 收成 ${crop.harvestReward} 🪙`;
+            const details = document.createElement('small'); details.textContent = `${crop.name} · 種子 ${crop.seedCost} 🪙 · 生長約 ${crop.growTime / 1000} 秒 · 收成 ${getHarvestReward(crop)} 🪙`;
             copy.append(name, details);
             variantOption.append(swatch, copy);
             variantOption.addEventListener('click', () => { if (game.plots[index]?.crop === null && game.coins >= crop.seedCost) { dialog.close(); plant(index, cropIndex, variant.id); } });
@@ -473,7 +457,7 @@
     const waterAction = !ready ? `<button class="action-button water dialog-primary" type="button" data-dialog-water ${isRaining || plot.watered || waterPending ? 'disabled' : ''}>${isRaining ? '陰雨中自然濕潤' : plot.watered ? wateredLabel : waterPending ? '等待澆水' : isDroneExcluded(plot) ? '手動澆水（30 秒，1.2 倍生長）' : '請無人機澆水（30 秒，1.2 倍生長）'}</button>` : '';
     const boostStatus = plot.watered ? `<p class="water-status">${plot.waterSource === 'rain' ? '雨水已補足澆水狀態' : Number.isFinite(plot.waterUntil) && plot.waterUntil > Date.now() ? `澆水加速中，還有 ${Math.ceil((plot.waterUntil - Date.now()) / 1000)} 秒` : '這株花已完成澆水加速'}</p>` : '';
     const deleteAction = game.plots.length > 1 ? `<button class="dialog-delete-plot" type="button" data-delete-plot ${hasDroneJobs() ? 'disabled' : ''}>${hasDroneJobs() ? '無人機工作時無法刪除' : '刪除這塊地'}</button>` : '';
-    dialogContent.innerHTML = `${plotModeSettingMarkup(plot, index)}<div class="dialog-crop"><span>${ready ? flowerIconMarkup(crop) : crop.seedIcon}</span><div><strong>${crop.name}${ready ? ' 已成熟' : ' 正在生長'}</strong><p>${ready ? `預計收成可獲得 ${crop.harvestReward} 枚金幣。` : `預計還需 ${remaining} 秒成熟。`}</p></div></div><div class="dialog-progress"><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div><small>${progress}%</small></div>${ready ? '<button class="action-button harvest dialog-primary" type="button" data-dialog-harvest>收成並領取金幣</button>' : waterAction}${boostStatus}${deleteAction}`;
+    dialogContent.innerHTML = `${plotModeSettingMarkup(plot, index)}<div class="dialog-crop"><span>${ready ? flowerIconMarkup(crop) : crop.seedIcon}</span><div><strong>${crop.name}${ready ? ' 已成熟' : ' 正在生長'}</strong><p>${ready ? `預計收成可獲得 ${getHarvestReward(crop)} 枚金幣。` : `預計還需 ${remaining} 秒成熟。`}</p></div></div><div class="dialog-progress"><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div><small>${progress}%</small></div>${ready ? '<button class="action-button harvest dialog-primary" type="button" data-dialog-harvest>收成並領取金幣</button>' : waterAction}${boostStatus}${deleteAction}`;
     dialogContent.querySelector('[data-dialog-harvest]')?.addEventListener('click', () => { dialog.close(); harvest(index); });
     dialogContent.querySelector('[data-dialog-water]')?.addEventListener('click', () => { dialog.close(); water(index); });
     dialogContent.querySelector('[data-delete-plot]')?.addEventListener('click', () => deletePlot(index));
@@ -784,7 +768,7 @@
     if (job.kind === 'harvest') {
       const plot = game.plots[job.index]; if (!plot || isDroneExcluded(plot) || plot.crop === null) return notify('收成任務條件已改變，已略過。');
       const crop = getPlantedCrop(plot); if (growthElapsed(plot) < crop.growTime) return notify('作物尚未成熟，收成任務已略過。');
-      game.coins += crop.harvestReward; plot.crop = null; plot.variantId = null; plot.variantName = null; plot.variantColor = null; plot.plantedAt = null; plot.plantHeight = null; plot.watered = false; plot.waterSource = null; plot.growthBonusMs = 0; delete plot.waterStartedAt; delete plot.waterUntil; save(); render();
+      const reward = getHarvestReward(crop); game.coins += reward; plot.crop = null; plot.variantId = null; plot.variantName = null; plot.variantColor = null; plot.plantedAt = null; plot.plantHeight = null; plot.watered = false; plot.waterSource = null; plot.growthBonusMs = 0; delete plot.waterStartedAt; delete plot.waterUntil; save(); render();
       if (job.automatic) {
         planAutomaticJobs();
         const replantIndex = jobQueue.findIndex((queued) => queued.kind === 'plant' && queued.index === job.index);
@@ -794,7 +778,7 @@
           renderJobQueue();
         }
       }
-      else notify(`收成了${crop.name}！獲得 ${crop.harvestReward} 金幣 ✨`);
+      else notify(`收成了${crop.name}！獲得 ${reward} 金幣 ✨`);
       return;
     }
     if (job.kind === 'water') {
@@ -922,7 +906,7 @@
     const crop = crops[plot.crop] || crops[0]; if (growthElapsed(plot) < crop.growTime) return;
     if (isDroneExcluded(plot)) {
       const plantedCrop = getPlantedCrop(plot);
-      game.coins += crop.harvestReward; plot.crop = null; plot.variantId = null; plot.variantName = null; plot.variantColor = null; plot.plantedAt = null; plot.plantHeight = null; plot.watered = false; plot.growthBonusMs = 0; delete plot.waterStartedAt; delete plot.waterUntil; save(); render(); notify(`手動收成了${plantedCrop.name}！獲得 ${crop.harvestReward} 金幣 ✨`); return;
+      const reward = getHarvestReward(crop); game.coins += reward; plot.crop = null; plot.variantId = null; plot.variantName = null; plot.variantColor = null; plot.plantedAt = null; plot.plantHeight = null; plot.watered = false; plot.growthBonusMs = 0; delete plot.waterStartedAt; delete plot.waterUntil; save(); render(); notify(`手動收成了${plantedCrop.name}！獲得 ${reward} 金幣 ✨`); return;
     }
     enqueueJob({ kind: 'harvest', index });
   }
@@ -983,14 +967,14 @@
     if (dialogContext?.type === 'plot' && game.plots[dialogContext.index]?.crop !== null) renderFarmDialog();
   }
   function buyManualLand() {
-    const cost = LAND_COST;
-    if (game.coins < cost) return notify('手動地塊固定需要 75 枚金幣，目前金幣不足。');
+    const cost = getLandCost();
+    if (game.coins < cost) return notify(`金幣不足，購買下一塊手動地塊需要 ${cost} 枚金幣。`);
     const position = getNextPlotPosition(game.plots, game.drones.map((drone) => drone.dockPosition));
     if (!position) return notify('找不到不與坪台重疊的相鄰位置，請先移動坪台。');
     const [x, z] = position;
     game.coins -= cost;
     game.plots.push({ crop: null, plantedAt: null, manual: true, grassOnly: false, x, z, y: 0 });
-    save(); render(); notify('已購買手動地塊，固定扣除 75 金幣。');
+    save(); render(); notify(`已購買手動地塊，扣除 ${cost} 金幣。`);
   }
   function buyLand() {
     const cost = getLandCost();
@@ -1223,8 +1207,13 @@
   if (offlineReport && offlineReport.rawDuration >= 60_000) {
     const minutes = Math.floor(offlineReport.simulatedDuration / 60_000);
     const offlineTime = minutes < 60 ? `${minutes} 分鐘` : `${Math.floor(minutes / 60)} 小時 ${minutes % 60} 分鐘`;
-    const cappedNote = offlineReport.rawDuration > offlineReport.simulatedDuration ? '（模擬上限 24 小時）' : '';
-    notify(`離線 ${offlineTime}${cappedNote}；已更新花卉成熟倒數，離線期間不會自動收成或補種。`);
+    const cappedNote = offlineReport.capped ? `（自動作業上限：${offlineReport.droneCountAtDeparture * 3} 小時）` : '';
+    if (offlineReport.automationEnabled) {
+      const delta = offlineReport.coinsDelta >= 0 ? `淨增加 ${offlineReport.coinsDelta}` : `淨減少 ${Math.abs(offlineReport.coinsDelta)}`;
+      notify(`離線自動模擬 ${offlineTime}${cappedNote}；${delta} 金幣。`);
+    } else {
+      notify(`離線 ${Math.floor(offlineReport.rawDuration / 60_000)} 分鐘；自動模式關閉，沒有離線自動生產${cappedNote ? '，已超過生產上限' : ''}。`);
+    }
   }
   setInterval(() => {
     const now = Date.now();
