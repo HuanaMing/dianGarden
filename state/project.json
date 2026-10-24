@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": null,
-  "nextAction": "依補充要求已恢復農地草皮與草地紋理，土壤床頂面仍高於草皮 0.055 單位；針對草皮的回歸檢查通過，完整 smoke test 有一次在無關的手機長按測試失敗。",
+  "activeTask": 197,
+  "nextAction": "任務197主要程式已修改：長按空白場景開啟五項快捷輪盤，無人機／農地管理／設定面板互斥；正在驗證 Playwright 回歸測試與手勢相容性。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
