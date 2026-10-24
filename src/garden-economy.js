@@ -18,7 +18,6 @@
   const MIN_JOB_BATTERY = 8;
   const DAY_CYCLE_MS = 16 * 60 * 1000;
   const RAIN_CYCLE_MS = 10 * 60 * 1000;
-  const RAIN_START_MS = 8 * 60 * 1000;
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
   function getLandCost(plotCount) {
@@ -129,7 +128,7 @@
       } else if (job.kind === 'water') {
         const crop = crops[plot.crop];
         if (!crop || plot.crop === null || plot.watered || weatherAt(time).isRaining || growthElapsed(plot, time) >= crop.growTime) return;
-        plot.watered = true; plot.waterSource = 'drone';
+        plot.watered = true; plot.waterSource = 'drone'; plot.waterWetnessStart = 1;
         plot.waterStartedAt = time; plot.waterUntil = time + WATER_DURATION;
       }
     };
@@ -214,7 +213,7 @@
         if (Number.isFinite(plot.waterStartedAt) && Number.isFinite(plot.waterUntil)) {
           plot.growthBonusMs = (plot.growthBonusMs || 0) + Math.max(0, Math.min(time, plot.waterUntil) - plot.waterStartedAt) * (WATER_GROWTH_RATE - 1);
         }
-        plot.watered = true; plot.waterSource = 'rain';
+        plot.watered = true; plot.waterSource = 'rain'; plot.waterWetnessStart = 1;
         plot.waterStartedAt = time; plot.waterUntil = time + WATER_DURATION;
       });
     };
