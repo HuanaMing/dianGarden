@@ -1,10 +1,10 @@
 (() => {
   const LAND_BASE_COST = 75;
   const LAND_GROWTH = 0.18;
-  const LAND_EXPONENT = 1.8;
-  const DRONE_BASE_COST = 900;
-  const DRONE_GROWTH = 0.3;
-  const DRONE_EXPONENT = 2;
+  const LAND_EXPONENT = 1.4;
+  const DRONE_BASE_COST = 300;
+  const DRONE_GROWTH = 0.15;
+  const DRONE_EXPONENT = 1.5;
   const MAX_DRONES = 8;
   const OFFLINE_HOURS_PER_DRONE = 3;
   const MAX_OFFLINE_MS = 24 * 60 * 60 * 1000;
@@ -30,7 +30,7 @@
     return plots.filter((plot) => plot && plot.grassOnly !== true).length;
   }
   function getProfitMultiplier(plantablePlotCount) {
-    return Math.min(1.75, 1 + 0.025 * Math.max(0, plantablePlotCount - 3));
+    return Math.min(2.5, 1 + 0.05 * Math.max(0, plantablePlotCount - 3));
   }
   function getHarvestReward(crop, plantablePlotCount) {
     if (!crop) return 0;
