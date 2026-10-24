@@ -1,7 +1,10 @@
 (() => {
   const LAND_BASE_COST = 75;
-  const LAND_GROWTH = 0.18;
-  const LAND_EXPONENT = 1.4;
+  const LAND_EARLY_GROWTH = 0.22;
+  const LAND_EARLY_EXPONENT = 1.8;
+  const LAND_STAGE_SPLIT = 10;
+  const LAND_LATE_GROWTH = 0.05;
+  const LAND_LATE_EXPONENT = 1.2;
   const DRONE_BASE_COST = 300;
   const DRONE_GROWTH = 0.15;
   const DRONE_EXPONENT = 1.5;
@@ -20,7 +23,10 @@
 
   function getLandCost(plotCount) {
     const count = Math.max(3, Number.isFinite(plotCount) ? plotCount : 3);
-    return Math.min(Number.MAX_SAFE_INTEGER, Math.round(LAND_BASE_COST * (1 + LAND_GROWTH * Math.max(0, count - 3)) ** LAND_EXPONENT));
+    const earlyCost = LAND_BASE_COST * (1 + LAND_EARLY_GROWTH * Math.max(0, count - 3)) ** LAND_EARLY_EXPONENT;
+    if (count <= LAND_STAGE_SPLIT) return Math.min(Number.MAX_SAFE_INTEGER, Math.round(earlyCost));
+    const costAtSplit = LAND_BASE_COST * (1 + LAND_EARLY_GROWTH * (LAND_STAGE_SPLIT - 3)) ** LAND_EARLY_EXPONENT;
+    return Math.min(Number.MAX_SAFE_INTEGER, Math.round(costAtSplit * (1 + LAND_LATE_GROWTH * (count - LAND_STAGE_SPLIT)) ** LAND_LATE_EXPONENT));
   }
   function getDroneCost(droneCount) {
     const count = clamp(Number.isInteger(droneCount) ? droneCount : 1, 1, MAX_DRONES);
@@ -30,7 +36,7 @@
     return plots.filter((plot) => plot && plot.grassOnly !== true).length;
   }
   function getProfitMultiplier(plantablePlotCount) {
-    return Math.min(2.5, 1 + 0.05 * Math.max(0, plantablePlotCount - 3));
+    return Math.min(3.5, 1 + 0.08 * Math.max(0, plantablePlotCount - 3));
   }
   function getHarvestReward(crop, plantablePlotCount) {
     if (!crop) return 0;
