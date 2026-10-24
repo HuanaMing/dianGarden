@@ -1299,6 +1299,18 @@
     requestAnimationFrame(draw);
   }
 
+  window.addEventListener('garden-menu-wheel-open', (event) => {
+    const pointerId = event.detail?.pointerId;
+    if (pointerId === undefined) return;
+    clearTimeout(emptyTouchRotateTimer);
+    clearTimeout(plotPressTimer);
+    clearTimeout(dockPressTimer);
+    dragging = false;
+    rotateHoldGesture = false;
+    pointerMoved = true;
+    clearPointerHoldRings();
+    touchPoints.delete(pointerId);
+  });
   canvas.addEventListener('pointerdown', (event) => {
     beginPointerFeedback(event);
     plotWasInMoveModeAtPointerDown = false;
@@ -1411,7 +1423,10 @@
       emptyTouchRotateTimer = setTimeout(() => {
         const singleTouchStillHeld = !isTouchPointer || (touchPoints.has(pressPointerId) && touchPoints.size === 1);
         if (dragging && singleTouchStillHeld && !pointerMoved
-          && pointerPlotIndex === null && dockHitAtPointer === null) rotateHoldGesture = true;
+          && pointerPlotIndex === null && dockHitAtPointer === null) {
+          const openedWheel = window.gardenMenuWheel?.openAt?.(pointerStartX, pointerStartY, pressPointerId);
+          if (!openedWheel) rotateHoldGesture = true;
+        }
       }, 500);
     }
     canvas.setPointerCapture(event.pointerId);
