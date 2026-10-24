@@ -21,6 +21,8 @@
   if (crops.length !== 11) throw new Error('花卉目錄載入失敗');
   let persistenceAvailable = true;
   let persistenceWarning = '';
+  let skipSaveOnExit = false;
+  window.addEventListener('diangarden:restore-cloud-save', () => { skipSaveOnExit = true; });
   function getNextPlotPosition(plots, blockedDocks = []) {
     const occupied = new Set(plots.map((plot) => `${plot.x},${plot.z}`));
     for (const plot of plots) {
@@ -308,8 +310,8 @@
   function notify(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(toastTimeout); toastTimeout = setTimeout(() => toast.classList.remove('show'), 2100); }
   function updateSaveStatus() { if (!saveStatus) return; saveStatus.textContent = persistenceWarning || '進度會自動儲存'; saveStatus.classList.toggle('save-warning', !persistenceAvailable); }
   if (offlineReport) save();
-  window.addEventListener('pagehide', () => { if (!isResetting) save(); });
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && !isResetting) save(); });
+  window.addEventListener('pagehide', () => { if (!isResetting && !skipSaveOnExit) save(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && !isResetting && !skipSaveOnExit) save(); });
   function growthElapsed(plot, now = Date.now()) {
     if (!plot || plot.crop === null || !Number.isFinite(plot.plantedAt)) return 0;
     let elapsed = Math.max(0, now - plot.plantedAt) + (plot.growthBonusMs || 0);
