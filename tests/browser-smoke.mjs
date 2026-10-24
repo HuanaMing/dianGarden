@@ -59,6 +59,21 @@ try {
   const rampCases = await page.evaluate(() => { const f=window.dianGardenGrassRampLogic.getConnections, l=[-0.5,0,0.5]; let n=0; for(const a of l)for(const b of l)for(const c of l)for(const d of l){const p=[{x:0,z:0,y:0},{x:0,z:-1,y:a},{x:1,z:0,y:b},{x:0,z:1,y:c},{x:-1,z:0,y:d}],s=p.map((_,i)=>({grassOnly:i===0})),r=f(p,s,0);if(r.north?.edgeHeight!==a||r.east?.edgeHeight!==b||r.south?.edgeHeight!==c||r.west?.edgeHeight!==d)return 0;n++;} return n; });
   if (rampCases !== 81) throw new Error('草地斜坡 81 種高度組合失敗：' + rampCases);
   checks.push('草地斜坡四邊 -0.5／0／+0.5 的 81 種排列通過');
+  const rampCornerCases = await page.evaluate(() => {
+    const heights = window.dianGardenGrassRampLogic.getCornerHeights;
+    const levels = [-0.5, 0, 0.5];
+    let count = 0;
+    for (const north of levels) for (const east of levels) for (const south of levels) for (const west of levels) {
+      const corners = heights({ north, east, south, west }, 0);
+      const expected = [(north + west) / 2, (north + east) / 2, (south + east) / 2, (south + west) / 2];
+      if (corners.length !== 4 || corners.some((value, index) => Math.abs(value - expected[index]) > 1e-8)) return 0;
+      count += 1;
+    }
+    const sloped = heights({ north: -0.5, east: 0, south: 0.5, west: 0 }, 0);
+    return count === 81 && new Set(sloped).size > 1 ? count : 0;
+  });
+  if (rampCornerCases !== 81) throw new Error('草地斜坡側面角點變形測試失敗：' + rampCornerCases);
+  checks.push('草地頂面與四周側面共用角點高度，81 種組合的側面變形測試通過');
   const offlineCheck = await page.evaluate(() => {
     const now=Date.now(), sim=window.gardenEconomy.simulateOfflineProgress, env=window.skyEnvironment, crops=window.flowerCatalog;
     const makeState=autoMode=>({coins:120,lastOnlineAt:now-5*3600000,autoMode,droneCount:1,drones:[{deployed:true,battery:100,dockPosition:{x:0,z:1.55,y:0}}],autoCropSelection:[0],plots:[{crop:0,plantedAt:now-5*3600000-180000,plantHeight:1,manual:false,grassOnly:false,x:0,z:0,y:0,watered:false}],worldTimeMs:60000,worldTimeAnchor:now-5*3600000,lastObservedRaining:false});
