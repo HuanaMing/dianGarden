@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 197,
-  "nextAction": "任務197重做：滑到旋轉區段立即收起輪盤並旋轉，放開退出；選項取消底板並局部放大花草環，素材可見度100%。待 CI／瀏覽器驗收。",
+  "activeTask": 198,
+  "nextAction": "任務198已替換輪盤與頂部介面四種按鈕素材，並更新 Pages 素材複製與回歸檢查；待瀏覽器／Actions 驗收。任務197的動態互動驗收仍待可用瀏覽器。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
