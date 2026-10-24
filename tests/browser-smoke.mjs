@@ -536,9 +536,10 @@ try {
   maturePage.on('pageerror', error => errors.push(`mature pageerror: ${error.message}`));
   maturePage.on('console', message => { if (message.type() === 'error') errors.push(`mature console: ${message.text()}`); });
   await maturePage.addInitScript(() => {
+    localStorage.setItem('sky-garden-guest-mode-v1', 'true');
     const now = Date.now();
     const dockPosition = { x: 0, z: 1.55, y: 0 };
-    localStorage.setItem('sky-garden-save-v1', JSON.stringify({
+    localStorage.setItem('sky-garden-guest-save-v1', JSON.stringify({
       coins: 120, cropCatalogVersion: 4, gardenName: '成熟植物測試', hudCollapsed: false, autoMode: false,
       autoCropSelection: [0], flowerVariants: [], worldTimeMs: 60000, worldTimeAnchor: now,
       lastObservedRaining: false, droneCount: 1, deploymentSequence: 1, lastOnlineAt: null,
@@ -565,9 +566,10 @@ try {
 
   const immaturePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await immaturePage.addInitScript(() => {
+    localStorage.setItem('sky-garden-guest-mode-v1', 'true');
     const now = Date.now();
     const dockPosition = { x: 0, z: 1.55, y: 0 };
-    localStorage.setItem('sky-garden-save-v1', JSON.stringify({
+    localStorage.setItem('sky-garden-guest-save-v1', JSON.stringify({
       coins: 120, cropCatalogVersion: 4, gardenName: '未成熟植物測試', autoMode: false, autoCropSelection: [0],
       worldTimeMs: 60000, worldTimeAnchor: now, lastObservedRaining: false, droneCount: 1,
       deploymentSequence: 1, dockPosition, drones: [{ dockPosition, deployed: true, deploymentOrder: 1, battery: 100, batteryUpdatedAt: now }],
@@ -623,7 +625,7 @@ try {
   }
 
   const versionPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
-  await versionPage.addInitScript(() => localStorage.setItem('diangarden-seen-version-v1', '000000, 001'));
+  await versionPage.addInitScript(() => { localStorage.setItem('sky-garden-guest-mode-v1', 'true'); localStorage.setItem('diangarden-seen-version-v1', '000000, 001'); });
   await versionPage.route('**/version.json*', route => route.fulfill({
     status: 200,
     contentType: 'application/json',
@@ -640,6 +642,7 @@ try {
   await versionPage.close();
 
   const forceUpdatePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await forceUpdatePage.addInitScript(() => localStorage.setItem('sky-garden-guest-mode-v1', 'true'));
   const forceUpdateRequests = [];
   forceUpdatePage.on('request', request => {
     const url = new URL(request.url());
