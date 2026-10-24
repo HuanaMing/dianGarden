@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 182,
-  "nextAction": "任務182已完成 Cloudflare Workers／D1 免費額度、閒置政策與 Google ID token 驗證官方文件初查，並新增 docs/cloud-save-architecture.md。下一步確認正式 GitHub Pages origin、發布 workflow 與 OAuth 允許來源；未經明確批准不建立 Cloudflare 資源、不建立 OAuth client、不部署或啟用付費功能。",
+  "nextAction": "任務182已建立 Cloudflare Worker API 原型、D1 migration、Wrangler 設定範本與冒煙測試，並加入 GitHub Actions。接著確認測試結果及 GitHub Pages 正式 origin／OAuth 需求；外部資源建立、OAuth client 與部署均待使用者另行批准。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務182：建立 Cloudflare D1／Worker、建立 Google OAuth Web Client 與部署外部 API 尚未獲批准；任何付費功能須另行明確批准。"
