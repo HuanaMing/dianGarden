@@ -36,7 +36,7 @@
     const count = Math.max(3, Number.isFinite(plotCount) ? plotCount : 3);
     if (count <= LAND_EARLY_STAGE_END) {
       const progress = (count - 3) / (LAND_EARLY_STAGE_END - 3);
-      const multiplier = LAND_EARLY_START_MULTIPLIER + (LAND_EARLY_END_MULTIPLIER - LAND_EARLY_START_MULTIPLIER) * progress;
+      const multiplier = LAND_EARLY_START_MULTIPLIER + (LAND_EARLY_END_MULTIPLIER - LAND_EARLY_START_MULTIPLIER) * Math.sqrt(progress);
       return Math.min(Number.MAX_SAFE_INTEGER, Math.round(getBaseLandCost(count) * multiplier));
     }
     const costAtEight = getBaseLandCost(LAND_EARLY_STAGE_END) * LAND_EARLY_END_MULTIPLIER;
