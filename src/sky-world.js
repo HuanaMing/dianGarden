@@ -461,10 +461,10 @@
       const half = tileSize / 2, epsilon = 1e-8;
       const touching = [];
       positions.forEach((position, plotIndex) => {
-        if (!position || states?.[plotIndex]?.grassOnly !== true) return;
+        if (!position) return;
         if (Math.abs(Math.abs(position.x - cornerX) - half) > epsilon
           || Math.abs(Math.abs(position.z - cornerZ) - half) > epsilon) return;
-        touching.push({ index: plotIndex, x: position.x, z: position.z, y: position.y || 0 });
+        touching.push({ index: plotIndex, x: position.x, z: position.z, y: position.y || 0, grass: states?.[plotIndex]?.grassOnly === true });
       });
       const sourceNode = touching.find((plot) => plot.index === index);
       if (!sourceNode) return source.y || 0;
@@ -482,7 +482,12 @@
           queue.push(candidate);
         }
       }
-      const heights = touching.filter((plot) => connected.has(plot.index)).map((plot) => plot.y);
+      const group = touching.filter((plot) => connected.has(plot.index));
+      // Farm tiles have a flat top at their plot height. When a connected farm
+      // touches this vertex, anchor the grass corner to that top instead of
+      // averaging only grass tiles (which left a visible gap at mixed seams).
+      const farmHeights = group.filter((plot) => !plot.grass).map((plot) => plot.y);
+      const heights = farmHeights.length ? farmHeights : group.map((plot) => plot.y);
       return heights.reduce((sum, height) => sum + height, 0) / heights.length;
     },
   });
