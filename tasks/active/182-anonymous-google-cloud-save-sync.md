@@ -1,54 +1,70 @@
 # 任務 182：Cloudflare D1 跨裝置雲端存檔
 
 ## 狀態
-執行中（active）。使用者已確認採用 Cloudflare Workers + D1 + Google 登入方向，目標是讓玩家換手機或電腦後可找回同一座花園。此確認只代表採用技術方向，不代表批准建立雲端資源、啟用付費方案或產生費用。
+執行中（active）。使用者已確認採用 Cloudflare Workers + D1 + Google 登入方向，目標是讓玩家換手機或電腦後可找回同一座花園。此確認只代表採用技術方向，不代表批准建立雲端資源、OAuth 用戶端、部署或啟用付費方案。
 
 ## 目標
-在保留現有本機存檔與離線遊玩能力的前提下，讓玩家可先匿名遊玩，之後以 Google 帳號綁定花園，並在不同裝置間同步進度。優先控制成本與維護複雜度，按小型休閒遊戲需求設計，不追求複雜的多人或防作弊系統。
+在保留現有本機存檔與離線遊玩能力的前提下，讓玩家可先不登入遊玩，之後以 Google 帳號綁定花園，並在不同裝置間同步進度。優先控制成本與維護複雜度，按小型休閒遊戲需求設計。
 
-## 使用者已確認的方向
-- 選用 Cloudflare Workers + D1（SQLite 型雲端 SQL 資料庫）作為候選架構，使用 Google 登入識別玩家。
-- 玩家可先不登入遊玩；登入／綁定後可在其他裝置找回同一座花園。
-- 優先以 Cloudflare 免費額度運作；尚未批准建立任何資源或啟用任何付費服務。
-- 本機遊玩與本機存檔必須在離線或雲端服務不可用時繼續可用。
-- GitHub 繼續用於原始碼與部署；不直接把 GitHub repository 當作可由前端任意寫入的玩家資料庫。
+## 已確認方向
+- 使用 Cloudflare Workers + D1（SQLite 型雲端 SQL 資料庫）+ Google Identity Services，作為跨裝置存檔候選架構。
+- 優先使用免費額度；尚未批准建立任何資源、設定 OAuth 或啟用付費服務。
+- 本機遊玩與存檔在離線或雲端服務不可用時必須繼續可用。
+- GitHub 繼續用於原始碼與靜態網站部署，不直接把 repository 當作可由前端任意寫入的玩家資料庫。
 - 不得把 Google client secret、Cloudflare API token 或其他伺服器秘密放入前端或公開 repository。
 
-## 開始實作前的工作
-1. 重新確認 Cloudflare Workers、D1 與 Google OAuth 當前文件、免費配額、計費方式、閒置行為與必要帳號設定。
-2. 檢查 GitHub Pages 的正式 origin、現有版本檢查流程與部署工作流程，規劃 Workers API 的部署位置、CORS 及 OAuth callback／redirect。
-3. 先提出資料流與安全邊界；不建立 Cloudflare 資源、不連結自動扣款、不部署外部服務，直到使用者另行明確批准。
-4. 不要直接開始多模組雲端整合程式碼，除非已先確認 API 部署、Google OAuth 與資源建立所需條件。可以先做獨立文件、資料模型與本機匯出／匯入等不依賴外部服務的工作，但須符合目前任務範圍並避免改動存檔格式造成風險。
+## 已完成研究
+- 查閱 Cloudflare Workers limits、Workers pricing、D1 pricing、D1 limits／FAQ 及 Google 官方 ID token 驗證指引。
+- Workers Free 每日 100,000 次請求；每日額度用盡可能回傳 1027 錯誤。
+- D1 Free 額度：每日 5,000,000 列讀取、100,000 列寫入；帳戶總計 5 GB；單一資料庫 500 MB；Time Travel 還原保留 7 天。
+- D1 沒有依閒置 7 天自動暫停的相同規則，且不按閒置運算時間收費；免費額度用完時查詢會失敗。
+- Workers Paid 最低 US$5／月。當前以免費方案為目標，不升級付費。
+- Google 身分驗證應由前端取得 ID token，透過 HTTPS 傳給 Worker；Worker 必須驗證簽章、audience、issuer 與 expiry，並只使用驗證後的 `sub` 作為玩家識別碼。
+- 伺服器秘密應放在 Cloudflare Worker Secrets，不能放在明文 vars、前端或 GitHub。
+- 研究文件已建立：`docs/cloud-save-architecture.md`。
 
-## 建議架構（待文件核對後細化）
-- 前端保留三個既有 localStorage 鍵：主存檔 `sky-garden-save-v1`、花卉變種 `sky-garden-flower-variants-v1`、自動選花偏好 `sky-garden-auto-crops-v1`。
-- Cloudflare Worker 提供最小化的存檔讀取／寫入 API，驗證 Google 登入取得的使用者身分，並只允許該身分存取自己的存檔。
-- D1 先以一張 `player_saves` 表儲存使用者識別碼、三個存檔元件（JSON）、schema 版本、revision 與更新時間；不過度正規化遊戲物件。
-- 首次綁定：若雲端無存檔，上傳目前本機花園；若已有雲端存檔，先讓玩家選擇保留本機或雲端，不可默默覆蓋。
-- 同步採 revision／樂觀鎖定。兩台裝置都修改時，保留本機與雲端候選版本，必要時請玩家選擇；不可無條件最後寫入覆蓋。
-- 離線時繼續使用本機存檔；恢復連線後再同步。雲端失敗不得阻止遊戲啟動或造成本機進度遺失。
-- 本機「重置進度」不自動刪除雲端存檔；雲端刪除需另設明確確認流程。
-- 初期可採用簡單的 Google 登入流程，但不可將可寫入資料庫的憑證或伺服器秘密放進前端。使用者可接受小遊戲不做複雜防作弊，但至少保留基本的身分驗證與玩家存檔隔離。
+官方來源：
+- https://developers.cloudflare.com/workers/platform/limits/
+- https://developers.cloudflare.com/workers/platform/pricing/
+- https://developers.cloudflare.com/d1/platform/pricing/
+- https://developers.cloudflare.com/d1/platform/limits/
+- https://developers.cloudflare.com/d1/reference/faq/
+- https://developers.google.com/identity/gsi/web/guides/verify-google-id-token
+
+## 下一步
+1. 確認正式 GitHub Pages origin 與 workflow，列出正式站及本機測試所需的 Google OAuth JavaScript origin。
+2. 與使用者確認是否已具備 Cloudflare 帳戶、是否同意之後建立免費 D1／Worker 資源，以及 Google OAuth Web Client 的設定方式。
+3. 在批准建立外部資源之前，可先設計本機可測試的 Worker handler、schema migration 與 API 測試，但不可部署或建立線上資源。
+4. 完成上述前置條件後，再整合前端登入與自動同步；保留原本 localStorage 的三個存檔 key。
+
+## 建議資料與 API 設計
+- D1 先用一張 `player_saves` 表，每位玩家一筆，存放主存檔 JSON、花卉變種 JSON、自動選花偏好 JSON、schema version、revision、updated_at。
+- `GET /api/save`：依已驗證的 Google `sub` 讀取存檔。
+- `PUT /api/save`：要求 `baseRevision`；版本不一致回傳 409，不得靜默覆蓋。
+- API 不接受前端指定 `user_id`，每個請求都要驗證 ID token。
+- CORS 只允許正式遊戲 origin 與明確指定的本機開發 origin；CORS 不能取代身分驗證。
+- 首次綁定若雲端無存檔才上傳；若雲端已有存檔，先讓玩家選擇本機或雲端版本。
+- 本機重置不自動刪除雲端備份；同步失敗不得阻止遊戲遊玩。
 
 ## 驗收條件
-- 玩家可在不登入時開始遊玩，原有本機存檔與離線功能不受影響。
-- Google 登入後可將現有本機花園綁定到帳號，不遺失進度。
-- 在另一台支援裝置使用同一帳號，可取回同一座花園。
-- 存檔同步不會在衝突時無提示覆蓋另一份進度。
-- 雲端服務不可用或離線時，遊戲仍可遊玩並保存本機進度。
-- 一個玩家不能透過 API 讀寫其他玩家的存檔。
-- 更新任務文件、架構文件、狀態紀錄與必要測試；未完成驗收前不得標記完成。
+- 不登入時遊戲完全照常運作。
+- Google 登入後可將現有本機花園綁定帳號；另一裝置可找回同一座花園。
+- 只可讀寫登入者自己的存檔。
+- 衝突時明確提示，不靜默覆蓋。
+- 網路中斷或額度用盡時本機遊戲仍可玩且本機進度保留。
+- 沒有秘密進入前端或 repository。
+- 未經明確批准，不建立外部資源、不部署、不產生付費用量。
 
 ## 既有存檔盤點（2026-10-24）
-- 專案是原生 HTML／CSS／JavaScript 靜態網站，由 GitHub Pages 發布；沒有 npm 專案依賴或既有雲端存檔整合。
-- 主存檔鍵為 `sky-garden-save-v1`；花卉變種獨立保存於 `sky-garden-flower-variants-v1`；自動選花偏好保存於 `sky-garden-auto-crops-v1`。
+- 專案是原生 HTML／CSS／JavaScript 靜態網站，由 GitHub Pages 發布，沒有既有雲端存檔整合。
+- 主存檔鍵：`sky-garden-save-v1`；花卉變種：`sky-garden-flower-variants-v1`；自動選花偏好：`sky-garden-auto-crops-v1`。
 - 主存檔包含金幣、地塊及作物狀態、地塊座標與手動／草地標記、花園名稱與頭像設定、無人機位置／部署／電量、自動模式、世界時間及離線結算欄位。花卉變種最多 30 筆，地塊透過 `variantId` 參照變種。
-- 存檔在主要遊戲狀態變更時立即寫入，並在頁面隱藏及 `pagehide` 再寫入；三個 localStorage 鍵分開寫入，沒有跨鍵原子交易。
-- 現有載入器會驗證存檔及變種資料；無效資料會保留原值並降級為當前工作階段，不會直接覆蓋。舊版缺少的欄位會以預設值補齊，`cropCatalogVersion` 目前為 4。
-- 現有「重置進度」會刪除上述三個 localStorage 鍵並重新載入。雲端版不可默默把本機重置等同刪除雲端備份。
+- 存檔在主要狀態變更時寫入，頁面隱藏及 `pagehide` 再寫入；三個 localStorage key 分開寫入，沒有跨鍵原子交易。
+- 現有載入器會驗證存檔及變種資料，`cropCatalogVersion` 目前為 4。
+- 本機「重置進度」會刪除上述三個 localStorage key。雲端版不可將本機重置默認視為刪除雲端存檔。
 
 ## 費用與批准邊界
-- 使用者曾批准查詢 Supabase 專案費用；工具回傳目前指定組織的新專案報價為 US$0／月，但使用者之後決定改評估 Cloudflare。該報價不適用於 Cloudflare，也不代表 Cloudflare 已建立任何資源。
-- Cloudflare 方案的目前費用、免費配額及計費風險尚待查證。
-- 使用者只確認採用 Cloudflare D1 跨裝置存檔的方向，未批准建立資源、部署 Worker、設定 OAuth 或啟用付費功能。
-- 目前沒有建立 Cloudflare 資源、沒有修改 Auth／資料庫設定，也沒有改動遊戲存檔程式。
+- 先前 Supabase 報價 US$0／月與 Cloudflare 無關。
+- Cloudflare 免費額度與限制已依官方文件初步核對，但尚未查閱使用者 Cloudflare 帳戶實際方案／付款狀態。
+- 使用者已批准採用 Cloudflare D1 方向，未批准建立 D1／Worker、建立 Google OAuth Web Client、部署 API 或啟用付費功能。
+- 目前沒有建立 Cloudflare 資源，沒有更改外部設定，也沒有修改遊戲存檔程式。
