@@ -57,3 +57,24 @@
 - 目前尚未找到本遊戲專用 Supabase 專案、URL／publishable key 設定或 Google OAuth provider 設定。
 - 導入 Supabase Auth／雲端資料表屬新增外部服務與架構變更；依專案規範，需使用者確認採用 Supabase，並確認是否可建立本遊戲專用專案（建立前先查明實際費用；不會在未確認費用前建立或啟用資源）。
 - 本次只完成程式與資料流盤點、同步方案及風險設計；尚未更動遊戲存檔程式或雲端資料庫。
+
+
+## Supabase 專案與 OAuth 條件初查（2026-10-24）
+
+### 費用初查（官方公開資料）
+- Supabase Free 標示為 US$0/月，包含匿名登入與社交 OAuth；資料庫每專案 500 MB、50,000 MAU、每月 5 GB egress，並可能在一週不活躍後暫停。官方標示 Free 專案上限為兩個（跨使用者擁有／管理的組織計算）。
+- Pro 官方標價自 US$25/月起，額外專案費用另計；不可假設現有組織目前採用 Free，也不可把「Free 有方案」等同「本帳戶建立專案必定零成本」。
+- 已連線帳戶目前只列出一個組織與一個非活躍專案 `daily-quest-rpg`。尚未建立本遊戲專案。需使用者確認允許針對該組織查詢專案報價；取得工具回傳的實際費用後，再由使用者明確批准任何非零費用。
+- 不得啟用付費方案、加購、計費資源或建立會產生非零費用的專案，除非使用者在看到實際報價後明確批准。
+
+### Google OAuth 與匿名登入設定條件
+- Supabase 官方文件支援匿名登入；匿名使用者後續轉正式帳號需啟用 manual identity linking，並在同一匿名 session 內呼叫 Google identity linking。匿名 session 遺失（登出、清除瀏覽器資料、換裝置）後，匿名身分本身不能復原。
+- 需在 Google Cloud 建立／選用 Google Cloud 專案、設定 OAuth consent screen（audience、scopes、branding），並建立 Web application OAuth Client ID。
+- Google Authorized JavaScript origins 應包含遊戲正式站點的 origin；本地測試另加 localhost origin。Google Authorized redirect URI 使用 Supabase 專案 Google provider 設定頁提供的 callback URL。
+- Supabase Auth Site URL／Redirect URLs 必須允許 GitHub Pages 正式網址與實際本地測試網址。精確網址尚待確認正式發布網址與新專案 callback，不能猜填。
+- Google Client Secret 僅存於 Supabase Auth provider 設定或安全的伺服器端環境，不得放進 GitHub repo、前端 JavaScript 或公開建置產物。前端只使用 Supabase Project URL 與 publishable key；資料安全必須由 RLS 和 owner predicate 保護。
+- 2026-10-30 起，Supabase 新專案的 public schema 資料表不再預設自動暴露於 Data API；新存檔表需明確檢查 Data API 暴露設定與必要 grants，並啟用 RLS，避免誤以為建表後 REST API 自動可用。
+- 近期 breaking-change 初查發現：Supabase HTTP API 將於 2026-11-10 起停用部分舊 TLS 1.2 CBC cipher suites。遊戲使用現代瀏覽器的 HTTPS fetch，通常不需要專案端特殊設定；仍需在驗收中確認部署瀏覽器能連線。其餘當前 Auth／資料 API 變更需在實作前再核對官方文件。
+
+### 本階段決策
+目前僅完成公開費率與官方設定條件初查。尚未建立專案、修改 Auth 設定、建立資料表、寫入 OAuth secrets 或修改遊戲程式。接下來需先確認費用報價所用的 Supabase 組織，再依實際報價由使用者決定是否繼續建立。
