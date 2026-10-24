@@ -1600,3 +1600,19 @@
 - 結果：使用者確認任務198驗收完成；將任務文件歸檔至 `tasks/done/198-button-assets.md`。
 - 檔案：`src/index.html`、`src/styles.css`、`.github/workflows/static.yml`、`tests/browser-smoke.mjs`、`docs/architecture.md`、`tasks/done/198-button-assets.md`。
 - 驗收紀錄：此處依使用者確認更新狀態，不額外宣稱 Agent 已獨立執行瀏覽器測試或確認 Pages 部署。
+
+
+## 2026-10-24 — 任務197完成：快捷輪盤互動與面板互斥驗收
+
+- 完成輪盤的即時旋轉、放開／取消退出、透明扇形選項、花草環可見度及三個面板互斥回歸驗收。
+- GitHub Actions Playwright 全套瀏覽器測試通過：[run 40083713166](https://github.com/HuanaMing/dianGarden/actions/runs/40083713166)；`browserErrors` 為空。
+- 桌面與手機輪盤截圖已保存並檢視：[驗收截圖 artifact](https://github.com/HuanaMing/dianGarden/actions/runs/40083713166/artifacts/12555733188)。
+- 原先因沒有可用瀏覽器而待驗收的狀態，已由實際 Playwright 桌面／手機測試解除；任務文件已移至 `tasks/done/197-menu-wheel.md`。
+
+## 2026-10-24 — 任務199完成：輪盤圖示裁切、尺寸與白框
+
+- 四個 PNG 圖示移至獨立覆蓋層，避開扇形按鈕 `clip-path`；桌面 35×35px、手機 32×32px，沿輪盤半徑定位，增加白色外框與輕微陰影。
+- Playwright 檢查通過圖示載入、尺寸、白框濾鏡、覆蓋層裁切、手機徑向位置、輪盤操作及整體回歸測試；`browserErrors` 為空。
+- 驗收 run：[40083713166](https://github.com/HuanaMing/dianGarden/actions/runs/40083713166)；截圖 artifact：[桌面與手機驗收截圖](https://github.com/HuanaMing/dianGarden/actions/runs/40083713166/artifacts/12555733188)。
+- Pages 部署來源提交已成功：[run 40080813362](https://github.com/HuanaMing/dianGarden/actions/runs/40080813362)。
+- `README.md`、`docs/architecture.md`、`docs/desicions.md`、`state/project.json`、`state/current-task.json` 與任務文件已同步；完成版已歸檔至 `tasks/done/199-wheel-icons.md`。
