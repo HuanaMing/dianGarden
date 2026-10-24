@@ -1585,3 +1585,11 @@
 - 驗收：GitHub Actions Playwright 通過（[run 40064598730](https://github.com/HuanaMing/dianGarden/actions/runs/40064598730)）。
 - 限制：尚未人工檢查實際遊戲截圖。
 - 檔案：`src/sky-world.js`、`tests/browser-smoke.mjs`、`docs/architecture.md`、`tasks/done/195-farm-plot-ramp-deformation.md`、狀態紀錄。
+
+## 2026-10-24 — 任務196：修正農地坡面草皮與植物中心附著
+
+- 修正農地坡面頂面顏色，只有純草地使用綠色頂面與草地斑紋；農地周邊底面改為土色，避免綠色草皮外露。
+- 土壤床中心改用地塊坡面中心高度加床厚度，並讓土壤紋理每個頂點依坡面高度放置。
+- 植物模型基準補償內部 0.055 單位偏移，根部貼齊草地表面或農地土壤床頂面；種子模型下移 0.02 單位以貼齊同一基準。
+- 驗證：GitHub Actions Playwright 通過（[run 40065297350](https://github.com/HuanaMing/dianGarden/actions/runs/40065297350)）；尚未人工檢查實際遊戲畫面。
+- 檔案：`src/sky-world.js`、`tests/browser-smoke.mjs`、`docs/architecture.md`、`tasks/done/196-farm-ramp-and-plant-attachment.md`、狀態紀錄。
