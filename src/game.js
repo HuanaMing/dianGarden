@@ -559,6 +559,26 @@
   function refreshDronePanelTimeout() {
     if (droneJobsPanel?.classList.contains('is-open')) setDronePanelOpen(true);
   }
+
+  function ensureHudExpanded() {
+    if (!game.hudCollapsed) return;
+    game.hudCollapsed = false;
+    save();
+    updateHudCollapse();
+  }
+  function setFarmPanelOpen(open) {
+    const panel = document.querySelector('#farm-management-panel');
+    const toggle = document.querySelector('#farm-management-toggle');
+    if (!panel || !toggle) return;
+    if (open) {
+      ensureHudExpanded();
+      setDronePanelOpen(false);
+      if (settingsPanel) settingsPanel.hidden = true;
+      settingsToggle?.setAttribute('aria-expanded', 'false');
+    }
+    panel.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+  }
   function updateHudCollapse() {
     document.querySelector('.world-frame')?.classList.toggle('is-hud-collapsed', game.hudCollapsed);
     if (game.hudCollapsed) {
