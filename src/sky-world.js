@@ -391,7 +391,25 @@
     }
   }
 
-  function addSoilTexture(positions, colors, x, z, bed, y, wet) {
+  function addSlopedSoilBed(positions, colors, x, z, bed, surfaceHeightAt, palette) {
+    const half = bed / 2, bottomOffset = 0.001, thickness = 0.055;
+    const corners = [
+      [x - half, z - half], [x + half, z - half],
+      [x + half, z + half], [x - half, z + half],
+    ].map(([px, pz]) => ({ x: px, z: pz, baseY: surfaceHeightAt(px, pz) + bottomOffset }));
+    const top = corners.map(point => [point.x, point.baseY + thickness, point.z]);
+    const bottom = corners.map(point => [point.x, point.baseY, point.z]);
+    const centerY = top.reduce((sum, point) => sum + point[1], 0) / top.length;
+    const center = [x, centerY, z];
+    for (let i = 0; i < 4; i += 1) {
+      const next = (i + 1) % 4;
+      addTriangle(positions, colors, top[i], top[next], center, palette.top);
+      addTriangle(positions, colors, bottom[i], bottom[next], top[next], palette.front);
+      addTriangle(positions, colors, bottom[i], top[next], top[i], palette.front);
+    }
+  }
+
+  function addSoilTexture(positions, colors, x, z, bed, y, wet, surfaceHeightAt = null) {
     const marks = [
       [-0.17, -0.13, 0.065, -0.35, 0.008, 0],
       [0.08, -0.16, 0.052, 0.62, 0.007, 1],
@@ -924,8 +942,8 @@
       const drySoil = { top: [0.66, 0.45, 0.31], front: [0.57, 0.38, 0.28], right: [0.53, 0.35, 0.27], back: [0.6, 0.4, 0.29], left: [0.56, 0.37, 0.27], bottom: [0.5, 0.34, 0.26] };
       const wetSoil = { top: [0.43, 0.29, 0.2], front: [0.39, 0.26, 0.19], right: [0.36, 0.24, 0.18], back: [0.41, 0.27, 0.2], left: [0.38, 0.25, 0.19], bottom: [0.34, 0.23, 0.18] };
       const soilPalette = Object.fromEntries(Object.keys(drySoil).map((face) => [face, drySoil[face].map((channel, channelIndex) => channel + (wetSoil[face][channelIndex] - channel) * wetness)]));
-      if (!plot?.grassOnly) addBox(positions, colors, x - bed / 2, plotY + 0.001, z - bed / 2, x + bed / 2, plotY + 0.055, z + bed / 2, soilPalette);
-      if (!plot?.grassOnly) addSoilTexture(positions, colors, x, z, bed, plotY + 0.057, wetness > 0.5);
+      if (!plot?.grassOnly) addSlopedSoilBed(positions, colors, x, z, bed, surfaceHeightAt, soilPalette);
+      if (!plot?.grassOnly) addSoilTexture(positions, colors, x, z, bed, plotY + 0.057, wetness > 0.5, surfaceHeightAt);
       // 手動農地以插在草地邊緣的空白告示牌辨識，避免干擾花株與耕作區。
       if (plot?.manual === true && !plot?.grassOnly) {
         const signX = x + half * 0.73;
