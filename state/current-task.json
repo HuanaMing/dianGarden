@@ -4,6 +4,6 @@
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "Cloudflare D1／Worker 與 Google OAuth 已配置。使用者實測可登入、上傳雲端，另一台裝置可找到雲端花園；載入後僅重新整理的問題已修正，正在等待 Pages 部署後重新測試完整載入流程。",
-  "result": "已配置 Worker／D1、Google OAuth 與前端 API。跨裝置可登入並找到雲端存檔，但首次載入時舊頁面的離頁自動存檔可能覆蓋剛寫入的雲端資料。已在 game.js 加入還原事件保護，cloud-save.js 在重新載入前發出該事件，避免 pagehide／visibilitychange 再寫入舊進度。尚待 Pages 部署及使用者跨裝置實測。"
+  "nextAction": "已在 src/cloud-save.js 啟用 Google Identity Services auto_select 與 One Tap prompt。等待 GitHub Pages 部署後，測試重新整理時是否可自動恢復登入；若瀏覽器政策或 Google 冷卻機制阻擋，仍需手動登入。",
+  "result": "已配置 Worker／D1、Google OAuth 與前端 API。跨裝置可登入並找到雲端存檔，但首次載入時舊頁面的離頁自動存檔可能覆蓋剛寫入的雲端資料。已在 game.js 加入還原事件保護，cloud-save.js 在重新載入前發出該事件，避免 pagehide／visibilitychange 再寫入舊進度。尚待 Pages 部署及使用者跨裝置實測。 2026-10-24：為改善重新整理後需要再次登入，已將 Google auto_select 設為 true，並在初始化後呼叫 Google One Tap prompt。未將 ID token 寫入 localStorage。尚待 Pages 部署與實機驗證。"
 }
