@@ -358,7 +358,7 @@ try {
   if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("wreath.src = 'assets/wreath.webp';") || worldSource.includes('touch-hold-progress')) throw new Error('移動模式即時拖曳或花草環素材實作不符');
   if (!worldSource.includes('plotWasInMoveModeAtPointerDown') || !worldSource.includes('!plotWasInMoveModeAtPointerDown')) throw new Error('地塊移動模式短按切換高度模式的修正未包含');
   if (!worldSource.includes('rotateHoldGesture') || worldSource.includes('rotateTouchGesture') || !worldSource.includes('if (pointerPlotIndex === null && dockHitAtPointer === null)')) throw new Error('PC 與手機的相機手勢尚未統一');
-  if (!worldSource.includes('window.gardenMenuWheel?.openAt?.(pointerStartX, pointerStartY, pressPointerId)') || !worldSource.includes("data-wheel-action=\"drone\"")) throw new Error('空白場景長按未連接五項快捷輪盤');
+  if (!worldSource.includes('window.gardenMenuWheel?.openAt?.(pointerStartX, pointerStartY, pressPointerId)') || !indexHtml.includes("data-wheel-action=\"drone\"")) throw new Error('空白場景長按未連接五項快捷輪盤');
   if (!worldSource.includes("wreath.src = 'assets/wreath.webp';") || !worldSource.includes("className = 'touch-hold-wreath'")) throw new Error('長按花草環未使用 assets 內的透明圖片素材');
   const styleSource = await fs.readFile(new URL('../src/styles.css', import.meta.url), 'utf8');
   if (!styleSource.includes('@keyframes touch-ring-rise{') || !styleSource.includes('translateY(-50px) scale(.72)') || !styleSource.includes('.touch-hold-ring{animation:touch-ring-rise') || !styleSource.includes('width:46px;height:46px')) throw new Error('花草環圖片的上升、停留、放大復原動畫未設定');
