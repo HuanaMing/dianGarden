@@ -1,4 +1,4 @@
-﻿(() => {
+﻿(async () => {
   const STARTING_COINS = 120;
   const MAX_DRONES = 8;
   const DRONE_BATTERY_DRAIN_PER_SECOND = 0.32;
@@ -186,7 +186,7 @@
     plots.forEach((plot) => { if (plotHasSupportAbove(plot, plots, deployedDocks)) plot.grassOnly = true; });
     return { ...saved, cropCatalogVersion: CROP_CATALOG_VERSION, gardenName: saved.gardenName || '花明摸魚花園', avatarMode: saved.avatarMode === 'manual' ? 'manual' : 'auto', avatarCrop: Number.isInteger(saved.avatarCrop) && saved.avatarCrop >= 0 && saved.avatarCrop < crops.length ? saved.avatarCrop : 0, hudCollapsed: saved.hudCollapsed === true, autoMode: saved.autoMode === true, autoCropSelection: Array.isArray(saved.autoCropSelection) ? saved.autoCropSelection : [0], flowerVariants, worldTimeMs: Number.isFinite(saved.worldTimeMs) ? saved.worldTimeMs : 60_000, worldTimeAnchor: Number.isFinite(saved.worldTimeAnchor) ? saved.worldTimeAnchor : Date.now(), lastObservedRaining: typeof saved.lastObservedRaining === 'boolean' ? saved.lastObservedRaining : window.skyEnvironment.getState(saved).isRaining, droneCount: drones.length, deploymentSequence, drones, dockPosition, plots };
   }
-  const game = loadGame();
+  if (window.diangardenCloudReady) {\n    await Promise.race([window.diangardenCloudReady, new Promise((resolve) => setTimeout(resolve, 5000))]);\n  }\n  const game = loadGame();
   let rainStartedAt = game.lastObservedRaining ? Date.now() : null;
   function getAutomaticPlotCount() { return window.gardenEconomy.getAutomaticPlotCount(game.plots); }
   function getLandCost() { return window.gardenEconomy.getLandCost(getAutomaticPlotCount()); }
@@ -298,7 +298,7 @@
     try {
       updateBatteries(game.lastOnlineAt);
       window.skyEnvironment.advance(game, game.lastOnlineAt);
-      const { flowerVariants, ...saveData } = game;
+      game.savedAt = game.lastOnlineAt;\n      const { flowerVariants, ...saveData } = game;
       localStorage.setItem(FLOWER_VARIANTS_KEY, JSON.stringify(flowerVariants));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
       localStorage.setItem(AUTO_CROP_KEY, JSON.stringify(game.autoCropSelection));
