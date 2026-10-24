@@ -1,6 +1,8 @@
 (() => {
   'use strict';
 
+  const GUEST_MODE_KEY = 'sky-garden-guest-mode-v1';
+  const GUEST_MODE_ACTIVE = (() => { try { return localStorage.getItem(GUEST_MODE_KEY) === 'true'; } catch (_) { return false; } })();
   const STORAGE_KEY = 'sky-garden-save-v1';
   const VARIANTS_KEY = 'sky-garden-flower-variants-v1';
   const AUTO_CROPS_KEY = 'sky-garden-auto-crops-v1';
@@ -11,10 +13,21 @@
   let hasResolvedStartupCloud = false;
   let resolveStartupCloud;
   window.diangardenCloudReady = new Promise((resolve) => { resolveStartupCloud = resolve; });
+  const startupDialog = document.querySelector('#startup-garden-dialog');
+  const startupSigninNode = document.querySelector('#startup-google-signin');
+  const startupLoginHint = document.querySelector('#startup-login-hint');
+  const guestNoticeNode = document.querySelector('#guest-garden-notice');
+  const returnToOwnGardenButton = document.querySelector('#return-to-own-garden');
+  const startGuestGardenButton = document.querySelector('#start-guest-garden');
   function finishStartupCloud() {
     if (hasResolvedStartupCloud) return;
     hasResolvedStartupCloud = true;
+    if (startupDialog?.open) startupDialog.close();
     resolveStartupCloud();
+  }
+  function showStartupChoice(message) {
+    if (startupLoginHint && message) startupLoginHint.textContent = message;
+    if (!GUEST_MODE_ACTIVE && startupDialog && !startupDialog.open) startupDialog.showModal();
   }
   const config = window.DIANGARDEN_CLOUD_SAVE_CONFIG || {};
   const statusNode = document.querySelector('#cloud-save-status');
@@ -296,11 +309,13 @@
   function handleCredential(response) {
     if (!response || typeof response.credential !== 'string') {
       setStatus('Google 登入未完成，請再試一次。', 'warning');
+      if (startupLoginHint) startupLoginHint.textContent = 'Google 登入未完成，請再試一次；也可以直接進入訪客花園。';
       return;
     }
     const claims = parseJwtPayload(response.credential);
     if (!claims || typeof claims.sub !== 'string') {
       setStatus('無法讀取 Google 登入資訊，請再試一次。', 'warning');
+      if (startupLoginHint) startupLoginHint.textContent = '無法讀取 Google 登入資訊，請重新登入或選擇訪客花園。';
       return;
     }
     idToken = response.credential;
@@ -310,6 +325,7 @@
     sessionOpenedAt = Date.now();
     syncEnabled = false;
     setStatus('Google 登入成功，正在檢查雲端花園…');
+    if (startupLoginHint) startupLoginHint.textContent = '登入成功，正在確認你的花園…';
     updateButtons(true);
     checkCloud();
   }
@@ -323,30 +339,48 @@
       auto_select: true,
       cancel_on_tap_outside: true,
     });
-    window.google.accounts.id.renderButton(signinNode, {
+    const buttonOptions = {
       type: 'standard',
       theme: 'outline',
       size: 'large',
       text: 'signin_with',
       shape: 'rectangular',
       width: 260,
-    });
+    };
+    window.google.accounts.id.renderButton(signinNode, buttonOptions);
+    if (startupSigninNode) window.google.accounts.id.renderButton(startupSigninNode, buttonOptions);
+    if (startupLoginHint) startupLoginHint.textContent = '若未自動登入，請點擊下方 Google 登入按鈕。';
     setStatus('Google 登入已準備好；若未自動登入，請點擊登入按鈕。');
     window.google.accounts.id.prompt((notification) => {
       if (!idToken && (notification.isNotDisplayed?.() || notification.isSkippedMoment?.() || notification.isDismissedMoment?.())) {
         setStatus('Google 未能自動登入，請點擊 Google 登入按鈕。');
       }
     });
-    window.setTimeout(finishStartupCloud, 3500);
+    window.setTimeout(() => {
+      if (!idToken && !hasResolvedStartupCloud) showStartupChoice('尚未自動登入，請登入 Google 回到自己的花園，或選擇進入訪客花園。');
+    }, 3500);
   }
 
   function loadGoogleIdentity() {
-    if (!config.googleClientId || !String(config.apiBaseUrl || '').trim()) {
-      setStatus('雲端存檔尚未設定；目前仍使用本機自動存檔。');
+    if (GUEST_MODE_ACTIVE) {
+      setStatus('目前使用獨立訪客花園；不會登入或同步雲端。');
       signinNode.hidden = true;
+      if (guestNoticeNode) guestNoticeNode.hidden = false;
+      if (returnToOwnGardenButton) returnToOwnGardenButton.hidden = false;
       updateButtons(false);
+      finishStartupCloud();
       return;
     }
+    if (!config.googleClientId || !String(config.apiBaseUrl || '').trim()) {
+      setStatus('Google 雲端登入尚未設定；你仍可選擇進入訪客花園。', 'warning');
+      if (startupSigninNode) startupSigninNode.hidden = true;
+      signinNode.hidden = true;
+      updateButtons(false);
+      showStartupChoice('目前無法使用 Google 登入；你可以進入獨立訪客花園，原有進度不會被覆蓋。');
+      return;
+    }
+    if (guestNoticeNode) guestNoticeNode.hidden = true;
+    if (returnToOwnGardenButton) returnToOwnGardenButton.hidden = true;
     signinNode.hidden = false;
     if (window.google?.accounts?.id) {
       initializeGoogle();
@@ -357,10 +391,16 @@
     script.async = true;
     script.defer = true;
     script.onload = initializeGoogle;
-    script.onerror = () => { finishStartupCloud(); setStatus('無法載入 Google 登入服務；本機遊戲仍可使用。', 'warning'); };
+    script.onerror = () => {
+      setStatus('無法載入 Google 登入服務；你仍可進入訪客花園。', 'warning');
+      showStartupChoice('Google 登入服務載入失敗，請稍後重試或先進入訪客花園。');
+    };
     document.head.appendChild(script);
     setStatus('正在載入 Google 登入…');
-    window.setTimeout(finishStartupCloud, 3500);
+    if (startupLoginHint) startupLoginHint.textContent = '正在準備 Google 登入…';
+    window.setTimeout(() => {
+      if (!idToken && !hasResolvedStartupCloud && !startupDialog?.open) showStartupChoice('Google 登入尚未完成，請選擇登入或進入訪客花園。');
+    }, 3500);
   }
 
   const sessionBanner = document.querySelector('#cloud-session-banner');
@@ -372,6 +412,23 @@
   uploadButton.addEventListener('click', () => uploadLocal());
   downloadButton.addEventListener('click', downloadCloud);
   refreshButton.addEventListener('click', () => checkCloud());
+  if (startGuestGardenButton) startGuestGardenButton.addEventListener('click', () => {
+    try {
+      localStorage.setItem(GUEST_MODE_KEY, 'true');
+      window.location.reload();
+    } catch (_) {
+      if (startupLoginHint) startupLoginHint.textContent = '無法建立獨立訪客存檔，請允許此網站使用本機儲存空間後再試。';
+    }
+  });
+  if (returnToOwnGardenButton) returnToOwnGardenButton.addEventListener('click', () => {
+    try {
+      localStorage.removeItem(GUEST_MODE_KEY);
+      window.location.reload();
+    } catch (_) {
+      setStatus('無法切換花園；瀏覽器本機儲存空間目前不可用。', 'warning');
+    }
+  });
+
   signoutButton.addEventListener('click', () => {
     idToken = null;
     currentSub = null;
