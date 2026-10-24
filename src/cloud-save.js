@@ -125,7 +125,8 @@
   function messageForError(error) {
     if (error.message === 'cloud_api_not_configured') return '雲端 API 尚未設定；目前仍使用本機自動存檔。';
     if (error.message === 'login_required') return '請先登入 Google。';
-    if (error.message === 'revision_conflict') return '雲端存檔版本已更新，已停止這次上傳。請重新載入最新雲端存檔。';\n    if (error.message === 'stale_session') return '這個瀏覽器工作階段已過期；為避免覆蓋新進度，已停止雲端同步，請重新載入頁面。';
+    if (error.message === 'revision_conflict') return '雲端存檔版本已更新，已停止這次上傳。請重新載入最新雲端存檔。';
+    if (error.message === 'stale_session') return '這個瀏覽器工作階段已過期；為避免覆蓋新進度，已停止雲端同步，請重新載入頁面。';
     if (error.message === 'invalid_google_id_token' || error.message === 'authentication_required') return 'Google 登入已失效，請重新登入。';
     if (error.message === 'storage_unavailable') return '雲端資料庫暫時無法使用；本機進度仍安全保留。';
     if (error.message === 'origin_not_allowed') return '目前網站網址尚未加入雲端 API 允許清單。';
@@ -298,7 +299,8 @@
       shape: 'rectangular',
       width: 260,
     });
-    window.google.accounts.id.prompt();\n    window.setTimeout(finishStartupCloud, 3500);
+    window.google.accounts.id.prompt();
+    window.setTimeout(finishStartupCloud, 3500);
   }
 
   function loadGoogleIdentity() {
@@ -320,7 +322,8 @@
     script.onload = initializeGoogle;
     script.onerror = () => { finishStartupCloud(); setStatus('無法載入 Google 登入服務；本機遊戲仍可使用。', 'warning'); };
     document.head.appendChild(script);
-    setStatus('正在載入 Google 登入…');\n    window.setTimeout(finishStartupCloud, 3500);
+    setStatus('正在載入 Google 登入…');
+    window.setTimeout(finishStartupCloud, 3500);
   }
 
   uploadButton.addEventListener('click', () => uploadLocal());
