@@ -304,7 +304,7 @@
       shape: 'rectangular',
       width: 260,
     });
-    window.google.accounts.id.prompt();
+    window.google.accounts.id.prompt();\n    window.setTimeout(finishStartupCloud, 3500);
   }
 
   function loadGoogleIdentity() {
