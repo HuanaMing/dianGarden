@@ -573,6 +573,11 @@
     updateHudCollapse();
   }
   const menuWheel = document.querySelector('#garden-menu-wheel');
+  const wheelActions = ['drone', 'farm', 'settings', 'catalog', 'collapse'];
+  const wheelAngles = [-90, -18, 54, 126, 198];
+  let wheelPointerId = null;
+  let wheelOrigin = null;
+  let wheelSelectedAction = null;
   function setFarmPanelOpen(open) {
     const panel = document.querySelector('#farm-management-panel');
     const toggle = document.querySelector('#farm-management-toggle');
