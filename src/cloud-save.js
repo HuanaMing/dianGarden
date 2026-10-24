@@ -6,7 +6,7 @@
   const AUTO_CROPS_KEY = 'sky-garden-auto-crops-v1';
   const SYNC_META_KEY = 'sky-garden-cloud-sync-v1';
   const LEGACY_BROWSER_ID_KEY = 'sky-garden-browser-id-v1';
-  let sessionOpenedAt = 0;
+  const sessionOpenedAt = Date.now();
   try { localStorage.removeItem(LEGACY_BROWSER_ID_KEY); } catch (_) { /* Ignore unavailable local storage. */ }
   let hasResolvedStartupCloud = false;
   let resolveStartupCloud;
@@ -108,6 +108,7 @@
       headers: {
         Authorization: 'Bearer ' + idToken,
         ...(body ? { 'Content-Type': 'application/json' } : {}),
+        'X-DianGarden-Opened-At': String(sessionOpenedAt),
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
       cache: 'no-store',
@@ -153,7 +154,6 @@
     if (!quiet) setStatus('正在檢查雲端存檔…');
     try {
       const result = await apiRequest('GET');
-      if (Number.isSafeInteger(result.openedAt) && result.openedAt > 0) sessionOpenedAt = result.openedAt;
       cloudSave = result.status === 'ok' ? result.save : null;
       cloudRevision = cloudSave ? cloudSave.revision : 0;
       const local = readLocalSave();
