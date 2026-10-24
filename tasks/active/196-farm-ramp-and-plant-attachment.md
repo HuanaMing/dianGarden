@@ -17,5 +17,19 @@
 - 土壤紋理各頂點依坡面高度放置，不以單一水平高度穿過土壤床。
 - 混合地塊共用角點、既有斜坡測試及 Playwright smoke test 通過。
 
-## 執行紀錄
-執行中；已修正農地頂面顏色、草地紋理條件、土壤床中心高度、植物根部基準與種子貼地位置。回歸測試已加入，等待最新 CI 結果。
+## 執行結果
+- 農地坡面底色改為土色；只有純草地繪製綠色草地斑紋，避免農地邊緣外露綠草。
+- 土壤床中心高度改為坡面中心高度加上床厚度，避免以四角平均造成非對稱坡面中心高度偏移。
+- 植物模型基準改為補償模型內部的 0.055 高度偏移，使根部貼齊草地地表或農地土壤床頂面；種子模型下移 0.02，讓種子底部與根部基準一致。
+- 土壤紋理的每個頂點依坡面高度放置。
+- 新增 Playwright 回歸檢查，涵蓋植物根部中心高度及坡面呈現規則。
+- GitHub Actions Playwright 通過：[run 40065297350](https://github.com/HuanaMing/dianGarden/actions/runs/40065297350)。
+- 尚未人工檢查實際遊戲畫面。
+
+## 修改檔案
+- `src/sky-world.js`
+- `tests/browser-smoke.mjs`
+- `docs/architecture.md`
+- `state/project.json`
+- `state/current-task.json`
+- `logs/task-history.md`
