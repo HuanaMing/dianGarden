@@ -6,7 +6,7 @@
   const AUTO_CROPS_KEY = 'sky-garden-auto-crops-v1';
   const SYNC_META_KEY = 'sky-garden-cloud-sync-v1';
   const LEGACY_BROWSER_ID_KEY = 'sky-garden-browser-id-v1';
-  const sessionOpenedAt = Date.now();
+  let sessionOpenedAt = 0;
   try { localStorage.removeItem(LEGACY_BROWSER_ID_KEY); } catch (_) { /* Ignore unavailable local storage. */ }
   let hasResolvedStartupCloud = false;
   let resolveStartupCloud;
@@ -281,6 +281,8 @@
     }
     idToken = response.credential;
     currentSub = claims.sub;
+    // Claim session ownership when login succeeds, not when this tab first opened.
+    sessionOpenedAt = Date.now();
     syncEnabled = false;
     setStatus('Google 登入成功，正在檢查雲端花園…');
     updateButtons(true);
@@ -304,7 +306,12 @@
       shape: 'rectangular',
       width: 260,
     });
-    window.google.accounts.id.prompt();
+    setStatus('Google 登入已準備好；若未自動登入，請點擊登入按鈕。');
+    window.google.accounts.id.prompt((notification) => {
+      if (!idToken && (notification.isNotDisplayed?.() || notification.isSkippedMoment?.() || notification.isDismissedMoment?.())) {
+        setStatus('Google 未能自動登入，請點擊 Google 登入按鈕。');
+      }
+    });
     window.setTimeout(finishStartupCloud, 3500);
   }
 
