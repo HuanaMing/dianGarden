@@ -464,24 +464,20 @@
   });
   function addGrassRamp(positions, colors, index, x, z, half, y) {
     const connections = window.dianGardenGrassRampLogic.getConnections(plotPositions, plotStates, index, TILE, 0.5);
+    const edgeHeights = Object.fromEntries(['north', 'east', 'south', 'west'].map((side) => [side, connections[side]?.edgeHeight ?? y]));
+    const cornerHeights = window.dianGardenGrassRampLogic.getCornerHeights(edgeHeights, y);
     const corners = [
       { x: x - half, z: z - half, side: [0.55, 0.39, 0.28], u: 0, v: 0 },
       { x: x + half, z: z - half, side: [0.48, 0.33, 0.25], u: 1, v: 0 },
       { x: x + half, z: z + half, side: [0.57, 0.4, 0.29], u: 1, v: 1 },
       { x: x - half, z: z + half, side: [0.5, 0.35, 0.26], u: 0, v: 1 },
-    ];
+    ].map((corner, cornerIndex) => ({ ...corner, y: cornerHeights[cornerIndex], top: [corner.x, cornerHeights[cornerIndex], corner.z] }));
     const edges = [
       { side: 'north', indices: [0, 1], color: corners[0].side },
       { side: 'east', indices: [1, 2], color: corners[1].side },
       { side: 'south', indices: [2, 3], color: corners[2].side },
       { side: 'west', indices: [3, 0], color: corners[3].side },
-    ].map((edge) => {
-      const edgeY = connections[edge.side]?.edgeHeight ?? y;
-      return { ...edge, points: edge.indices.map((cornerIndex) => {
-        const corner = corners[cornerIndex];
-        return { ...corner, y: edgeY, top: [corner.x, edgeY, corner.z] };
-      }) };
-    });
+    ].map((edge) => ({ ...edge, points: edge.indices.map((cornerIndex) => corners[cornerIndex]) }));
     const center = { x, z, y, u: 0.5, v: 0.5, top: [x, y, z] };
     const bottomY = Math.min(y, ...edges.flatMap((edge) => edge.points.map((point) => point.y))) - 0.5;
     const grass = [0.43, 0.68, 0.39];
