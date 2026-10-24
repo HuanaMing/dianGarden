@@ -269,7 +269,7 @@ input, [contenteditable="true"]{
 .world-topbar{left:12px;right:12px;top:12px;min-height:54px;display:flex;align-items:center;gap:12px}
 .world-brand{flex:0 1 auto;min-width:0}
 .world-status{flex:1;min-width:0}
-.topbar-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.topbar-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto}.topbar-actions .btn-icon-image{display:block;width:25px;height:25px;object-fit:contain;pointer-events:none}
 .topbar-actions .drone-panel-toggle,
 .topbar-actions .settings-toggle,
 .topbar-actions .encyclopedia-link,
@@ -292,7 +292,7 @@ input, [contenteditable="true"]{
   .world-status{gap:3px 6px}
   
   .topbar-actions{gap:4px}
-  .topbar-actions .drone-panel-toggle,.topbar-actions .settings-toggle,.topbar-actions .encyclopedia-link,.topbar-actions .hud-toggle{width:32px;height:32px;min-height:32px;flex-basis:32px;border-radius:9px;font-size:16px}
+  .topbar-actions .drone-panel-toggle,.topbar-actions .settings-toggle,.topbar-actions .encyclopedia-link,.topbar-actions .hud-toggle{width:32px;height:32px;min-height:32px;flex-basis:32px;border-radius:9px;font-size:16px}.topbar-actions .btn-icon-image{width:22px;height:22px}
   .topbar-actions .hud-toggle{font-size:14px}
   .drone-jobs{top:66px;right:8px;width:min(240px,calc(100% - 16px));max-height:40vh}
   .settings-panel{top:66px;right:8px}
@@ -557,9 +557,9 @@ input, [contenteditable="true"]{
 .garden-menu-wheel button{position:absolute;left:0;top:0;width:216px;height:216px;padding:0;border:0;border-radius:0;background:transparent;color:#426d58;box-shadow:none;font:inherit;cursor:pointer;pointer-events:auto;transform:rotate(var(--wheel-angle,0deg));transform-origin:50% 50%;clip-path:polygon(25.9% 8.3%,37.5% 3.7%,50% 1.9%,62.5% 3.7%,74.1% 8.3%,62.5% 28.2%,56.5% 26.4%,50% 25.9%,43.5% 26.4%,37.5% 28.2%);transition:transform .13s ease,filter .13s ease;outline:none}
 .garden-menu-wheel button::before{content:"";position:absolute;inset:0;background-image:url("assets/wreath.webp");background-repeat:no-repeat;background-size:100% 100%;opacity:1;pointer-events:none;transform:rotate(calc(var(--wheel-angle,0deg) * -1));}
 .garden-menu-wheel button span,.garden-menu-wheel button small{position:absolute;left:0;width:100%;display:block;text-align:center;transform:rotate(calc(var(--wheel-angle,0deg) * -1));pointer-events:none;text-shadow:0 1px 2px rgba(255,255,255,.9)}
-.garden-menu-wheel button span{top:29px;font-size:23px;line-height:1.1}
+.garden-menu-wheel button span{top:29px;font-size:23px;line-height:1.1}.garden-menu-wheel button span .wheel-button-image{display:block;width:25px;height:25px;margin:0 auto;object-fit:contain}
 .garden-menu-wheel button small{top:54px;font-size:10px;font-weight:900;white-space:nowrap}
 .garden-menu-wheel button.is-selected{transform:rotate(var(--wheel-angle,0deg)) scale(1.18);filter:drop-shadow(0 0 5px rgba(57,112,70,.65));z-index:2}
 .garden-menu-wheel button.is-selected span,.garden-menu-wheel button.is-selected small{color:#244d34;text-shadow:0 0 3px #fff,0 1px 2px #fff}
 .garden-menu-wheel button.is-mode-active{filter:drop-shadow(0 0 5px rgba(57,112,70,.65))}
-@media(max-width:700px){.garden-menu-wheel{width:204px;height:204px}.garden-menu-wheel button{width:204px;height:204px}.garden-menu-wheel button span{top:28px;font-size:21px}.garden-menu-wheel button small{top:51px;font-size:9px}}
+@media(max-width:700px){.garden-menu-wheel{width:204px;height:204px}.garden-menu-wheel button{width:204px;height:204px}.garden-menu-wheel button span{top:28px;font-size:21px}.garden-menu-wheel button span .wheel-button-image{width:23px;height:23px}.garden-menu-wheel button small{top:51px;font-size:9px}}
