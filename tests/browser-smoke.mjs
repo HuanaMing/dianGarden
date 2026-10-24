@@ -5,6 +5,18 @@ const baseURL = process.env.GARDEN_TEST_URL || 'http://127.0.0.1:4173';
 const outputDir = 'test-results/screenshots';
 
 const indexHtml = await fs.readFile('src/index.html', 'utf8');
+const cloudSaveSource = await fs.readFile('src/cloud-save.js', 'utf8');
+const gameSource = await fs.readFile('src/game.js', 'utf8');
+if (!indexHtml.includes('id="startup-garden-dialog"') || !indexHtml.includes('id="start-guest-garden"')
+  || !indexHtml.includes('id="return-to-own-garden"')) throw new Error('登入入口／訪客花園控制項缺失');
+if (!cloudSaveSource.includes("localStorage.setItem(GUEST_MODE_KEY, 'true')")
+  || !cloudSaveSource.includes("localStorage.removeItem(GUEST_MODE_KEY)")
+  || !gameSource.includes("'sky-garden-guest-save-v1'")
+  || !gameSource.includes("'sky-garden-guest-flower-variants-v1'")
+  || !gameSource.includes("'sky-garden-guest-auto-crops-v1'")
+  || gameSource.includes('Promise.race([window.diangardenCloudReady')) {
+  throw new Error('訪客存檔隔離或啟動閘門程式規格不符');
+}
 const versionedResourceUrls = [...indexHtml.matchAll(/(?:src|href)="([^"]+\.(?:js|css)(?:\?[^"]*)?)"/g)].map(match => match[1]);
 if (!versionedResourceUrls.length || versionedResourceUrls.some(url => !new URL(url, 'https://example.test/').searchParams.has('v'))) {
   throw new Error('HTML 的 JavaScript／CSS 資源缺少部署版本參數：' + JSON.stringify(versionedResourceUrls));
@@ -14,8 +26,34 @@ await fs.mkdir(outputDir, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const errors = [];
 const checks = [];
+const startupPage = await browser.newPage({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 1 });
+page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
+page.on('console', message => { if (message.type() === 'error') errors.push(`console: ${message.text()}`); });
+await startupPage.addInitScript(() => {
+  localStorage.removeItem('sky-garden-guest-mode-v1');
+  localStorage.setItem('sky-garden-save-v1', '{"preserveOriginal":"yes"}');
+});
+await startupPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+await startupPage.locator('#startup-garden-dialog[open]').waitFor({ state: 'visible', timeout: 8000 });
+if (!(await startupPage.locator('#sky-canvas').evaluate(canvas => canvas.width === 0 || canvas.height === 0))) {
+  throw new Error('登入選擇前遊戲已初始化，啟動閘門未生效');
+}
+await startupPage.locator('#start-guest-garden').click();
+await startupPage.locator('#sky-canvas').waitFor({ state: 'visible' });
+const guestIsolation = await startupPage.evaluate(() => ({
+  guestMode: localStorage.getItem('sky-garden-guest-mode-v1'),
+  originalSave: localStorage.getItem('sky-garden-save-v1'),
+  guestSave: localStorage.getItem('sky-garden-guest-save-v1'),
+  dialogOpen: document.querySelector('#startup-garden-dialog')?.open,
+}));
+if (guestIsolation.guestMode !== 'true' || guestIsolation.originalSave !== '{"preserveOriginal":"yes"}'
+  || guestIsolation.dialogOpen) throw new Error('訪客入口未保留原有本機存檔或未正確解除啟動閘門：' + JSON.stringify(guestIsolation));
+checks.push('未自動登入時先顯示入口選擇；進入訪客模式不會覆寫原有本機存檔');
+await startupPage.close();
+
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
 await page.addInitScript(() => {
+  localStorage.setItem('sky-garden-guest-mode-v1', 'true');
   window.__webglDrawCalls = 0;
   const original = WebGLRenderingContext.prototype.drawArrays;
   WebGLRenderingContext.prototype.drawArrays = function (...args) {
