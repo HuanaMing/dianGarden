@@ -452,11 +452,6 @@ try {
   const ringGeometry = await touchPage.evaluate(() => {
     const element = document.querySelector('.touch-hold-ring');
     if (!element) return { missing: true, events: window.__touchPointerEvents };
-    const image = element.querySelector('.touch-hold-wreath');
-    const style = getComputedStyle(element);
-    const imageStyle = image && getComputedStyle(image);
-    return { imageSrc: image?.getAttribute('src'), imageWidth: imageStyle?.width, ringTransform: style.transform, animationDuration: style.animationDuration, animationDelay: style.animationDelay };
-  });
   if (ringGeometry.missing) throw new Error('手機長按環在動畫驗收前被移除：' + JSON.stringify(ringGeometry));
 
     const image = element.querySelector('.touch-hold-wreath');
