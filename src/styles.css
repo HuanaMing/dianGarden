@@ -687,3 +687,6 @@ input, [contenteditable="true"]{
 @media(max-height:480px){
   .farm-management-panel,.settings-panel,.drone-jobs{padding-top:60px!important}
 }
+
+/* 全畫面面板不套用舊浮窗的縮放入場動畫，避免短暫露出遊戲邊緣。 */
+.farm-management-panel,.settings-panel,.drone-jobs{animation:none!important;transform:none!important;transform-origin:top left}
