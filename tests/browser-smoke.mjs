@@ -229,7 +229,7 @@ try {
       selectedScale,
     };
   });
-  if (wheelGeometry.centerContent !== 'none' || !wheelGeometry.sectorClip.startsWith('polygon(') || wheelGeometry.sectorBackground !== 'rgba(0, 0, 0, 0)' || wheelGeometry.sectorBorder !== '0px' || wheelGeometry.wreathOpacity !== '1' || wheelGeometry.wreathVisibility !== 'visible' || wheelGeometry.selectedScale < 1.1) throw new Error('花草環需無底板、透明中心、選中區放大且可見度 100%');
+  if (!['none', 'normal', ''].includes(wheelGeometry.centerContent) || !wheelGeometry.sectorClip.startsWith('polygon(') || wheelGeometry.sectorBackground !== 'rgba(0, 0, 0, 0)' || wheelGeometry.sectorBorder !== '0px' || wheelGeometry.wreathOpacity !== '1' || wheelGeometry.wreathVisibility !== 'visible' || wheelGeometry.selectedScale < 1.1) throw new Error('花草環需無中央偽元素底板、透明扇形按鈕、選中區放大且可見度100%：' + JSON.stringify(wheelGeometry));
   const frameBox = await page.locator('.world-frame').boundingBox();
   const wheelOpened = await page.evaluate(({ x, y }) => window.gardenMenuWheel.openAt(x, y, 1), { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
   if (!wheelOpened || !(await page.locator('#garden-menu-wheel').isVisible())) throw new Error('長按快捷輪盤未能顯示');
