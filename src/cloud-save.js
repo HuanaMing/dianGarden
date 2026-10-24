@@ -230,6 +230,8 @@
         updatedAt: cloudSave.updatedAt || null,
       });
       setStatus('已載入雲端花園，正在重新載入遊戲…', 'success');
+      // Prevent the old in-memory game from overwriting the cloud save during pagehide.
+      window.dispatchEvent(new Event('diangarden:restore-cloud-save'));
       window.location.reload();
     } catch (_) {
       setStatus('雲端存檔格式無法讀取；本機資料未變更。', 'warning');
