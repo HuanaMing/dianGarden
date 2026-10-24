@@ -255,3 +255,12 @@ src/sky-world.js 依據作物成長進度顯示種子、幼苗或成熟花。每
 `#garden-menu-wheel` 以花草環圖片作為背景；六個操作按鈕各自使用扇形 `clip-path`，讓指標懸停時只放大對應弧段。四個 PNG 圖示不再放在受裁切的按鈕內，而是放在輪盤容器中的獨立 `.wheel-icon-overlay` 覆蓋層。每個覆蓋層以 `data-wheel-icon` 對應操作名稱，`src/sky-world.js` 依相同的 60 度順序設定角度，沿輪盤半徑定位；圖示本身反向旋轉，保持圖案正向。覆蓋層不攔截指標事件，因此不影響扇形按鈕的選取。
 
 桌面圖示尺寸為 35×35px，手機版為 32×32px；徑向中心距離分別約 104px 與 100px。圖示以四方向白色 drop-shadow 形成外框，再加輕微深色陰影提高對比。按鈕仍保留 `role="menuitem"`、`aria-label` 及 `data-wheel-action`；圖示層為 `aria-hidden`，不重複朗讀操作名稱。Playwright smoke test 驗證圖示素材載入、尺寸、覆蓋層不受扇形裁切、白色外框及手機版徑向位置。
+
+
+## 跨裝置雲端存檔原型與工作階段失效處理（任務182）
+
+`src/cloud-save.js` 將 Google Identity Services 登入、雲端存檔讀寫與本機存檔事件串接；`src/cloud-save-config.js` 只保存可公開的設定欄位，目前 Client ID 與 Worker API URL 仍是 placeholder。Worker 原型位於 `cloudflare/worker.js`，使用已驗證 Google ID token 的 `sub` 隔離玩家資料，並以 revision／`baseRevision` 回報版本衝突；D1 schema 與 migration 位於 `cloudflare/`。前端在本機存檔成功後觸發 `diangarden:save`，雲端同步失敗時不阻止本機遊玩。
+
+載入雲端存檔前會先觸發保護事件，讓遊戲模組避免在 `pagehide`／`visibilitychange` 時把舊的本機狀態回寫覆蓋雲端資料。若 GET／PUT 回傳 `stale_session`，前端關閉自動雲端同步、清除待上傳計時器並顯示主畫面常駐離線提示；失效工作階段不得透過重新檢查重新取得同步權，成功重新登入後才可清除失效狀態。
+
+目前此功能仍是未配置的原型：沒有真實 Client ID／API URL、未建立或部署 Cloudflare 資源，不能視為線上雲端同步已啟用。部署與正式端到端驗收仍須使用者另行批准並實測。
