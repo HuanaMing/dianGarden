@@ -17,10 +17,10 @@
           <canvas id="sky-canvas" aria-label="可用滑鼠與鍵盤探索並選取土地的空中農場 3D 場景"></canvas>
           <div class="garden-menu-wheel" id="garden-menu-wheel" role="menu" aria-label="花園快捷輪盤" hidden>
             <img class="garden-menu-wreath" src="assets/wreath.webp" alt="" aria-hidden="true" draggable="false">
-            <button type="button" role="menuitem" data-wheel-action="drone" aria-label="無人機"><span>🚁</span><small>無人機</small></button>
-            <button type="button" role="menuitem" data-wheel-action="farm" aria-label="農地管理"><span>🌱</span><small>農地管理</small></button>
-            <button type="button" role="menuitem" data-wheel-action="settings" aria-label="設定"><span>⚙️</span><small>設定</small></button>
-            <button type="button" role="menuitem" data-wheel-action="catalog" aria-label="圖鑑"><span>📖</span><small>圖鑑</small></button>
+            <button type="button" role="menuitem" data-wheel-action="drone" aria-label="無人機"><span aria-hidden="true"><img class="wheel-button-image" src="assets/btn/無人機管理.png" alt=""></span><small>無人機</small></button>
+            <button type="button" role="menuitem" data-wheel-action="farm" aria-label="農地管理"><span aria-hidden="true"><img class="wheel-button-image" src="assets/btn/農地管理.png" alt=""></span><small>農地管理</small></button>
+            <button type="button" role="menuitem" data-wheel-action="settings" aria-label="設定"><span aria-hidden="true"><img class="wheel-button-image" src="assets/btn/設定.png" alt=""></span><small>設定</small></button>
+            <button type="button" role="menuitem" data-wheel-action="catalog" aria-label="圖鑑"><span aria-hidden="true"><img class="wheel-button-image" src="assets/btn/圖鑑.png" alt=""></span><small>圖鑑</small></button>
             <button type="button" role="menuitem" data-wheel-action="collapse" aria-label="收合或展開介面"><span>🔼</span><small>收合介面</small></button>
             <button type="button" role="menuitem" data-wheel-action="rotate" aria-label="旋轉" aria-pressed="false"><span>🔄</span><small>旋轉</small></button>
           </div>
@@ -32,10 +32,10 @@
               <span class="environment-status" id="environment-status" aria-live="polite">晴朗 · 白天</span>
             </div>
           <div class="topbar-actions" role="group" aria-label="花園控制">
-              <button class="farm-management-toggle" id="farm-management-toggle" type="button" aria-controls="farm-management-panel" aria-expanded="false" aria-label="農地管理" title="農地管理">🌱</button>
-              <button class="drone-panel-toggle" id="drone-panel-toggle" type="button" aria-controls="drone-jobs" aria-expanded="false" aria-label="無人機">🚁</button>
-              <button class="settings-toggle" id="settings-toggle" type="button" aria-controls="settings-panel" aria-expanded="false" aria-label="設定">⚙️</button>
-              <a class="encyclopedia-link" href="encyclopedia.html" aria-label="花卉圖鑑" title="花卉圖鑑">📖</a>
+              <button class="farm-management-toggle" id="farm-management-toggle" type="button" aria-controls="farm-management-panel" aria-expanded="false" aria-label="農地管理" title="農地管理"><img class="btn-icon-image" src="assets/btn/農地管理.png" alt="" aria-hidden="true"></button>
+              <button class="drone-panel-toggle" id="drone-panel-toggle" type="button" aria-controls="drone-jobs" aria-expanded="false" aria-label="無人機"><img class="btn-icon-image" src="assets/btn/無人機管理.png" alt="" aria-hidden="true"></button>
+              <button class="settings-toggle" id="settings-toggle" type="button" aria-controls="settings-panel" aria-expanded="false" aria-label="設定"><img class="btn-icon-image" src="assets/btn/設定.png" alt="" aria-hidden="true"></button>
+              <a class="encyclopedia-link" href="encyclopedia.html" aria-label="花卉圖鑑" title="花卉圖鑑"><img class="btn-icon-image" src="assets/btn/圖鑑.png" alt="" aria-hidden="true"></a>
               <button class="hud-toggle" id="hud-toggle" type="button" aria-controls="world-topbar drone-jobs plot-selector world-instructions" aria-expanded="true" aria-label="收合介面">🔼</button>
             </div>
           </header>
