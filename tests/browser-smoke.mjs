@@ -161,6 +161,21 @@ try {
   await page.locator('#drone-panel-toggle').click();
   await page.locator('#settings-toggle').click();
   if (!(await page.locator('#settings-panel').isVisible())) throw new Error('設定按鈕未能開啟設定面板');
+  if (await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) || await page.locator('#farm-management-panel').isVisible()) throw new Error('開啟設定時未關閉無人機或農地管理面板');
+  await page.locator('#farm-management-toggle').click();
+  if (!(await page.locator('#farm-management-panel').isVisible()) || await page.locator('#settings-panel').isVisible() || await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open'))) throw new Error('農地管理面板沒有關閉其他兩個面板');
+  await page.locator('#drone-panel-toggle').click();
+  if (!(await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) ) || await page.locator('#settings-panel').isVisible() || await page.locator('#farm-management-panel').isVisible()) throw new Error('無人機面板沒有關閉其他兩個面板');
+  await page.locator('#settings-toggle').click();
+  if (!(await page.locator('#settings-panel').isVisible()) || await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) || await page.locator('#farm-management-panel').isVisible()) throw new Error('設定面板沒有關閉其他兩個面板');
+  const wheelActions = await page.locator('#garden-menu-wheel [data-wheel-action]').evaluateAll(nodes => nodes.map(node => node.dataset.wheelAction));
+  if (wheelActions.join(',') !== 'drone,farm,settings,catalog,collapse') throw new Error('快捷輪盤選項不完整或順序錯誤：' + wheelActions.join(','));
+  const frameBox = await page.locator('.world-frame').boundingBox();
+  const wheelOpened = await page.evaluate(({ x, y }) => window.gardenMenuWheel.openAt(x, y, 1), { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
+  if (!wheelOpened || !(await page.locator('#garden-menu-wheel').isVisible())) throw new Error('長按快捷輪盤未能顯示');
+  await page.mouse.move(frameBox.x + frameBox.width / 2 + 70, frameBox.y + frameBox.height / 2 - 70);
+  await page.mouse.up();
+  if (!(await page.locator('#farm-management-panel').isVisible()) || await page.locator('#garden-menu-wheel').isVisible()) throw new Error('滑動輪盤選擇農地管理未正確執行');
   if (!(await page.locator('.operation-help').isVisible())) throw new Error('操作說明未移至設定面板');
   if (!(await page.locator('#avatar-mode').isVisible())) throw new Error('設定中未顯示自訂頭像控制');
   for (const selector of ['#current-version', '#latest-version', '#force-update-button']) {
