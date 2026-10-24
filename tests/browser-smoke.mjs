@@ -168,6 +168,7 @@ try {
   if (!(await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) ) || await page.locator('#settings-panel').isVisible() || await page.locator('#farm-management-panel').isVisible()) throw new Error('無人機面板沒有關閉其他兩個面板');
   await page.locator('#settings-toggle').click();
   if (!(await page.locator('#settings-panel').isVisible()) || await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) || await page.locator('#farm-management-panel').isVisible()) throw new Error('設定面板沒有關閉其他兩個面板');
+  await page.locator('#settings-toggle').click();
   const wheelActions = await page.locator('#garden-menu-wheel [data-wheel-action]').evaluateAll(nodes => nodes.map(node => node.dataset.wheelAction));
   if (wheelActions.join(',') !== 'drone,farm,settings,catalog,collapse,rotate') throw new Error('快捷輪盤選項不完整或順序錯誤：' + wheelActions.join(','));
   const buttonAssetChecks = await page.locator('.wheel-button-image, .topbar-actions .btn-icon-image').evaluateAll(images => images.map(image => ({
@@ -391,8 +392,8 @@ try {
   await touchPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   const touchCanvas = await touchPage.locator('#sky-canvas').boundingBox();
   if (!touchCanvas) throw new Error('無法取得手機觸控畫布位置');
-  const touchX = Math.round(touchCanvas.x + 24);
-  const touchY = Math.round(touchCanvas.y + touchCanvas.height * 0.72);
+  const touchX = Math.round(touchCanvas.x + touchCanvas.width * 0.5);
+  const touchY = Math.round(touchCanvas.y + touchCanvas.height * 0.5);
   const environmentCheck = await touchPage.evaluate(() => {
     const at = worldTimeMs => window.skyEnvironment.getState({ worldTimeMs, worldTimeAnchor: 0 }, 0);
     return {
