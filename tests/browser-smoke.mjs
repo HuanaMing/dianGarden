@@ -448,7 +448,7 @@ try {
     return { exists: Boolean(ring), visibility: ring ? getComputedStyle(ring).visibility : null, events: window.__touchPointerEvents };
   });
   if (!ringRevealState.exists || ringRevealState.visibility !== 'visible') throw new Error('手機長按環在按下200ms後未保持顯示：' + JSON.stringify(ringRevealState));
-  await touchPage.waitForTimeout(480);
+  await touchPage.waitForTimeout(420);
   const ringGeometry = await touchPage.evaluate(() => {
     const element = document.querySelector('.touch-hold-ring');
     if (!element) return { missing: true, events: window.__touchPointerEvents };
