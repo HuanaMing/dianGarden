@@ -4,6 +4,6 @@
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "盤點 src/game.js、src/flower-catalog.js、src/sky-environment.js 與 src/sky-world.js 的經濟、成熟計時、派工、電量和離線存檔流程；建立基準與回本模擬後再決定公式。",
-  "result": "已依 AGENTS.md 將任務文件由 inbox 移至 active，並回讀驗證 active 版本包含完整需求與驗收條件。遊戲程式尚未修改。"
+  "nextAction": "補齊手動地塊、純草地、收起無人機、低金幣、空選花種、離線上限與重複結算測試；回讀程式和文件確認一致。瀏覽器驗收未執行，需明確記錄。",
+  "result": "已新增 src/garden-economy.js 並整合 src/game.js、src/index.html；地塊與無人機價格、收成淨利倍率、離線自動生產模擬已實作。初步模擬已產出代表性地塊回本表；JavaScript 語法檢查與離線上限／關閉自動模式／不重複結算等模型測試通過，仍需補齊邊界測試及文件回讀。"
 }
