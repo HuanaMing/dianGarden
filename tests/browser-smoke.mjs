@@ -212,6 +212,9 @@ try {
   if (await page.locator('#garden-menu-wheel .garden-menu-wreath').getAttribute('src') !== 'assets/wreath.webp') throw new Error('快捷輪盤未沿用花草環素材');
   const wheelGeometry = await page.evaluate(async () => {
     const wheel = document.querySelector('#garden-menu-wheel');
+    const wasHidden = wheel.hidden;
+    wheel.hidden = false;
+    wheel.classList.add('is-active');
     const sector = wheel.querySelector('[data-wheel-action="drone"]');
     const wreath = wheel.querySelector('.garden-menu-wreath');
     const style = getComputedStyle(sector);
@@ -219,6 +222,8 @@ try {
     await new Promise(resolve => setTimeout(resolve, 180));
     const selectedScale = new DOMMatrixReadOnly(getComputedStyle(sector).transform).a;
     sector.classList.remove('is-selected');
+    wheel.hidden = wasHidden;
+    wheel.classList.remove('is-active');
     return {
       centerContent: getComputedStyle(wheel, '::before').content,
       sectorClip: style.clipPath,
