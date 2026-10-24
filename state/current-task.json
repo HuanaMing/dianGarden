@@ -5,6 +5,6 @@
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務182：建立 Cloudflare D1／Worker、建立 Google OAuth Web Client 與部署外部 API 尚未獲批准；任何付費功能須另行明確批准。"
   ],
-  "nextAction": "已完成 Cloudflare Workers／D1 免費額度、閒置政策與 Google ID token 驗證的官方文件初查，並新增 docs/cloud-save-architecture.md。下一步確認正式 GitHub Pages origin、現有發布 workflow 及 Google OAuth 允許來源；只做本機程式／測試準備，不建立雲端資源、不部署。",
-  "result": "任務182方向為 Cloudflare Workers + D1 + Google 登入，保留三個現有 localStorage 存檔鍵及離線遊玩。已記錄官方配額：Workers Free 100,000 請求／日；D1 Free 5,000,000 列讀取／日、100,000 列寫入／日、5 GB 帳戶儲存及單庫 500 MB；Workers Paid 最低 US$5／月。免費額度耗盡時雲端 API／查詢可能失敗，因此需保留本機存檔。未建立外部資源、未部署、未修改遊戲程式。"
+  "nextAction": "已新增 Worker API 原型、D1 migration、Wrangler 設定範本與 Worker 冒煙測試，並接入 GitHub Actions。下一步確認 Actions 測試結果、GitHub Pages 正式 origin 與 OAuth 設定需求；未經明確批准不建立 Cloudflare 資源、不建立 OAuth client、不部署。",
+  "result": "任務182已在 GitHub 建立 cloudflare/worker.js、cloudflare/migrations/0001_create_player_saves.sql、cloudflare/schema.sql、cloudflare/wrangler.toml、tests/cloudflare-worker-smoke.mjs，並更新 browser-check workflow 與架構文件。原型支援 Google ID token 驗證、玩家資料隔離、存檔讀寫、revision 衝突保護、CORS 與 body 限制。尚未接入遊戲前端、未建立外部資源、未部署；GitHub Actions 測試結果待確認。"
 }
