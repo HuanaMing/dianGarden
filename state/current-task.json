@@ -1,9 +1,10 @@
 {
   "name": "任務200：Google 登入提示與獨立訪客花園",
-  "status": "in_progress",
+  "status": "awaiting_user_acceptance",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "實作登入閘門、入口對話框與訪客獨立存檔命名空間；完成後執行語法與回歸檢查。",
-  "taskFile": "tasks/active/200-google-login-and-guest-garden.md"
+  "nextAction": "任務200程式與自動化驗收已完成；請使用者實際開啟遊戲確認未自動登入時的入口、訪客花園存檔隔離，以及設定中的返回自己的花園流程。使用者驗收前保留在 tasks/active/。",
+  "taskFile": "tasks/active/200-google-login-and-guest-garden.md",
+  "result": "已新增登入入口閘門、獨立訪客存檔命名空間與返回自己的花園控制；GitHub Actions 瀏覽器驗收及 Cloudflare Worker smoke test 通過。前端來源提交的 Pages 部署成功。等待使用者實際遊玩驗收，不移入 done。"
 }
