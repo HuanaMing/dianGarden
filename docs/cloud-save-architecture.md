@@ -6,7 +6,7 @@
 
 以 Cloudflare Workers + D1 + Google Identity Services 為優先候選，符合本遊戲的輕量靜態網站、低維護與跨裝置需求。D1 可在 Workers Free 與 Paid 方案使用，沒有依資料庫閒置天數自動暫停的規則；官方定價說明採查詢用量與儲存量計費，閒置時不收資料庫運算費。Workers Free 仍有每日請求上限，因此「不會因閒置暫停」不等於沒有服務配額限制。
 
-本文件只記錄設計與研究結果，不代表已建立 Cloudflare 資源、OAuth 用戶端或部署 API。
+已在 repository 加入尚未部署的 Worker API 原型、D1 migration、Wrangler 設定範本與冒煙測試。這些檔案不代表已建立 Cloudflare 資源、OAuth 用戶端或部署 API。
 
 ## 官方費用與限制（查閱日期：2026-10-24）
 
@@ -67,6 +67,17 @@ CREATE TABLE IF NOT EXISTS player_saves (
 4. 本機保留三個既有 key：`sky-garden-save-v1`、`sky-garden-flower-variants-v1`、`sky-garden-auto-crops-v1`。雲端失敗時仍能遊玩。
 5. 成功同步後記錄最後已同步 revision；若另一裝置已有較新 revision，要求重新載入或手動選擇，避免丟失進度。
 6. 本機重置只清除本機進度，不自動刪除雲端存檔。
+
+## 已建立的原型（尚未部署）
+
+- `cloudflare/worker.js`：`GET /api/save` 與 `PUT /api/save`，使用 Google ID token 的簽章、issuer、audience、expiry 驗證，並以已驗證的 `sub` 隔離玩家資料；使用 revision 條件更新避免靜默覆蓋；限制 body 大小及 origin。
+- `cloudflare/migrations/0001_create_player_saves.sql`：D1 初始資料表 migration。
+- `cloudflare/schema.sql`：同一資料表 schema 參考。
+- `cloudflare/wrangler.toml`：部署設定範本，資料庫 ID、Google Client ID、允許來源都是未配置的 placeholder，不能直接部署。
+- `tests/cloudflare-worker-smoke.mjs`：用本機 mock D1 與測試 RSA key 驗證 CORS、登入驗證、玩家隔離、存檔讀寫、版本衝突及輸入大小限制。
+- `.github/workflows/browser-check.yml`：已加入此冒煙測試步驟，並在 `cloudflare/**` 變更時觸發測試 workflow。
+
+此原型目前未接入 `src/game.js` 或遊戲登入 UI；尚未有正式 Google Client ID，也未在 Cloudflare 建立 D1／Worker，因此跨裝置功能尚未可供玩家使用。
 
 ## 實作前仍需確認
 
