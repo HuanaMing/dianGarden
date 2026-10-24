@@ -238,6 +238,7 @@ try {
   const frameBox = await page.locator('.world-frame').boundingBox();
   const wheelOpened = await page.evaluate(({ x, y }) => window.gardenMenuWheel.openAt(x, y, 1), { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
   if (!wheelOpened || !(await page.locator('#garden-menu-wheel').isVisible())) throw new Error('長按快捷輪盤未能顯示');
+  await page.screenshot({ path: `${outputDir}/garden-wheel-desktop.png`, fullPage: true });
   await page.evaluate(({ x, y }) => {
     document.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, pointerType: 'mouse', clientX: x + 70, clientY: y - 70, bubbles: true, cancelable: true }));
     document.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, pointerType: 'mouse', clientX: x + 70, clientY: y - 70, bubbles: true, cancelable: true }));
@@ -436,11 +437,28 @@ try {
   }));
   if (!touchState.ringExists) throw new Error('單指觸控後長按環被提前移除：' + JSON.stringify(touchState));
   const touchRing = touchPage.locator('.touch-hold-ring');
-  if (await touchRing.evaluate(element => getComputedStyle(element).visibility) !== 'hidden') throw new Error('手機長按環未延遲 200ms 顯示：' + JSON.stringify(touchState));
+  const ringInitialState = await touchPage.evaluate(() => {
+    const ring = document.querySelector('.touch-hold-ring');
+    return { exists: Boolean(ring), visibility: ring ? getComputedStyle(ring).visibility : null, events: window.__touchPointerEvents };
+  });
+  if (!ringInitialState.exists || ringInitialState.visibility !== 'hidden') throw new Error('手機長按環應在前200ms存在但隱藏：' + JSON.stringify(ringInitialState));
   await touchPage.waitForTimeout(120);
-  if (await touchRing.evaluate(element => getComputedStyle(element).visibility) !== 'visible') throw new Error('手機長按環在按下 200ms 後仍未顯示');
+  const ringRevealState = await touchPage.evaluate(() => {
+    const ring = document.querySelector('.touch-hold-ring');
+    return { exists: Boolean(ring), visibility: ring ? getComputedStyle(ring).visibility : null, events: window.__touchPointerEvents };
+  });
+  if (!ringRevealState.exists || ringRevealState.visibility !== 'visible') throw new Error('手機長按環在按下200ms後未保持顯示：' + JSON.stringify(ringRevealState));
   await touchPage.waitForTimeout(480);
-  const ringGeometry = await touchRing.evaluate(element => {
+  const ringGeometry = await touchPage.evaluate(() => {
+    const element = document.querySelector('.touch-hold-ring');
+    if (!element) return { missing: true, events: window.__touchPointerEvents };
+    const image = element.querySelector('.touch-hold-wreath');
+    const style = getComputedStyle(element);
+    const imageStyle = image && getComputedStyle(image);
+    return { imageSrc: image?.getAttribute('src'), imageWidth: imageStyle?.width, ringTransform: style.transform, animationDuration: style.animationDuration, animationDelay: style.animationDelay };
+  });
+  if (ringGeometry.missing) throw new Error('手機長按環在動畫驗收前被移除：' + JSON.stringify(ringGeometry));
+
     const image = element.querySelector('.touch-hold-wreath');
     const style = getComputedStyle(element);
     const imageStyle = image && getComputedStyle(image);
