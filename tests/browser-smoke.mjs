@@ -61,9 +61,10 @@ try {
   checks.push('草地斜坡四邊 -0.5／0／+0.5 的 81 種排列通過');
   const offlineCheck = await page.evaluate(() => {
     const now=Date.now(), sim=window.gardenEconomy.simulateOfflineProgress, env=window.skyEnvironment, crops=window.flowerCatalog;
-    const makeState=autoMode=>({coins:120,lastOnlineAt:now-5*3600000,autoMode,droneCount:1,drones:[{deployed:true,battery:100,dockPosition:{x:0,z:1.55,y:0}}],plots:[],worldTimeMs:60000,worldTimeAnchor:now-5*3600000,lastObservedRaining:false});
-    const capped=sim(makeState(true),now,crops,env), disabled=sim(makeState(false),now,crops,env);
-    return capped?.simulatedDuration===10800000 && capped.capped && disabled?.simulatedDuration===0 && disabled.coinsDelta===0;
+    const makeState=autoMode=>({coins:120,lastOnlineAt:now-5*3600000,autoMode,droneCount:1,drones:[{deployed:true,battery:100,dockPosition:{x:0,z:1.55,y:0}}],autoCropSelection:[0],plots:[{crop:0,plantedAt:now-5*3600000-180000,plantHeight:1,manual:false,grassOnly:false,x:0,z:0,y:0,watered:false}],worldTimeMs:60000,worldTimeAnchor:now-5*3600000,lastObservedRaining:false});
+    const enabledState=makeState(true), disabledState=makeState(false);
+    const capped=sim(enabledState,now,crops,env), disabled=sim(disabledState,now,crops,env);
+    return capped?.simulatedDuration===10800000 && capped.capped && capped.coinsDelta>0 && disabled?.simulatedDuration===0 && disabled.coinsDelta===0 && disabledState.plots[0].crop===0;
   });
   if (!offlineCheck) throw new Error('離線模擬未遵守單台無人機 3 小時上限或自動模式關閉規則');
   checks.push('任務191離線模擬：單台無人機 3 小時上限與關閉自動模式不生產通過');
