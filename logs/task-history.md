@@ -1593,3 +1593,10 @@
 - 植物模型基準補償內部 0.055 單位偏移，根部貼齊草地表面或農地土壤床頂面；種子模型下移 0.02 單位以貼齊同一基準。
 - 驗證：GitHub Actions Playwright 通過（[run 40065297350](https://github.com/HuanaMing/dianGarden/actions/runs/40065297350)）；尚未人工檢查實際遊戲畫面。
 - 檔案：`src/sky-world.js`、`tests/browser-smoke.mjs`、`docs/architecture.md`、`tasks/done/196-farm-ramp-and-plant-attachment.md`、狀態紀錄。
+
+
+## 2026-10-24 — 任務 198：按鈕素材替換輪盤與頂部介面 emoji
+
+- 結果：使用者確認任務198驗收完成；將任務文件歸檔至 `tasks/done/198-button-assets.md`。
+- 檔案：`src/index.html`、`src/styles.css`、`.github/workflows/static.yml`、`tests/browser-smoke.mjs`、`docs/architecture.md`、`tasks/done/198-button-assets.md`。
+- 驗收紀錄：此處依使用者確認更新狀態，不額外宣稱 Agent 已獨立執行瀏覽器測試或確認 Pages 部署。
