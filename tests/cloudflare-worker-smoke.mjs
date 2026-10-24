@@ -62,16 +62,16 @@ const env = {
         },
         async run() {
           if (sql.startsWith("INSERT OR IGNORE")) {
-            const [userId, saveData, variantsData, autoCropsData, schemaVersion, updatedAt] = values;
+            const [userId, saveData, variantsData, autoCropsData, schemaVersion, updatedAt, openedAt, savedAt] = values;
             if (rows.has(userId)) return { meta: { changes: 0 } };
-            rows.set(userId, { save_data: saveData, variants_data: variantsData, auto_crops_data: autoCropsData, schema_version: schemaVersion, revision: 1, updated_at: updatedAt });
+            rows.set(userId, { save_data: saveData, variants_data: variantsData, auto_crops_data: autoCropsData, schema_version: schemaVersion, revision: 1, updated_at: updatedAt, opened_at: openedAt, saved_at: savedAt });
             return { meta: { changes: 1 } };
           }
           if (sql.startsWith("UPDATE player_saves")) {
-            const [saveData, variantsData, autoCropsData, schemaVersion, updatedAt, userId, revision] = values;
+            const [saveData, variantsData, autoCropsData, schemaVersion, updatedAt, savedAt, userId, revision, openedAt] = values;
             const row = rows.get(userId);
-            if (!row || row.revision !== revision) return { meta: { changes: 0 } };
-            rows.set(userId, { save_data: saveData, variants_data: variantsData, auto_crops_data: autoCropsData, schema_version: schemaVersion, revision: revision + 1, updated_at: updatedAt });
+            if (!row || row.revision !== revision || row.opened_at !== openedAt) return { meta: { changes: 0 } };
+            rows.set(userId, { ...row, save_data: saveData, variants_data: variantsData, auto_crops_data: autoCropsData, schema_version: schemaVersion, revision: revision + 1, updated_at: updatedAt, saved_at: savedAt });
             return { meta: { changes: 1 } };
           }
           throw new Error("Unexpected statement: " + sql);
