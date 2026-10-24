@@ -43,9 +43,15 @@
 - `src/index.html`：設定面板新增跨裝置存檔區，提供 Google 登入容器、同步狀態、上傳本機花園、載入雲端花園、重新檢查及登出操作。
 - `src/cloud-save-config.js`：公開設定 placeholder，未填入真實 Client ID 或 API URL，避免尚未配置時誤發請求。
 - `src/cloud-save.js`：整合 Google Identity Services，登入後讀取雲端 revision；第一次綁定或本機／雲端版本不同時要求玩家明確選擇，不會自動覆蓋；上傳使用 baseRevision，偵測 409 衝突；雲端下載前再次確認會取代本機存檔；同步失敗時保留本機遊戲。
-- `src/game.js`：本機成功存檔後發出 `diangarden:save` 事件，供雲端模組延遲同步；補上同步期間本機有新變更時的後續補傳。
-- `src/styles.css`：新增設定區樣式。
-- `src/index.html` 已載入設定與雲端存檔模組。
+- `src/game.js`：本機成功存檔後發出 `diangarden:save` 事件，供雲端模組延遲同步；補上同步期間本機有新變更時的後續補傳，並在重新載入前發出保護事件，避免舊頁面的 `pagehide`／`visibilitychange` 將舊進度覆蓋到剛載入的雲端存檔。
+- `src/styles.css`：新增設定區樣式與主畫面常駐離線提示。
+- `src/index.html` 已載入設定與雲端存檔模組，並提供帳號工作階段失效提示。
+
+## 2026-10-25：工作階段失效提示與同步保護進度
+- 已修正 `stale_session` 回應處理：GET／PUT 遇到失效工作階段時，關閉自動雲端同步、清除待上傳計時器，並在主畫面顯示常駐提示「帳號已在他處登入，花園進入離線模式。」
+- 舊工作階段重新檢查時，不會因 Worker 拒絕舊時間戳而重新取得同步權；重新登入成功後可清除失效狀態。
+- 已更新 `src/cloud-save.js`、`src/index.html`、`src/styles.css`。此提示功能依使用者回報已完成；本次同步文件，不將整個任務182標記完成。
+- 任務182仍為 active：尚需確認 CI／Playwright 結果、由使用者在正式 Pages 網站實測；Cloudflare D1／Worker、Google OAuth Client 與 API 部署仍須另行批准，尚未部署。
 
 ## 下一步
 1. 確認 GitHub Actions 的 Worker 冒煙測試與瀏覽器驗收結果；目前無法從已連接的工具直接讀取完整 Actions run 清單，因此不能宣稱已通過。
@@ -82,5 +88,5 @@
 - 先前 Supabase 報價 US$0／月與 Cloudflare 無關。
 - Cloudflare 免費額度與限制已依官方文件初步核對，但尚未查閱使用者 Cloudflare 帳戶實際方案／付款狀態。
 - 使用者已批准採用 Cloudflare D1 方向，未批准建立 D1／Worker、建立 Google OAuth Web Client、部署 API 或啟用付費功能。
-- 目前沒有建立 Cloudflare 資源，沒有更改外部設定，亦未把 Worker 接入遊戲前端；跨裝置功能尚未可供玩家使用。
+- 前端雲端存檔整合原型已接入遊戲設定面板，但設定仍是 placeholder，未配置真實 Client ID／API URL，因此不會連線至 Worker；跨裝置功能尚未可供玩家使用。
 - Worker 原型及 CI 測試已提交至 repository；GitHub Actions 的實際執行結果尚待確認。
