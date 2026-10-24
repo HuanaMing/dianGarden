@@ -174,12 +174,16 @@ try {
   const frameBox = await page.locator('.world-frame').boundingBox();
   const wheelOpened = await page.evaluate(({ x, y }) => window.gardenMenuWheel.openAt(x, y, 1), { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
   if (!wheelOpened || !(await page.locator('#garden-menu-wheel').isVisible())) throw new Error('長按快捷輪盤未能顯示');
-  await page.mouse.move(frameBox.x + frameBox.width / 2 + 70, frameBox.y + frameBox.height / 2 - 70);
-  await page.mouse.up();
+  await page.evaluate(({ x, y }) => {
+    document.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, pointerType: 'mouse', clientX: x + 70, clientY: y - 70, bubbles: true, cancelable: true }));
+    document.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, pointerType: 'mouse', clientX: x + 70, clientY: y - 70, bubbles: true, cancelable: true }));
+  }, { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
   if (!(await page.locator('#farm-management-panel').isVisible()) || await page.locator('#garden-menu-wheel').isVisible()) throw new Error('滑動輪盤選擇農地管理未正確執行');
   await page.evaluate(({ x, y }) => window.gardenMenuWheel.openAt(x, y, 1), { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
-  await page.mouse.move(frameBox.x + frameBox.width / 2 - 70, frameBox.y + frameBox.height / 2 - 40);
-  await page.mouse.up();
+  await page.evaluate(({ x, y }) => {
+    document.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, pointerType: 'mouse', clientX: x - 70, clientY: y - 40, bubbles: true, cancelable: true }));
+    document.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, pointerType: 'mouse', clientX: x - 70, clientY: y - 40, bubbles: true, cancelable: true }));
+  }, { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
   if (await page.locator('#garden-menu-wheel [data-wheel-action="rotate"]').getAttribute('aria-pressed') !== 'true') throw new Error('選擇旋轉後未啟用旋轉模式');
   if (!(await page.locator('.operation-help').isVisible())) throw new Error('操作說明未移至設定面板');
   if (!(await page.locator('#avatar-mode').isVisible())) throw new Error('設定中未顯示自訂頭像控制');
