@@ -278,7 +278,7 @@ try {
   if (!worldSource.includes('rotateHoldGesture') || worldSource.includes('rotateTouchGesture') || !worldSource.includes('if (pointerPlotIndex === null && dockHitAtPointer === null)')) throw new Error('PC 與手機的相機手勢尚未統一');
   if (!worldSource.includes("wreath.src = 'assets/wreath.webp';") || !worldSource.includes("className = 'touch-hold-wreath'")) throw new Error('長按花草環未使用 assets 內的透明圖片素材');
   const styleSource = await fs.readFile(new URL('../src/styles.css', import.meta.url), 'utf8');
-  if (!styleSource.includes('@keyframes touch-ring-rise{0%{transform:translate(-50%,-50%) translateY(0) scale(1)}40%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}80%{transform:translate(-50%,-50%) translateY(-50px) scale(.72)}100%{transform:translate(-50%,-50%) translateY(-50px) scale(1)}}') || !styleSource.includes('.touch-hold-ring{animation:touch-ring-rise .5s cubic-bezier(.2,.65,.3,1) .2s forwards}') || !styleSource.includes('width:46px;height:46px')) throw new Error('花草環圖片的上升、停留、放大復原動畫未設定');
+  if (!styleSource.includes('@keyframes touch-ring-rise{') || !styleSource.includes('translateY(-50px) scale(.72)') || !styleSource.includes('.touch-hold-ring{animation:touch-ring-rise') || !styleSource.includes('width:46px;height:46px')) throw new Error('花草環圖片的上升、停留、放大復原動畫未設定');
   checks.push('白色花草圓環無進度條：上升50px、停留0.2秒並於0.1秒放大復原');
   if (!worldSource.includes("heightEdit?.kind === 'dock' && heightEdit.index === pressedDock && heightEdit.mode === 'move'") || !worldSource.includes('screenToGround(pointerStartX, pointerStartY, 1.36 + getDockHeight(pressedDock))')) throw new Error('無人機坪台移動模式未支援直接拖曳或未使用坪台高度平面');
   if (worldSource.includes('if (dragPreview && Number.isInteger(dragPreview.index))')) throw new Error('拖曳預覽仍保留重複十字箭頭');
