@@ -1561,3 +1561,10 @@
 - 驗證：`src/game.js` 與 `src/garden-economy.js` 語法檢查通過；手工地塊計數與價格不變、自動地塊推進價格、手工地塊影響淨利倍率、純草地排除、價格單調性、管理列表保留原始索引及文件同步等 9 項檢查全部通過。
 - 限制：尚未執行瀏覽器驗收；需在實際 UI 確認農地管理列表及場景操作。
 - 檔案：`src/game.js`、`src/garden-economy.js`、`README.md`、`docs/architecture.md`、`docs/desicions.md`、`tasks/done/192-manual-plots-and-land-payback.md`。
+
+## 2026-10-24 — 任務192重做：草地斜坡側面跟隨頂面變形
+
+- 結果：草地斜坡四周側面上緣改為與頂面共用同一組角點高度；角點高度依相鄰兩側邊緣高度推導，側面會隨頂面坡度變形。保留四向一格與高度差不超過 0.5 的連接限制，不使用對角線。
+- 驗證：GitHub Actions Playwright 瀏覽器自動驗收通過，包含四邊高度差 -0.5、0、+0.5 的 81 種排列、側面角點 81 種組合、無效鄰居限制與既有回歸測試。工作流程：https://github.com/HuanaMing/dianGarden/actions/runs/40063305945
+- 限制：未人工逐像素檢查所有地形截圖，故不宣稱人工視覺驗收完成。
+- 檔案：`src/sky-world.js`、`tests/browser-smoke.mjs`、`docs/architecture.md`、`tasks/done/192-grass-ramp-side-mesh-redo.md`、狀態紀錄。
