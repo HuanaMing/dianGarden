@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 197,
-  "nextAction": "任務197已加入快捷輪盤與面板互斥功能及回歸案例；目前無可用瀏覽器裝置執行測試，等待部署後人工驗收。",
+  "nextAction": "任務197重做已更新六等分弧形輪盤、花草環裝飾與旋轉模式；待 GitHub Actions 與瀏覽器驗收確認。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
