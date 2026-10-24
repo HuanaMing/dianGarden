@@ -143,7 +143,6 @@
   let pinchActive = false;
   let suppressTouchTap = false;
   let rotateHoldGesture = false;
-  let rotateModeEnabled = false;
   let emptyTouchRotateTimer = null;
   const touchFeedbackLayer = document.createElement('div');
   touchFeedbackLayer.className = 'touch-feedback-layer';
@@ -1313,9 +1312,12 @@
     activePointerFeedback.delete(pointerId);
     touchPoints.delete(pointerId);
   });
-  window.addEventListener('garden-camera-rotate-toggle', (event) => {
-    rotateModeEnabled = event.detail?.enabled === true;
+  window.addEventListener('garden-camera-rotate-start', (event) => {
+    dragging = true; rotateHoldGesture = true; pointerMoved = true;
+    lastPointerX = event.detail?.clientX ?? lastPointerX;
+    lastPointerY = event.detail?.clientY ?? lastPointerY;
   });
+  window.addEventListener('garden-camera-rotate-end', () => { rotateHoldGesture = false; });
   canvas.addEventListener('pointerdown', (event) => {
     beginPointerFeedback(event);
     plotWasInMoveModeAtPointerDown = false;
@@ -1423,7 +1425,7 @@
       }, 500);
     }
     if (pointerPlotIndex === null && dockHitAtPointer === null) {
-      rotateHoldGesture = rotateModeEnabled;
+      rotateHoldGesture = false;
       const pressPointerId = event.pointerId;
       const isTouchPointer = event.pointerType === 'touch';
       emptyTouchRotateTimer = setTimeout(() => {
@@ -1826,137 +1828,96 @@
   const wheel = document.querySelector('#garden-menu-wheel');
   const frame = document.querySelector('.world-frame');
   if (!wheel || !frame) return;
-
   const actions = ['drone', 'farm', 'settings', 'catalog', 'collapse', 'rotate'];
   const selectionAngles = [-90, -30, 30, 90, 150, 210];
-  const labels = {
-    drone: '#drone-panel-toggle',
-    farm: '#farm-management-toggle',
-    settings: '#settings-toggle',
-    catalog: '.encyclopedia-link',
-    collapse: '#hud-toggle',
-  };
-  let pointerId = null;
-  let origin = null;
-  let selected = null;
-  let rotateModeEnabled = false;
-
+  const labels = { drone: '#drone-panel-toggle', farm: '#farm-management-toggle', settings: '#settings-toggle', catalog: '.encyclopedia-link', collapse: '#hud-toggle' };
+  let pointerId = null, rotationPointerId = null, origin = null, selected = null, rotationActive = false;
   function closeWheel() {
-    wheel.hidden = true;
-    wheel.classList.remove('is-active');
+    wheel.hidden = true; wheel.classList.remove('is-active');
     wheel.querySelectorAll('button').forEach((button) => button.classList.remove('is-selected'));
-    pointerId = null;
-    origin = null;
-    selected = null;
+    pointerId = null; origin = null; selected = null;
   }
-
+  function setRotationActive(enabled, event = null) {
+    rotationActive = enabled;
+    const button = wheel.querySelector('[data-wheel-action="rotate"]');
+    if (button) {
+      button.classList.toggle('is-mode-active', enabled);
+      button.setAttribute('aria-pressed', String(enabled));
+      button.setAttribute('aria-label', enabled ? '旋轉中，放開即可退出' : '旋轉');
+    }
+    window.dispatchEvent(new CustomEvent(enabled ? 'garden-camera-rotate-start' : 'garden-camera-rotate-end', {
+      detail: { pointerId: rotationPointerId, clientX: event?.clientX, clientY: event?.clientY },
+    }));
+  }
   function chooseAt(x, y) {
     if (!origin) return;
-    const dx = x - origin.x;
-    const dy = y - origin.y;
+    const dx = x - origin.x, dy = y - origin.y;
     if (Math.hypot(dx, dy) < 22) selected = null;
     else {
       const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-      let best = 0;
-      let distance = Infinity;
+      let best = 0, distance = Infinity;
       selectionAngles.forEach((center, index) => {
         const delta = Math.abs(((angle - center + 540) % 360) - 180);
         if (delta < distance) { distance = delta; best = index; }
       });
       selected = actions[best];
     }
-    wheel.querySelectorAll('[data-wheel-action]').forEach((button) => {
-      button.classList.toggle('is-selected', button.dataset.wheelAction === selected);
-    });
+    wheel.querySelectorAll('[data-wheel-action]').forEach((button) => button.classList.toggle('is-selected', button.dataset.wheelAction === selected));
   }
-
-  function updateRotateMode(enabled) {
-    rotateModeEnabled = enabled;
-    const button = wheel.querySelector('[data-wheel-action="rotate"]');
-    if (button) {
-      button.classList.toggle('is-mode-active', enabled);
-      button.setAttribute('aria-pressed', String(enabled));
-      button.setAttribute('aria-label', enabled ? '旋轉模式已開啟' : '旋轉');
-    }
-    window.dispatchEvent(new CustomEvent('garden-camera-rotate-toggle', { detail: { enabled } }));
-  }
-
   function runAction(action) {
     closeWheel();
-    if (action === 'rotate') {
-      updateRotateMode(!rotateModeEnabled);
-      return;
-    }
-    const target = document.querySelector(labels[action] || '');
-    target?.click();
+    if (action === 'rotate') return;
+    document.querySelector(labels[action] || '')?.click();
   }
-
-  wheel.querySelectorAll('[data-wheel-action]').forEach((button) => {
-    const index = actions.indexOf(button.dataset.wheelAction);
-    const angle = index * 60;
-    button.style.setProperty('--wheel-angle', `${angle}deg`);
-    button.setAttribute('aria-pressed', button.dataset.wheelAction === 'rotate' ? 'false' : 'false');
-    button.addEventListener('click', () => runAction(button.dataset.wheel-action));
+  wheel.querySelectorAll('[data-wheel-action]').forEach((button, index) => {
+    button.style.setProperty('--wheel-angle', `${index * 60}deg`);
+    button.setAttribute('aria-pressed', 'false');
+    button.addEventListener('click', () => runAction(button.dataset.wheelAction));
   });
-
   window.gardenMenuWheel = {
     isOpen: () => !wheel.hidden,
     openAt(clientX, clientY, id) {
       if (!wheel.hidden || document.querySelector('dialog[open]')) return false;
-      const rect = frame.getBoundingClientRect();
-      const margin = 116;
-      const x = Math.max(margin, Math.min(rect.width - margin, clientX - rect.left));
-      const y = Math.max(margin, Math.min(rect.height - margin, clientY - rect.top));
-      wheel.style.left = `${x}px`;
-      wheel.style.top = `${y}px`;
+      const rect = frame.getBoundingClientRect(), margin = 116;
+      wheel.style.left = `${Math.max(margin, Math.min(rect.width - margin, clientX - rect.left))}px`;
+      wheel.style.top = `${Math.max(margin, Math.min(rect.height - margin, clientY - rect.top))}px`;
       const collapseItem = wheel.querySelector('[data-wheel-action="collapse"]');
       const isCollapsed = document.querySelector('#hud-toggle')?.textContent?.trim() === '🔽';
       if (collapseItem) {
-        const icon = collapseItem.querySelector('span');
-        const label = collapseItem.querySelector('small');
+        const icon = collapseItem.querySelector('span'), label = collapseItem.querySelector('small');
         if (icon) icon.textContent = isCollapsed ? '🔽' : '🔼';
         if (label) label.textContent = isCollapsed ? '展開介面' : '收合介面';
         collapseItem.setAttribute('aria-label', isCollapsed ? '展開介面' : '收合介面');
       }
-      const rotateButton = wheel.querySelector('[data-wheel-action="rotate"]');
-      if (rotateButton) {
-        rotateButton.classList.toggle('is-mode-active', rotateModeEnabled);
-        rotateButton.setAttribute('aria-pressed', String(rotateModeEnabled));
-        rotateButton.setAttribute('aria-label', rotateModeEnabled ? '旋轉模式已開啟' : '旋轉');
-      }
-      wheel.hidden = false;
-      wheel.classList.add('is-active');
-      pointerId = id;
-      origin = { x: clientX, y: clientY };
-      selected = null;
+      wheel.hidden = false; wheel.classList.add('is-active');
+      pointerId = id; origin = { x: clientX, y: clientY }; selected = null;
       window.dispatchEvent(new CustomEvent('garden-menu-wheel-open', { detail: { pointerId: id } }));
       return true;
     },
   };
-
   document.addEventListener('pointermove', (event) => {
+    if (rotationActive && event.pointerId === rotationPointerId) return;
     if (wheel.hidden || event.pointerId !== pointerId) return;
-    event.preventDefault();
+    event.preventDefault(); chooseAt(event.clientX, event.clientY);
+    if (selected === 'rotate') {
+      rotationPointerId = event.pointerId; closeWheel(); setRotationActive(true, event); return;
+    }
     event.stopPropagation();
-    chooseAt(event.clientX, event.clientY);
   }, true);
-
   document.addEventListener('pointerup', (event) => {
+    if (rotationActive && event.pointerId === rotationPointerId) {
+      setRotationActive(false, event); rotationPointerId = null; return;
+    }
     if (wheel.hidden || event.pointerId !== pointerId) return;
-    event.preventDefault();
-    event.stopPropagation();
-    const action = selected;
-    closeWheel();
-    if (action) runAction(action);
+    event.preventDefault(); event.stopPropagation();
+    const action = selected; closeWheel(); if (action) runAction(action);
   }, true);
-
   document.addEventListener('pointercancel', (event) => {
+    if (rotationActive && event.pointerId === rotationPointerId) {
+      setRotationActive(false, event); rotationPointerId = null; return;
+    }
     if (wheel.hidden || event.pointerId !== pointerId) return;
-    event.stopPropagation();
-    closeWheel();
+    event.stopPropagation(); closeWheel();
   }, true);
-
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !wheel.hidden) closeWheel();
-  });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !wheel.hidden) closeWheel(); });
 })();
