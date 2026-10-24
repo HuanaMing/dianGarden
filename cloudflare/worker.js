@@ -174,7 +174,7 @@ export default {
     if (origin && !origins.includes(origin)) return jsonResponse({ error: "origin_not_allowed" }, 403);
 
     const url = new URL(request.url);
-    if (url.pathname !== "/api/save") return jsonResponse({ error: "not_found" }, 404);
+    if (url.pathname !== "/api/save") return jsonResponse({ error: "not_found" }, 404, headers);
 
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers });
