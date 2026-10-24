@@ -59,6 +59,14 @@ try {
   const rampCases = await page.evaluate(() => { const f=window.dianGardenGrassRampLogic.getConnections, l=[-0.5,0,0.5]; let n=0; for(const a of l)for(const b of l)for(const c of l)for(const d of l){const p=[{x:0,z:0,y:0},{x:0,z:-1,y:a},{x:1,z:0,y:b},{x:0,z:1,y:c},{x:-1,z:0,y:d}],s=p.map((_,i)=>({grassOnly:i===0})),r=f(p,s,0);if(r.north?.edgeHeight!==a||r.east?.edgeHeight!==b||r.south?.edgeHeight!==c||r.west?.edgeHeight!==d)return 0;n++;} return n; });
   if (rampCases !== 81) throw new Error('草地斜坡 81 種高度組合失敗：' + rampCases);
   checks.push('草地斜坡四邊 -0.5／0／+0.5 的 81 種排列通過');
+  const offlineCheck = await page.evaluate(() => {
+    const now=Date.now(), sim=window.gardenEconomy.simulateOfflineProgress, env=window.skyEnvironment, crops=window.flowerCatalog;
+    const makeState=autoMode=>({coins:120,lastOnlineAt:now-5*3600000,autoMode,droneCount:1,drones:[{deployed:true,battery:100,dockPosition:{x:0,z:1.55,y:0}}],plots:[],worldTimeMs:60000,worldTimeAnchor:now-5*3600000,lastObservedRaining:false});
+    const capped=sim(makeState(true),now,crops,env), disabled=sim(makeState(false),now,crops,env);
+    return capped?.simulatedDuration===10800000 && capped.capped && disabled?.simulatedDuration===0 && disabled.coinsDelta===0;
+  });
+  if (!offlineCheck) throw new Error('離線模擬未遵守單台無人機 3 小時上限或自動模式關閉規則');
+  checks.push('任務191離線模擬：單台無人機 3 小時上限與關閉自動模式不生產通過');
   const invalidLinks = await page.evaluate(() => { const f=window.dianGardenGrassRampLogic.getConnections, none=x=>Object.values(x).every(v=>v===null), s=[{grassOnly:true},{grassOnly:false}]; return none(f([{x:0,z:0,y:0},{x:1,z:1,y:0}],s,0)) && none(f([{x:0,z:0,y:0},{x:0,z:-2,y:0}],s,0)) && none(f([{x:0,z:0,y:0},{x:1,z:0,y:0.50001}],s,0)); });
   if (!invalidLinks) throw new Error('草地斜坡錯誤連接了對角線、距離超過一格或高度差超過 0.5 的地塊');
   const grassEdgesMatch = await page.evaluate(() => { const f=window.dianGardenGrassRampLogic.getConnections; const a=f([{x:0,z:0,y:0},{x:1,z:0,y:0.5}],[{grassOnly:true},{grassOnly:true}],0); const b=f([{x:1,z:0,y:0.5},{x:0,z:0,y:0}],[{grassOnly:true},{grassOnly:true}],0); return a.east?.edgeHeight===b.west?.edgeHeight; });
