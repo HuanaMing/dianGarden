@@ -1,9 +1,9 @@
 {
-  "name": "任務182：Cloudflare D1 跨裝置雲端存檔",
-  "status": "completed",
+  "name": "任務200：Google 登入提示與獨立訪客花園",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務182已完成並歸檔。下一步依 tasks/active/ 與 tasks/inbox/ 的實際內容選擇下一項任務。",
-  "result": "任務182：Cloudflare D1 跨裝置雲端存檔。使用者已確認整體驗收通過，並回報 Cloudflare Worker／D1 已成功部署。stale_session 時會停止自動同步、清除待上傳計時器並顯示常駐離線提示；重新登入成功後可恢復同步。本機存檔保留。完成紀錄：tasks/done/182-cloud-save-sync.md。2026-10-25 狀態同步已驗證：完成版存在、active 原檔已移除、相關 JSON 可正常解析。本次未獨立重跑 CI 或探測線上 API。"
+  "nextAction": "實作登入閘門、入口對話框與訪客獨立存檔命名空間；完成後執行語法與回歸檢查。",
+  "taskFile": "tasks/active/200-google-login-and-guest-garden.md"
 }
