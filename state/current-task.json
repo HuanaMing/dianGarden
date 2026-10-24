@@ -1,9 +1,10 @@
 {
-  "name": "任務182：匿名遊玩與 Google 綁定的雲端存檔、自動同步",
+  "name": "任務182：Cloudflare D1 跨裝置雲端存檔",
   "status": "in_progress",
   "pendingApprovals": [
-    "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
+    "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
+    "任務182：Cloudflare Workers／D1 與 Google OAuth 的目前費用、免費配額與設定條件尚待查證；未經明確批准不得建立資源、部署或啟用付費功能。"
   ],
-  "nextAction": "任務182已完成 Supabase 公開費率、Google OAuth／匿名登入條件與近期 breaking-change 初查。下一步需使用者確認可針對目前唯一可用的 Supabase 組織查詢專案實際報價；取得報價後，再由使用者明確批准任何非零費用，才可建立專案。",
-  "result": "任務182執行中：已完成本機存檔盤點與同步衝突方案，已記錄 Supabase Free／Pro 公開費率、Google OAuth 設定要求、RLS 與 Data API 暴露注意事項。未建立專案、未修改雲端資料庫／Auth、未變更遊戲存檔程式。待使用者確認查詢現有組織的實際專案報價。"
+  "nextAction": "任務182方向已由使用者確認改為 Cloudflare Workers + D1 + Google 登入，以支援跨裝置找回同一座花園。下一步先核對 Cloudflare 官方費用、免費額度、閒置政策及 Google OAuth／Workers 部署條件；只做研究與文件規劃，不建立資源、不部署、不啟用付費服務。",
+  "result": "已更新任務182文件：採用 Cloudflare D1 跨裝置存檔方向，保留現有三個 localStorage 存檔鍵、本機離線能力與衝突保護。使用者只批准技術方向，尚未批准建立 Cloudflare 資源或產生費用。未建立任何雲端資源，未修改遊戲程式。"
 }
