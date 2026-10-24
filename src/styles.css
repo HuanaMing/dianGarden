@@ -557,9 +557,15 @@ input, [contenteditable="true"]{
 .garden-menu-wheel button{position:absolute;left:0;top:0;width:216px;height:216px;padding:0;border:0;border-radius:0;background:transparent;color:#426d58;box-shadow:none;font:inherit;cursor:pointer;pointer-events:auto;transform:rotate(var(--wheel-angle,0deg));transform-origin:50% 50%;clip-path:polygon(25.9% 8.3%,37.5% 2.5%,50% 0%,62.5% 2.5%,74.1% 8.3%,62.5% 39%,56.5% 36.5%,50% 36%,43.5% 36.5%,37.5% 39%);transition:transform .13s ease,filter .13s ease;outline:none}
 .garden-menu-wheel button::before{content:"";position:absolute;inset:0;background-image:url("assets/wreath.webp");background-repeat:no-repeat;background-size:100% 100%;opacity:1;pointer-events:none;transform:rotate(calc(var(--wheel-angle,0deg) * -1));}
 .garden-menu-wheel button span,.garden-menu-wheel button small{position:absolute;left:0;width:100%;display:block;text-align:center;transform:rotate(calc(var(--wheel-angle,0deg) * -1));pointer-events:none;text-shadow:0 1px 2px rgba(255,255,255,.9)}
-.garden-menu-wheel button span{top:29px;font-size:23px;line-height:1.1}.garden-menu-wheel button span .wheel-button-image{display:block;width:50px;height:50px;margin:0 auto;object-fit:contain;transform:translateY(-28px)}
+.garden-menu-wheel button span{top:29px;font-size:23px;line-height:1.1}
+.garden-menu-wheel button span.wheel-icon-upright{transform:translate(var(--icon-x,0px),calc(0px - var(--icon-outward,28px)))}
+.garden-menu-wheel button span .wheel-button-image{display:block;width:50px;height:50px;margin:0 auto;object-fit:contain;transform:rotate(calc(var(--wheel-angle,0deg) * -1))}
+.garden-menu-wheel button[data-wheel-action="drone"]{--icon-x:0px;--icon-outward:28px}
+.garden-menu-wheel button[data-wheel-action="farm"]{--icon-x:0px;--icon-outward:28px}
+.garden-menu-wheel button[data-wheel-action="settings"]{--icon-x:0px;--icon-outward:28px}
+.garden-menu-wheel button[data-wheel-action="catalog"]{--icon-x:0px;--icon-outward:28px}
 .garden-menu-wheel button small{top:54px;font-size:10px;font-weight:900;white-space:nowrap}
 .garden-menu-wheel button.is-selected{transform:rotate(var(--wheel-angle,0deg)) scale(1.18);filter:drop-shadow(0 0 5px rgba(57,112,70,.65));z-index:2}
 .garden-menu-wheel button.is-selected span,.garden-menu-wheel button.is-selected small{color:#244d34;text-shadow:0 0 3px #fff,0 1px 2px #fff}
 .garden-menu-wheel button.is-mode-active{filter:drop-shadow(0 0 5px rgba(57,112,70,.65))}
-@media(max-width:700px){.garden-menu-wheel{width:204px;height:204px}.garden-menu-wheel button{width:204px;height:204px}.garden-menu-wheel button span{top:28px;font-size:21px}.garden-menu-wheel button span .wheel-button-image{width:46px;height:46px;transform:translateY(-27px)}.garden-menu-wheel button small{top:51px;font-size:9px}}
+@media(max-width:700px){.garden-menu-wheel{width:204px;height:204px}.garden-menu-wheel button{width:204px;height:204px}.garden-menu-wheel button span{top:28px;font-size:21px}.garden-menu-wheel button span.wheel-icon-upright{--icon-outward:27px}.garden-menu-wheel button .wheel-button-image{width:46px;height:46px}.garden-menu-wheel button[data-wheel-action="drone"]{--icon-outward:27px}.garden-menu-wheel button[data-wheel-action="farm"]{--icon-outward:27px}.garden-menu-wheel button[data-wheel-action="settings"]{--icon-outward:27px}.garden-menu-wheel button[data-wheel-action="catalog"]{--icon-outward:27px}.garden-menu-wheel button small{top:51px;font-size:9px}}
