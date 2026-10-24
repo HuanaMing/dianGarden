@@ -303,7 +303,7 @@
       : null;
     const headColor = customHeadColor || flowerHeadColors[flowerIndex] || flowerHeadColors[0];
     if (stage === 0) {
-      addOctahedron(positions, colors, x, 0.13, z, 0.065, 0.055, 0.065,
+      addOctahedron(positions, colors, x, 0.11, z, 0.065, 0.055, 0.065,
         (flowerIndex === 10 ? [0.43, 0.19, 0.18] : seedColors[flowerIndex] || seedColors[0]));
       return;
     }
@@ -483,7 +483,9 @@
     },
     getPlantBaseHeight(surfaceHeightAt, x, z, grassOnly) {
       const groundHeight = surfaceHeightAt(x, z);
-      return grassOnly ? groundHeight : groundHeight + 0.056;
+      // addFlowerModel's local geometry baseline is y=0.055. Offset its origin so
+      // the visible root meets the ground on grass or the raised soil-bed top on farms.
+      return grassOnly ? groundHeight - 0.055 : groundHeight + 0.001;
     },
     getSharedCornerHeight(positions, states, index, cornerX, cornerZ, tileSize = 1, maxHeightDifference = 0.5) {
       const source = positions?.[index];
