@@ -170,6 +170,16 @@ try {
   if (!(await page.locator('#settings-panel').isVisible()) || await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) || await page.locator('#farm-management-panel').isVisible()) throw new Error('設定面板沒有關閉其他兩個面板');
   const wheelActions = await page.locator('#garden-menu-wheel [data-wheel-action]').evaluateAll(nodes => nodes.map(node => node.dataset.wheelAction));
   if (wheelActions.join(',') !== 'drone,farm,settings,catalog,collapse,rotate') throw new Error('快捷輪盤選項不完整或順序錯誤：' + wheelActions.join(','));
+  const buttonAssetChecks = await page.locator('.wheel-button-image, .topbar-actions .btn-icon-image').evaluateAll(images => images.map(image => ({
+    src: image.getAttribute('src'),
+    loaded: image.complete && image.naturalWidth > 0 && image.naturalHeight > 0,
+  })));
+  const expectedButtonAssets = ['assets/btn/無人機管理.png', 'assets/btn/農地管理.png', 'assets/btn/設定.png', 'assets/btn/圖鑑.png'];
+  if (buttonAssetChecks.length !== 8 || buttonAssetChecks.some(image => !image.loaded)
+    || expectedButtonAssets.some(src => buttonAssetChecks.filter(image => image.src === src).length !== 2)) {
+    throw new Error('輪盤與頂部資訊介面的四種按鈕素材必須各出現兩次且成功載入：' + JSON.stringify(buttonAssetChecks));
+  }
+  checks.push('輪盤與頂部資訊介面的農地、無人機、設定、圖鑑按鈕素材均成功載入');
   if (await page.locator('#garden-menu-wheel .garden-menu-wreath').getAttribute('src') !== 'assets/wreath.webp') throw new Error('快捷輪盤未沿用花草環素材');
   const wheelGeometry = await page.evaluate(async () => {
     const wheel = document.querySelector('#garden-menu-wheel');
