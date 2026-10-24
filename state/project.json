@@ -2,10 +2,10 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 182,
-  "nextAction": "任務182已完成 Supabase 公開費率、Google OAuth／匿名登入條件與近期 breaking-change 初查。下一步需使用者確認可針對目前唯一可用的 Supabase 組織查詢專案實際報價；取得報價後，再由使用者明確批准任何非零費用，才可建立專案。",
+  "nextAction": "任務182方向已確認改為 Cloudflare Workers + D1 + Google 登入，支援跨裝置找回同一座花園。先查核 Cloudflare 官方費用、免費額度、閒置政策與 OAuth／部署條件；未經明確批准不得建立資源、部署或啟用付費服務。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
-    "任務182：確認可針對目前連線的 Supabase 組織查詢專案實際報價；任何非零費用仍需看過報價後另行明確批准。"
+    "任務182：Cloudflare 資源建立、部署與任何付費功能尚未獲批准。"
   ],
   "updatedAt": "2026-10-24"
 }
