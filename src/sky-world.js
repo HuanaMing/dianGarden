@@ -483,11 +483,9 @@
         }
       }
       const group = touching.filter((plot) => connected.has(plot.index));
-      // Farm tiles have a flat top at their plot height. When a connected farm
-      // touches this vertex, anchor the grass corner to that top instead of
-      // averaging only grass tiles (which left a visible gap at mixed seams).
-      const farmHeights = group.filter((plot) => !plot.grass).map((plot) => plot.y);
-      const heights = farmHeights.length ? farmHeights : group.map((plot) => plot.y);
+      // Every connected tile, grass or farm, uses the same shared vertex height.
+      // This lets farm blocks slope too while keeping mixed grass/farm seams aligned.
+      const heights = group.map((plot) => plot.y);
       return heights.reduce((sum, height) => sum + height, 0) / heights.length;
     },
   });
@@ -919,18 +917,9 @@
       const wetness = Math.max(rainWetness, dryingWetness, wateringWetness);
       const wet = wetness > 0.001;
       let plantBaseY = plotY;
-      if (plot?.grassOnly) {
-        const surfaceHeightAt = addGrassRamp(positions, colors, i, x, z, half, plotY);
-        plantBaseY = surfaceHeightAt(x, z);
-        addGrassTexture(positions, colors, x, z, half, plotY, [0.43, 0.68, 0.39], surfaceHeightAt);
-      }
-      else {
-        addBox(positions, colors, x - half, plotY - 0.5, z - half, x + half, plotY, z + half, {
-          top: [0.43, 0.68, 0.39], front: [0.57, 0.37, 0.27], right: [0.48, 0.31, 0.25],
-          back: [0.58, 0.39, 0.28], left: [0.51, 0.33, 0.25], bottom: [0.4, 0.28, 0.24],
-        });
-        addGrassTexture(positions, colors, x, z, half, plotY, [0.43, 0.68, 0.39]);
-      }
+      const surfaceHeightAt = addGrassRamp(positions, colors, i, x, z, half, plotY);
+      plantBaseY = surfaceHeightAt(x, z);
+      addGrassTexture(positions, colors, x, z, half, plotY, [0.43, 0.68, 0.39], surfaceHeightAt);
       const bed = TILE * 0.66;
       const drySoil = { top: [0.66, 0.45, 0.31], front: [0.57, 0.38, 0.28], right: [0.53, 0.35, 0.27], back: [0.6, 0.4, 0.29], left: [0.56, 0.37, 0.27], bottom: [0.5, 0.34, 0.26] };
       const wetSoil = { top: [0.43, 0.29, 0.2], front: [0.39, 0.26, 0.19], right: [0.36, 0.24, 0.18], back: [0.41, 0.27, 0.2], left: [0.38, 0.25, 0.19], bottom: [0.34, 0.23, 0.18] };
