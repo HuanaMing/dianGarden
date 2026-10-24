@@ -180,6 +180,30 @@ try {
     throw new Error('輪盤與頂部資訊介面的四種按鈕素材必須各出現兩次且成功載入：' + JSON.stringify(buttonAssetChecks));
   }
   checks.push('輪盤與頂部資訊介面的農地、無人機、設定、圖鑑按鈕素材均成功載入');
+  const wheelAccessibility = await page.locator('#garden-menu-wheel [data-wheel-action]').evaluateAll(buttons => buttons.map(button => ({
+    action: button.dataset.wheelAction,
+    label: button.getAttribute('aria-label'),
+    role: button.getAttribute('role'),
+    visibleLabel: [...button.querySelectorAll('small')].some(label => getComputedStyle(label).display !== 'none' && label.textContent.trim() !== ''),
+  })));
+  if (wheelAccessibility.length !== 6 || wheelAccessibility.some(button => button.role !== 'menuitem' || !button.label || button.visibleLabel)) {
+    throw new Error('輪盤六個選項必須保留無障礙名稱且不顯示文字標籤：' + JSON.stringify(wheelAccessibility));
+  }
+  const wheelOverlayStyle = await page.locator('#garden-menu-wheel .wheel-icon-overlay').evaluateAll(nodes => nodes.map(node => ({
+    action: node.dataset.wheelIcon,
+    clipPath: getComputedStyle(node).clipPath,
+    pointerEvents: getComputedStyle(node).pointerEvents,
+    zIndex: Number.parseInt(getComputedStyle(node).zIndex, 10),
+    imageWidth: Number.parseFloat(getComputedStyle(node.querySelector('img')).width),
+    imageHeight: Number.parseFloat(getComputedStyle(node.querySelector('img')).height),
+    filter: getComputedStyle(node.querySelector('img')).filter,
+    loaded: node.querySelector('img').complete && node.querySelector('img').naturalWidth > 0,
+  })));
+  if (wheelOverlayStyle.length !== 4 || wheelOverlayStyle.some(icon => icon.clipPath !== 'none' || icon.pointerEvents !== 'none' || icon.zIndex < 1
+    || icon.imageWidth !== 35 || icon.imageHeight !== 35 || !icon.filter.includes('drop-shadow') || !icon.filter.includes('rgb(255, 255, 255)') || !icon.loaded)) {
+    throw new Error('桌面版四個圖示需位於不受扇形裁切的獨立覆蓋層、尺寸35px並具白色外框：' + JSON.stringify(wheelOverlayStyle));
+  }
+  checks.push('六個輪盤選項保留 aria-label 且無文字標籤；桌面四個圖示為35px、位於裁切層外並具白框');
   if (await page.locator('#garden-menu-wheel .garden-menu-wreath').getAttribute('src') !== 'assets/wreath.webp') throw new Error('快捷輪盤未沿用花草環素材');
   const wheelGeometry = await page.evaluate(async () => {
     const wheel = document.querySelector('#garden-menu-wheel');
@@ -320,6 +344,26 @@ try {
   const mainViewport = await page.locator('meta[name="viewport"]').getAttribute('content');
   if (!mainViewport?.includes('user-scalable=no') || !mainViewport.includes('maximum-scale=1')) throw new Error('主畫面 viewport 未限制瀏覽器頁面縮放');
   await page.screenshot({ path: `${outputDir}/garden-mobile.png`, fullPage: true });
+  const mobileFrameBox = await page.locator('.world-frame').boundingBox();
+  const mobileWheelOpened = await page.evaluate(({ x, y }) => window.gardenMenuWheel.openAt(x, y, 91), {
+    x: mobileFrameBox.x + mobileFrameBox.width / 2,
+    y: mobileFrameBox.y + mobileFrameBox.height / 2,
+  });
+  if (!mobileWheelOpened) throw new Error('手機版無法開啟快捷輪盤以進行圖示驗收');
+  const mobileWheelIcons = await page.locator('#garden-menu-wheel .wheel-icon-overlay').evaluateAll(nodes => nodes.map(node => {
+    const image = node.querySelector('img'), rect = image.getBoundingClientRect();
+    const wheel = document.querySelector('#garden-menu-wheel').getBoundingClientRect();
+    const dx = rect.left + rect.width / 2 - (wheel.left + wheel.width / 2);
+    const dy = rect.top + rect.height / 2 - (wheel.top + wheel.height / 2);
+    return { action: node.dataset.wheelIcon, width: parseFloat(getComputedStyle(image).width), height: parseFloat(getComputedStyle(image).height), radius: Math.hypot(dx, dy), loaded: image.complete && image.naturalWidth > 0 };
+  }));
+  if (mobileWheelIcons.length !== 4 || mobileWheelIcons.some(icon => icon.width !== 32 || icon.height !== 32 || Math.abs(icon.radius - 100) > 2 || !icon.loaded)) {
+    throw new Error('手機版四個圖示需為32px並沿圓環外側定位：' + JSON.stringify(mobileWheelIcons));
+  }
+  await page.screenshot({ path: `${outputDir}/garden-wheel-mobile.png`, fullPage: true });
+  await page.keyboard.press('Escape');
+  if (await page.locator('#garden-menu-wheel').isVisible()) throw new Error('手機版快捷輪盤無法透過 Escape 關閉');
+  checks.push('手機版四個圖示為32px，徑向距離100px且素材載入正常；輪盤可正常關閉');
   await page.locator('#farm-management-toggle').click();
   await page.locator('[data-plot-button="0"]').click();
   const deleteButtonBounds = await page.locator('#farm-dialog [data-delete-plot]').boundingBox();
