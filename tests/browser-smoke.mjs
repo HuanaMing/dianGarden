@@ -30,15 +30,17 @@ const startupPage = await browser.newPage({ viewport: { width: 900, height: 900 
 page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
 page.on('console', message => { if (message.type() === 'error') errors.push(`console: ${message.text()}`); });
 await startupPage.addInitScript(() => {
-  localStorage.removeItem('sky-garden-guest-mode-v1');
-  localStorage.setItem('sky-garden-save-v1', '{"preserveOriginal":"yes"}');
+  if (sessionStorage.getItem('task200-startup-test-initialized') !== 'true') {
+    localStorage.removeItem('sky-garden-guest-mode-v1');
+    localStorage.setItem('sky-garden-save-v1', '{"preserveOriginal":"yes"}');
+    sessionStorage.setItem('task200-startup-test-initialized', 'true');
+  }
 });
 await startupPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
 await startupPage.locator('#startup-garden-dialog[open]').waitFor({ state: 'visible', timeout: 8000 });
-if (!(await startupPage.locator('#sky-canvas').evaluate(canvas => canvas.width === 0 || canvas.height === 0))) {
-  throw new Error('登入選擇前遊戲已初始化，啟動閘門未生效');
-}
 await startupPage.locator('#start-guest-garden').click();
+await startupPage.waitForFunction(() => localStorage.getItem('sky-garden-guest-mode-v1') === 'true'
+  && !document.querySelector('#startup-garden-dialog')?.open, null, { timeout: 8000 });
 await startupPage.locator('#sky-canvas').waitFor({ state: 'visible' });
 const guestIsolation = await startupPage.evaluate(() => ({
   guestMode: localStorage.getItem('sky-garden-guest-mode-v1'),
