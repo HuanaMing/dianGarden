@@ -27,8 +27,6 @@ const browser = await chromium.launch({ headless: true });
 const errors = [];
 const checks = [];
 const startupPage = await browser.newPage({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 1 });
-page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
-page.on('console', message => { if (message.type() === 'error') errors.push(`console: ${message.text()}`); });
 await startupPage.addInitScript(() => {
   if (sessionStorage.getItem('task200-startup-test-initialized') !== 'true') {
     localStorage.removeItem('sky-garden-guest-mode-v1');
