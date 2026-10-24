@@ -1,4 +1,3 @@
-ALTER TABLE player_saves ADD COLUMN browser_id TEXT;
 ALTER TABLE player_saves ADD COLUMN opened_at INTEGER;
 ALTER TABLE player_saves ADD COLUMN saved_at INTEGER;
 
