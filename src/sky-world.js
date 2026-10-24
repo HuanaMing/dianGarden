@@ -454,6 +454,13 @@
       });
       return sides;
     },
+    getCornerHeights(edgeHeights, centerY) {
+      const north = Number.isFinite(edgeHeights.north) ? edgeHeights.north : centerY;
+      const east = Number.isFinite(edgeHeights.east) ? edgeHeights.east : centerY;
+      const south = Number.isFinite(edgeHeights.south) ? edgeHeights.south : centerY;
+      const west = Number.isFinite(edgeHeights.west) ? edgeHeights.west : centerY;
+      return [(north + west) / 2, (north + east) / 2, (south + east) / 2, (south + west) / 2];
+    },
   });
   function addGrassRamp(positions, colors, index, x, z, half, y) {
     const connections = window.dianGardenGrassRampLogic.getConnections(plotPositions, plotStates, index, TILE, 0.5);
