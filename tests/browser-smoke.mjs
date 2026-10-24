@@ -417,12 +417,26 @@ try {
     || environmentCheck.rainEndStart !== 1 || Math.abs(environmentCheck.rainEndMid - 0.6) > 0.001 || environmentCheck.clearStart !== 0
     || environmentCheck.logicalRainBefore !== false || environmentCheck.logicalRainStart !== true || environmentCheck.logicalRainEnd !== false) throw new Error('晴雨視覺漸變應只在交替前五秒且不應提前改變遊戲天氣狀態：' + JSON.stringify(environmentCheck));
   checks.push('日夜漸變每秒線性進度、晴雨交替前 5 秒視覺過渡通過');
+  await touchPage.evaluate(() => {
+    window.__touchPointerEvents = [];
+    ['pointerdown', 'pointerup', 'pointercancel', 'pointermove'].forEach(type => {
+      document.addEventListener(type, event => window.__touchPointerEvents.push({
+        type, pointerId: event.pointerId, pointerType: event.pointerType,
+        x: event.clientX, y: event.clientY, target: event.target?.id || event.target?.className || event.target?.tagName,
+      }), true);
+    });
+  });
   const cdp = await touchPage.context().newCDPSession(touchPage);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: touchX, y: touchY, id: 1 }] });
   await touchPage.waitForTimeout(100);
+  const touchState = await touchPage.evaluate(() => ({
+    ringExists: Boolean(document.querySelector('.touch-hold-ring')),
+    events: window.__touchPointerEvents,
+    activePointers: document.querySelectorAll('.touch-feedback-layer .touch-hold-ring').length,
+  }));
+  if (!touchState.ringExists) throw new Error('單指觸控後長按環被提前移除：' + JSON.stringify(touchState));
   const touchRing = touchPage.locator('.touch-hold-ring');
-  if (await touchRing.count() !== 1) throw new Error('單指按下時未建立長按環形進度');
-  if (await touchRing.evaluate(element => getComputedStyle(element).visibility) !== 'hidden') throw new Error('手機長按環未延遲 200ms 顯示');
+  if (await touchRing.evaluate(element => getComputedStyle(element).visibility) !== 'hidden') throw new Error('手機長按環未延遲 200ms 顯示：' + JSON.stringify(touchState));
   await touchPage.waitForTimeout(120);
   if (await touchRing.evaluate(element => getComputedStyle(element).visibility) !== 'visible') throw new Error('手機長按環在按下 200ms 後仍未顯示');
   await touchPage.waitForTimeout(480);
