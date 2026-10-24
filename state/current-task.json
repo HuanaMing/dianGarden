@@ -2,9 +2,8 @@
   "name": "任務182：Cloudflare D1 跨裝置雲端存檔",
   "status": "in_progress",
   "pendingApprovals": [
-    "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
-    "任務182：建立 Cloudflare D1／Worker、建立 Google OAuth Web Client 與部署外部 API 尚未獲批准；任何付費功能須另行明確批准。"
+    "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "已完成 Worker API 原型與遊戲前端登入／同步 UI 整合，設定仍為空值因此不會連線。下一步確認 GitHub Actions 測試結果、正式 Pages origin，並等待使用者另行批准建立 D1／Worker 與 Google OAuth client；未批准前不部署外部 API。",
-  "result": "任務182已新增 Cloudflare Worker API、D1 migration、Wrangler 範本、冒煙測試與 CI；前端已新增跨裝置存檔區、Google Identity Services 登入流程、雲端載入／上傳／衝突選擇及本機存檔事件同步。src/cloud-save-config.js 目前 Google Client ID 與 API URL 都是空值，故雲端功能尚未啟用。沒有建立 Cloudflare 資源或部署 Worker。GitHub Actions 實際測試結果尚無法確認。"
+  "nextAction": "Cloudflare D1／Worker 與 Google OAuth 已配置。使用者實測可登入、上傳雲端，另一台裝置可找到雲端花園；載入後僅重新整理的問題已修正，正在等待 Pages 部署後重新測試完整載入流程。",
+  "result": "已配置 Worker／D1、Google OAuth 與前端 API。跨裝置可登入並找到雲端存檔，但首次載入時舊頁面的離頁自動存檔可能覆蓋剛寫入的雲端資料。已在 game.js 加入還原事件保護，cloud-save.js 在重新載入前發出該事件，避免 pagehide／visibilitychange 再寫入舊進度。尚待 Pages 部署及使用者跨裝置實測。"
 }
