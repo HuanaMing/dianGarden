@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 201,
-  "nextAction": "任務201已提交全畫面管理介面樣式與 Playwright 驗收更新；等待 GitHub Actions 瀏覽器 smoke test 結果，若失敗則依工作日誌修正。",
+  "nextAction": "任務201程式、Playwright 瀏覽器驗收與 GitHub Pages 部署工作流程均成功；等待使用者實際遊玩確認三個管理介面全畫面覆蓋與操作體驗。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
