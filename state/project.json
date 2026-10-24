@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 182,
-  "nextAction": "任務182本輪 stale_session 離線提示已由使用者驗收。Worker／D1 與前端同步仍是未配置原型，尚未配置真實 Google Client ID／API URL。下一步依批准流程處理外部資源與部署；不得將原型描述為已上線。",
+  "activeTask": null,
+  "nextAction": "任務182已由使用者確認整體驗收完成，並回報 Cloudflare Worker／D1 已成功部署；完成紀錄位於 tasks/done/182-cloud-save-sync.md。下一步選擇其他 active／inbox 任務。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務182：建立 Cloudflare D1／Worker、建立 Google OAuth Web Client 與部署外部 API 尚未獲批准；任何付費功能須另行明確批准。"
