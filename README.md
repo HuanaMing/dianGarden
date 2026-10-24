@@ -47,4 +47,6 @@
 - `logs/task-history.md`：已執行任務的結果摘要。
 
 
+- `src/cloud-save.js`、`src/cloud-save-config.js`：跨裝置雲端存檔原型與公開設定入口；目前尚未配置真實 Google Client ID／Worker API URL，雲端服務未部署。
+
 農地操作視窗可派無人機澆水。每株作物可澆一次，澆水後 8 秒內以 2 倍速度生長；工作會加入同一條無人機佇列。自動模式也會為尚未成熟且未澆水的作物安排一次澆水。
