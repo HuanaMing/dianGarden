@@ -4,6 +4,6 @@
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "執行 GitHub Actions Playwright smoke test；確認五項輪盤滑動選取、面板互斥及原有地塊長按／雙指縮放行為。",
+  "nextAction": "等待部署後實際驗收；本次連線沒有可用瀏覽器裝置可執行 Playwright。",
   "result": "已加入輪盤 DOM 與樣式；空白場景長按約500ms會開啟輪盤，並取消相機旋轉手勢。無人機、農地管理與設定面板已改為互斥；自動回歸測試已加入，結果待 CI 確認。"
 }
