@@ -158,10 +158,13 @@
       cloudRevision = cloudSave ? cloudSave.revision : 0;
       const local = readLocalSave();
       if (cloudSave) {
-        // Cloud is authoritative: restore it before allowing automatic uploads.
+        // Restore a cloud revision only once. Startup may update volatile timestamps
+        // after offline simulation, so an already accepted revision must not trigger a reload loop.
         const cloudSignature = signatureOf(cloudSave);
         const localSignature = signatureOf(local);
-        if (cloudSignature !== localSignature) {
+        const meta = readMeta();
+        const previouslyLoadedSameRevision = meta.userSub === currentSub && meta.revision === cloudRevision;
+        if (cloudSignature !== localSignature && !previouslyLoadedSameRevision) {
           localStorage.setItem(STORAGE_KEY, cloudSave.saveData);
           localStorage.setItem(VARIANTS_KEY, cloudSave.variantsData);
           localStorage.setItem(AUTO_CROPS_KEY, cloudSave.autoCropsData);
