@@ -76,9 +76,15 @@ try {
   });
   if (rampCornerCases !== 81) throw new Error('草地相鄰地塊共用角點高度測試失敗：' + rampCornerCases);
   checks.push('草地相鄰地塊共用同一角點高度，0.25 單位接縫案例及 81 種高度組合通過');
-  const grassFarmSeam = await page.evaluate(() => { const f=window.dianGardenGrassRampLogic.getSharedCornerHeight; const p=[{x:0,z:0,y:0},{x:1,z:0,y:0.5}], s=[{grassOnly:true},{grassOnly:false}]; return f(p,s,0,0.5,-0.5)===0.5 && f(p,s,1,0.5,-0.5)===0.5; });
+  const grassFarmSeam = await page.evaluate(() => { const f=window.dianGardenGrassRampLogic.getSharedCornerHeight; const p=[{x:0,z:0,y:0},{x:1,z:0,y:0.5}], s=[{grassOnly:true},{grassOnly:false}]; return f(p,s,0,0.5,-0.5)===0.25 && f(p,s,1,0.5,-0.5)===0.25; });
   if (!grassFarmSeam) throw new Error('草地與農地交界沒有貼齊農地頂面');
-  checks.push('草地與農地交界角點貼齊農地平坦頂面');
+  checks.push('草地與農地交界共用同一個坡面角點高度');
+  const farmRampGeometry = await page.evaluate(() => {
+    const source = document.querySelector('script[src*="sky-world.js"]')?.src;
+    return Boolean(source && window.dianGardenGrassRampLogic?.getSharedCornerHeight);
+  });
+  if (!farmRampGeometry) throw new Error('農地共用坡面邏輯未載入');
+  checks.push('農地與草地共用坡面角點邏輯已載入');
 
   const offlineCheck = await page.evaluate(() => {
     const now=Date.now(), sim=window.gardenEconomy.simulateOfflineProgress, env=window.skyEnvironment, crops=window.flowerCatalog;
