@@ -1874,6 +1874,10 @@
     button.setAttribute('aria-pressed', 'false');
     button.addEventListener('click', () => runAction(button.dataset.wheelAction));
   });
+  wheel.querySelectorAll('[data-wheel-icon]').forEach((icon) => {
+    const index = actions.indexOf(icon.dataset.wheelIcon);
+    if (index >= 0) icon.style.setProperty('--wheel-angle', `${index * 60}deg`);
+  });
   window.gardenMenuWheel = {
     isOpen: () => !wheel.hidden,
     openAt(clientX, clientY, id) {
