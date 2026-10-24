@@ -40,6 +40,8 @@
 - `tasks/`：任務佇列，按狀態分類。
 - `assets/flowers/`：花卉 PNG 素材集中存放處，目前收納十一種花卉的圖片素材。
 - `docs/`：架構及決策紀錄。
+- `tests/browser-smoke.mjs`：Playwright 桌面／手機瀏覽器回歸與視覺規格驗收。
+- `.github/workflows/browser-check.yml`：自動準備靜態測試站、執行 Chromium 驗收，並保存截圖 artifact。
 - `docs/flower-background.md`：花卉花語、生長節奏與代表株型資料及來源。
 - `state/`：專案與目前任務狀態的 JSON 紀錄。
 - `logs/task-history.md`：已執行任務的結果摘要。
