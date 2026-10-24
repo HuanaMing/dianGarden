@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 196,
-  "nextAction": "任務196程式修改已提交；執行 Playwright 與語法檢查，驗證農地土色頂面、中心附著與坡面紋理。",
+  "activeTask": null,
+  "nextAction": "任務196：農地坡面草皮外露與植物中心附著修正已完成；Playwright 自動驗收通過，實際遊戲畫面尚未人工檢查。等待下一項任務指示。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
