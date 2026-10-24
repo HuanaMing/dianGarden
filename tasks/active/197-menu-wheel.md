@@ -21,4 +21,6 @@
 - 已更新 src/styles.css：移除選項底板與邊框，選取時放大對應 60 度花草環區段，素材 opacity 設為 1 且 visibility visible。
 - 已更新 tests/browser-smoke.mjs，加入即時旋轉、放開退出、花草環可見度及無底板樣式檢查。
 - 已更新 docs/architecture.md。
-- 尚待 GitHub Actions／實際瀏覽器結果確認，不標記為完成。
+- 靜態驗收（2026-10-24）：確認六個選項與事件流程存在；旋轉區段會在 pointermove 立即關閉輪盤並派發旋轉開始事件，pointerup／pointercancel 會派發結束事件；花草環 CSS 設為 opacity:1、visibility:visible，選取區段有 scale(1.18)。
+- 動態驗收尚未完成：目前沒有可用的遠端瀏覽器裝置（已連線裝置為 Offline），而 GitHub Actions 只有 Pages 部署流程，未執行 tests/browser-smoke.mjs；目前 commit 的狀態檢查也沒有回報項目。不能據此宣稱手機／桌面互動測試通過。
+- 任務狀態維持進行中，待取得可用瀏覽器後驗證即時旋轉、放開退出、地塊拖曳、雙指縮放與三面板互斥。
