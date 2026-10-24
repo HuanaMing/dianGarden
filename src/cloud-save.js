@@ -198,6 +198,13 @@
     } finally {
       syncBusy = false;
       updateButtons(Boolean(idToken));
+      if (syncEnabled && idToken) {
+        const latestSignature = signatureOf(readLocalSave());
+        if (latestSignature && latestSignature !== lastUploadedSignature) {
+          clearTimeout(pendingSyncTimer);
+          pendingSyncTimer = setTimeout(() => uploadLocal({ automatic: true }), 1200);
+        }
+      }
     }
   }
 
