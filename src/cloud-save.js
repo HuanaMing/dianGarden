@@ -5,17 +5,9 @@
   const VARIANTS_KEY = 'sky-garden-flower-variants-v1';
   const AUTO_CROPS_KEY = 'sky-garden-auto-crops-v1';
   const SYNC_META_KEY = 'sky-garden-cloud-sync-v1';
-  const BROWSER_ID_KEY = 'sky-garden-browser-id-v1';
-  const sessionOpenedAt = Date.now();
-  function getBrowserId() {
-    let id = localStorage.getItem(BROWSER_ID_KEY);
-    if (!id) {
-      id = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), (v) => v.toString(16).padStart(2, '0')).join('');
-      localStorage.setItem(BROWSER_ID_KEY, id);
-    }
-    return id;
-  }
-  const browserId = getBrowserId();
+  const LEGACY_BROWSER_ID_KEY = 'sky-garden-browser-id-v1';
+  let sessionOpenedAt = 0;
+  try { localStorage.removeItem(LEGACY_BROWSER_ID_KEY); } catch (_) { /* Ignore unavailable local storage. */ }
   let hasResolvedStartupCloud = false;
   let resolveStartupCloud;
   window.diangardenCloudReady = new Promise((resolve) => { resolveStartupCloud = resolve; });
@@ -115,7 +107,6 @@
       method,
       headers: {
         Authorization: 'Bearer ' + idToken,
-        ...(body ? { 'Content-Type': 'application/json' } : {}),\n        'X-DianGarden-Browser-Id': browserId,\n        'X-DianGarden-Opened-At': String(sessionOpenedAt),
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
       cache: 'no-store',
@@ -148,6 +139,8 @@
       saveData: save.saveData,
       variantsData: save.variantsData,
       autoCropsData: save.autoCropsData,
+      openedAt: sessionOpenedAt,
+      savedAt: (() => { try { const parsed = JSON.parse(save.saveData); return Number.isSafeInteger(parsed.savedAt) && parsed.savedAt > 0 ? parsed.savedAt : Date.now(); } catch (_) { return Date.now(); } })(),
     };
   }
 
@@ -158,6 +151,7 @@
     if (!quiet) setStatus('正在檢查雲端存檔…');
     try {
       const result = await apiRequest('GET');
+      if (Number.isSafeInteger(result.openedAt) && result.openedAt > 0) sessionOpenedAt = result.openedAt;
       cloudSave = result.status === 'ok' ? result.save : null;
       cloudRevision = cloudSave ? cloudSave.revision : 0;
       const local = readLocalSave();
