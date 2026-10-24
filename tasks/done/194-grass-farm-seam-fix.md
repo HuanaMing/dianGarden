@@ -12,7 +12,7 @@
 ## 驗收
 - 草地與農地交界的程式修正已推送。
 - 初始 Playwright workflow 已成功：run 40064256204。
-- 新增交界回歸測試後的 workflow 正在執行，需以 run 40064288882 的最終結果確認。
+- 新增交界回歸測試後的 GitHub Actions Playwright workflow 通過：run 40064288882。
 - 尚未人工檢查實際遊戲截圖。
 
 ## 修改檔案
