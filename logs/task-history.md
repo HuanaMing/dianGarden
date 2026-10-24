@@ -1551,3 +1551,13 @@
 - 驗證：`src/garden-economy.js` 與 `src/game.js` 通過 JavaScript 語法解析；離線上限、關閉自動模式、手動地塊、純草地、空選花種、收起無人機、低電量夜間、低金幣、降雨交界、重複結算與價格單調性等模型測試通過。
 - 限制：未執行瀏覽器驗收；離線飛行時間使用直線距離與垂直航段估算，尚未以 WebGL 實際避障路徑校準。詳細公式、回本表及限制見 `tasks/done/191-economic-balance-and-offline-simulation.md`。
 - 檔案：`src/garden-economy.js`、`src/game.js`、`src/index.html`、`README.md`、`docs/architecture.md`、`docs/desicions.md`、`state/project.json`、`state/current-task.json`、`tasks/done/191-economic-balance-and-offline-simulation.md`。
+
+## 2026-10-24 — 任務192：手工地塊計數與自動地塊回本節奏調整
+
+- 完成：農地管理列表隱藏手工地塊並以自動地塊連續編號；手工地塊仍保留在 3D 場景與存檔中，可透過場景操作。收合介面的地塊數字改為自動地塊數。
+- 計數：新增 `getAutomaticPlotCount()`，土地價格與顯示總數只計自動地塊；收成淨利倍率繼續計入所有非純草地地塊，包括手工地塊。
+- 新價格（現有自動地塊數 → 下一塊價格）：3→143、4→170、5→208、6→251、7→294、8→339、9→413、10→491、15→945、20→1489、28→3126 金幣。
+- 以任務191既有邊際收益模型按價格比例換算的回本估算：3 塊 9.7 分鐘、6 塊 10.3 分鐘、10 塊 29.9 分鐘、15 塊 33.5 分鐘、20 塊 131 分鐘、28 塊 193 分鐘。這些是估算，不是瀏覽器實測。
+- 驗證：`src/game.js` 與 `src/garden-economy.js` 語法檢查通過；手工地塊計數與價格不變、自動地塊推進價格、手工地塊影響淨利倍率、純草地排除、價格單調性、管理列表保留原始索引及文件同步等 9 項檢查全部通過。
+- 限制：尚未執行瀏覽器驗收；需在實際 UI 確認農地管理列表及場景操作。
+- 檔案：`src/game.js`、`src/garden-economy.js`、`README.md`、`docs/architecture.md`、`docs/desicions.md`、`tasks/done/192-manual-plots-and-land-payback.md`。
