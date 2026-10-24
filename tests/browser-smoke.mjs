@@ -171,12 +171,22 @@ try {
   const wheelActions = await page.locator('#garden-menu-wheel [data-wheel-action]').evaluateAll(nodes => nodes.map(node => node.dataset.wheelAction));
   if (wheelActions.join(',') !== 'drone,farm,settings,catalog,collapse,rotate') throw new Error('快捷輪盤選項不完整或順序錯誤：' + wheelActions.join(','));
   if (await page.locator('#garden-menu-wheel .garden-menu-wreath').getAttribute('src') !== 'assets/wreath.webp') throw new Error('快捷輪盤未沿用花草環素材');
-  const wheelGeometry = await page.evaluate(() => ({
-    centerContent: getComputedStyle(document.querySelector('#garden-menu-wheel'), '::before').content,
-    sectorClip: getComputedStyle(document.querySelector('#garden-menu-wheel [data-wheel-action="drone"]')).clipPath,
-    wheelBackground: getComputedStyle(document.querySelector('#garden-menu-wheel')).backgroundColor,
-  }));
-  if (wheelGeometry.centerContent !== 'none' || !wheelGeometry.sectorClip.startsWith('polygon(') || wheelGeometry.wheelBackground !== 'rgba(0, 0, 0, 0)') throw new Error('快捷輪盤中心或 60 度弧形樣式不符合設計');
+  const wheelGeometry = await page.evaluate(() => {
+    const wheel = document.querySelector('#garden-menu-wheel');
+    const sector = wheel.querySelector('[data-wheel-action="drone"]');
+    const wreath = wheel.querySelector('.garden-menu-wreath');
+    const style = getComputedStyle(sector);
+    return {
+      centerContent: getComputedStyle(wheel, '::before').content,
+      sectorClip: style.clipPath,
+      sectorBackground: style.backgroundColor,
+      sectorBorder: style.borderWidth,
+      selectedTransform: getComputedStyle(sector.classList.add('is-selected') || sector).transform,
+      wreathOpacity: getComputedStyle(wreath).opacity,
+      wreathVisibility: getComputedStyle(wreath).visibility,
+    };
+  });
+  if (wheelGeometry.centerContent !== 'none' || !wheelGeometry.sectorClip.startsWith('polygon(') || wheelGeometry.sectorBackground !== 'rgba(0, 0, 0, 0)' || wheelGeometry.sectorBorder !== '0px' || wheelGeometry.wreathOpacity !== '1' || wheelGeometry.wreathVisibility !== 'visible' || wheelGeometry.selectedTransform === 'none') throw new Error('花草環需無底板、透明中心、選中區放大且可見度 100%');
   const frameBox = await page.locator('.world-frame').boundingBox();
   const wheelOpened = await page.evaluate(({ x, y }) => window.gardenMenuWheel.openAt(x, y, 1), { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
   if (!wheelOpened || !(await page.locator('#garden-menu-wheel').isVisible())) throw new Error('長按快捷輪盤未能顯示');
@@ -187,10 +197,15 @@ try {
   if (!(await page.locator('#farm-management-panel').isVisible()) || await page.locator('#garden-menu-wheel').isVisible()) throw new Error('滑動輪盤選擇農地管理未正確執行');
   await page.evaluate(({ x, y }) => window.gardenMenuWheel.openAt(x, y, 1), { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
   await page.evaluate(({ x, y }) => {
-    document.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, pointerType: 'mouse', clientX: x - 70, clientY: y - 40, bubbles: true, cancelable: true }));
-    document.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, pointerType: 'mouse', clientX: x - 70, clientY: y - 40, bubbles: true, cancelable: true }));
+    const event = new PointerEvent('pointermove', { pointerId: 1, pointerType: 'mouse', clientX: x - 70, clientY: y - 40, bubbles: true, cancelable: true });
+    document.querySelector('#sky-canvas').dispatchEvent(event);
   }, { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
-  if (await page.locator('#garden-menu-wheel [data-wheel-action="rotate"]').getAttribute('aria-pressed') !== 'true') throw new Error('選擇旋轉後未啟用旋轉模式');
+  if (await page.locator('#garden-menu-wheel').isVisible()) throw new Error('滑到旋轉選項後輪盤沒有立即收起');
+  if (await page.locator('#garden-menu-wheel [data-wheel-action="rotate"]').getAttribute('aria-pressed') !== 'true') throw new Error('滑到旋轉選項後未立即進入旋轉模式');
+  await page.evaluate(({ x, y }) => {
+    document.querySelector('#sky-canvas').dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, pointerType: 'mouse', clientX: x - 70, clientY: y - 40, bubbles: true, cancelable: true }));
+  }, { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
+  if (await page.locator('#garden-menu-wheel [data-wheel-action="rotate"]').getAttribute('aria-pressed') !== 'false') throw new Error('放開指標後未退出旋轉模式');
   if (!(await page.locator('.operation-help').isVisible())) throw new Error('操作說明未移至設定面板');
   if (!(await page.locator('#avatar-mode').isVisible())) throw new Error('設定中未顯示自訂頭像控制');
   for (const selector of ['#current-version', '#latest-version', '#force-update-button']) {
