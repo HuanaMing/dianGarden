@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 198,
-  "nextAction": "任務198已替換輪盤與頂部介面四種按鈕素材，並更新 Pages 素材複製與回歸檢查；待瀏覽器／Actions 驗收。任務197的動態互動驗收仍待可用瀏覽器。",
+  "activeTask": 199,
+  "nextAction": "任務199已移除快捷輪盤六個選項的可見文字，並將四種 PNG 圖示放大為桌面版 50px、手機版 46px；待瀏覽器視覺驗收。任務197動態互動驗收仍待處理。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
