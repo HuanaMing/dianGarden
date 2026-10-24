@@ -23,6 +23,8 @@
   let persistenceWarning = '';
   let skipSaveOnExit = false;
   window.addEventListener('diangarden:restore-cloud-save', () => { skipSaveOnExit = true; });
+  let skipSaveOnExit = false;
+  window.addEventListener('diangarden:restore-cloud-save', () => { skipSaveOnExit = true; });
   function getNextPlotPosition(plots, blockedDocks = []) {
     const occupied = new Set(plots.map((plot) => `${plot.x},${plot.z}`));
     for (const plot of plots) {
