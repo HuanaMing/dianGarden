@@ -1,5 +1,5 @@
 name = "diangarden-cloud-save"
-main = "cloudflare/worker.js"
+main = "worker.js"
 compatibility_date = "2026-10-24"
 workers_dev = true
 
