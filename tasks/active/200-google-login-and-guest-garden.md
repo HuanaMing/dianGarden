@@ -25,6 +25,13 @@
 - Google script 或 API 設定不可用時，玩家仍可選擇訪客模式。
 - 相關 JavaScript 語法、入口 UI／存檔隔離測試通過；未實際執行的瀏覽器／部署驗收如實記錄。
 
-## 狀態
-- 已確認需求與訪客資料隔離方案。
-- 執行中。
+## 實作結果（2026-10-25）
+- 已新增登入入口對話框；Google 自動登入失敗後不再由固定 timeout 放行遊戲，而是等待登入／雲端檢查成功或玩家明確選擇訪客花園。
+- 已新增持久化訪客模式旗標及三組獨立儲存鍵：主存檔、花卉變種、自動選花。訪客模式下雲端模組不初始化 Google 登入或自動同步。
+- 已在設定介面加入訪客花園提示與「回到自己的花園」按鈕；返回時清除訪客旗標並重新載入。
+- 已新增 Playwright 驗收，確認入口閘門、訪客模式切換及原有本機存檔保留。
+- 驗收：GitHub Actions 瀏覽器驗收通過（[run 40119558579](https://github.com/HuanaMing/dianGarden/actions/runs/40119558579)）；同一工作流程中的 Cloudflare Worker smoke test 通過。
+- GitHub Pages 部署：含本任務前端程式的來源提交部署工作流程成功（[run 40119056401](https://github.com/HuanaMing/dianGarden/actions/runs/40119056401)）。
+- 測試環境修正：更新 Cloudflare Worker smoke test 的 Node.js 原生 crypto 初始化、session timestamp 欄位與 DB mock，讓測試符合現行 Worker session ownership 契約。
+- 修改檔案：`src/index.html`、`src/styles.css`、`src/cloud-save.js`、`src/game.js`、`tests/browser-smoke.mjs`、`tests/cloudflare-worker-smoke.mjs`、`README.md`、`docs/architecture.md`、`docs/desicions.md`、`state/project.json`、`state/current-task.json`。
+- 狀態：程式與自動化驗收已完成，**等待使用者實際遊玩驗收**；目前不移入 `tasks/done/`。
