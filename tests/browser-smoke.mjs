@@ -197,13 +197,21 @@ try {
   await page.locator('#drone-panel-toggle').click();
   if (await page.locator('#drone-panel-toggle').textContent() !== '🚁') throw new Error('無人機按鈕圖示異常，不應變成文字');
   await page.locator('#drone-panel-toggle').click();
+  const assertFullscreenPanel = async selector => {
+    const bounds = await page.locator(selector).evaluate(element => { const rect = element.getBoundingClientRect(); return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }; });
+    const frame = await page.locator('.world-frame').boundingBox();
+    if (!frame || bounds.width < frame.width - 2 || bounds.height < frame.height - 2 || Math.abs(bounds.x - frame.x) > 2 || Math.abs(bounds.y - frame.y) > 2) throw new Error('管理面板未覆蓋整個遊戲畫面：' + selector + ' ' + JSON.stringify({ bounds, frame }));
+  };
   await page.locator('#settings-toggle').click();
   if (!(await page.locator('#settings-panel').isVisible())) throw new Error('設定按鈕未能開啟設定面板');
+  await assertFullscreenPanel('#settings-panel');
   if (await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) || await page.locator('#farm-management-panel').isVisible()) throw new Error('開啟設定時未關閉無人機或農地管理面板');
   await page.locator('#farm-management-toggle').click();
   if (!(await page.locator('#farm-management-panel').isVisible()) || await page.locator('#settings-panel').isVisible() || await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open'))) throw new Error('農地管理面板沒有關閉其他兩個面板');
+  await assertFullscreenPanel('#farm-management-panel');
   await page.locator('#drone-panel-toggle').click();
   if (!(await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) ) || await page.locator('#settings-panel').isVisible() || await page.locator('#farm-management-panel').isVisible()) throw new Error('無人機面板沒有關閉其他兩個面板');
+  await assertFullscreenPanel('#drone-jobs');
   await page.locator('#settings-toggle').click();
   if (!(await page.locator('#settings-panel').isVisible()) || await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) || await page.locator('#farm-management-panel').isVisible()) throw new Error('設定面板沒有關閉其他兩個面板');
   await page.locator('#settings-toggle').click();
@@ -325,11 +333,11 @@ try {
       versionCardHeight: versionCard.height,
     };
   });
-  if (settingsPanelSize.width > 240) throw new Error('設定面板未縮窄：' + JSON.stringify(settingsPanelSize));
-  if (settingsPanelSize.avatarOptionCount !== 11 || settingsPanelSize.avatarOptionHeight > 30) throw new Error('頭像選擇器未壓縮或花種缺漏：' + JSON.stringify(settingsPanelSize));
-  if (settingsPanelSize.avatarTextLabelCount !== 0 || settingsPanelSize.avatarPickerLabelVisible || settingsPanelSize.avatarOptionContents.some(option => option.imageCount !== 1 || option.text !== '')) throw new Error('頭像選擇器仍顯示文字或缺少純像素圖：' + JSON.stringify(settingsPanelSize));
-  if (Number.parseFloat(settingsPanelSize.padding) > 9 || Number.parseFloat(settingsPanelSize.versionCardPadding) > 8) throw new Error('設定面板內距仍過大：' + JSON.stringify(settingsPanelSize));
-  checks.push('設定面板寬度、內距、版本卡片與 11 種純像素圖頭像選擇器已精簡');
+  if (settingsPanelSize.width < (await page.locator('.world-frame').evaluate(element => element.getBoundingClientRect().width)) - 2) throw new Error('設定面板未擴展至全畫面：' + JSON.stringify(settingsPanelSize));
+  if (settingsPanelSize.avatarOptionCount !== 11 || settingsPanelSize.avatarOptionHeight < 30) throw new Error('全畫面頭像選擇器尺寸或花種數量異常：' + JSON.stringify(settingsPanelSize));
+  if (settingsPanelSize.avatarTextLabelCount !== 0 || !settingsPanelSize.avatarPickerLabelVisible || settingsPanelSize.avatarOptionContents.some(option => option.imageCount !== 1 || option.text !== '')) throw new Error('全畫面頭像選擇器的標籤或純像素圖配置異常：' + JSON.stringify(settingsPanelSize));
+  if (Number.parseFloat(settingsPanelSize.padding) < 10 || Number.parseFloat(settingsPanelSize.versionCardPadding) < 10) throw new Error('全畫面設定面板內距沒有隨版面放大：' + JSON.stringify(settingsPanelSize));
+  checks.push('任務201：三個管理面板覆蓋遊戲畫面，設定內容擴展並保留11種純像素圖頭像');
 
   if (await page.locator('#avatar-flower-picker').isVisible()) throw new Error('自動頭像模式未隱藏花卉選擇介面');
   const avatarOptions = page.locator('.avatar-flower-option');
