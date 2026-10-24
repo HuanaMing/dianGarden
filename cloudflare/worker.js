@@ -21,7 +21,7 @@ function corsHeaders(request, env) {
   return {
     "access-control-allow-origin": origin,
     "access-control-allow-methods": "GET, PUT, OPTIONS",
-    "access-control-allow-headers": "Authorization, Content-Type",
+    "access-control-allow-headers": "Authorization, Content-Type, X-DianGarden-Opened-At",
     "access-control-max-age": "86400",
     "vary": "Origin",
   };
@@ -114,16 +114,17 @@ async function readRequestJson(request) {
 
 // A server-issued, monotonically increasing timestamp makes the newest GET session the owner,
 // without storing a browser/device identifier. The accepted timestamp is returned to that session.
-async function handleGetSave(userId, env) {
+async function handleGetSave(userId, request, env) {
+  const openedAt = Number(request.headers.get("X-DianGarden-Opened-At") || 0);
+  if (!Number.isSafeInteger(openedAt) || openedAt <= 0) return jsonResponse({ error: "invalid_session" }, 400);
   const row = await env.DB.prepare(
     "SELECT save_data, variants_data, auto_crops_data, schema_version, revision, updated_at, opened_at, saved_at FROM player_saves WHERE user_id = ?",
   ).bind(userId).first();
 
-  if (!row) return jsonResponse({ status: "not_found", revision: 0, openedAt: Date.now() });
-
-  const openedAt = Math.max(Date.now(), Number(row.opened_at || 0) + 1);
+  if (!row) return jsonResponse({ status: "not_found", revision: 0 });
+  if (row.opened_at != null && openedAt < row.opened_at) return jsonResponse({ error: "stale_session" }, 409);
   const claimed = await env.DB.prepare(
-    "UPDATE player_saves SET opened_at = ? WHERE user_id = ? AND (opened_at IS NULL OR opened_at < ?)",
+    "UPDATE player_saves SET opened_at = ? WHERE user_id = ? AND (opened_at IS NULL OR opened_at <= ?)",
   ).bind(openedAt, userId, openedAt).run();
   if (claimed.meta?.changes !== 1) return jsonResponse({ error: "session_claim_failed" }, 409);
 
@@ -148,6 +149,10 @@ async function handlePutSave(userId, request, env) {
   try { payload = validateSavePayload(await readRequestJson(request)); }
   catch (error) { return jsonResponse({ error: error.message }, 400); }
 
+  const sessionOpenedAt = Number(request.headers.get("X-DianGarden-Opened-At") || 0);
+  if (!Number.isSafeInteger(sessionOpenedAt) || sessionOpenedAt <= 0 || sessionOpenedAt !== payload.openedAt) {
+    return jsonResponse({ error: "invalid_session" }, 400);
+  }
   const now = new Date().toISOString();
   if (payload.baseRevision === 0) {
     const result = await env.DB.prepare(
@@ -192,7 +197,7 @@ export default {
     catch (_) { return jsonResponse({ error: "invalid_google_id_token" }, 401, headers); }
 
     try {
-      const response = request.method === "GET" ? await handleGetSave(userId, env) : await handlePutSave(userId, request, env);
+      const response = request.method === "GET" ? await handleGetSave(userId, request, env) : await handlePutSave(userId, request, env);
       const responseHeaders = new Headers(response.headers);
       for (const [key, value] of Object.entries(headers)) responseHeaders.set(key, value);
       return new Response(response.body, { status: response.status, headers: responseHeaders });
