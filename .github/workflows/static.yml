@@ -7,6 +7,7 @@ on:
     branches: ["main"]
     paths:
       - "src/**"
+      - "assets/btn/**"
       - ".github/workflows/static.yml"
 
   # Allows you to run this workflow manually from the Actions tab
@@ -90,7 +91,7 @@ jobs:
         run: python3 scripts/version-assets.py src/index.html src/version.json
 
       - name: 準備遊戲圖片資產
-        run: mkdir -p src/assets/flowers && cp assets/flowers/*.png src/assets/flowers/ && cp assets/wreath.webp src/assets/wreath.webp
+        run: mkdir -p src/assets/flowers src/assets/btn && cp assets/flowers/*.png src/assets/flowers/ && cp assets/wreath.webp src/assets/wreath.webp && cp assets/btn/*.png src/assets/btn/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
