@@ -262,7 +262,7 @@
     window.google.accounts.id.initialize({
       client_id: config.googleClientId,
       callback: handleCredential,
-      auto_select: false,
+      auto_select: true,
       cancel_on_tap_outside: true,
     });
     window.google.accounts.id.renderButton(signinNode, {
@@ -273,6 +273,7 @@
       shape: 'rectangular',
       width: 260,
     });
+    window.google.accounts.id.prompt();
   }
 
   function loadGoogleIdentity() {
