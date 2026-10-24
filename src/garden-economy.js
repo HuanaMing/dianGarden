@@ -174,7 +174,6 @@
       if (!seconds) return;
       const weather = weatherAt((time + previousTime) / 2);
       drones.forEach((drone) => {
-        if (drone.deployed === false) return;
         if (drone.job) drone.battery -= seconds * BATTERY_DRAIN_PER_SECOND;
         if (weather.isDay && !weather.isRaining) drone.battery += seconds * BATTERY_CHARGE_PER_SECOND;
         drone.battery = clamp(drone.battery, 0, 100);
