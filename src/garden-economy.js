@@ -1,0 +1,289 @@
+(() => {
+  const LAND_BASE_COST = 75;
+  const LAND_GROWTH = 0.18;
+  const LAND_EXPONENT = 1.8;
+  const DRONE_BASE_COST = 900;
+  const DRONE_GROWTH = 0.3;
+  const DRONE_EXPONENT = 2;
+  const MAX_DRONES = 8;
+  const OFFLINE_HOURS_PER_DRONE = 3;
+  const MAX_OFFLINE_MS = 24 * 60 * 60 * 1000;
+  const WATER_DURATION = 30_000;
+  const WATER_GROWTH_RATE = 1.2;
+  const BATTERY_DRAIN_PER_SECOND = 0.32;
+  const BATTERY_CHARGE_PER_SECOND = 0.44;
+  const MIN_JOB_BATTERY = 8;
+  const DAY_CYCLE_MS = 16 * 60 * 1000;
+  const RAIN_CYCLE_MS = 10 * 60 * 1000;
+  const RAIN_START_MS = 8 * 60 * 1000;
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+  function getLandCost(plotCount) {
+    const count = Math.max(3, Number.isFinite(plotCount) ? plotCount : 3);
+    return Math.min(Number.MAX_SAFE_INTEGER, Math.round(LAND_BASE_COST * (1 + LAND_GROWTH * Math.max(0, count - 3)) ** LAND_EXPONENT));
+  }
+  function getDroneCost(droneCount) {
+    const count = clamp(Number.isInteger(droneCount) ? droneCount : 1, 1, MAX_DRONES);
+    return Math.min(Number.MAX_SAFE_INTEGER, Math.round(DRONE_BASE_COST * (1 + DRONE_GROWTH * (count - 1)) ** DRONE_EXPONENT));
+  }
+  function getPlantablePlotCount(plots) {
+    return plots.filter((plot) => plot && plot.grassOnly !== true).length;
+  }
+  function getProfitMultiplier(plantablePlotCount) {
+    return Math.min(1.75, 1 + 0.025 * Math.max(0, plantablePlotCount - 3));
+  }
+  function getHarvestReward(crop, plantablePlotCount) {
+    if (!crop) return 0;
+    const seedCost = Math.max(0, Number(crop.seedCost) || 0);
+    const baseProfit = Math.max(0, (Number(crop.harvestReward) || 0) - seedCost);
+    return seedCost + Math.round(baseProfit * getProfitMultiplier(plantablePlotCount));
+  }
+  function simulateOfflineProgress(state, now, crops, environment) {
+    const departureAt = Number.isFinite(state.lastOnlineAt) ? state.lastOnlineAt : now;
+    const rawDuration = Math.max(0, now - departureAt);
+    const droneCountAtDeparture = clamp(
+      Number.isInteger(state.droneCount) ? state.droneCount : (state.drones?.length || 1),
+      1,
+      MAX_DRONES,
+    );
+    const simulatedDuration = state.autoMode === true
+      ? Math.min(rawDuration, droneCountAtDeparture * OFFLINE_HOURS_PER_DRONE * 60 * 60 * 1000, MAX_OFFLINE_MS)
+      : 0;
+    const simulationEnd = departureAt + simulatedDuration;
+    const worldTimeAt = (time) => {
+      const savedTime = Number.isFinite(state.worldTimeMs) ? state.worldTimeMs : 60_000;
+      const anchor = Number.isFinite(state.worldTimeAnchor) ? state.worldTimeAnchor : departureAt;
+      return savedTime + Math.max(0, time - anchor);
+    };
+    const weatherAt = (time) => environment.getState({
+      worldTimeMs: Number.isFinite(state.worldTimeMs) ? state.worldTimeMs : 60_000,
+      worldTimeAnchor: Number.isFinite(state.worldTimeAnchor) ? state.worldTimeAnchor : departureAt,
+    }, time);
+    const growthElapsed = (plot, time) => {
+      if (!plot || plot.crop === null || !Number.isFinite(plot.plantedAt)) return 0;
+      let elapsed = Math.max(0, time - plot.plantedAt) + (plot.growthBonusMs || 0);
+      if (Number.isFinite(plot.waterStartedAt) && Number.isFinite(plot.waterUntil)) {
+        elapsed += Math.max(0, Math.min(time, plot.waterUntil) - plot.waterStartedAt) * (WATER_GROWTH_RATE - 1);
+      }
+      return elapsed;
+    };
+    const settleWater = (plot, time) => {
+      if (!Number.isFinite(plot.waterStartedAt) || !Number.isFinite(plot.waterUntil) || time < plot.waterUntil) return;
+      plot.growthBonusMs = (plot.growthBonusMs || 0) + Math.max(0, plot.waterUntil - plot.waterStartedAt) * (WATER_GROWTH_RATE - 1);
+      delete plot.waterStartedAt;
+      delete plot.waterUntil;
+    };
+    const clearCrop = (plot) => {
+      plot.crop = null; plot.plantedAt = null; plot.plantHeight = null;
+      plot.variantId = null; plot.variantName = null; plot.variantColor = null;
+      plot.watered = false; plot.waterSource = null; plot.growthBonusMs = 0;
+      delete plot.waterStartedAt; delete plot.waterUntil;
+    };
+    const excluded = (plot) => !plot || plot.manual === true || plot.grassOnly === true;
+    const hasJob = (queue, drones, kind, index) =>
+      queue.some((job) => job.kind === kind && job.index === index)
+      || drones.some((drone) => drone.job && drone.job.kind === kind && drone.job.index === index);
+    const autoSelection = Array.isArray(state.autoCropSelection) ? state.autoCropSelection : [0];
+    let randomSeed = ((Math.floor(departureAt) >>> 0) ^ (state.plots.length * 2654435761)) >>> 0;
+    const random = () => {
+      randomSeed = (1664525 * randomSeed + 1013904223) >>> 0;
+      return randomSeed / 4294967296;
+    };
+    const queue = [];
+    const drones = (Array.isArray(state.drones) ? state.drones : []).map((drone, index) => ({
+      index,
+      deployed: drone.deployed !== false,
+      dockPosition: drone.dockPosition || { x: 0, z: 1.55, y: 0 },
+      battery: clamp(Number.isFinite(drone.battery) ? drone.battery : 100, 0, 100),
+      batteryUpdatedAt: departureAt,
+      job: null,
+      lastPlotIndex: null,
+    })).slice(0, droneCountAtDeparture);
+    while (drones.length < droneCountAtDeparture) {
+      drones.push({ index: drones.length, deployed: true, dockPosition: { x: 0, z: 1.55, y: 0 }, battery: 100, batteryUpdatedAt: departureAt, job: null, lastPlotIndex: null });
+    }
+    const commitJob = (job, time) => {
+      const plot = state.plots[job.index];
+      if (!plot || excluded(plot)) return;
+      if (job.kind === 'plant') {
+        const crop = crops[job.cropIndex];
+        if (plot.crop !== null || !crop || state.coins < crop.seedCost) return;
+        state.coins -= crop.seedCost;
+        plot.crop = job.cropIndex; plot.plantedAt = time; plot.plantHeight = 1;
+        plot.variantId = null; plot.variantName = null; plot.variantColor = null;
+        plot.watered = false; plot.waterSource = null; plot.growthBonusMs = 0;
+        delete plot.waterStartedAt; delete plot.waterUntil;
+      } else if (job.kind === 'harvest') {
+        if (plot.crop === null) return;
+        const crop = crops[plot.crop];
+        if (!crop || growthElapsed(plot, time) < crop.growTime) return;
+        state.coins += getHarvestReward(crop, getPlantablePlotCount(state.plots));
+        clearCrop(plot);
+      } else if (job.kind === 'water') {
+        const crop = crops[plot.crop];
+        if (!crop || plot.crop === null || plot.watered || weatherAt(time).isRaining || growthElapsed(plot, time) >= crop.growTime) return;
+        plot.watered = true; plot.waterSource = 'drone';
+        plot.waterStartedAt = time; plot.waterUntil = time + WATER_DURATION;
+      }
+    };
+    const planJobs = (time) => {
+      if (state.autoMode !== true) return;
+      const raining = weatherAt(time).isRaining;
+      state.plots.forEach((plot, index) => {
+        if (excluded(plot) || plot.crop === null || hasJob(queue, drones, 'harvest', index)) return;
+        const crop = crops[plot.crop];
+        if (crop && growthElapsed(plot, time) >= crop.growTime) queue.push({ kind: 'harvest', index, automatic: true });
+      });
+      state.plots.forEach((plot, index) => {
+        if (excluded(plot) || raining || plot.crop === null || plot.watered
+          || hasJob(queue, drones, 'water', index) || hasJob(queue, drones, 'harvest', index)) return;
+        const crop = crops[plot.crop];
+        if (crop && growthElapsed(plot, time) < crop.growTime) queue.push({ kind: 'water', index, automatic: true });
+      });
+      const reserved = () => queue.reduce((sum, job) => sum + (job.kind === 'plant' ? (crops[job.cropIndex]?.seedCost || 0) : 0), 0)
+        + drones.reduce((sum, drone) => sum + (drone.job?.kind === 'plant' ? (crops[drone.job.cropIndex]?.seedCost || 0) : 0), 0);
+      state.plots.forEach((plot, index) => {
+        if (excluded(plot) || plot.crop !== null || hasJob(queue, drones, 'plant', index)) return;
+        const affordable = autoSelection.map((cropIndex) => ({ cropIndex, crop: crops[cropIndex] }))
+          .filter(({ crop }) => crop && crop.seedCost <= state.coins - reserved());
+        if (affordable.length) {
+          const choice = affordable[Math.floor(random() * affordable.length)];
+          queue.push({ kind: 'plant', index, cropIndex: choice.cropIndex, automatic: true });
+        }
+      });
+    };
+    const jobTiming = (job, drone, time) => {
+      const plot = state.plots[job.index];
+      const target = plot || { x: 0, z: 0, y: 0 };
+      const start = drone.dockPosition;
+      const distance = Math.hypot((target.x || 0) - (start.x || 0), (target.z || 0) - (start.z || 0));
+      const laneY = 2 + drone.index * 0.28;
+      const idleY = 1.5 + (start.y || 0);
+      const workY = job.kind === 'water' ? 1.18 + (target.y || 0)
+        : job.kind === 'harvest' ? (crops[plot.crop]?.height || 0.5) * (plot.plantHeight || 1) + (target.y || 0) + 0.12
+          : 0.14 + (target.y || 0);
+      const hoverSeconds = job.kind === 'water' ? 1.68 : job.kind === 'expand' ? 0.7 : 0.5;
+      const outbound = Math.abs(laneY - idleY) + distance + Math.abs(laneY - workY);
+      const returning = Math.abs(laneY - workY) + distance + Math.abs(laneY - idleY);
+      const estimatedBattery = Math.max(MIN_JOB_BATTERY, (distance * 3 + 8) * BATTERY_DRAIN_PER_SECOND + 3);
+      return { startAt: time, commitAt: time + (outbound + hoverSeconds) * 1000, finishAt: time + (outbound + hoverSeconds + returning) * 1000, estimatedBattery };
+    };
+    const updateBatteries = (time, previousTime) => {
+      const seconds = Math.max(0, time - previousTime) / 1000;
+      if (!seconds) return;
+      const weather = weatherAt((time + previousTime) / 2);
+      drones.forEach((drone) => {
+        if (drone.deployed === false) return;
+        if (drone.job) drone.battery -= seconds * BATTERY_DRAIN_PER_SECOND;
+        if (weather.isDay && !weather.isRaining) drone.battery += seconds * BATTERY_CHARGE_PER_SECOND;
+        drone.battery = clamp(drone.battery, 0, 100);
+        drone.batteryUpdatedAt = time;
+      });
+    };
+    const dispatch = (time) => {
+      const available = drones.filter((drone) => drone.deployed && !drone.job)
+        .sort((a, b) => (b.battery === 100 ? 1 : 0) - (a.battery === 100 ? 1 : 0) || b.battery - a.battery || a.index - b.index);
+      for (const drone of available) {
+        let queueIndex = -1;
+        for (let index = 0; index < queue.length; index += 1) {
+          const job = queue[index];
+          const plot = state.plots[job.index];
+          if (job.kind !== 'plant' && (!plot || plot.crop === null)) continue;
+          const distance = plot ? Math.hypot((plot.x || 0) - (drone.dockPosition.x || 0), (plot.z || 0) - (drone.dockPosition.z || 0)) : 0;
+          const required = Math.max(MIN_JOB_BATTERY, (distance * 3 + 8) * BATTERY_DRAIN_PER_SECOND + 3);
+          if (drone.battery < required) continue;
+          if (drones.some((other) => other.job && other.job.kind !== 'expand' && other.job.index === job.index)) continue;
+          queueIndex = index; break;
+        }
+        if (queueIndex < 0) continue;
+        const [job] = queue.splice(queueIndex, 1);
+        const timing = jobTiming(job, drone, time);
+        if (drone.battery < timing.estimatedBattery) { queue.unshift(job); continue; }
+        drone.job = { ...job, ...timing, committed: false };
+      }
+    };
+    const applyRain = (time) => {
+      state.plots.forEach((plot) => {
+        if (plot.crop === null) return;
+        if (Number.isFinite(plot.waterStartedAt) && Number.isFinite(plot.waterUntil)) {
+          plot.growthBonusMs = (plot.growthBonusMs || 0) + Math.max(0, Math.min(time, plot.waterUntil) - plot.waterStartedAt) * (WATER_GROWTH_RATE - 1);
+        }
+        plot.watered = true; plot.waterSource = 'rain';
+        plot.waterStartedAt = time; plot.waterUntil = time + WATER_DURATION;
+      });
+    };
+    let time = departureAt;
+    let previousWeather = weatherAt(time);
+    let previousTime = time;
+    if (state.autoMode === true && simulatedDuration > 0) {
+      while (time <= simulationEnd) {
+        const weather = weatherAt(time);
+        if (!previousWeather.isRaining && weather.isRaining) applyRain(time);
+        state.plots.forEach((plot) => settleWater(plot, time));
+        updateBatteries(time, previousTime);
+        drones.forEach((drone) => {
+          const job = drone.job;
+          if (!job) return;
+          if (!job.committed && job.commitAt <= time) {
+            job.committed = true;
+            commitJob(job, job.commitAt);
+          }
+          if (job.finishAt <= time) {
+            if (!job.committed) { job.committed = true; commitJob(job, job.commitAt); }
+            drone.lastPlotIndex = job.index;
+            drone.job = null;
+          }
+        });
+        planJobs(time);
+        dispatch(time);
+        previousWeather = weather;
+        previousTime = time;
+        time += 1000;
+      }
+    }
+    // Natural weather and growth continue after the automated-work budget is exhausted.
+    if (rawDuration > simulatedDuration) {
+      const startWorld = worldTimeAt(simulationEnd);
+      const phase = ((startWorld % RAIN_CYCLE_MS) + RAIN_CYCLE_MS) % RAIN_CYCLE_MS;
+      const nextRainDelay = phase < RAIN_START_MS ? RAIN_START_MS - phase : RAIN_CYCLE_MS - phase + RAIN_START_MS;
+      const nextRainAt = simulationEnd + nextRainDelay;
+      if (nextRainAt <= now) {
+        state.plots.forEach((plot) => {
+          if (plot.crop !== null && plot.watered !== true) {
+            if (Number.isFinite(plot.waterStartedAt) && Number.isFinite(plot.waterUntil)) {
+              plot.growthBonusMs = (plot.growthBonusMs || 0) + Math.max(0, Math.min(nextRainAt, plot.waterUntil) - plot.waterStartedAt) * (WATER_GROWTH_RATE - 1);
+            }
+            plot.watered = true; plot.waterSource = 'rain';
+            plot.waterStartedAt = nextRainAt; plot.waterUntil = nextRainAt + WATER_DURATION;
+          }
+        });
+      }
+    }
+    state.plots.forEach((plot) => settleWater(plot, now));
+    const endWorldTime = worldTimeAt(now);
+    state.worldTimeMs = endWorldTime;
+    state.worldTimeAnchor = now;
+    state.lastObservedRaining = weatherAt(now).isRaining;
+    state.drones.forEach((drone) => { drone.batteryUpdatedAt = now; });
+    state.lastOfflineReturnAt = now;
+    state.lastOnlineAt = now;
+    if (rawDuration <= 0) return null;
+    return {
+      departureAt, returnAt: now, rawDuration, simulatedDuration,
+      automationEnabled: state.autoMode === true,
+      droneCountAtDeparture,
+      capped: rawDuration > simulatedDuration,
+      coinsEarned: state.coins,
+    };
+  }
+  window.gardenEconomy = {
+    getLandCost,
+    getDroneCost,
+    getPlantablePlotCount,
+    getProfitMultiplier,
+    getHarvestReward,
+    simulateOfflineProgress,
+    OFFLINE_HOURS_PER_DRONE,
+    MAX_OFFLINE_MS,
+  };
+})();
