@@ -1638,4 +1638,4 @@
 - 使用者確認任務182整體驗收通過，並補充 Cloudflare Worker／D1 已成功部署。
 - 建立 `tasks/done/182-cloud-save-sync.md` 完成紀錄；更新 `state/project.json`、`state/current-task.json`、`README.md`、`docs/architecture.md` 與 `docs/desicions.md`。
 - 排查反覆出現的 GitHub 寫入安全檢查阻擋：本輪重新讀取最新內容後，將一般文件／狀態寫入逐檔、單次操作重試，相關更新成功。先前遭阻擋的原因尚無工具回傳的具體分類，不能斷言是特定內容或刪除操作所致。
-- 尚待處理：確認 active 舊任務檔已移除；補充寫入失敗時的安全重試規範。此次未獨立重跑 CI 或探測線上 API。
+- 已完成：確認 `tasks/active/182-anonymous-google-cloud-save-sync.md` 已移除、完成版仍存在；已在 `AGENTS.md` 補充安全重試規範。此次未獨立重跑 CI 或探測線上 API。
