@@ -1,9 +1,9 @@
 {
-  "name": "任務191：悠閒型經濟平衡與離線自動生產模擬",
-  "status": "completed",
+  "name": "任務192：手工地塊計數與自動地塊回本節奏調整",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務191已歸檔至 tasks/done；等待下一個任務指示。",
-  "result": "已新增經濟模組、整合分段土地價格／無人機價格／收成淨利倍率與離線自動生產模擬；同步 README、架構、決策、任務歷史與專案狀態。JavaScript 語法檢查及模型情境測試通過。未執行瀏覽器驗收；飛行時間使用直線距離估算，限制已記錄。"
+  "nextAction": "修改經濟模組的自動地塊計數／價格曲線，調整農地管理列表渲染，進行語法與模型回本驗證，再同步文件。",
+  "result": "已建立 tasks/active/192-manual-plots-and-land-payback.md。盤點確認農地管理列表目前顯示所有地塊，土地價格以 game.plots.length 計算；收成倍率已正確排除純草地並包含手工地塊，應保留此語意。"
 }
