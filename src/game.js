@@ -572,6 +572,7 @@
     save();
     updateHudCollapse();
   }
+  const menuWheel = document.querySelector('#garden-menu-wheel');
   function setFarmPanelOpen(open) {
     const panel = document.querySelector('#farm-management-panel');
     const toggle = document.querySelector('#farm-management-toggle');
