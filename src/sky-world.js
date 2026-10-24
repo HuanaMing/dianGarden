@@ -399,7 +399,9 @@
     ].map(([px, pz]) => ({ x: px, z: pz, baseY: surfaceHeightAt(px, pz) + bottomOffset }));
     const top = corners.map(point => [point.x, point.baseY + thickness, point.z]);
     const bottom = corners.map(point => [point.x, point.baseY, point.z]);
-    const centerY = top.reduce((sum, point) => sum + point[1], 0) / top.length;
+    // Anchor the bed's center to the same center height used by the tile surface.
+    // Averaging the inner corners can drift away from the actual center on asymmetric ramps.
+    const centerY = surfaceHeightAt(x, z) + bottomOffset + thickness;
     const center = [x, centerY, z];
     for (let i = 0; i < 4; i += 1) {
       const next = (i + 1) % 4;
@@ -407,6 +409,7 @@
       addTriangle(positions, colors, bottom[i], bottom[next], top[next], palette.front);
       addTriangle(positions, colors, bottom[i], top[next], top[i], palette.front);
     }
+    return centerY;
   }
 
   function addSoilTexture(positions, colors, x, z, bed, y, wet, surfaceHeightAt = null) {
@@ -435,10 +438,15 @@
       const variedAngle = angle + rotation;
       const dx = Math.cos(variedAngle) * length * 0.5, dz = Math.sin(variedAngle) * length * 0.5;
       const px = -Math.sin(variedAngle) * width * 0.5, pz = Math.cos(variedAngle) * width * 0.5;
-      const a = [cx - dx + px, y, cz - dz + pz];
-      const b = [cx + dx + px, y, cz + dz + pz];
-      const d = [cx - dx - px, y, cz - dz - pz];
-      const e = [cx + dx - px, y, cz + dz - pz];
+      const textureY = (px, pz) => surfaceHeightAt ? surfaceHeightAt(px, pz) + 0.057 : y;
+      const ax = cx - dx + px, az = cz - dz + pz;
+      const bx = cx + dx + px, bz = cz + dz + pz;
+      const dxp = cx - dx - px, dzp = cz - dz - pz;
+      const ex = cx + dx - px, ez = cz + dz - pz;
+      const a = [ax, textureY(ax, az), az];
+      const b = [bx, textureY(bx, bz), bz];
+      const d = [dxp, textureY(dxp, dzp), dzp];
+      const e = [ex, textureY(ex, ez), ez];
       addTriangle(positions, colors, a, b, e, palette[shade]);
       addTriangle(positions, colors, a, e, d, palette[shade]);
     }
@@ -472,6 +480,10 @@
         sides[side] = { index: neighborIndex, y: neighborY, edgeHeight, heightDifference };
       });
       return sides;
+    },
+    getPlantBaseHeight(surfaceHeightAt, x, z, grassOnly) {
+      const groundHeight = surfaceHeightAt(x, z);
+      return grassOnly ? groundHeight : groundHeight + 0.056;
     },
     getSharedCornerHeight(positions, states, index, cornerX, cornerZ, tileSize = 1, maxHeightDifference = 0.5) {
       const source = positions?.[index];
@@ -525,13 +537,16 @@
     ].map((edge) => ({ ...edge, points: edge.indices.map((cornerIndex) => corners[cornerIndex]) }));
     const center = { x, z, y, u: 0.5, v: 0.5, top: [x, y, z] };
     const bottomY = Math.min(y, ...edges.flatMap((edge) => edge.points.map((point) => point.y))) - 0.5;
-    const grass = [0.43, 0.68, 0.39];
-    edges.forEach((edge) => addTriangle(positions, colors, edge.points[0].top, edge.points[1].top, center.top, grass));
+    // Farm plots must not expose green turf around or above the raised soil bed.
+    const topColor = plotStates[index]?.grassOnly
+      ? [0.43, 0.68, 0.39]
+      : [0.58, 0.39, 0.28];
+    edges.forEach((edge) => addTriangle(positions, colors, edge.points[0].top, edge.points[1].top, center.top, topColor));
     for (let cornerIndex = 0; cornerIndex < 4; cornerIndex += 1) {
       const previousEdge = edges[(cornerIndex + 3) % 4], nextEdge = edges[cornerIndex];
       const previousPoint = previousEdge.points[1], nextPoint = nextEdge.points[0];
       if (Math.abs(previousPoint.y - nextPoint.y) > 1e-8) {
-        addTriangle(positions, colors, previousPoint.top, nextPoint.top, center.top, grass);
+        addTriangle(positions, colors, previousPoint.top, nextPoint.top, center.top, topColor);
       }
     }
     edges.forEach((edge) => {
@@ -934,16 +949,19 @@
       const wateringWetness = Number.isFinite(plot?.waterVisualStartedAt) ? Math.min(1, Math.max(0, (soilNow - plot.waterVisualStartedAt) / 1680)) : 0;
       const wetness = Math.max(rainWetness, dryingWetness, wateringWetness);
       const wet = wetness > 0.001;
-      let plantBaseY = plotY;
       const surfaceHeightAt = addGrassRamp(positions, colors, i, x, z, half, plotY);
-      plantBaseY = surfaceHeightAt(x, z);
-      addGrassTexture(positions, colors, x, z, half, plotY, [0.43, 0.68, 0.39], surfaceHeightAt);
+      const plantBaseY = window.dianGardenGrassRampLogic.getPlantBaseHeight(surfaceHeightAt, x, z, plot?.grassOnly === true);
+      if (plot?.grassOnly) {
+        addGrassTexture(positions, colors, x, z, half, plotY, [0.43, 0.68, 0.39], surfaceHeightAt);
+      }
       const bed = TILE * 0.66;
       const drySoil = { top: [0.66, 0.45, 0.31], front: [0.57, 0.38, 0.28], right: [0.53, 0.35, 0.27], back: [0.6, 0.4, 0.29], left: [0.56, 0.37, 0.27], bottom: [0.5, 0.34, 0.26] };
       const wetSoil = { top: [0.43, 0.29, 0.2], front: [0.39, 0.26, 0.19], right: [0.36, 0.24, 0.18], back: [0.41, 0.27, 0.2], left: [0.38, 0.25, 0.19], bottom: [0.34, 0.23, 0.18] };
       const soilPalette = Object.fromEntries(Object.keys(drySoil).map((face) => [face, drySoil[face].map((channel, channelIndex) => channel + (wetSoil[face][channelIndex] - channel) * wetness)]));
-      if (!plot?.grassOnly) addSlopedSoilBed(positions, colors, x, z, bed, surfaceHeightAt, soilPalette);
-      if (!plot?.grassOnly) addSoilTexture(positions, colors, x, z, bed, plotY + 0.057, wetness > 0.5, surfaceHeightAt);
+      if (!plot?.grassOnly) {
+        const soilBedCenterY = addSlopedSoilBed(positions, colors, x, z, bed, surfaceHeightAt, soilPalette);
+        addSoilTexture(positions, colors, x, z, bed, soilBedCenterY, wetness > 0.5, surfaceHeightAt);
+      }
       // 手動農地以插在草地邊緣的空白告示牌辨識，避免干擾花株與耕作區。
       if (plot?.manual === true && !plot?.grassOnly) {
         const signX = x + half * 0.73;
