@@ -12,7 +12,7 @@
 ## 驗收
 - 基礎地塊坡面修改的 Playwright workflow 通過：run 40064543763。
 - 農地土壤床與紋理修改的 workflow 通過：run 40064576241。
-- 更新混合交界測試後的 workflow 正在執行，需以 run 40064598730 的最終結果確認。
+- 更新混合交界測試後的 GitHub Actions Playwright workflow 通過：run 40064598730。
 - 尚未人工檢查實際遊戲截圖。
 
 ## 修改檔案
