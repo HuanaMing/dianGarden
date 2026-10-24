@@ -31,11 +31,19 @@
 - https://developers.cloudflare.com/d1/reference/faq/
 - https://developers.google.com/identity/gsi/web/guides/verify-google-id-token
 
+## 已完成的程式原型
+- `cloudflare/worker.js`：建立 `GET /api/save`、`PUT /api/save` API 原型，驗證 Google ID token 簽章、issuer、audience、expiry，以已驗證的 `sub` 隔離玩家存檔；支援 body 大小限制、CORS 與 revision 衝突回應。
+- `cloudflare/migrations/0001_create_player_saves.sql` 與 `cloudflare/schema.sql`：D1 存檔 schema。
+- `cloudflare/wrangler.toml`：部署設定範本，仍使用未設定的 database ID、Google Client ID 及 origin placeholder，不能直接部署。
+- `tests/cloudflare-worker-smoke.mjs`：建立 mock D1 與測試 RSA token 的 API 冒煙測試，涵蓋 CORS、驗證、玩家隔離、讀寫、revision 衝突及輸入大小。
+- `.github/workflows/browser-check.yml`：將 Worker 冒煙測試加入 CI，並把 `cloudflare/**` 納入觸發條件。
+- `docs/cloud-save-architecture.md`：補上原型檔案與尚未部署的限制。
+
 ## 下一步
-1. 確認正式 GitHub Pages origin 與 workflow，列出正式站及本機測試所需的 Google OAuth JavaScript origin。
-2. 與使用者確認是否已具備 Cloudflare 帳戶、是否同意之後建立免費 D1／Worker 資源，以及 Google OAuth Web Client 的設定方式。
-3. 在批准建立外部資源之前，可先設計本機可測試的 Worker handler、schema migration 與 API 測試，但不可部署或建立線上資源。
-4. 完成上述前置條件後，再整合前端登入與自動同步；保留原本 localStorage 的三個存檔 key。
+1. 等待 GitHub Actions 執行並檢查 Worker 冒煙測試結果；若失敗先修正。
+2. 核對 GitHub Pages 正式 origin 及部署 workflow，確認 OAuth 允許來源。
+3. 前端整合前，需取得實際 Google Web Client ID；不得猜測或提交秘密。
+4. 外部資源建立、OAuth client 建立及 Worker 部署仍需使用者另行明確批准；本階段不建立線上資源、不部署。
 
 ## 建議資料與 API 設計
 - D1 先用一張 `player_saves` 表，每位玩家一筆，存放主存檔 JSON、花卉變種 JSON、自動選花偏好 JSON、schema version、revision、updated_at。
@@ -67,4 +75,5 @@
 - 先前 Supabase 報價 US$0／月與 Cloudflare 無關。
 - Cloudflare 免費額度與限制已依官方文件初步核對，但尚未查閱使用者 Cloudflare 帳戶實際方案／付款狀態。
 - 使用者已批准採用 Cloudflare D1 方向，未批准建立 D1／Worker、建立 Google OAuth Web Client、部署 API 或啟用付費功能。
-- 目前沒有建立 Cloudflare 資源，沒有更改外部設定，也沒有修改遊戲存檔程式。
+- 目前沒有建立 Cloudflare 資源，沒有更改外部設定，亦未把 Worker 接入遊戲前端；跨裝置功能尚未可供玩家使用。
+- Worker 原型及 CI 測試已提交至 repository；GitHub Actions 的實際執行結果尚待確認。
