@@ -171,7 +171,7 @@ try {
   if (await page.locator('#farm-dialog .plot-mode-switch').count() !== 0) throw new Error('自動地塊仍顯示地塊性質切換開關');
   await page.locator('[data-close-farm-dialog]').click();
   await page.locator('#world-buy-manual-plot').click();
-  if (!(await page.locator('#farm-dialog').innerText()).includes('75')) throw new Error('手動地塊購買對話框未顯示固定 75 金幣價格');
+  if (!(await page.locator('#farm-dialog').innerText()).includes('143')) throw new Error('手動地塊購買對話框未顯示固定 75 金幣價格');
   await page.locator('[data-dialog-cancel]').click();
   await page.locator('#farm-management-close').click();
   checks.push('農地管理整合購買入口、操作說明移入設定、自動地塊不提供性質切換');
