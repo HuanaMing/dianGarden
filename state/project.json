@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": 196,
-  "nextAction": "執行任務196：修正農地坡面時綠色草皮外露，並讓草地／農地上的植物附著於實際中心表面高度。",
+  "nextAction": "任務196程式修改已提交；執行 Playwright 與語法檢查，驗證農地土色頂面、中心附著與坡面紋理。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
