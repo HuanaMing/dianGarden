@@ -82,15 +82,21 @@ const env = {
   },
 };
 
+const testSessionOpenedAt = Date.now();
+
 async function call(method, { token, body, origin = "https://example.test", path = "/api/save" } = {}) {
   const headers = new Headers();
   if (origin) headers.set("Origin", origin);
-  if (token) headers.set("Authorization", "Bearer " + token);
+  if (token) {
+    headers.set("Authorization", "Bearer " + token);
+    if (method === "GET" || method === "PUT") headers.set("X-DianGarden-Opened-At", String(testSessionOpenedAt));
+  }
   if (body !== undefined) headers.set("Content-Type", "application/json");
+  const payload = body === undefined ? undefined : { ...body, openedAt: body.openedAt ?? testSessionOpenedAt };
   return worker.fetch(new Request("https://worker.example" + path, {
     method,
     headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: payload === undefined ? undefined : JSON.stringify(payload),
   }), env);
 }
 
