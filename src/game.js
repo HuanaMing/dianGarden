@@ -300,6 +300,7 @@
       localStorage.setItem(FLOWER_VARIANTS_KEY, JSON.stringify(flowerVariants));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
       localStorage.setItem(AUTO_CROP_KEY, JSON.stringify(game.autoCropSelection));
+      window.dispatchEvent(new CustomEvent('diangarden:save', { detail: { savedAt: game.lastOnlineAt } }));
       return true;
     }
     catch (_) { persistenceAvailable = false; persistenceWarning = '自動儲存失敗；重新整理可能會遺失本次進度。'; updateSaveStatus(); notify(persistenceWarning); return false; }
