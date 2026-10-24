@@ -1616,3 +1616,11 @@
 - 驗收 run：[40083713166](https://github.com/HuanaMing/dianGarden/actions/runs/40083713166)；截圖 artifact：[桌面與手機驗收截圖](https://github.com/HuanaMing/dianGarden/actions/runs/40083713166/artifacts/12555733188)。
 - Pages 部署來源提交已成功：[run 40080813362](https://github.com/HuanaMing/dianGarden/actions/runs/40080813362)。
 - `README.md`、`docs/architecture.md`、`docs/desicions.md`、`state/project.json`、`state/current-task.json` 與任務文件已同步；完成版已歸檔至 `tasks/done/199-wheel-icons.md`。
+
+
+## 2026-10-24 — 任務174、175、180、188、189、190補齊完成歸檔
+
+- 使用者確認六項任務此前都已完成驗收，先前只是忘記移至 `tasks/done/`。
+- 任務174、175、180原本已有正式完成文件，移除 `tasks/active/` 中的提示檔；任務188、189、190建立完整完成紀錄，記錄使用者確認驗收。
+- 已驗證任務188、189、190的 `tasks/done/` 完成文件內容成功建立，再移除 active 原始檔。
+- `state/project.json`、`state/current-task.json` 同步更新；任務109的 Xcode／付費雲端 Mac 批准仍維持待處理。
