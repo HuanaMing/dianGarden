@@ -56,6 +56,8 @@
             </section>
             <section class="cloud-save-settings" aria-label="跨裝置雲端存檔">
               <h3>跨裝置存檔</h3>
+              <p id="guest-garden-notice" class="cloud-save-description" hidden>目前正在遊玩訪客花園，進度獨立保存在這台裝置，不會覆蓋自己的花園或同步到雲端。</p>
+              <button id="return-to-own-garden" class="guest-return-button" type="button" hidden>回到自己的花園</button>
               <p class="cloud-save-description">登入 Google 後，可在其他裝置找回同一座花園。本機存檔仍會保留。</p>
               <div id="cloud-save-signin" class="cloud-save-signin" aria-label="Google 登入"></div>
               <p id="cloud-save-status" class="cloud-save-status" role="status" aria-live="polite">雲端存檔尚未設定；目前仍使用本機自動存檔。</p>
@@ -94,6 +96,21 @@
             <nav class="world-plots" id="plot-selector" aria-label="空中農地" role="group"></nav>
             <div class="land-purchase-actions" role="group" aria-label="購買地塊"><button class="world-buy-manual-plot" id="world-buy-manual-plot" type="button" aria-label="購買手動地塊">手動地塊</button><button class="world-expand" id="world-expand" type="button" aria-label="購買自動地塊">自動地塊</button></div>
           </section>
+          <dialog class="seed-dialog startup-garden-dialog" id="startup-garden-dialog" aria-labelledby="startup-garden-title" aria-describedby="startup-garden-description">
+            <div class="seed-dialog-heading"><div><p class="eyebrow">WELCOME TO YOUR SKY GARDEN</p><h2 id="startup-garden-title">要去哪座花園？</h2></div></div>
+            <p class="seed-dialog-description" id="startup-garden-description">尚未自動登入 Google。你可以登入回到自己的花園，或先逛逛一座獨立的新訪客花園。</p>
+            <section class="startup-own-garden" aria-label="回到自己的花園">
+              <h3>回到自己的花園</h3>
+              <p>登入 Google 後會檢查並載入你的雲端花園。</p>
+              <div id="startup-google-signin" class="cloud-save-signin" aria-label="Google 登入"></div>
+              <p id="startup-login-hint" class="startup-login-hint" role="status" aria-live="polite">正在準備 Google 登入…</p>
+            </section>
+            <div class="startup-guest-garden">
+              <h3>去新花園逛逛</h3>
+              <p>建立獨立訪客花園；你原有的本機與雲端進度都會保留。</p>
+              <button id="start-guest-garden" class="startup-guest-button" type="button">進入訪客花園</button>
+            </div>
+          </dialog>
           <dialog class="seed-dialog" id="farm-dialog" aria-labelledby="farm-dialog-title">
             <div class="seed-dialog-heading"><div><p class="eyebrow">YOUR SKY GARDEN</p><h2 id="farm-dialog-title">農地</h2></div><button class="dialog-close" type="button" aria-label="關閉操作視窗" data-close-farm-dialog>×</button></div>
             <div class="farm-dialog-content" id="farm-dialog-content"></div>
