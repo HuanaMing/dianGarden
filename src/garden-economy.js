@@ -218,6 +218,11 @@
     if (simulatedDuration === 0 && weatherAt(departureAt).isRaining && state.lastObservedRaining !== true) applyRain(departureAt);
     if (state.autoMode === true && simulatedDuration > 0) {
       while (time <= simulationEnd) {
+        for (let index = queue.length - 1; index >= 0; index -= 1) {
+          const job = queue[index];
+          const plot = state.plots[job.index];
+          if (!plot || excluded(plot) || (job.kind === 'water' && (plot.crop === null || plot.watered || growthElapsed(plot, time) >= (crops[plot.crop]?.growTime || 0)))) queue.splice(index, 1);
+        }
         const weather = weatherAt(time);
         if (!previousWeather.isRaining && weather.isRaining) applyRain(time);
         state.plots.forEach((plot) => settleWater(plot, time));
@@ -301,7 +306,7 @@
       departureAt, returnAt: now, rawDuration, simulatedDuration,
       automationEnabled: state.autoMode === true,
       droneCountAtDeparture,
-      capped: rawDuration > simulatedDuration,
+      capped: state.autoMode === true && rawDuration > simulatedDuration,
       coinsBefore, coinsAfter: state.coins, coinsDelta: state.coins - coinsBefore,
     };
   }
