@@ -50,7 +50,7 @@
 ## 2026-10-25：工作階段失效提示與同步保護進度
 - 已修正 `stale_session` 回應處理：GET／PUT 遇到失效工作階段時，關閉自動雲端同步、清除待上傳計時器，並在主畫面顯示常駐提示「帳號已在他處登入，花園進入離線模式。」
 - 舊工作階段重新檢查時，不會因 Worker 拒絕舊時間戳而重新取得同步權；重新登入成功後可清除失效狀態。
-- 已更新 `src/cloud-save.js`、`src/index.html`、`src/styles.css`。此提示功能依使用者回報已完成；本次同步文件，不將整個任務182標記完成。
+- 已更新 `src/cloud-save.js`、`src/index.html`、`src/styles.css`。此提示功能已由使用者於 2026-10-25 明確驗收，確認無問題。任務182的雲端服務仍未配置／部署，因此只確認本輪提示功能驗收完成，不宣稱跨裝置雲端存檔已上線。
 - 任務182仍為 active：尚需確認 CI／Playwright 結果、由使用者在正式 Pages 網站實測；Cloudflare D1／Worker、Google OAuth Client 與 API 部署仍須另行批准，尚未部署。
 
 ## 下一步
