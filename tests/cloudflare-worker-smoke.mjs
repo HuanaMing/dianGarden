@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { webcrypto } from "node:crypto";
 
-globalThis.crypto = webcrypto;
+if (!globalThis.crypto) Object.defineProperty(globalThis, "crypto", { value: webcrypto, configurable: true });
 
 const workerSource = await readFile(new URL("../cloudflare/worker.js", import.meta.url), "utf8");
 const { default: worker } = await import("data:text/javascript;base64," + Buffer.from(workerSource).toString("base64"));
