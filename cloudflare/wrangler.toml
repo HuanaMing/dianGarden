@@ -7,7 +7,7 @@ workers_dev = true
 binding = "DB"
 database_name = "diangarden-saves"
 database_id = "9b86c8c7-8158-46e6-b976-68e307d11f69"
-migrations_dir = "cloudflare/migrations"
+migrations = "cloudflare/migrations"
 
 [vars]
 # Public Google OAuth Web Client ID; never store a client secret here.
