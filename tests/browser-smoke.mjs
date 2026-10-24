@@ -54,6 +54,8 @@ try {
   if (!gameCanvas.webgl) throw new Error('遊戲首頁未能建立 WebGL context');
   if (gameCanvas.width < 100 || gameCanvas.height < 100) throw new Error('遊戲畫布尺寸異常');
   checks.push('遊戲 WebGL 畫布已建立');
+  const grassRampLogicLoaded = await page.evaluate(() => typeof window.dianGardenGrassRampLogic?.getConnections === 'function');
+  if (!grassRampLogicLoaded) throw new Error('草地斜坡連接邏輯未載入');
 
   const mouseCanvasBounds = await page.locator('#sky-canvas').boundingBox();
   if (!mouseCanvasBounds) throw new Error('無法取得 PC 畫布位置');
