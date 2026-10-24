@@ -1031,8 +1031,7 @@
   document.querySelector('#farm-management-toggle')?.addEventListener('click', () => {
     const panel = document.querySelector('#farm-management-panel');
     if (!panel) return;
-    panel.hidden = !panel.hidden;
-    document.querySelector('#farm-management-toggle')?.setAttribute('aria-expanded', String(!panel.hidden));
+    setFarmPanelOpen(panel.hidden !== false);
   });
   document.querySelector('#farm-management-close')?.addEventListener('click', () => {
     const panel = document.querySelector('#farm-management-panel');
