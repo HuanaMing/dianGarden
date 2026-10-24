@@ -3,8 +3,8 @@
   "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
-    "任務182：Cloudflare Workers／D1 與 Google OAuth 的目前費用、免費配額與設定條件尚待查證；未經明確批准不得建立資源、部署或啟用付費功能。"
+    "任務182：建立 Cloudflare D1／Worker、建立 Google OAuth Web Client 與部署外部 API 尚未獲批准；任何付費功能須另行明確批准。"
   ],
-  "nextAction": "任務182方向已由使用者確認改為 Cloudflare Workers + D1 + Google 登入，以支援跨裝置找回同一座花園。下一步先核對 Cloudflare 官方費用、免費額度、閒置政策及 Google OAuth／Workers 部署條件；只做研究與文件規劃，不建立資源、不部署、不啟用付費服務。",
-  "result": "已更新任務182文件：採用 Cloudflare D1 跨裝置存檔方向，保留現有三個 localStorage 存檔鍵、本機離線能力與衝突保護。使用者只批准技術方向，尚未批准建立 Cloudflare 資源或產生費用。未建立任何雲端資源，未修改遊戲程式。"
+  "nextAction": "已完成 Cloudflare Workers／D1 免費額度、閒置政策與 Google ID token 驗證的官方文件初查，並新增 docs/cloud-save-architecture.md。下一步確認正式 GitHub Pages origin、現有發布 workflow 及 Google OAuth 允許來源；只做本機程式／測試準備，不建立雲端資源、不部署。",
+  "result": "任務182方向為 Cloudflare Workers + D1 + Google 登入，保留三個現有 localStorage 存檔鍵及離線遊玩。已記錄官方配額：Workers Free 100,000 請求／日；D1 Free 5,000,000 列讀取／日、100,000 列寫入／日、5 GB 帳戶儲存及單庫 500 MB；Workers Paid 最低 US$5／月。免費額度耗盡時雲端 API／查詢可能失敗，因此需保留本機存檔。未建立外部資源、未部署、未修改遊戲程式。"
 }
