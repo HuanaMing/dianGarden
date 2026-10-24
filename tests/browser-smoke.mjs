@@ -56,6 +56,8 @@ try {
   checks.push('遊戲 WebGL 畫布已建立');
   const grassRampLogicLoaded = await page.evaluate(() => typeof window.dianGardenGrassRampLogic?.getConnections === 'function');
   if (!grassRampLogicLoaded) throw new Error('草地斜坡連接邏輯未載入');
+  const rampCases = await page.evaluate(() => { const f=window.dianGardenGrassRampLogic.getConnections, l=[-0.5,0,0.5]; let n=0; for(const a of l)for(const b of l)for(const c of l)for(const d of l){const p=[{x:0,z:0,y:0},{x:0,z:-1,y:a},{x:1,z:0,y:b},{x:0,z:1,y:c},{x:-1,z:0,y:d}],s=p.map((_,i)=>({grassOnly:i===0})),r=f(p,s,0);if(r.north?.edgeHeight!==a||r.east?.edgeHeight!==b||r.south?.edgeHeight!==c||r.west?.edgeHeight!==d)return 0;n++;} return n; });
+  if (rampCases !== 81) throw new Error('草地斜坡 81 種高度組合失敗：' + rampCases);
 
   const mouseCanvasBounds = await page.locator('#sky-canvas').boundingBox();
   if (!mouseCanvasBounds) throw new Error('無法取得 PC 畫布位置');
