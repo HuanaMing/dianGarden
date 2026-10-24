@@ -1,0 +1,17 @@
+name = "diangarden-cloud-save"
+main = "worker.js"
+compatibility_date = "2026-10-24"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "diangarden-saves"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[vars]
+# Replace with the Google OAuth Web Client ID after it is created.
+GOOGLE_CLIENT_ID = "REPLACE_WITH_GOOGLE_WEB_CLIENT_ID"
+# Comma-separated exact origins. Example: https://huanaming.github.io
+# Do not use "*" for a credentialed save API.
+ALLOWED_ORIGINS = "REPLACE_WITH_GAME_ORIGIN"
