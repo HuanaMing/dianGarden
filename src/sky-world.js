@@ -1309,6 +1309,7 @@
     rotateHoldGesture = false;
     pointerMoved = true;
     clearPointerHoldRings();
+    activePointerFeedback.delete(pointerId);
     touchPoints.delete(pointerId);
   });
   canvas.addEventListener('pointerdown', (event) => {
