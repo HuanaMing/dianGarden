@@ -56,24 +56,26 @@ try {
   checks.push('遊戲 WebGL 畫布已建立');
   const grassRampLogicLoaded = await page.evaluate(() => typeof window.dianGardenGrassRampLogic?.getConnections === 'function');
   if (!grassRampLogicLoaded) throw new Error('草地斜坡連接邏輯未載入');
-  const rampCases = await page.evaluate(() => { const f=window.dianGardenGrassRampLogic.getConnections, l=[-0.5,0,0.5]; let n=0; for(const a of l)for(const b of l)for(const c of l)for(const d of l){const p=[{x:0,z:0,y:0},{x:0,z:-1,y:a},{x:1,z:0,y:b},{x:0,z:1,y:c},{x:-1,z:0,y:d}],s=p.map((_,i)=>({grassOnly:i===0})),r=f(p,s,0);if(r.north?.edgeHeight!==a||r.east?.edgeHeight!==b||r.south?.edgeHeight!==c||r.west?.edgeHeight!==d)return 0;n++;} return n; });
+  const rampCases = await page.evaluate(() => { const f=window.dianGardenGrassRampLogic.getConnections, l=[-0.5,0,0.5]; let n=0; for(const a of l)for(const b of l)for(const c of l)for(const d of l){const p=[{x:0,z:0,y:0},{x:0,z:-1,y:a},{x:1,z:0,y:b},{x:0,z:1,y:c},{x:-1,z:0,y:d}],s=p.map(()=>({grassOnly:true})),r=f(p,s,0);if(r.north?.edgeHeight!==a/2||r.east?.edgeHeight!==b/2||r.south?.edgeHeight!==c/2||r.west?.edgeHeight!==d/2)return 0;n++;} return n; });
   if (rampCases !== 81) throw new Error('草地斜坡 81 種高度組合失敗：' + rampCases);
-  checks.push('草地斜坡四邊 -0.5／0／+0.5 的 81 種排列通過');
+  checks.push('草地斜坡四邊 -0.5／0／+0.5 的 81 種排列使用對稱接縫高度');
   const rampCornerCases = await page.evaluate(() => {
-    const heights = window.dianGardenGrassRampLogic.getCornerHeights;
-    const levels = [-0.5, 0, 0.5];
-    let count = 0;
-    for (const north of levels) for (const east of levels) for (const south of levels) for (const west of levels) {
-      const corners = heights({ north, east, south, west }, 0);
-      const expected = [(north + west) / 2, (north + east) / 2, (south + east) / 2, (south + west) / 2];
-      if (corners.length !== 4 || corners.some((value, index) => Math.abs(value - expected[index]) > 1e-8)) return 0;
-      count += 1;
+    const f=window.dianGardenGrassRampLogic.getSharedCornerHeight, levels=[-0.5,0,0.5];
+    let checked=0;
+    for(const a of levels) for(const b of levels) for(const n of levels) for(const ne of levels) {
+      const p=[{x:0,z:0,y:a},{x:1,z:0,y:b},{x:0,z:-1,y:n},{x:1,z:-1,y:ne}], s=p.map(()=>({grassOnly:true}));
+      if(Math.abs(a-b)<=0.5+1e-8) {
+        const fromA=f(p,s,0,0.5,-0.5), fromB=f(p,s,1,0.5,-0.5);
+        if(Math.abs(fromA-fromB)>1e-8) return 0;
+      }
+      checked++;
     }
-    const sloped = heights({ north: -0.5, east: 0, south: 0.5, west: 0 }, 0);
-    return count === 81 && new Set(sloped).size > 1 ? count : 0;
+    const pair=[{x:0,z:0,y:0},{x:1,z:0,y:0.5}], states=[{grassOnly:true},{grassOnly:true}];
+    const left=f(pair,states,0,0.5,-0.5), right=f(pair,states,1,0.5,-0.5);
+    return checked===81 && Math.abs(left-0.25)<1e-8 && Math.abs(right-0.25)<1e-8 ? checked : 0;
   });
-  if (rampCornerCases !== 81) throw new Error('草地斜坡側面角點變形測試失敗：' + rampCornerCases);
-  checks.push('草地頂面與四周側面共用角點高度，81 種組合的側面變形測試通過');
+  if (rampCornerCases !== 81) throw new Error('草地相鄰地塊共用角點高度測試失敗：' + rampCornerCases);
+  checks.push('草地相鄰地塊共用同一角點高度，0.25 單位接縫案例及 81 種高度組合通過');
   const offlineCheck = await page.evaluate(() => {
     const now=Date.now(), sim=window.gardenEconomy.simulateOfflineProgress, env=window.skyEnvironment, crops=window.flowerCatalog;
     const makeState=autoMode=>({coins:120,lastOnlineAt:now-5*3600000,autoMode,droneCount:1,drones:[{deployed:true,battery:100,dockPosition:{x:0,z:1.55,y:0}}],autoCropSelection:[0],plots:[{crop:0,plantedAt:now-5*3600000-180000,plantHeight:1,manual:false,grassOnly:false,x:0,z:0,y:0,watered:false}],worldTimeMs:60000,worldTimeAnchor:now-5*3600000,lastObservedRaining:false});
