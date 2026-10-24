@@ -181,9 +181,14 @@ try {
       sectorClip: style.clipPath,
       sectorBackground: style.backgroundColor,
       sectorBorder: style.borderWidth,
-      selectedTransform: getComputedStyle(sector.classList.add('is-selected') || sector).transform,
       wreathOpacity: getComputedStyle(wreath).opacity,
       wreathVisibility: getComputedStyle(wreath).visibility,
+      selectedTransform: (() => {
+        sector.classList.add('is-selected');
+        const value = getComputedStyle(sector).transform;
+        sector.classList.remove('is-selected');
+        return value;
+      })(),
     };
   });
   if (wheelGeometry.centerContent !== 'none' || !wheelGeometry.sectorClip.startsWith('polygon(') || wheelGeometry.sectorBackground !== 'rgba(0, 0, 0, 0)' || wheelGeometry.sectorBorder !== '0px' || wheelGeometry.wreathOpacity !== '1' || wheelGeometry.wreathVisibility !== 'visible' || wheelGeometry.selectedTransform === 'none') throw new Error('花草環需無底板、透明中心、選中區放大且可見度 100%');
