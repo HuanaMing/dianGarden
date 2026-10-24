@@ -35,3 +35,11 @@
 - 測試環境修正：更新 Cloudflare Worker smoke test 的 Node.js 原生 crypto 初始化、session timestamp 欄位與 DB mock，讓測試符合現行 Worker session ownership 契約。
 - 修改檔案：`src/index.html`、`src/styles.css`、`src/cloud-save.js`、`src/game.js`、`tests/browser-smoke.mjs`、`tests/cloudflare-worker-smoke.mjs`、`README.md`、`docs/architecture.md`、`docs/desicions.md`、`state/project.json`、`state/current-task.json`。
 - 狀態：程式與自動化驗收已完成，**等待使用者實際遊玩驗收**；目前不移入 `tasks/done/`。
+
+
+## 文案重做（2026-10-25）
+- 入口標題改為「引路者：」。
+- 開場引言改為「溫柔卻迷茫的旅人啊，你看起來像是迷路了，願蒲公英為你指引歸途。」
+- 登入區標題改為「回到我的花園」，移除下方登入說明與「尚未自動登入，請…」提示文字。
+- 訪客區標題改為「舊的花期已過，」，說明改為「我想去新的花園看看」，按鈕改為「暫時的居所」。
+- 已更新 `src/index.html`，並確認指定新文案皆存在、指定舊文案皆已移除；GitHub Actions 驗收正在執行。
