@@ -186,7 +186,13 @@
   }
   const game = loadGame();
   let rainStartedAt = game.lastObservedRaining ? Date.now() : null;
-  function getLandCost() { return window.gardenEconomy.getLandCost(game.plots.length); }
+  function getAutomaticPlotCount() { return window.gardenEconomy.getAutomaticPlotCount(game.plots); }
+  function getLandCost() { return window.gardenEconomy.getLandCost(getAutomaticPlotCount()); }
+  function getPlotLabel(index) {
+    const plot = game.plots[index];
+    if (plot?.manual === true) return '手動地塊';
+    return `自動地塊 ${game.plots.slice(0, index + 1).filter((item) => item.manual !== true).length}`;
+  }
   function getDroneCost() { return window.gardenEconomy.getDroneCost(game.droneCount); }
   function getPlantablePlotCount() { return window.gardenEconomy.getPlantablePlotCount(game.plots); }
   function getHarvestReward(crop) { return window.gardenEconomy.getHarvestReward(crop, getPlantablePlotCount()); }
@@ -380,7 +386,7 @@
       const isManual = dialogContext.type === 'manual-expansion';
       const cost = getLandCost();
       dialogTitle.textContent = isManual ? '購買手動地塊' : '購買自動地塊';
-      const description = isManual ? '手動地塊依目前可見土地總數計價，不會由無人機自動播種、澆水或收成。' : '自動地塊依目前可見土地總數計價，可由無人機執行自動工作。';
+      const description = isManual ? '手動地塊不計入自動地塊數，但仍會影響可種植地塊的收成淨利倍率；無人機不會自動照料。' : '價格依目前自動地塊數計算；手動地塊不會推進價格曲線。新地塊可由無人機執行自動工作。';
       dialogContent.innerHTML = `<p class="seed-dialog-description">${description} 需要 ${cost} 枚金幣。你目前有 ${game.coins} 枚。</p><div class="dialog-actions"><button class="dialog-cancel" type="button" data-dialog-cancel>再想想</button><button class="action-button" type="button" data-confirm-expansion ${game.coins < cost ? 'disabled' : ''}>確認購買　${cost} 🪙</button></div>`;
       dialogContent.querySelector('[data-dialog-cancel]').addEventListener('click', () => dialog.close());
       dialogContent.querySelector('[data-confirm-expansion]').addEventListener('click', () => { if (game.coins >= cost) { dialog.close(); if (isManual) buyManualLand(); else buyLand(); } });
@@ -390,7 +396,7 @@
     const plot = game.plots[index];
     if (!plot) { dialog.close(); return; }
     selectPlot(index);
-    dialogTitle.textContent = `農地 ${String(index + 1).padStart(2, '0')}`;
+    dialogTitle.textContent = getPlotLabel(index);
     if (plot.crop === null) {
       dialog.classList.add('has-seed-picker');
       const deleteAction = game.plots.length > 1 ? `<button class="dialog-delete-plot" type="button" data-delete-plot ${hasDroneJobs() ? 'disabled' : ''}>${hasDroneJobs() ? '無人機工作時無法刪除' : '刪除這塊地'}</button>` : '';
@@ -563,7 +569,7 @@
       settingsToggle?.setAttribute('aria-expanded', 'false');
       setDronePanelOpen(false);
     }
-    if (hudCollapsedSummary) { const environment = window.skyEnvironment.getState(game); hudCollapsedSummary.textContent = `${game.gardenName} · 🪙 ${game.coins} · 🌱 ${game.plots.length} · ${environment.isRaining ? '陰雨' : '晴朗'} · ${({ dawn: '清晨', day: '白天', dusk: '黃昏', night: '夜晚' })[environment.phase]} · ${jobStatus?.textContent || '無人機待命'}${persistenceWarning ? ' · 存檔需留意' : ''}`; }
+    if (hudCollapsedSummary) { const environment = window.skyEnvironment.getState(game); hudCollapsedSummary.textContent = `${game.gardenName} · 🪙 ${game.coins} · 🌱 ${getAutomaticPlotCount()} · ${environment.isRaining ? '陰雨' : '晴朗'} · ${({ dawn: '清晨', day: '白天', dusk: '黃昏', night: '夜晚' })[environment.phase]} · ${jobStatus?.textContent || '無人機待命'}${persistenceWarning ? ' · 存檔需留意' : ''}`; }
     if (!hudToggle) return;
     hudToggle.textContent = game.hudCollapsed ? '🔽' : '🔼';
     hudToggle.setAttribute('aria-label', game.hudCollapsed ? '展開介面' : '收合介面');
@@ -925,7 +931,7 @@
     if (!plot || game.plots.length <= 1) return notify('至少要保留一塊空中土地。');
     const remainingPlots = game.plots.filter((_, plotIndex) => plotIndex !== index);
     const plantedCrop = plot.crop === null ? '' : `這塊地上的${getPlantedCrop(plot).name}也會一併移除。`;
-    if (!window.confirm(`確定要刪除農地 ${index + 1} 嗎？${plantedCrop}`)) return;
+    if (!window.confirm(`確定要刪除${getPlotLabel(index)}嗎？${plantedCrop}`)) return;
     game.plots = remainingPlots;
     activePlotIndex = Math.min(index, remainingPlots.length - 1);
     dialog.close();
@@ -937,6 +943,8 @@
     settleExpiredWaterBoosts();
     updateHud(); updateAutoModeButton(); updateHudCollapse(); renderDroneFleet(); plotSelector.replaceChildren();
     game.plots.forEach((plot, index) => {
+      if (plot.manual === true) return;
+      const automaticPlotNumber = game.plots.slice(0, index + 1).filter((item) => item.manual !== true).length;
       const crop = plot.crop === null ? null : getPlantedCrop(plot);
       const elapsed = crop ? growthElapsed(plot) : 0;
       const ready = crop && elapsed >= crop.growTime;
@@ -949,9 +957,9 @@
       button.className = 'world-plot-button';
       button.type = 'button';
       button.dataset.plotButton = index;
-      button.setAttribute('aria-label', `農地 ${index + 1}，${state}。開啟操作`);
+      button.setAttribute('aria-label', `${getPlotLabel(index)}，${state}。開啟操作`);
       button.setAttribute('aria-pressed', 'false');
-      button.innerHTML = `<span class="world-plot-number">${String(index + 1).padStart(2, '0')}</span><span class="world-plot-icon" aria-hidden="true">${crop ? ready ? flowerIconMarkup(crop, 'flower-pixel-icon plot-pixel-icon') : crop.seedIcon : '＋'}</span><span class="world-plot-state">${plotMode(plot) === 'grass' ? '草地' : plotMode(plot) === 'manual' ? '手動' : !crop ? '空地' : rainWet ? '雨中濕潤' : ready ? '可收成' : `${remaining}s`}</span>${crop ? `<span class="world-plot-progress" aria-hidden="true"><span style="width:${progress}%"></span></span>` : ''}`;
+      button.innerHTML = `<span class="world-plot-number">${String(automaticPlotNumber).padStart(2, '0')}</span><span class="world-plot-icon" aria-hidden="true">${crop ? ready ? flowerIconMarkup(crop, 'flower-pixel-icon plot-pixel-icon') : crop.seedIcon : '＋'}</span><span class="world-plot-state">${plotMode(plot) === 'grass' ? '草地' : plotMode(plot) === 'manual' ? '手動' : !crop ? '空地' : rainWet ? '雨中濕潤' : ready ? '可收成' : `${remaining}s`}</span>${crop ? `<span class="world-plot-progress" aria-hidden="true"><span style="width:${progress}%"></span></span>` : ''}`;
       button.addEventListener('click', () => openPlotDialog(index));
       plotSelector.append(button);
     });
