@@ -1,9 +1,9 @@
 (() => {
   const LAND_BASE_COST = 75;
-  const LAND_EARLY_GROWTH = 0.21;
+  const LAND_EARLY_GROWTH = 0.2;
   const LAND_EARLY_EXPONENT = 1.8;
   const LAND_STAGE_SPLIT = 10;
-  const LAND_LATE_GROWTH = 0.05;
+  const LAND_LATE_GROWTH = 0.03;
   const LAND_LATE_EXPONENT = 1.2;
   const DRONE_BASE_COST = 300;
   const DRONE_GROWTH = 0.15;
