@@ -41,6 +41,7 @@
   function simulateOfflineProgress(state, now, crops, environment) {
     const departureAt = Number.isFinite(state.lastOnlineAt) ? state.lastOnlineAt : now;
     const rawDuration = Math.max(0, now - departureAt);
+    const coinsBefore = state.coins;
     const droneCountAtDeparture = clamp(
       Number.isInteger(state.droneCount) ? state.droneCount : (state.drones?.length || 1),
       1,
@@ -215,6 +216,7 @@
     let time = departureAt;
     let previousWeather = weatherAt(time);
     let previousTime = time;
+    if (simulatedDuration === 0 && weatherAt(departureAt).isRaining && state.lastObservedRaining !== true) applyRain(departureAt);
     if (state.autoMode === true && simulatedDuration > 0) {
       while (time <= simulationEnd) {
         const weather = weatherAt(time);
@@ -234,12 +236,27 @@
             drone.job = null;
           }
         });
-        planJobs(time);
-        dispatch(time);
+        if (time < simulationEnd) {
+          planJobs(time);
+          dispatch(time);
+        }
         previousWeather = weather;
         previousTime = time;
-        time += 1000;
+        if (time >= simulationEnd) break;
+        time = Math.min(time + 1000, simulationEnd);
       }
+    }
+    // Finish battery accounting at the exact simulation boundary; unfinished jobs stop when the budget ends.
+    if (state.autoMode === true && simulatedDuration > 0 && previousTime < simulationEnd) {
+      updateBatteries(simulationEnd, previousTime);
+      drones.forEach((drone) => {
+        const job = drone.job;
+        if (job && !job.committed && job.commitAt <= simulationEnd) {
+          job.committed = true;
+          commitJob(job, job.commitAt);
+        }
+        drone.job = null;
+      });
     }
     // Natural weather and growth continue after the automated-work budget is exhausted.
     if (rawDuration > simulatedDuration) {
@@ -264,7 +281,20 @@
     state.worldTimeMs = endWorldTime;
     state.worldTimeAnchor = now;
     state.lastObservedRaining = weatherAt(now).isRaining;
-    state.drones.forEach((drone) => { drone.batteryUpdatedAt = now; });
+    // Once automated simulation stops, idle drones can still charge in dry daylight.
+    const chargeStart = simulationEnd;
+    drones.forEach((simDrone) => {
+      let chargeTime = chargeStart;
+      while (simDrone.battery < 100 && chargeTime < now) {
+        const next = Math.min(now, chargeTime + 1000);
+        const weather = weatherAt((chargeTime + next) / 2);
+        if (weather.isDay && !weather.isRaining) simDrone.battery = Math.min(100, simDrone.battery + ((next - chargeTime) / 1000) * BATTERY_CHARGE_PER_SECOND);
+        chargeTime = next;
+        if (chargeTime - chargeStart > 20 * 60 * 1000) break;
+      }
+      const savedDrone = state.drones[simDrone.index];
+      if (savedDrone) { savedDrone.battery = simDrone.battery; savedDrone.batteryUpdatedAt = now; }
+    });
     state.lastOfflineReturnAt = now;
     state.lastOnlineAt = now;
     if (rawDuration <= 0) return null;
@@ -273,7 +303,7 @@
       automationEnabled: state.autoMode === true,
       droneCountAtDeparture,
       capped: rawDuration > simulatedDuration,
-      coinsEarned: state.coins,
+      coinsBefore, coinsAfter: state.coins, coinsDelta: state.coins - coinsBefore,
     };
   }
   window.gardenEconomy = {
