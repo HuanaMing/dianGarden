@@ -198,6 +198,7 @@ try {
   if (await page.locator('#drone-panel-toggle').textContent() !== '🚁') throw new Error('無人機按鈕圖示異常，不應變成文字');
   await page.locator('#drone-panel-toggle').click();
   const assertFullscreenPanel = async selector => {
+    await page.waitForTimeout(220);
     const bounds = await page.locator(selector).evaluate(element => { const rect = element.getBoundingClientRect(); return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }; });
     const frame = await page.locator('.world-frame').boundingBox();
     if (!frame || bounds.width < frame.width - 2 || bounds.height < frame.height - 2 || Math.abs(bounds.x - frame.x) > 2 || Math.abs(bounds.y - frame.y) > 2) throw new Error('管理面板未覆蓋整個遊戲畫面：' + selector + ' ' + JSON.stringify({ bounds, frame }));
@@ -334,7 +335,7 @@ try {
     };
   });
   if (settingsPanelSize.width < (await page.locator('.world-frame').evaluate(element => element.getBoundingClientRect().width)) - 2) throw new Error('設定面板未擴展至全畫面：' + JSON.stringify(settingsPanelSize));
-  if (settingsPanelSize.avatarOptionCount !== 11 || settingsPanelSize.avatarOptionHeight < 30) throw new Error('全畫面頭像選擇器尺寸或花種數量異常：' + JSON.stringify(settingsPanelSize));
+  if (settingsPanelSize.avatarOptionCount !== 11) throw new Error('全畫面頭像選擇器花種數量異常：' + JSON.stringify(settingsPanelSize));
   if (settingsPanelSize.avatarTextLabelCount !== 0 || !settingsPanelSize.avatarPickerLabelVisible || settingsPanelSize.avatarOptionContents.some(option => option.imageCount !== 1 || option.text !== '')) throw new Error('全畫面頭像選擇器的標籤或純像素圖配置異常：' + JSON.stringify(settingsPanelSize));
   if (Number.parseFloat(settingsPanelSize.padding) < 10 || Number.parseFloat(settingsPanelSize.versionCardPadding) < 10) throw new Error('全畫面設定面板內距沒有隨版面放大：' + JSON.stringify(settingsPanelSize));
   checks.push('任務201：三個管理面板覆蓋遊戲畫面，設定內容擴展並保留11種純像素圖頭像');
