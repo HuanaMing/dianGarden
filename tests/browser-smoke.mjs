@@ -171,6 +171,12 @@ try {
   const wheelActions = await page.locator('#garden-menu-wheel [data-wheel-action]').evaluateAll(nodes => nodes.map(node => node.dataset.wheelAction));
   if (wheelActions.join(',') !== 'drone,farm,settings,catalog,collapse,rotate') throw new Error('快捷輪盤選項不完整或順序錯誤：' + wheelActions.join(','));
   if (await page.locator('#garden-menu-wheel .garden-menu-wreath').getAttribute('src') !== 'assets/wreath.webp') throw new Error('快捷輪盤未沿用花草環素材');
+  const wheelGeometry = await page.evaluate(() => ({
+    centerContent: getComputedStyle(document.querySelector('#garden-menu-wheel'), '::before').content,
+    sectorClip: getComputedStyle(document.querySelector('#garden-menu-wheel [data-wheel-action="drone"]')).clipPath,
+    wheelBackground: getComputedStyle(document.querySelector('#garden-menu-wheel')).backgroundColor,
+  }));
+  if (wheelGeometry.centerContent !== 'none' || !wheelGeometry.sectorClip.startsWith('polygon(') || wheelGeometry.wheelBackground !== 'rgba(0, 0, 0, 0)') throw new Error('快捷輪盤中心或 60 度弧形樣式不符合設計');
   const frameBox = await page.locator('.world-frame').boundingBox();
   const wheelOpened = await page.evaluate(({ x, y }) => window.gardenMenuWheel.openAt(x, y, 1), { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
   if (!wheelOpened || !(await page.locator('#garden-menu-wheel').isVisible())) throw new Error('長按快捷輪盤未能顯示');
