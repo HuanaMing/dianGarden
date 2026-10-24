@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "192-grass-ramp-side-mesh-redo",
-  "nextAction": "執行任務192重做：確認草地斜坡四周側面隨頂面變形，完成瀏覽器自動測試並檢查結果。",
+  "activeTask": null,
+  "nextAction": "任務192重做：草地斜坡側面跟隨頂面變形，已完成並歸檔；Playwright 自動驗收通過，尚未人工逐像素檢查所有地形截圖。等待下一項任務指示。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
