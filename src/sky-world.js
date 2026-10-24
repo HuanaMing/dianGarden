@@ -1827,8 +1827,8 @@
   const frame = document.querySelector('.world-frame');
   if (!wheel || !frame) return;
 
-  const actions = ['drone', 'farm', 'settings', 'catalog', 'collapse'];
-  const angles = [-90, -18, 54, 126, 198];
+  const actions = ['drone', 'farm', 'settings', 'catalog', 'collapse', 'rotate'];
+  const selectionAngles = [-90, -30, 30, 90, 150, 210];
   const labels = {
     drone: '#drone-panel-toggle',
     farm: '#farm-management-toggle',
@@ -1839,6 +1839,7 @@
   let pointerId = null;
   let origin = null;
   let selected = null;
+  let rotateModeEnabled = false;
 
   function closeWheel() {
     wheel.hidden = true;
@@ -1858,7 +1859,7 @@
       const angle = Math.atan2(dy, dx) * 180 / Math.PI;
       let best = 0;
       let distance = Infinity;
-      angles.forEach((center, index) => {
+      selectionAngles.forEach((center, index) => {
         const delta = Math.abs(((angle - center + 540) % 360) - 180);
         if (delta < distance) { distance = delta; best = index; }
       });
@@ -1869,26 +1870,41 @@
     });
   }
 
+  function updateRotateMode(enabled) {
+    rotateModeEnabled = enabled;
+    const button = wheel.querySelector('[data-wheel-action="rotate"]');
+    if (button) {
+      button.classList.toggle('is-mode-active', enabled);
+      button.setAttribute('aria-pressed', String(enabled));
+      button.setAttribute('aria-label', enabled ? '旋轉模式已開啟' : '旋轉');
+    }
+    window.dispatchEvent(new CustomEvent('garden-camera-rotate-toggle', { detail: { enabled } }));
+  }
+
   function runAction(action) {
     closeWheel();
+    if (action === 'rotate') {
+      updateRotateMode(!rotateModeEnabled);
+      return;
+    }
     const target = document.querySelector(labels[action] || '');
     target?.click();
   }
 
   wheel.querySelectorAll('[data-wheel-action]').forEach((button) => {
     const index = actions.indexOf(button.dataset.wheelAction);
-    const angle = angles[index] * Math.PI / 180;
-    button.style.left = `${Math.cos(angle) * 78}px`;
-    button.style.top = `${Math.sin(angle) * 78}px`;
-    button.addEventListener('click', () => runAction(button.dataset.wheelAction));
+    const angle = index * 60;
+    button.style.setProperty('--wheel-angle', `${angle}deg`);
+    button.setAttribute('aria-pressed', button.dataset.wheelAction === 'rotate' ? 'false' : 'false');
+    button.addEventListener('click', () => runAction(button.dataset.wheel-action));
   });
 
   window.gardenMenuWheel = {
     isOpen: () => !wheel.hidden,
     openAt(clientX, clientY, id) {
-      if (wheel.hidden === false || document.querySelector('dialog[open]')) return false;
+      if (!wheel.hidden || document.querySelector('dialog[open]')) return false;
       const rect = frame.getBoundingClientRect();
-      const margin = 112;
+      const margin = 116;
       const x = Math.max(margin, Math.min(rect.width - margin, clientX - rect.left));
       const y = Math.max(margin, Math.min(rect.height - margin, clientY - rect.top));
       wheel.style.left = `${x}px`;
@@ -1901,6 +1917,12 @@
         if (icon) icon.textContent = isCollapsed ? '🔽' : '🔼';
         if (label) label.textContent = isCollapsed ? '展開介面' : '收合介面';
         collapseItem.setAttribute('aria-label', isCollapsed ? '展開介面' : '收合介面');
+      }
+      const rotateButton = wheel.querySelector('[data-wheel-action="rotate"]');
+      if (rotateButton) {
+        rotateButton.classList.toggle('is-mode-active', rotateModeEnabled);
+        rotateButton.setAttribute('aria-pressed', String(rotateModeEnabled));
+        rotateButton.setAttribute('aria-label', rotateModeEnabled ? '旋轉模式已開啟' : '旋轉');
       }
       wheel.hidden = false;
       wheel.classList.add('is-active');
