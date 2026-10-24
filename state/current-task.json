@@ -1,9 +1,9 @@
 {
-  "name": "任務199：快捷輪盤圖示尺寸、定位與辨識度",
-  "status": "completed",
+  "name": "任務182：匿名遊玩與 Google 綁定的雲端存檔、自動同步",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務174、175、180、188、189、190均已由使用者確認驗收完成並歸檔；任務197與199也已完成瀏覽器驗收並歸檔。下一步檢查其餘 active/inbox 任務，任務109的 Xcode／付費雲端 Mac 批准仍待處理。",
-  "result": "任務199完成：四個 PNG 圖示移出扇形裁切層，桌面35×35px、手機32×32px，新增白色外框與輕微陰影。GitHub Actions Playwright 全套驗收 run 40083713166 成功，browserErrors 為空；桌面與手機輪盤截圖已檢視。任務197的輪盤互動、觸控及面板互斥也在同一全套測試中通過，已歸檔至 tasks/done。另依使用者確認，任務174、175、180、188、189、190均已完成驗收，已補齊 done 歸檔並移除 active 副本。"
+  "nextAction": "任務182已完成本機存檔 schema、寫入／重置流程盤點與同步衝突方案；待使用者批准採用 Supabase 並確認是否可建立本遊戲專用專案（先查實際費用），批准後再接入 Auth、Google OAuth、雲端資料表與 RLS，最後進行跨裝置與離線同步驗收。任務109的 Xcode／付費雲端 Mac 批准仍待處理。",
+  "result": "任務182執行中：已確認任務181完成；已移除 inbox 重複檔並保留 active 版本。已盤點三個 localStorage key、存檔欄位、立即／pagehide／visibilitychange 寫入、載入驗證、花卉變種參照及重置行為。尚未修改遊戲存檔程式或雲端資料庫；Supabase 導入屬新增外部服務／架構變更，等待使用者批准。"
 }
