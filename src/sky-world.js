@@ -82,10 +82,10 @@
   let plotStates = galleryMode ? [{ crop: 0, plantedAt: 0, elapsed: 1, growTime: 1, plantHeight: 1 }] : [];
   // A planted crop may only advance visually until its planting identity changes.
   // This prevents transient stale growth snapshots from swapping a mature flower back to a seed.
-  const plotVisualStages = [];
+  const plotVisualStages = new Map();
   function getPlotVisualStage(plot, index) {
     if (!plot || !Number.isInteger(plot.crop) || !Number.isFinite(plot.plantedAt)) {
-      plotVisualStages[index] = null;
+      plotVisualStages.delete(index);
       return 0;
     }
     const identity = `${plot.crop}:${plot.plantedAt}`;
@@ -93,9 +93,9 @@
     const growTime = Number.isFinite(plot.growTime) && plot.growTime > 0 ? plot.growTime : 15_000;
     const progress = Math.min(1, elapsed / growTime);
     let stage = progress >= 1 ? 2 : progress >= 0.28 ? 1 : 0;
-    const previous = plotVisualStages[index];
+    const previous = plotVisualStages.get(index);
     if (previous?.identity === identity) stage = Math.max(stage, previous.stage);
-    plotVisualStages[index] = { identity, stage };
+    plotVisualStages.set(index, { identity, stage });
     return stage;
   }
   function manualPlantCoordinate(positionIndex) {
@@ -1044,7 +1044,8 @@
         const normalized = plot?.manual === true ? manualPlantCoordinate(plant.positionIndex || plantIndex + 1) : { x: 0.5, z: 0.5 };
         const plantX = x + (normalized.x - 0.5) * 0.9;
         const plantZ = z + (normalized.z - 0.5) * 0.9;
-        const stage = getPlotVisualStage(plant, i * 100 + plantIndex);
+        const stageKey = plot?.manual === true ? `manual:${i}:${plant.positionIndex || plantIndex + 1}` : i;
+        const stage = getPlotVisualStage(plant, stageKey);
         const flowerVertexStart = positions.length;
         addFlowerModel(positions, colors, plantX, plantZ, plant.crop, stage,
           Number.isFinite(plant.plantHeight) ? plant.plantHeight : 1, plant.customColor);
