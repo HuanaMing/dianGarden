@@ -20,7 +20,7 @@ if (!cloudSaveSource.includes("const needsChoice = authenticated && statusNode.d
   || !cloudSaveSource.includes("error.message === 'invalid_google_id_token' || error.message === 'authentication_required'")
   || !cloudSaveSource.includes("if (expired) {\n      clearStoredAuthSession();\n      sessionOpenedAt = 0;\n      syncEnabled = false;\n      clearTimeout(pendingSyncTimer);")
   || !cloudSaveSource.includes("signinNode.hidden = true;\n      if (startupSigninNode) startupSigninNode.hidden = true;")
-  || !cloudSaveSource.includes("if (!idToken || sessionExpired) return;")
+  || !cloudSaveSource.includes("if (!accessToken || sessionExpired) return;")
   || !cloudSaveSource.includes("function refreshCurrentPage() {\n    window.location.href = window.location.href;\n  }")
   || !gameSource.includes("cloudSessionExpired ? '暫停同步雲端進度' : '進度會自動儲存'")) {
   throw new Error('同步狀態、異地登入後隱藏登入入口、停止雲端請求或暫停同步提示邏輯缺失');
@@ -814,77 +814,79 @@ try {
   checks.push('任務209：本機存檔讀取失敗時，跨裝置存檔區顯示醒目警告');
   await saveWarningPage.close();
 
+  const authApiPattern = 'https://diangarden-cloud-save.ry15968.workers.dev/api/**';
+  const authCorsHeaders = {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, PUT, POST, OPTIONS',
+    'access-control-allow-headers': 'authorization,content-type,x-diangarden-opened-at',
+    'content-type': 'application/json',
+  };
   const restoredAuthPage = await browser.newPage({ viewport: { width: 900, height: 900 } });
   const restoredAuthOpenedAt = Date.now() - 5000;
-  const restoredAuthExp = Math.floor(Date.now() / 1000) + 3600;
-  const restoredAuthToken = await restoredAuthPage.evaluate(({ exp }) => {
-    const encode = value => btoa(JSON.stringify(value)).replace(/=/g, '').replaceAll('+', '-').replaceAll('/', '_');
-    return 'header.' + encode({
-      iss: 'https://accounts.google.com',
-      aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com',
-      sub: 'task231-session-account',
-      exp,
-    }) + '.signature';
-  }, { exp: restoredAuthExp });
-  await restoredAuthPage.addInitScript(({ token, exp, openedAt }) => {
+  await restoredAuthPage.addInitScript(({ openedAt }) => {
     localStorage.removeItem('sky-garden-guest-mode-v1');
-    sessionStorage.setItem('sky-garden-auth-session-v1', JSON.stringify({
-      version: 1, idToken: token, currentSub: 'task231-session-account', exp, sessionOpenedAt: openedAt,
+    localStorage.setItem('sky-garden-auth-session-v1', JSON.stringify({
+      version: 2, refreshToken: 'test-session-id.old-refresh-secret', currentSub: 'task232-session-account',
     }));
-    window.__task231GoogleInitializeCalls = 0;
-    window.__task231GooglePromptCalls = 0;
+    sessionStorage.setItem('sky-garden-auth-opened-at-v1', String(openedAt));
+    window.__task232GoogleInitializeCalls = 0;
+    window.__task232GooglePromptCalls = 0;
     window.google = { accounts: { id: {
-      initialize() { window.__task231GoogleInitializeCalls += 1; },
+      initialize() { window.__task232GoogleInitializeCalls += 1; },
       renderButton() {},
-      prompt() { window.__task231GooglePromptCalls += 1; },
+      prompt() { window.__task232GooglePromptCalls += 1; },
       disableAutoSelect() {},
     } } };
-  }, { token: restoredAuthToken, exp: restoredAuthExp, openedAt: restoredAuthOpenedAt });
+  }, { openedAt: restoredAuthOpenedAt });
   const restoredAuthRequests = [];
-  await restoredAuthPage.route('https://diangarden-cloud-save.ry15968.workers.dev/api/save', async route => {
+  await restoredAuthPage.route(authApiPattern, async route => {
     const request = route.request();
+    const url = new URL(request.url());
     if (request.method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: {
-        'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'GET, PUT, OPTIONS',
-        'access-control-allow-headers': 'authorization,content-type,x-diangarden-opened-at',
-      } });
+      await route.fulfill({ status: 204, headers: authCorsHeaders });
       return;
     }
-    restoredAuthRequests.push({
-      method: request.method(),
-      authorization: request.headers()['authorization'],
-      openedAt: request.headers()['x-diangarden-opened-at'],
-    });
-    await route.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' },
-      body: JSON.stringify({ status: 'not_found', revision: 0 }) });
+    restoredAuthRequests.push({ path: url.pathname, method: request.method(), authorization: request.headers()['authorization'], body: request.postDataJSON?.() });
+    if (url.pathname === '/api/session/refresh') {
+      await route.fulfill({ status: 200, headers: authCorsHeaders, body: JSON.stringify({
+        accessToken: 'test-session-id.access-secret', accessExpiresAt: Math.floor(Date.now() / 1000) + 900,
+        refreshToken: 'test-session-id.rotated-refresh-secret', idleExpiresAt: Math.floor(Date.now() / 1000) + 2592000,
+        userId: 'task232-session-account',
+      }) });
+    } else if (url.pathname === '/api/save') {
+      await route.fulfill({ status: 200, headers: authCorsHeaders, body: JSON.stringify({ status: 'not_found', revision: 0 }) });
+    } else {
+      await route.fulfill({ status: 200, headers: authCorsHeaders, body: JSON.stringify({ status: 'signed_out' }) });
+    }
   });
   await restoredAuthPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   await restoredAuthPage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('雲端還沒有存檔'));
   const restoredAuthState = await restoredAuthPage.evaluate(() => ({
-    session: JSON.parse(sessionStorage.getItem('sky-garden-auth-session-v1') || 'null'),
-    googleInitializeCalls: window.__task231GoogleInitializeCalls,
-    googlePromptCalls: window.__task231GooglePromptCalls,
+    session: JSON.parse(localStorage.getItem('sky-garden-auth-session-v1') || 'null'),
+    openedAt: Number(sessionStorage.getItem('sky-garden-auth-opened-at-v1')),
+    googleInitializeCalls: window.__task232GoogleInitializeCalls,
+    googlePromptCalls: window.__task232GooglePromptCalls,
     startupDialogOpen: Boolean(document.querySelector('#startup-garden-dialog')?.open),
   }));
-  if (restoredAuthRequests.length !== 1 || restoredAuthRequests[0].method !== 'GET'
-    || restoredAuthRequests[0].authorization !== 'Bearer ' + restoredAuthToken
-    || restoredAuthRequests[0].openedAt !== String(restoredAuthOpenedAt)
-    || restoredAuthState.googleInitializeCalls !== 1 || restoredAuthState.googlePromptCalls !== 0 || restoredAuthState.startupDialogOpen
-    || restoredAuthState.session?.sessionOpenedAt !== restoredAuthOpenedAt) {
-    throw new Error('任務231：有效 sessionStorage 登入未恢復原雲端工作階段：' + JSON.stringify({ restoredAuthRequests, restoredAuthState }));
+  if (restoredAuthRequests.length !== 2 || restoredAuthRequests[0].path !== '/api/session/refresh'
+    || restoredAuthRequests[1].path !== '/api/save' || restoredAuthRequests[1].authorization !== 'Bearer test-session-id.access-secret'
+    || restoredAuthRequests[1].body !== undefined || restoredAuthState.session?.refreshToken !== 'test-session-id.rotated-refresh-secret'
+    || restoredAuthState.openedAt !== restoredAuthOpenedAt || restoredAuthState.googleInitializeCalls !== 1
+    || restoredAuthState.googlePromptCalls !== 0 || restoredAuthState.startupDialogOpen) {
+    throw new Error('任務232：重新開啟遊戲未恢復長期登入並輪替更新憑證：' + JSON.stringify({ restoredAuthRequests, restoredAuthState }));
   }
   await restoredAuthPage.locator('#settings-toggle').click();
   await restoredAuthPage.locator('#cloud-save-signout').click();
+  await restoredAuthPage.waitForFunction(() => localStorage.getItem('sky-garden-auth-session-v1') === null);
   const signedOutAuthState = await restoredAuthPage.evaluate(() => ({
-    session: sessionStorage.getItem('sky-garden-auth-session-v1'),
+    session: localStorage.getItem('sky-garden-auth-session-v1'),
     signInVisible: !document.querySelector('#cloud-save-signin')?.hidden,
     actionsHidden: document.querySelector('#cloud-save-actions')?.hidden,
   }));
   if (signedOutAuthState.session !== null || !signedOutAuthState.signInVisible || !signedOutAuthState.actionsHidden) {
-    throw new Error('任務231：登出未清除 sessionStorage 登入資訊或未關閉雲端操作：' + JSON.stringify(signedOutAuthState));
+    throw new Error('任務232：登出未清除長期登入憑證或未關閉雲端操作：' + JSON.stringify(signedOutAuthState));
   }
-  checks.push('任務231：恢復同分頁登入時保留 sessionOpenedAt，登出會清除短效憑證');
+  checks.push('任務232：跨日登入恢復、更新憑證輪替及登出清除狀態');
   await restoredAuthPage.close();
 
   const credentialPersistencePage = await browser.newPage({ viewport: { width: 900, height: 900 } });
@@ -894,151 +896,114 @@ try {
     return 'header.' + encode({
       iss: 'https://accounts.google.com',
       aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com',
-      sub: 'task231-login-account', exp,
+      sub: 'task232-login-account', exp,
     }) + '.signature';
   }, { exp: loginTokenExp });
   await credentialPersistencePage.addInitScript(() => {
     localStorage.removeItem('sky-garden-guest-mode-v1');
-    window.__task231GoogleInitializeCalls = 0;
-    window.__task231GooglePromptCalls = 0;
+    window.__task232GoogleInitializeCalls = 0;
+    window.__task232GooglePromptCalls = 0;
     window.google = { accounts: { id: {
       initialize(options) {
-        window.__task231GoogleInitializeCalls += 1;
-        window.__task231CredentialCallback = options.callback;
+        window.__task232GoogleInitializeCalls += 1;
+        window.__task232CredentialCallback = options.callback;
       },
       renderButton() {},
-      prompt() { window.__task231GooglePromptCalls += 1; },
+      prompt() { window.__task232GooglePromptCalls += 1; },
       disableAutoSelect() {},
     } } };
   });
   const credentialPersistenceRequests = [];
-  await credentialPersistencePage.route('https://diangarden-cloud-save.ry15968.workers.dev/api/save', async route => {
+  await credentialPersistencePage.route(authApiPattern, async route => {
     const request = route.request();
+    const url = new URL(request.url());
     if (request.method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: {
-        'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'GET, PUT, OPTIONS',
-        'access-control-allow-headers': 'authorization,content-type,x-diangarden-opened-at',
-      } });
+      await route.fulfill({ status: 204, headers: authCorsHeaders });
       return;
     }
-    credentialPersistenceRequests.push({
-      method: request.method(),
-      authorization: request.headers()['authorization'],
-      openedAt: request.headers()['x-diangarden-opened-at'],
-    });
-    await route.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' },
-      body: JSON.stringify({ status: 'not_found', revision: 0 }) });
+    credentialPersistenceRequests.push({ path: url.pathname, method: request.method(), authorization: request.headers()['authorization'], body: request.postDataJSON?.() });
+    if (url.pathname === '/api/session') {
+      await route.fulfill({ status: 201, headers: authCorsHeaders, body: JSON.stringify({
+        accessToken: 'login-session.access-1', accessExpiresAt: Math.floor(Date.now() / 1000) + 900,
+        refreshToken: 'login-session.refresh-1', idleExpiresAt: Math.floor(Date.now() / 1000) + 2592000,
+        userId: 'task232-login-account',
+      }) });
+    } else if (url.pathname === '/api/session/refresh') {
+      await route.fulfill({ status: 200, headers: authCorsHeaders, body: JSON.stringify({
+        accessToken: 'login-session.access-2', accessExpiresAt: Math.floor(Date.now() / 1000) + 900,
+        refreshToken: 'login-session.refresh-2', idleExpiresAt: Math.floor(Date.now() / 1000) + 2592000,
+        userId: 'task232-login-account',
+      }) });
+    } else {
+      await route.fulfill({ status: 200, headers: authCorsHeaders, body: JSON.stringify({ status: 'not_found', revision: 0 }) });
+    }
   });
   await credentialPersistencePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
-  await credentialPersistencePage.waitForFunction(() => typeof window.__task231CredentialCallback === 'function');
-  await credentialPersistencePage.evaluate(token => window.__task231CredentialCallback({ credential: token }), loginToken);
+  await credentialPersistencePage.waitForFunction(() => typeof window.__task232CredentialCallback === 'function');
+  await credentialPersistencePage.evaluate(token => window.__task232CredentialCallback({ credential: token }), loginToken);
   await credentialPersistencePage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('雲端還沒有存檔'));
-  const persistedLogin = await credentialPersistencePage.evaluate(() => JSON.parse(sessionStorage.getItem('sky-garden-auth-session-v1') || 'null'));
-  if (!persistedLogin || persistedLogin.idToken !== loginToken || persistedLogin.currentSub !== 'task231-login-account'
-    || persistedLogin.exp !== loginTokenExp || !Number.isSafeInteger(persistedLogin.sessionOpenedAt)
-    || credentialPersistenceRequests.length !== 1
-    || credentialPersistenceRequests[0].openedAt !== String(persistedLogin.sessionOpenedAt)) {
-    throw new Error('任務231：Google 登入成功後未安全保存短效 token 與 sessionOpenedAt：' + JSON.stringify({ persistedLogin, credentialPersistenceRequests }));
+  const persistedLogin = await credentialPersistencePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-auth-session-v1') || 'null'));
+  if (!persistedLogin || persistedLogin.version !== 2 || persistedLogin.refreshToken !== 'login-session.refresh-1'
+    || persistedLogin.currentSub !== 'task232-login-account' || JSON.stringify(persistedLogin).includes('header.')
+    || credentialPersistenceRequests[0]?.path !== '/api/session'
+    || credentialPersistenceRequests[0]?.body?.idToken !== loginToken
+    || credentialPersistenceRequests[1]?.path !== '/api/save'
+    || credentialPersistenceRequests[1]?.authorization !== 'Bearer login-session.access-1') {
+    throw new Error('任務232：Google 登入後未建立遊戲專用工作階段或仍持久保存 Google ID Token：' + JSON.stringify({ persistedLogin, credentialPersistenceRequests }));
   }
   await credentialPersistencePage.reload({ waitUntil: 'networkidle', timeout: 30000 });
   await credentialPersistencePage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('雲端還沒有存檔'));
   const reloadedLogin = await credentialPersistencePage.evaluate(() => ({
-    session: JSON.parse(sessionStorage.getItem('sky-garden-auth-session-v1') || 'null'),
-    googleInitializeCalls: window.__task231GoogleInitializeCalls,
-    googlePromptCalls: window.__task231GooglePromptCalls,
+    session: JSON.parse(localStorage.getItem('sky-garden-auth-session-v1') || 'null'),
+    googleInitializeCalls: window.__task232GoogleInitializeCalls,
+    googlePromptCalls: window.__task232GooglePromptCalls,
   }));
-  if (credentialPersistenceRequests.length !== 2
-    || credentialPersistenceRequests[1].authorization !== 'Bearer ' + loginToken
-    || credentialPersistenceRequests[1].openedAt !== String(persistedLogin.sessionOpenedAt)
-    || reloadedLogin.session?.sessionOpenedAt !== persistedLogin.sessionOpenedAt
+  if (credentialPersistenceRequests.filter(item => item.path === '/api/session/refresh').length !== 1
+    || credentialPersistenceRequests.at(-1)?.authorization !== 'Bearer login-session.access-2'
+    || reloadedLogin.session?.refreshToken !== 'login-session.refresh-2'
     || reloadedLogin.googleInitializeCalls !== 1 || reloadedLogin.googlePromptCalls !== 0) {
-    throw new Error('任務231：頁面重新載入後未恢復同一登入憑證與雲端工作階段：' + JSON.stringify({ credentialPersistenceRequests, reloadedLogin }));
+    throw new Error('任務232：頁面重新載入後未使用更新憑證恢復登入：' + JSON.stringify({ credentialPersistenceRequests, reloadedLogin }));
   }
-  checks.push('任務231：Google 登入成功後保存短效憑證，重新載入後沿用相同 sessionOpenedAt');
+  checks.push('任務232：Google ID Token 僅用於首次登入，之後以遊戲更新憑證恢復登入');
   await credentialPersistencePage.close();
 
   const expiredAuthPage = await browser.newPage({ viewport: { width: 900, height: 900 } });
   await expiredAuthPage.addInitScript(() => {
     localStorage.removeItem('sky-garden-guest-mode-v1');
-    const exp = Math.floor(Date.now() / 1000) - 120;
-    const encode = value => btoa(JSON.stringify(value)).replace(/=/g, '').replaceAll('+', '-').replaceAll('/', '_');
-    const token = 'header.' + encode({
-      iss: 'https://accounts.google.com',
-      aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com',
-      sub: 'task231-expired-account', exp,
-    }) + '.signature';
-    sessionStorage.setItem('sky-garden-auth-session-v1', JSON.stringify({
-      version: 1, idToken: token, currentSub: 'task231-expired-account', exp, sessionOpenedAt: Date.now(),
+    localStorage.setItem('sky-garden-auth-session-v1', JSON.stringify({
+      version: 2, refreshToken: 'expired-session.refresh-secret', currentSub: 'task232-expired-account',
     }));
-    window.__task231GoogleInitializeCalls = 0;
+    window.__task232GoogleInitializeCalls = 0;
     window.google = { accounts: { id: {
-      initialize() { window.__task231GoogleInitializeCalls += 1; },
+      initialize() { window.__task232GoogleInitializeCalls += 1; },
       renderButton() {},
       prompt() {},
       disableAutoSelect() {},
     } } };
   });
-  await expiredAuthPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
-  await expiredAuthPage.waitForFunction(() => window.__task231GoogleInitializeCalls > 0);
-  const expiredAuthState = await expiredAuthPage.evaluate(() => ({
-    session: sessionStorage.getItem('sky-garden-auth-session-v1'),
-    googleInitializeCalls: window.__task231GoogleInitializeCalls,
-  }));
-  if (expiredAuthState.session !== null || expiredAuthState.googleInitializeCalls !== 1) {
-    throw new Error('任務231：過期的 sessionStorage 憑證未清除或未回到登入流程：' + JSON.stringify(expiredAuthState));
-  }
-  checks.push('任務231：過期登入憑證會清除並回到 Google 登入流程');
-  await expiredAuthPage.close();
-
-  const rejectedAuthPage = await browser.newPage({ viewport: { width: 900, height: 900 } });
-  await rejectedAuthPage.addInitScript(() => {
-    localStorage.removeItem('sky-garden-guest-mode-v1');
-    const exp = Math.floor(Date.now() / 1000) + 3600;
-    const encode = value => btoa(JSON.stringify(value)).replace(/=/g, '').replaceAll('+', '-').replaceAll('/', '_');
-    const token = 'header.' + encode({
-      iss: 'https://accounts.google.com',
-      aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com',
-      sub: 'task231-server-rejected-account', exp,
-    }) + '.signature';
-    sessionStorage.setItem('sky-garden-auth-session-v1', JSON.stringify({
-      version: 1, idToken: token, currentSub: 'task231-server-rejected-account', exp, sessionOpenedAt: Date.now(),
-    }));
-    window.__task231GoogleInitializeCalls = 0;
-    window.__task231GooglePromptCalls = 0;
-    window.google = { accounts: { id: {
-      initialize() { window.__task231GoogleInitializeCalls += 1; },
-      renderButton() {},
-      prompt() { window.__task231GooglePromptCalls += 1; },
-      disableAutoSelect() {},
-    } } };
-  });
-  await rejectedAuthPage.route('https://diangarden-cloud-save.ry15968.workers.dev/api/save', async route => {
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: {
-        'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'GET, PUT, OPTIONS',
-        'access-control-allow-headers': 'authorization,content-type,x-diangarden-opened-at',
-      } });
+  await expiredAuthPage.route(authApiPattern, async route => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: authCorsHeaders });
       return;
     }
-    await route.fulfill({ status: 401, headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' },
-      body: JSON.stringify({ error: 'invalid_google_id_token' }) });
+    if (new URL(request.url()).pathname === '/api/session/refresh') {
+      await route.fulfill({ status: 401, headers: authCorsHeaders, body: JSON.stringify({ error: 'session_expired' }) });
+    } else {
+      await route.fulfill({ status: 200, headers: authCorsHeaders, body: JSON.stringify({ status: 'not_found', revision: 0 }) });
+    }
   });
-  await rejectedAuthPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
-  await rejectedAuthPage.locator('#startup-garden-dialog[open]').waitFor({ state: 'visible', timeout: 8000 });
-  const rejectedAuthState = await rejectedAuthPage.evaluate(() => ({
-    session: sessionStorage.getItem('sky-garden-auth-session-v1'),
-    signInVisible: !document.querySelector('#cloud-save-signin')?.hidden,
-    startupSignInVisible: !document.querySelector('#startup-google-signin')?.hidden,
-    status: document.querySelector('#cloud-save-status')?.textContent.trim(),
+  await expiredAuthPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await expiredAuthPage.waitForFunction(() => window.__task232GoogleInitializeCalls > 0);
+  const expiredAuthState = await expiredAuthPage.evaluate(() => ({
+    session: localStorage.getItem('sky-garden-auth-session-v1'),
+    googleInitializeCalls: window.__task232GoogleInitializeCalls,
   }));
-  if (rejectedAuthState.session !== null || !rejectedAuthState.signInVisible || !rejectedAuthState.startupSignInVisible
-    || rejectedAuthState.status !== 'Google 登入已失效，請重新登入。') {
-    throw new Error('任務231：伺服器拒絕 ID token 後未清除登入狀態或恢復登入入口：' + JSON.stringify(rejectedAuthState));
+  if (expiredAuthState.session !== null || expiredAuthState.googleInitializeCalls !== 1) {
+    throw new Error('任務232：過期長期登入未清除並回到 Google 登入流程：' + JSON.stringify(expiredAuthState));
   }
-  checks.push('任務231：伺服器拒絕 ID token 後清除暫存並要求重新登入');
-  await rejectedAuthPage.close();
+  checks.push('任務232：過期長期登入會清除並回到 Google 登入流程');
+  await expiredAuthPage.close();
 
   const staleSessionPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await staleSessionPage.addInitScript(() => {
