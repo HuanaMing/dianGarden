@@ -112,8 +112,8 @@ body{background:#d9f0f7}
 .variant-editor{width:min(60vh,100%);box-sizing:border-box;margin:0;padding:9px 12px;gap:8px}
 .variant-editor #saved-variants{max-height:60px;overflow-y:auto}
 .flower-picker-panel{display:grid;grid-template-rows:auto minmax(0,1fr);min-width:0;min-height:0;overflow:hidden;border:1px solid #e3eadd;border-radius:20px;background:#f7f8f1b8}
-.flower-picker-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0;padding:14px 16px 10px;color:#46634d;font-size:16px}
-.flower-picker-heading span{color:#89968a;font-size:10px;font-weight:600}
+.flower-picker-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0;padding:14px 16px 10px;color:#46634d;font-size:16px}
+.flower-picker-collapse-indicator{display:none;width:24px;height:24px;flex:0 0 24px;object-fit:contain;image-rendering:pixelated;margin-left:auto}
 .flower-picker-scroll{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:0 10px 10px}
 .encyclopedia-grid{display:grid;grid-template-columns:1fr;gap:8px;margin:0}
 .encyclopedia-disclaimer{margin:10px 4px 2px;color:#8a968b;font-size:10px;line-height:1.5}
@@ -761,10 +761,9 @@ input, [contenteditable="true"]{
 @media(max-width:760px){
   .encyclopedia-layout{position:relative}
   .flower-picker-heading{touch-action:none;user-select:none;cursor:grab}
-  .flower-picker-collapse-indicator{display:inline-block;flex:none;transition:transform .15s ease}
+  .flower-picker-collapse-indicator{display:block}
   .encyclopedia-layout.is-picker-expanded .flower-picker-panel{position:absolute;inset:0;z-index:10;min-height:0;border-radius:14px;background:#f7f8f1f5;box-shadow:0 8px 26px #31594f24}
   .encyclopedia-layout.is-picker-expanded .flower-picker-heading{cursor:grabbing}
-  .encyclopedia-layout.is-picker-expanded .flower-picker-collapse-indicator{transform:rotate(180deg)}
 }
 
 /* 任務218：農地管理依地塊類型切換，桌面列表固定五欄。 */
