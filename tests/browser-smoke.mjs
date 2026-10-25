@@ -1571,20 +1571,29 @@ try {
     await manualUpgradePage.locator('#farm-dialog [data-manual-seed-options] .seed-option').first().click();
   }
   const fullCapacity = await manualUpgradePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots[3]);
-  // 重新開啟操作視窗，驗證滿載後實際呈現的 UI，而非依賴上一個按鈕事件的暫存 DOM。
-  await manualUpgradePage.evaluate(() => window.onSkyPlotActivate?.(3));
+  // 關閉可能仍顯示舊內容的操作視窗，再開啟該地塊，確認最新的滿載狀態。
+  await manualUpgradePage.evaluate(() => {
+    const dialog = document.querySelector('#farm-dialog');
+    if (dialog?.open) dialog.close();
+    window.onSkyPlotActivate?.(3);
+  });
   await manualUpgradePage.locator('#farm-dialog[open] .manual-plant-card').first().waitFor({ state: 'visible', timeout: 8000 });
   const visiblePlantCardsAtCapacity = await manualUpgradePage.locator('#farm-dialog .manual-plant-card').count();
+  const fullCapacityHeading = await manualUpgradePage.locator('#farm-dialog .manual-seed-heading').innerText();
   const seedOptionsAtCapacity = await manualUpgradePage.locator('#farm-dialog [data-manual-seed-options] .seed-option').count();
-  if (fullCapacity.plants.length !== 4 || visiblePlantCardsAtCapacity !== 4 || seedOptionsAtCapacity !== 0) {
+  if (fullCapacity.plants.length !== 4 || visiblePlantCardsAtCapacity !== 4 || seedOptionsAtCapacity !== 0 || !fullCapacityHeading.includes('名額已滿')) {
     throw new Error('任務229：容量滿載後仍可新增花株，或容量限制不正確：' + JSON.stringify({
       plantCount: fullCapacity.plants?.length,
       capacityLevel: fullCapacity.capacityLevel,
       visiblePlantCardsAtCapacity,
       seedOptionsAtCapacity,
+      fullCapacityHeading,
+      dialogOpen: await manualUpgradePage.locator('#farm-dialog').evaluate(dialog => dialog.open),
+      dialogTitle: await manualUpgradePage.locator('#farm-dialog [data-manual-seed-options]').evaluate(el => el.parentElement?.innerText),
       coins: (await manualUpgradePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')))).coins,
     }));
   }
+  checks.push('任務229：升級價格40／106／186、連續付款、容量滿載限制、自動地塊隔離與重載持久性通過');
   await manualUpgradePage.reload({ waitUntil: 'networkidle', timeout: 30000 });
   const persistedUpgrade = await manualUpgradePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots[3]);
   if (persistedUpgrade.capacityLevel !== 4 || persistedUpgrade.plants.length !== 4) {
