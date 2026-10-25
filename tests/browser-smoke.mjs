@@ -114,8 +114,10 @@ await droneTeleportPage.addInitScript(() => {
   const originalBufferData = WebGLRenderingContext.prototype.bufferData;
   WebGLRenderingContext.prototype.bufferData = function (target, data, usage) {
     const result = originalBufferData.call(this, target, data, usage);
+    window.__dgDroneFrameCounter = (window.__dgDroneFrameCounter || 0) + 1;
     if (window.__dgWebglBuffers[2] && window.__dgBoundBuffer === window.__dgWebglBuffers[2]
-      && data instanceof Float32Array && window.__dgDroneFrames.length < 100) {
+      && data instanceof Float32Array && window.__dgDroneFrameCounter % 3 === 0) {
+      if (window.__dgDroneFrames.length >= 120) window.__dgDroneFrames.shift();
       window.__dgDroneFrames.push(Array.from(data));
     }
     return result;
