@@ -170,7 +170,7 @@
           && (plant.growthBonusMs === undefined || (Number.isFinite(plant.growthBonusMs) && plant.growthBonusMs >= 0))
           && (plant.variantId === undefined || plant.variantId === null || flowerVariants.some((variant) => variant.id === plant.variantId && variant.cropIndex === plant.crop))
           && ((plant.waterStartedAt === undefined && plant.waterUntil === undefined)
-            || (Number.isFinite(plant.waterStartedAt) && Number.isFinite(plant.waterUntil) && plant.waterUntil > plant.waterStartedAt && plant.watered === true)))));
+            || (Number.isFinite(plant.waterStartedAt) && Number.isFinite(plant.waterUntil) && plant.waterUntil > plant.waterStartedAt && plant.watered === true))))));
   }
   function loadGame() {
     let flowerVariants = [];
