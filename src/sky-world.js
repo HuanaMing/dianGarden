@@ -501,6 +501,41 @@
       });
       return sides;
     },
+    getConnectedGroupBottomY(positions, index, tileSize = 1, maxHeightDifference = 0.5) {
+      if (!Array.isArray(positions) || !Number.isInteger(index) || !positions[index]) return 0;
+      const epsilon = 1e-8;
+      const connected = new Set([index]);
+      const queue = [index];
+      while (queue.length) {
+        const currentIndex = queue.shift();
+        const current = positions[currentIndex];
+        positions.forEach((candidate, candidateIndex) => {
+          if (!candidate || connected.has(candidateIndex)) return;
+          const dx = Math.abs(candidate.x - current.x);
+          const dz = Math.abs(candidate.z - current.z);
+          const dy = Math.abs((candidate.y || 0) - (current.y || 0));
+          const horizontalTouch = ((Math.abs(dx - tileSize) <= epsilon && dz <= epsilon)
+            || (Math.abs(dz - tileSize) <= epsilon && dx <= epsilon))
+            && dy <= maxHeightDifference + epsilon;
+          const verticalTouch = dx <= epsilon && dz <= epsilon && dy > epsilon
+            && dy <= maxHeightDifference + epsilon;
+          if (!horizontalTouch && !verticalTouch) return;
+          connected.add(candidateIndex);
+          queue.push(candidateIndex);
+        });
+      }
+      let lowestY = Infinity;
+      connected.forEach((plotIndex) => { lowestY = Math.min(lowestY, positions[plotIndex].y || 0); });
+      return Number.isFinite(lowestY) ? lowestY - tileSize * 0.5 : 0;
+    },
+    hasPlotDirectlyBelow(positions, index, tileSize = 1) {
+      const source = positions?.[index];
+      if (!source || !Array.isArray(positions)) return false;
+      const epsilon = 1e-8;
+      return positions.some((candidate, candidateIndex) => candidateIndex !== index && candidate
+        && Math.abs(candidate.x - source.x) <= epsilon && Math.abs(candidate.z - source.z) <= epsilon
+        && Math.abs((source.y || 0) - (candidate.y || 0) - tileSize * 0.5) <= epsilon);
+    },
     getPlantBaseHeight(surfaceHeightAt, x, z, grassOnly) {
       const groundHeight = surfaceHeightAt(x, z);
       // addFlowerModel's local geometry baseline is y=0.055. Offset its origin so
@@ -558,7 +593,11 @@
       { side: 'west', indices: [3, 0], color: corners[3].side },
     ].map((edge) => ({ ...edge, points: edge.indices.map((cornerIndex) => corners[cornerIndex]) }));
     const center = { x, z, y, u: 0.5, v: 0.5, top: [x, y, z] };
-    const bottomY = Math.min(y, ...edges.flatMap((edge) => edge.points.map((point) => point.y))) - 0.5;
+    const localBottomY = Math.min(y, ...edges.flatMap((edge) => edge.points.map((point) => point.y))) - 0.5;
+    const rampLogic = window.dianGardenGrassRampLogic;
+    const hasPlotBelow = rampLogic.hasPlotDirectlyBelow(plotPositions, index, TILE);
+    const groupBottomY = rampLogic.getConnectedGroupBottomY(plotPositions, index, TILE, 0.5);
+    const bottomY = hasPlotBelow ? localBottomY : Math.min(localBottomY, groupBottomY);
     // Farm plots must not expose green turf around or above the raised soil bed.
     const topColor = [0.43, 0.68, 0.39];
     edges.forEach((edge) => addTriangle(positions, colors, edge.points[0].top, edge.points[1].top, center.top, topColor));
