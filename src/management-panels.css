@@ -191,3 +191,16 @@
   .drone-jobs .drone-fleet{gap:6px}
   .drone-jobs .drone-fleet-item{padding:6px 3px;border-radius:11px}
 }
+
+/* 任務218：依手動／自動分類切換地塊，桌面五欄、窄螢幕三欄。 */
+.farm-management-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:0 0 6px}
+.farm-management-tabs button{min-width:0;min-height:34px;padding:7px 10px;border:1px solid #dce8d8;border-radius:10px;background:#f4f7ed;color:#63806e;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.farm-management-tabs button[aria-selected="true"]{border-color:#8bbd91;background:#e5f2df;color:#315d3b;box-shadow:inset 0 0 0 1px #8bbd9133}
+.farm-management-panel .world-plots{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:6px;max-height:32vh;overflow:auto}
+.farm-management-panel .world-plots .world-plot-button{width:100%;min-width:0;padding:6px 3px}
+.farm-management-panel .farm-empty-state{grid-column:1/-1;margin:8px 4px;color:#7c9082;font-size:11px;line-height:1.5}
+@media(max-width:700px){
+  .farm-management-tabs button{min-height:36px;padding:6px 5px}
+  .farm-management-panel .world-plots{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px;max-height:35vh}
+  .farm-management-panel .world-plots .world-plot-button{min-height:58px;padding:5px 3px}
+}
