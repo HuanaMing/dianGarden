@@ -885,6 +885,75 @@ try {
   checks.push('任務231：恢復同分頁登入時保留 sessionOpenedAt，登出會清除短效憑證');
   await restoredAuthPage.close();
 
+  const credentialPersistencePage = await browser.newPage({ viewport: { width: 900, height: 900 } });
+  const loginTokenExp = Math.floor(Date.now() / 1000) + 3600;
+  const loginToken = await credentialPersistencePage.evaluate(({ exp }) => {
+    const encode = value => btoa(JSON.stringify(value)).replace(/=/g, '').replaceAll('+', '-').replaceAll('/', '_');
+    return 'header.' + encode({
+      iss: 'https://accounts.google.com',
+      aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com',
+      sub: 'task231-login-account', exp,
+    }) + '.signature';
+  }, { exp: loginTokenExp });
+  await credentialPersistencePage.addInitScript(() => {
+    localStorage.removeItem('sky-garden-guest-mode-v1');
+    window.__task231GoogleInitializeCalls = 0;
+    window.google = { accounts: { id: {
+      initialize(options) {
+        window.__task231GoogleInitializeCalls += 1;
+        window.__task231CredentialCallback = options.callback;
+      },
+      renderButton() {},
+      prompt() {},
+      disableAutoSelect() {},
+    } } };
+  });
+  const credentialPersistenceRequests = [];
+  await credentialPersistencePage.route('https://diangarden-cloud-save.ry15968.workers.dev/api/save', async route => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: {
+        'access-control-allow-origin': '*',
+        'access-control-allow-methods': 'GET, PUT, OPTIONS',
+        'access-control-allow-headers': 'authorization,content-type,x-diangarden-opened-at',
+      } });
+      return;
+    }
+    credentialPersistenceRequests.push({
+      method: request.method(),
+      authorization: request.headers()['authorization'],
+      openedAt: request.headers()['x-diangarden-opened-at'],
+    });
+    await route.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' },
+      body: JSON.stringify({ status: 'not_found', revision: 0 }) });
+  });
+  await credentialPersistencePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await credentialPersistencePage.waitForFunction(() => typeof window.__task231CredentialCallback === 'function');
+  await credentialPersistencePage.evaluate(token => window.__task231CredentialCallback({ credential: token }), loginToken);
+  await credentialPersistencePage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('雲端還沒有存檔'));
+  const persistedLogin = await credentialPersistencePage.evaluate(() => JSON.parse(sessionStorage.getItem('sky-garden-auth-session-v1') || 'null'));
+  if (!persistedLogin || persistedLogin.idToken !== loginToken || persistedLogin.currentSub !== 'task231-login-account'
+    || persistedLogin.exp !== loginTokenExp || !Number.isSafeInteger(persistedLogin.sessionOpenedAt)
+    || credentialPersistenceRequests.length !== 1
+    || credentialPersistenceRequests[0].openedAt !== String(persistedLogin.sessionOpenedAt)) {
+    throw new Error('任務231：Google 登入成功後未安全保存短效 token 與 sessionOpenedAt：' + JSON.stringify({ persistedLogin, credentialPersistenceRequests }));
+  }
+  await credentialPersistencePage.reload({ waitUntil: 'networkidle', timeout: 30000 });
+  await credentialPersistencePage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('雲端還沒有存檔'));
+  const reloadedLogin = await credentialPersistencePage.evaluate(() => ({
+    session: JSON.parse(sessionStorage.getItem('sky-garden-auth-session-v1') || 'null'),
+    googleInitializeCalls: window.__task231GoogleInitializeCalls,
+  }));
+  if (credentialPersistenceRequests.length !== 2
+    || credentialPersistenceRequests[1].authorization !== 'Bearer ' + loginToken
+    || credentialPersistenceRequests[1].openedAt !== String(persistedLogin.sessionOpenedAt)
+    || reloadedLogin.session?.sessionOpenedAt !== persistedLogin.sessionOpenedAt
+    || reloadedLogin.googleInitializeCalls !== 0) {
+    throw new Error('任務231：頁面重新載入後未恢復同一登入憑證與雲端工作階段：' + JSON.stringify({ credentialPersistenceRequests, reloadedLogin }));
+  }
+  checks.push('任務231：Google 登入成功後保存短效憑證，重新載入後沿用相同 sessionOpenedAt');
+  await credentialPersistencePage.close();
+
   const expiredAuthPage = await browser.newPage({ viewport: { width: 900, height: 900 } });
   await expiredAuthPage.addInitScript(() => {
     localStorage.removeItem('sky-garden-guest-mode-v1');
