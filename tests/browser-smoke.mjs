@@ -11,6 +11,14 @@ if (!indexHtml.includes('id="startup-garden-dialog"') || !indexHtml.includes('id
   || !indexHtml.includes('id="return-to-own-garden"')) throw new Error('登入入口／訪客花園控制項缺失');
 if (!cloudSaveSource.includes("signinNode.hidden = true;\n    if (startupSigninNode) startupSigninNode.hidden = true;")
   || !cloudSaveSource.includes("signinNode.hidden = false;\n    if (startupSigninNode) startupSigninNode.hidden = false;")) throw new Error('Google 登入成功隱藏入口或登出後恢復入口的邏輯缺失');
+if (indexHtml.includes('登入 Google 後，可在其他裝置找回同一座花園') || indexHtml.includes('雲端同步需要網路。同步失敗不會阻止遊玩')) {
+  throw new Error('跨裝置存檔區仍包含已移除的常駐說明文字');
+}
+if (!cloudSaveSource.includes("const needsChoice = authenticated && statusNode.dataset.state === 'choice';")
+  || !cloudSaveSource.includes("error.message === 'invalid_google_id_token' || error.message === 'authentication_required'")
+  || !cloudSaveSource.includes("if (expired) {\n      syncEnabled = false;\n      clearTimeout(pendingSyncTimer);")) {
+  throw new Error('同步操作未依目前狀態精簡顯示，或登入失效恢復入口的邏輯缺失');
+}
 if (!cloudSaveSource.includes("localStorage.setItem(GUEST_MODE_KEY, 'true')")
   || !cloudSaveSource.includes("localStorage.removeItem(GUEST_MODE_KEY)")
   || !gameSource.includes("'sky-garden-guest-save-v1'")
