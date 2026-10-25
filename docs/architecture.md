@@ -289,3 +289,8 @@ Worker 的 `POST /api/session/refresh` 會輪替存取與更新憑證；D1 只�
 
 D1 新增表格定義於 `cloudflare/schema.sql`，增量 migration 為 `cloudflare/migrations/002-player-sessions.sql`。更新 Worker 上線前，必須先將 migration 套用到既有 D1；僅將 SQL 提交至 GitHub 不會自動變更生產資料庫。本任務不會手動觸發 GitHub Pages 部署，也不會宣稱 Cloudflare 生產環境已更新。
 
+
+
+### WebGL 動態光照（任務237）
+
+`src/sky-world.js` 在世界幾何上傳時依每三個頂點計算法線，並將法線緩衝區與位置、顏色緩衝區一併送入 WebGL。頂點 shader 以世界座標法線、相機方向、方向光及環境光 uniform 計算受光顏色；模型檔案不必個別修改。日照強度由 `skyEnvironment` 提供的日照進度、時段與降雨混合值控制，黎明／黃昏採暖色光，雨天降低直射光，夜間大幅降低環境光及方向光。場景 canvas 不再以 CSS brightness 模擬日夜，避免與 shader 光照重複調暗。無人機及短暫特效也使用各自的法線緩衝區。
