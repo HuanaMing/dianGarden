@@ -1,10 +1,10 @@
 {
-  "name": "任務201：管理介面擴展為全畫面覆蓋層",
-  "status": "awaiting_user_acceptance",
+  "name": "任務202：頭像設定獨立彈出（並行處理任務203、204）",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "請使用者實際開啟遊戲，確認無人機管理、農地管理與設定會覆蓋整個遊戲畫面，並測試頂部切換控制、面板內捲動及手機版操作。驗收通過前保留在 tasks/active/。",
-  "taskFile": "tasks/active/201-fullscreen-management-panels.md",
-  "result": "已修改 src/styles.css，三個管理介面覆蓋整個 .world-frame，設定面板桌面雙欄、手機單欄，保留頂部控制列與面板內捲動。tests/browser-smoke.mjs 新增全畫面尺寸及互斥驗收。GitHub Actions Playwright 驗收 run 40122950792 通過，GitHub Pages 部署 run 40122950794 成功；等待使用者實際遊玩驗收。"
+  "nextAction": "完成 Playwright 驗收及 Pages 部署確認；再請使用者實際測試頭像彈窗、設定同步／輔助功能分頁與登入後隱藏登入按鈕。三項驗收前保留在 tasks/active/。",
+  "taskFile": "tasks/active/202-avatar-settings-dialog.md",
+  "result": "任務201已由使用者於2026-10-25驗收通過並歸檔。任務202-204程式已推送：頭像設定獨立對話框、設定同步／輔助功能分頁、Google 登入成功時隱藏登入入口且登出後恢復。Playwright 瀏覽器驗收仍在執行，先前版本暴露出測試流程切換分頁時漏開設定面板，已修正並重新執行；尚未宣稱通過。"
 }
