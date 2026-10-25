@@ -1053,6 +1053,8 @@
     const positions = [];
     const colors = [];
     const opacities = [];
+    const horizontal = Math.cos(pitch) * distance;
+    const eye = cameraMode === '2d' ? [targetX, topDownHeight, targetZ] : [targetX + Math.sin(yaw) * horizontal, Math.sin(pitch) * distance, targetZ + Math.cos(yaw) * horizontal];
     const addCloud = (x, y, z, drift, scale = 1) => {
       const start = positions.length / 3;
       const cloudColor = environmentState.isRaining ? [0.62, 0.72, 0.76] : [0.86, 0.93, 0.96];
@@ -1062,20 +1064,20 @@
       for (let i = start; i < positions.length / 3; i += 1) opacities.push(environmentState.isRaining ? 0.36 : 0.42);
     };
     const elapsed = time * 0.000012;
-    // Keep clouds beyond the normal camera zoom radius (max 24 world units) so they read as distant sky, not objects floating between islands.
+    // Clouds follow the camera eye by a fixed offset to prevent the camera from catching up; their height offsets are halved.
     const clouds = [
-      { x: -34, y: 15, z: -30, speed: 0.22, phase: 0.3, scale: 2.5 },
-      { x: -10, y: 19, z: -43, speed: 0.16, phase: 2.4, scale: 2.9 },
-      { x: 25, y: 16, z: -35, speed: 0.19, phase: 4.7, scale: 2.7 },
-      { x: 43, y: 18, z: -5, speed: 0.14, phase: 1.4, scale: 2.5 },
-      { x: -39, y: 17, z: 10, speed: 0.18, phase: 3.5, scale: 2.8 },
-      { x: -18, y: 21, z: 35, speed: 0.15, phase: 5.2, scale: 3.0 },
-      { x: 17, y: 15, z: 39, speed: 0.2, phase: 1.8, scale: 2.6 },
-      { x: 39, y: 20, z: 27, speed: 0.13, phase: 4.1, scale: 3.1 },
+      { x: -34, y: 7.5, z: -30, speed: 0.22, phase: 0.3, scale: 3.7 },
+      { x: -10, y: 9.5, z: -43, speed: 0.16, phase: 2.4, scale: 4.0 },
+      { x: 25, y: 8, z: -35, speed: 0.19, phase: 4.7, scale: 4.2 },
+      { x: 43, y: 9, z: -5, speed: 0.14, phase: 1.4, scale: 3.8 },
+      { x: -39, y: 8.5, z: 10, speed: 0.18, phase: 3.5, scale: 4.4 },
+      { x: -18, y: 10.5, z: 35, speed: 0.15, phase: 5.2, scale: 4.6 },
+      { x: 17, y: 7.5, z: 39, speed: 0.2, phase: 1.8, scale: 3.9 },
+      { x: 39, y: 10, z: 27, speed: 0.13, phase: 4.1, scale: 4.3 },
     ];
     for (const cloud of clouds) {
       const drift = Math.sin(elapsed * cloud.speed + cloud.phase) * 2.4;
-      addCloud(cloud.x, cloud.y, cloud.z, drift, cloud.scale);
+      addCloud(eye[0] + cloud.x, eye[1] + cloud.y, eye[2] + cloud.z, drift, cloud.scale);
     }
 
     skyVertexCount = positions.length / 3;
