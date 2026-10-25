@@ -1740,3 +1740,12 @@
 - 修正：僅在無人機停靠 X/Z 座標實際改變時更新返航路徑，電量與其他非位置欄位更新不再重設路徑插值。
 - 驗收：GitHub Actions Playwright 桌面／手機完整測試通過：[run 40169170602](https://github.com/HuanaMing/dianGarden/actions/runs/40169170602)。新增八台無人機動畫與持續電量更新的瀏覽器測試，70 個取樣的最大相鄰位置位移為 0.080 世界單位，低於 0.8 的異常跳位門檻。
 - 檔案：`src/sky-world.js`、`tests/browser-smoke.mjs`、`tasks/done/225-drone-teleportation.md`。
+
+
+## 2026-10-25 — 任務226：修正圖鑑全螢幕與手機選花面板
+
+- 根因：任務224加入的啟動繪圖暫停也套用至圖鑑頁面；圖鑑不會執行遊戲主頁的解除暫停流程。調整為只有遊戲主頁在啟動時預設暫停，圖鑑直接開始繪圖。
+- 手機介面：選花標題支援上拉展開面板並覆蓋預覽區、下拉恢復原排版；保留點擊切換，選擇花種後會自動收回面板。桌面排版維持不變。
+- 回歸測試：驗證圖鑑一般／全螢幕持續繪圖、畫布尺寸與退出全螢幕；驗證手機上拉／下拉／點擊切換、選花後恢復排版及全螢幕 API fallback。完整 Playwright 桌面／手機驗收通過：[run 40170657617](https://github.com/HuanaMing/dianGarden/actions/runs/40170657617)。
+- 檔案：`src/sky-world.js`、`src/flower-encyclopedia.js`、`src/styles.css`、`tests/browser-smoke.mjs`、`tasks/done/226-encyclopedia-fullscreen-and-picker.md`。
+- 限制：未額外進行人工實機視覺驗收；依 Playwright 自動瀏覽器驗收確認。
