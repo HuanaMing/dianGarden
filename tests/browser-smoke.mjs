@@ -7,6 +7,8 @@ const outputDir = 'test-results/screenshots';
 const indexHtml = await fs.readFile('src/index.html', 'utf8');
 const cloudSaveSource = await fs.readFile('src/cloud-save.js', 'utf8');
 const gameSource = await fs.readFile('src/game.js', 'utf8');
+const skyWorldSource = await fs.readFile('src/sky-world.js', 'utf8');
+const versionCheckSource = await fs.readFile('src/version-check.js', 'utf8');
 if (!indexHtml.includes('id="startup-garden-dialog"') || !indexHtml.includes('id="start-guest-garden"')
   || !indexHtml.includes('id="return-to-own-garden"')) throw new Error('登入入口／訪客花園控制項缺失');
 if (!cloudSaveSource.includes("signinNode.hidden = true;\n    if (startupSigninNode) startupSigninNode.hidden = true;")
@@ -22,6 +24,16 @@ if (!cloudSaveSource.includes("const needsChoice = authenticated && statusNode.d
   || !cloudSaveSource.includes("function refreshCurrentPage() {\n    window.location.href = window.location.href;\n  }")
   || !gameSource.includes("cloudSessionExpired ? '暫停同步雲端進度' : '進度會自動儲存'")) {
   throw new Error('同步狀態、異地登入後隱藏登入入口、停止雲端請求或暫停同步提示邏輯缺失');
+}
+if (!skyWorldSource.includes("const renderingPauseReasons = new Set(['startup']);")
+  || !skyWorldSource.includes("setRenderingPaused,")
+  || !skyWorldSource.includes("if (isRenderingPaused()) {")
+  || !gameSource.includes("setRenderingPaused?.('startup', false)")
+  || !versionCheckSource.includes("setRenderingPaused?.('version-update', true)")
+  || !versionCheckSource.includes("setRenderingPaused?.('version-update', false)")
+  || !cloudSaveSource.includes("setRenderingPaused?.('cloud-restore', true)")
+  || !cloudSaveSource.includes("setRenderingPaused?.('cloud-restore', false)")) {
+  throw new Error('登入／雲端還原／更新期間的繪圖暫停與失敗復原機制缺失');
 }
 if (!cloudSaveSource.includes("localStorage.setItem(GUEST_MODE_KEY, 'true')")
   || !cloudSaveSource.includes("localStorage.removeItem(GUEST_MODE_KEY)")
@@ -42,6 +54,12 @@ const errors = [];
 const checks = [];
 const startupPage = await browser.newPage({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 1 });
 await startupPage.addInitScript(() => {
+  window.__startupWebglDrawCalls = 0;
+  const originalDrawArrays = WebGLRenderingContext.prototype.drawArrays;
+  WebGLRenderingContext.prototype.drawArrays = function (...args) {
+    window.__startupWebglDrawCalls += 1;
+    return originalDrawArrays.apply(this, args);
+  };
   if (sessionStorage.getItem('task200-startup-test-initialized') !== 'true') {
     localStorage.removeItem('sky-garden-guest-mode-v1');
     localStorage.setItem('sky-garden-save-v1', '{"preserveOriginal":"yes"}');
@@ -50,10 +68,15 @@ await startupPage.addInitScript(() => {
 });
 await startupPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
 await startupPage.locator('#startup-garden-dialog[open]').waitFor({ state: 'visible', timeout: 8000 });
+await startupPage.waitForTimeout(150);
+const drawCallsWhileWaitingForGardenChoice = await startupPage.evaluate(() => window.__startupWebglDrawCalls);
+if (drawCallsWhileWaitingForGardenChoice !== 0) throw new Error('任務224：尚未選定花園時場景仍在繪圖');
 await startupPage.locator('#start-guest-garden').click();
 await startupPage.waitForFunction(() => localStorage.getItem('sky-garden-guest-mode-v1') === 'true'
   && !document.querySelector('#startup-garden-dialog')?.open, null, { timeout: 8000 });
 await startupPage.locator('#sky-canvas').waitFor({ state: 'visible' });
+await startupPage.waitForFunction(() => window.__startupWebglDrawCalls > 0, null, { timeout: 5000 });
+checks.push('任務224：啟動選擇期間暫停 WebGL 繪圖，選定訪客花園後恢復');
 const guestIsolation = await startupPage.evaluate(() => ({
   guestMode: localStorage.getItem('sky-garden-guest-mode-v1'),
   originalSave: localStorage.getItem('sky-garden-save-v1'),
