@@ -227,6 +227,39 @@ try {
   await page.locator('#farm-management-toggle').click();
   if (!(await page.locator('#farm-management-panel').isVisible()) || await page.locator('#settings-panel').isVisible() || await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open'))) throw new Error('農地管理面板沒有關閉其他兩個面板');
   await assertManagementPanelSize('#farm-management-panel');
+  const farmTabs = page.locator('.farm-management-tabs');
+  if (await farmTabs.count() !== 1 || await page.locator('#farm-tab-manual').getAttribute('role') !== 'tab'
+    || await page.locator('#farm-tab-auto').getAttribute('role') !== 'tab') {
+    throw new Error('農地管理未提供手動／自動地塊分頁');
+  }
+  if (await page.locator('#farm-tab-auto').getAttribute('aria-selected') !== 'true'
+    || await page.locator('#plot-selector [data-plot-button]').count() !== 3
+    || await page.locator('#plot-selector').getAttribute('aria-labelledby') !== 'farm-tab-auto') {
+    throw new Error('自動地塊分頁未正確顯示預設自動地塊');
+  }
+  const desktopFarmGrid = await page.locator('#plot-selector').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length);
+  if (desktopFarmGrid !== 5) throw new Error('桌面農地管理網格應固定五欄，實際為 ' + desktopFarmGrid);
+  await page.locator('#farm-tab-manual').click();
+  if (await page.locator('#farm-tab-manual').getAttribute('aria-selected') !== 'true'
+    || await page.locator('#plot-selector').getAttribute('aria-labelledby') !== 'farm-tab-manual'
+    || !(await page.locator('#plot-selector .farm-empty-state').innerText()).includes('沒有手動地塊')) {
+    throw new Error('手動地塊分頁切換或空狀態提示不正確');
+  }
+  await page.locator('#farm-tab-auto').click();
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileFarmGrid = await page.locator('#plot-selector').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length);
+  if (mobileFarmGrid !== 3 || await page.locator('#plot-selector [data-plot-button]').count() !== 3) {
+    throw new Error('手機農地管理網格應維持可操作的響應式欄數，實際欄數：' + mobileFarmGrid);
+  }
+  const mobilePlotBounds = await page.locator('#plot-selector [data-plot-button]').first().boundingBox();
+  const mobilePanelBounds = await page.locator('#farm-management-panel').boundingBox();
+  if (!mobilePlotBounds || !mobilePanelBounds || mobilePlotBounds.x < mobilePanelBounds.x
+    || mobilePlotBounds.x + mobilePlotBounds.width > mobilePanelBounds.x + mobilePanelBounds.width + 1) {
+    throw new Error('手機地塊按鈕溢出農地管理面板');
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  checks.push('任務218：手動／自動分頁切換、桌面五欄及手機響應式地塊網格');
+
   await page.locator('.farm-management-heading strong').click();
   if (!(await page.locator('#farm-management-panel').isVisible())) throw new Error('點擊農地管理面板內部未能維持開啟狀態');
   await page.mouse.click(20, 500);
