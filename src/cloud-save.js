@@ -434,6 +434,8 @@
   signoutButton.addEventListener('click', () => {
     idToken = null;
     currentSub = null;
+    signinNode.hidden = false;
+    if (startupSigninNode) startupSigninNode.hidden = false;
     cloudSave = null;
     cloudRevision = 0;
     syncEnabled = false;
