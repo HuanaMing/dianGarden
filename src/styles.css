@@ -844,7 +844,7 @@ input, [contenteditable="true"]{
 
 
 /* 任務235：手機版引路者入口收緊留白，讓登入與訪客選項排列更緊湊。 */
-@media(max-width:520px){
+@media(max-width:700px){
   .startup-garden-dialog{gap:9px;padding:16px}
   .startup-garden-dialog .seed-dialog-heading h2{font-size:18px;line-height:1.3}
   .startup-garden-dialog .seed-dialog-description{font-size:12px;line-height:1.45}
@@ -857,7 +857,7 @@ input, [contenteditable="true"]{
 
 
 /* 任務235修正：以對話框 ID 提高手機樣式優先權，明顯收緊引路者版面。 */
-@media(max-width:520px){
+@media(max-width:700px){
   #startup-garden-dialog{
     width:calc(100% - 20px);
     max-width:460px;
@@ -879,7 +879,7 @@ input, [contenteditable="true"]{
 }
 
 /* 任務235第三版：手機引路者視窗依內容自動決定高度，禁止 Grid 把卡片撐滿剩餘空間。 */
-@media(max-width:520px){
+@media(max-width:700px){
   #startup-garden-dialog{
     display:none;
     width:calc(100% - 24px);
