@@ -6,5 +6,5 @@
   ],
   "nextAction": "檢查管理面板與頭像介面目前的字級覆寫，新增明確穩定的字級規則與 Playwright 字級穩定性檢查；驗收通過後歸檔並開始任務211。",
   "taskFile": "tasks/active/210-fixed-management-interface-typography.md",
-  "result": "任務210已從 inbox 移至 active；尚未修改程式。"
+  "result": "任務210已完成並歸檔，瀏覽器驗收與 Pages 部署通過；任務211已移至 active，正在開始檢查異地登入狀態流程。"
 }
