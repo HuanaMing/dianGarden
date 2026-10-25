@@ -310,12 +310,12 @@ try {
     loaded: image.complete && image.naturalWidth > 0 && image.naturalHeight > 0,
   })));
   const expectedButtonAssetCounts = {
-    'assets/btn/無人機管理.png': 1,
+    'assets/btn/無人機管理.png': 2,
     'assets/btn/農地管理.png': 2,
     'assets/btn/設定.png': 2,
     'assets/btn/圖鑑.png': 2,
   };
-  if (buttonAssetChecks.length !== 7 || buttonAssetChecks.some(image => !image.loaded)
+  if (buttonAssetChecks.length !== 8 || buttonAssetChecks.some(image => !image.loaded)
     || Object.entries(expectedButtonAssetCounts).some(([src, count]) => buttonAssetChecks.filter(image => image.src === src).length !== count)) {
     throw new Error('輪盤及頂部介面的按鈕素材數量須符合目前實際配置且全部成功載入：' + JSON.stringify(buttonAssetChecks));
   }
