@@ -1,9 +1,9 @@
 {
-  "name": "任務216：設定新增自動更新開關",
+  "name": "任務217：圖鑑預覽全螢幕與手機版收合",
   "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務215已完成，桌面與手機版的面板外部點擊關閉、面板內部操作及 aria-expanded 同步通過 GitHub Actions 瀏覽器驗收 run 40160090064。開始任務216：檢查版本檢查流程與版本儲存偏好，新增可持久保存的自動更新開關，保留手動立即更新及失敗不阻擋啟動的行為。",
-  "taskFile": "tasks/active/216-add-auto-update-setting.md"
+  "nextAction": "任務216已完成並通過 GitHub Actions 瀏覽器驗收 run 40160706280。開始任務217：檢查圖鑑版面與選花事件，新增預覽全螢幕／退出控制及手機版標題收合，選花後恢復原排版，再執行桌面與手機驗收。任務217 active 文件已建立；移除 inbox 原檔的寫入遭安全檢查阻擋，暫保留重複原檔，未再重試。",
+  "taskFile": "tasks/active/217-encyclopedia-preview-fullscreen-and-mobile-collapse.md"
 }
