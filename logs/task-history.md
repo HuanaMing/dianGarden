@@ -1678,3 +1678,14 @@
 - 三份完成文件已歸檔至 `tasks/done/`，`tasks/inbox/` 與 `tasks/active/` 僅保留 `.gitkeep`。
 - 部署核對：最近一次成功 Pages 部署 [run 40153603304](https://github.com/HuanaMing/dianGarden/actions/runs/40153603304) 的來源 SHA 為 `55137d0`，早於任務212程式提交 `79e0c3f`；未找到任務212最新程式提交的對應部署紀錄。依工作規範，手動觸發正式部署前需取得使用者批准。
 - 任務109的 Xcode／付費雲端 Mac 批准仍維持待處理。
+
+
+## 2026-10-25 — 任務213～218依序完成
+
+- 任務213：修正開啟／關閉無人機管理面板時按鈕圖片被 `textContent` 覆寫的問題；Playwright 驗收通過：[run 40159070750](https://github.com/HuanaMing/dianGarden/actions/runs/40159070750)。
+- 任務214：固定無人機管理面板尺寸，機隊改為四欄方形卡片，佇列超出剩餘空間時隱藏；Playwright 驗收通過：[run 40159616644](https://github.com/HuanaMing/dianGarden/actions/runs/40159616644)。
+- 任務215：無人機與農地管理面板支援點擊外部空白處關閉，保留內部操作並同步 `aria-expanded`；桌面與手機 Playwright 驗收通過：[run 40160090064](https://github.com/HuanaMing/dianGarden/actions/runs/40160090064)。
+- 任務216：新增可持久保存的自動更新開關，關閉自動更新時仍可手動更新；Playwright 驗收通過：[run 40160706280](https://github.com/HuanaMing/dianGarden/actions/runs/40160706280)。
+- 任務217：圖鑑預覽新增全螢幕／退出控制及手機版預覽收合；Playwright 驗收通過：[run 40161199720](https://github.com/HuanaMing/dianGarden/actions/runs/40161199720)。
+- 任務218：農地管理新增手動／自動地塊分頁，依既有 `plot.manual` 分類；桌面五欄、手機三欄，切換分頁前後存檔地塊資料不變。Playwright 驗收通過：[run 40161849860](https://github.com/HuanaMing/dianGarden/actions/runs/40161849860)。
+- 六項任務的完成文件均已驗證並歸檔至 `tasks/done/`；未執行新的 GitHub Pages 手動部署。既有部署批准與 Xcode／付費雲端 Mac 批准仍維持待處理。
