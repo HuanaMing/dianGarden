@@ -1,9 +1,9 @@
 {
-  "name": "任務213：修復設定介面造成無人機圖示異常",
+  "name": "任務214：固定無人機管理版面與四欄網格",
   "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務213已移至 active。已修正 setDronePanelOpen() 不再覆寫無人機按鈕的圖片內容，並更新 Playwright 圖示素材驗收；等待最新瀏覽器自動驗收完成，再決定是否歸檔並開始任務214。",
-  "taskFile": "tasks/active/213-fix-drone-icon-changing-in-settings.md"
+  "nextAction": "任務213已修復並通過 GitHub Actions 瀏覽器驗收 run 40159070750，完成歸檔。開始任務214：檢查無人機管理面板、機隊卡片與工作佇列的現有 CSS／渲染，實作固定尺寸、四欄圓角正方形卡片與佇列溢出裁切，再跑瀏覽器驗收。",
+  "taskFile": "tasks/active/214-drone-panel-fixed-layout-and-four-column-grid.md"
 }
