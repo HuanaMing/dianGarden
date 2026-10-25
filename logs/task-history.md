@@ -1668,3 +1668,13 @@
 - 兩項任務完成版均已建立、驗證後歸檔至 `tasks/done/`。
 - 任務212已移至 `tasks/active/`，開始統一主畫面與設定頁面的蒲公英雙行提示及「輕搖風鈴」按鈕。
 - 任務109的 Xcode／付費雲端 Mac 批准仍維持待處理。
+
+
+## 2026-10-25 — 任務210～212依序完成
+
+- 任務210：固定無人機管理、農地管理、設定及頭像介面的字級；桌面與手機 Playwright 驗收通過：[run 40151680717](https://github.com/HuanaMing/dianGarden/actions/runs/40151680717)。
+- 任務211：異地登入後隱藏登入入口、停止雲端讀寫、保留本機存檔並顯示「暫停同步雲端進度」；Playwright 驗收通過：[run 40152399816](https://github.com/HuanaMing/dianGarden/actions/runs/40152399816)。
+- 任務212：主畫面及設定頁使用指定蒲公英雙行文案與「輕搖風鈴」按鈕；桌面、手機版面與重新整理保留本機存檔的測試通過：[run 40154108002](https://github.com/HuanaMing/dianGarden/actions/runs/40154108002)。
+- 三份完成文件已歸檔至 `tasks/done/`，`tasks/inbox/` 與 `tasks/active/` 僅保留 `.gitkeep`。
+- 部署核對：最近一次成功 Pages 部署 [run 40153603304](https://github.com/HuanaMing/dianGarden/actions/runs/40153603304) 的來源 SHA 為 `55137d0`，早於任務212程式提交 `79e0c3f`；未找到任務212最新程式提交的對應部署紀錄。依工作規範，手動觸發正式部署前需取得使用者批准。
+- 任務109的 Xcode／付費雲端 Mac 批准仍維持待處理。
