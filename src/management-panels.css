@@ -122,3 +122,70 @@
   .cloud-session-banner-line:first-child{font-size:13px}
   .cloud-session-banner-line:nth-child(2){font-size:12px}
 }
+
+/* 任務214：無人機面板固定尺寸；機隊四欄方形卡片，佇列只使用剩餘空間。 */
+.drone-jobs:not(.is-open){display:none!important}
+.drone-jobs.is-open{
+  display:flex!important;
+  flex-direction:column;
+  align-items:stretch;
+  gap:8px;
+  height:min(620px,82dvh)!important;
+  max-height:min(82dvh,680px)!important;
+  overflow:hidden!important;
+}
+.drone-jobs>strong,
+.drone-jobs>.auto-mode,
+.drone-jobs>.buy-drone,
+.drone-jobs>.drone-fleet{flex:0 0 auto}
+.drone-jobs .drone-fleet{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin-top:0;
+}
+.drone-jobs .drone-fleet-item{
+  aspect-ratio:1 / 1;
+  min-width:0;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:space-between;
+  gap:4px;
+  padding:8px 4px;
+  overflow:hidden;
+  border-radius:14px;
+  text-align:center;
+}
+.drone-jobs .drone-fleet-item>span{
+  display:-webkit-box;
+  min-width:0;
+  max-width:100%;
+  overflow:hidden;
+  overflow-wrap:anywhere;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:3;
+  font-size:10px!important;
+  line-height:1.3;
+}
+.drone-jobs .drone-fleet-item>button{
+  flex:0 0 auto;
+  max-width:100%;
+  padding:4px 5px;
+  font-size:10px!important;
+  line-height:1.2;
+}
+.drone-jobs>#job-queue{
+  flex:1 1 0;
+  min-height:0;
+  margin:0;
+  overflow:hidden;
+  align-content:start;
+}
+.drone-jobs>#job-queue>li{min-width:0;overflow:hidden}
+@media(max-width:700px){
+  .drone-jobs.is-open{height:min(620px,82dvh)!important}
+  .drone-jobs .drone-fleet{gap:6px}
+  .drone-jobs .drone-fleet-item{padding:6px 3px;border-radius:11px}
+}
