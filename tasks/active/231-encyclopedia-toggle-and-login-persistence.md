@@ -1,7 +1,7 @@
 # 任務231：修正圖鑑收合圖示方向與返回花園重複登入
 
 ## 狀態
-- 狀態：執行中（active）
+- 狀態：已完成，待依規範歸檔（active → done）
 - 類型：Bug 修正
 - 優先度：一般；登入體驗問題優先檢查
 
@@ -38,8 +38,13 @@
 - 執行可用的 Playwright 桌面／手機回歸測試；如無法執行，明確記錄限制，不宣稱已通過。
 
 ## 執行結果
-- 已提交 `src/encyclopedia.html`：圖鑑選花標題初始圖示由「收合.png」改為「展開.png」。
-- 已提交 `src/flower-encyclopedia.js`：展開狀態顯示「展開.png」、收合狀態顯示「收合.png」，反轉原有映射。
-- 已提交 `tests/browser-smoke.mjs`：更新手機版初始、拖曳及點擊展開／收合的圖示預期。
-- 登入持續性尚未修改。初步評估需跨頁保存短效 Google ID token 與 `sessionOpenedAt` 才能維持同一個雲端 session ownership；因這會把 bearer token 從記憶體擴大保存至同分頁 `sessionStorage`，先取得使用者確認再實作。
-- 自動瀏覽器驗收預期由 main 分支 push 觸發；尚未確認 workflow 結果。
+- 已修正 `src/encyclopedia.html` 初始圖示及 `src/flower-encyclopedia.js` 狀態映射：收合時顯示「展開.png」，展開時顯示「收合.png」，保留手機拖曳與點擊操作。
+- 已更新 `src/cloud-save.js`：Google ID token、`sub`、`exp` 與 `sessionOpenedAt` 以版本化紀錄暫存於同分頁 `sessionStorage`；不寫入 `localStorage`。
+- 恢復前檢查紀錄格式、token 的 `iss`、`aud`、`sub`、`exp`，並要求至少剩餘 60 秒有效期；恢復原 `sessionOpenedAt` 後仍呼叫雲端 API，不跳過伺服器驗證。
+- 登入成功後保存工作階段；登出、前端發現憑證過期／損壞、伺服器回傳無效憑證或 `stale_session` 時清除暫存並停止同步。恢復既有工作階段時只預備 Google 登入按鈕，不自動 prompt 或重新認領雲端所有權；若伺服器拒絕憑證，會顯示重新登入入口。
+- 未改動遊戲存檔格式、訪客存檔命名空間或本機／雲端衝突處理；未將 token 寫入 URL、`localStorage` 或專案文件。
+- 已新增 `tests/browser-smoke.mjs` 覆蓋登入成功保存、頁面重載沿用相同 `sessionOpenedAt`、登出清除、過期憑證清除、伺服器拒絕憑證後清除，以及圖鑑手機版圖示互動。
+- 已新增 `tests/cloudflare-worker-smoke.mjs` 驗證過期 ID token 被拒絕，並驗證新工作階段取得所有權後舊工作階段的上傳會被拒絕為 `stale_session`。
+- 已在 `docs/desicions.md` 記錄此安全取捨。
+- **回歸驗收通過**：GitHub Actions run 613（commit `0a9858c4db4dc5013a2aac9c67e3b150433451c7`）及最終完整驗收 run 616（commit `5f8e632d6ee920dae7c6dd81680885491182a364`）；Worker smoke tests 通過，Playwright 全套桌面／手機測試通過，`browserErrors: []`。最終驗收紀錄：`https://github.com/HuanaMing/dianGarden/actions/runs/40185985390`。
+- 未手動觸發 GitHub Pages 部署；既有任務109付費雲端 Mac及任務212手動部署批准要求仍有效。
