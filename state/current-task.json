@@ -1,9 +1,9 @@
 {
-  "name": "任務217：圖鑑預覽全螢幕與手機版收合",
+  "name": "任務218：農地管理分頁與五欄地塊網格",
   "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務216已完成並通過 GitHub Actions 瀏覽器驗收 run 40160706280。開始任務217：檢查圖鑑版面與選花事件，新增預覽全螢幕／退出控制及手機版標題收合，選花後恢復原排版，再執行桌面與手機驗收。任務217 active 文件已建立；移除 inbox 原檔的寫入遭安全檢查阻擋，暫保留重複原檔，未再重試。",
-  "taskFile": "tasks/active/217-encyclopedia-preview-fullscreen-and-mobile-collapse.md"
+  "nextAction": "任務217已完成並通過 GitHub Actions 瀏覽器驗收 run 40161199720。開始任務218：依現有 plot.manual 資料分類手動／自動地塊，新增兩個分頁並將地塊網格固定為桌面五欄，驗證不改動存檔資料及手機可用性。",
+  "taskFile": "tasks/active/218-farm-panel-tabs-and-five-column-grid.md"
 }
