@@ -21,3 +21,12 @@
 - 同一介面在短內容、長內容及狀態提示變化時，對應元素的計算字級不變。
 - 桌面與手機尺寸下，文字不被裁切；必要時可捲動或換行。
 - Playwright 回歸測試通過，並包含字級穩定性檢查。
+
+## 執行結果
+- 已在 `src/management-panels.css` 加入任務210專用的固定字級規則，涵蓋無人機、農地管理、設定與頭像介面的標題、內文、狀態、按鈕、花種名稱等文字。
+- 使用固定 px 字級與 `text-size-adjust: 100%`；長文字允許換行，不以文字長度改變字級。
+- 在 `tests/browser-smoke.mjs` 加入桌面與手機字級驗收，逐一檢查預期字級，並將多個文字項目暫時替換成長文，確認計算字級前後一致。
+- 瀏覽器驗收：通過，GitHub Actions [40151680717](https://github.com/HuanaMing/dianGarden/actions/runs/40151680717)。
+- GitHub Pages 部署：通過，GitHub Actions [40151618826](https://github.com/HuanaMing/dianGarden/actions/runs/40151618826)。
+- 未執行手動視覺檢查；已由 Playwright 桌面及手機驗收涵蓋字級穩定性。
+- 結果：完成。
