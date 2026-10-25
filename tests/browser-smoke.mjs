@@ -194,6 +194,9 @@ if (await encyclopediaPage.locator('.encyclopedia-layout').evaluate(element => e
 checks.push('任務230：手機選花標題像素圖隨展開／收合狀態切換，桌面版排版不受影響');
 await encyclopediaPage.close();
 const startupPage = await browser.newPage({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 1 });
+const startupErrors = [];
+startupPage.on('pageerror', error => startupErrors.push(`pageerror: ${error.message}`));
+startupPage.on('console', message => { if (message.type() === 'error') startupErrors.push(`console: ${message.text()}`); });
 await startupPage.addInitScript(() => {
   window.__startupWebglDrawCalls = 0;
   const originalDrawArrays = WebGLRenderingContext.prototype.drawArrays;
@@ -216,7 +219,11 @@ await startupPage.locator('#start-guest-garden').click();
 await startupPage.waitForFunction(() => localStorage.getItem('sky-garden-guest-mode-v1') === 'true'
   && !document.querySelector('#startup-garden-dialog')?.open, null, { timeout: 8000 });
 await startupPage.locator('#sky-canvas').waitFor({ state: 'visible' });
-await startupPage.waitForFunction(() => window.__startupWebglDrawCalls > 0, null, { timeout: 5000 });
+try {
+  await startupPage.waitForFunction(() => window.__startupWebglDrawCalls > 0, null, { timeout: 5000 });
+} catch (_) {
+  throw new Error(`任務224：選定訪客花園後場景未恢復繪圖；${JSON.stringify(startupErrors)}`);
+}
 checks.push('任務224：啟動選擇期間暫停 WebGL 繪圖，選定訪客花園後恢復');
 const guestIsolation = await startupPage.evaluate(() => ({
   guestMode: localStorage.getItem('sky-garden-guest-mode-v1'),
