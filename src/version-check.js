@@ -4,23 +4,32 @@
 
   const versionUrl = new URL('version.json', scriptUrl);
   const storageKey = 'diangarden-seen-version-v1';
+  const autoUpdateStorageKey = 'diangarden-auto-update-v1';
   const validVersionPattern = /^(?:\d{6},\d{2}(?::\d{2}:\d{2}-r\d+a\d+)?|\d{6}, \d{3,})$/;
   const checkIntervalMs = 5 * 60 * 1000;
   let latestVersion = '';
   let dismissedVersion = '';
   let banner = null;
   let isRefreshing = false;
+  let autoUpdateAttemptedVersion = '';
 
   const currentVersionElement = document.querySelector('#current-version');
   const latestVersionElement = document.querySelector('#latest-version');
   const statusElement = document.querySelector('#version-check-status');
   const forceUpdateButton = document.querySelector('#force-update-button');
+  const autoUpdateToggle = document.querySelector('#auto-update-toggle');
 
   function getSeenVersion() {
     try { return localStorage.getItem(storageKey) || ''; } catch (_) { return ''; }
   }
   function setSeenVersion(version) {
     try { localStorage.setItem(storageKey, version); } catch (_) {}
+  }
+  function getAutoUpdateEnabled() {
+    try { return localStorage.getItem(autoUpdateStorageKey) !== 'false'; } catch (_) { return true; }
+  }
+  function setAutoUpdateEnabled(enabled) {
+    try { localStorage.setItem(autoUpdateStorageKey, String(enabled)); } catch (_) {}
   }
   function getCurrentVersion() {
     const buildVersion = window.__DIANGARDEN_BUILD_VERSION__;
@@ -90,6 +99,7 @@
         forceUpdateButton.textContent = '立即更新';
       }
       renderVersionInfo('更新失敗，遊戲進度未被清除；請稍後重試。');
+      if (autoUpdateToggle?.checked && latestVersion && getCurrentVersion() && getCurrentVersion() !== latestVersion) createUpdateBanner(latestVersion);
     }
   }
   function createUpdateBanner(version) {
@@ -140,12 +150,40 @@
       const currentVersion = getCurrentVersion();
       if (!currentVersion) setSeenVersion(latestVersion);
       renderVersionInfo();
-      if (currentVersion && currentVersion !== latestVersion && dismissedVersion !== latestVersion) createUpdateBanner(latestVersion);
-      else if (banner && currentVersion === latestVersion) { banner.remove(); banner = null; }
+      if (currentVersion && currentVersion !== latestVersion && dismissedVersion !== latestVersion) {
+        if (getAutoUpdateEnabled()) {
+          if (autoUpdateAttemptedVersion !== latestVersion) {
+            autoUpdateAttemptedVersion = latestVersion;
+            if (banner) { banner.remove(); banner = null; }
+            void forceRefresh();
+          }
+        } else createUpdateBanner(latestVersion);
+      } else if (banner && currentVersion === latestVersion) { banner.remove(); banner = null; }
     } catch (_) {
       latestVersion = '';
       renderVersionInfo();
     }
+  }
+  if (autoUpdateToggle) {
+    autoUpdateToggle.checked = getAutoUpdateEnabled();
+    autoUpdateToggle.addEventListener('change', () => {
+      const enabled = autoUpdateToggle.checked;
+      setAutoUpdateEnabled(enabled);
+      dismissedVersion = '';
+      const currentVersion = getCurrentVersion();
+      if (!enabled) {
+        autoUpdateAttemptedVersion = '';
+        if (latestVersion && currentVersion && currentVersion !== latestVersion) createUpdateBanner(latestVersion);
+        renderVersionInfo('自動更新已關閉；仍可使用「立即更新」手動更新。');
+        return;
+      }
+      if (banner) { banner.remove(); banner = null; }
+      renderVersionInfo('自動更新已開啟。');
+      if (latestVersion && currentVersion && currentVersion !== latestVersion) {
+        autoUpdateAttemptedVersion = latestVersion;
+        void forceRefresh();
+      }
+    });
   }
   forceUpdateButton?.addEventListener('click', () => { void forceRefresh(); });
   void checkVersion();
