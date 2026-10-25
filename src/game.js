@@ -244,6 +244,7 @@
   const environmentStatus = document.querySelector('#environment-status');
   const gardenNameDisplay = document.querySelector('#garden-name-display');
   const gardenAvatar = document.querySelector('#garden-avatar');
+  const avatarDialog = document.querySelector('#avatar-dialog');
   const avatarModeSelect = document.querySelector('#avatar-mode');
   const avatarFlowerPicker = document.querySelector('#avatar-flower-picker');
   const avatarFlowerOptions = document.querySelector('#avatar-flower-options');
@@ -1077,6 +1078,9 @@
     document.querySelector('.world-frame')?.classList.toggle('is-power-save', enabled);
     notify(enabled ? '省電模式已開啟：清空場景畫布並暫停 GPU 繪圖，遊戲邏輯持續運作。' : '省電模式已關閉：恢復場景繪圖。');
   });
+  gardenAvatar?.addEventListener('click', () => { if (avatarDialog && !avatarDialog.open) avatarDialog.showModal(); });
+  avatarDialog?.querySelector('[data-close-avatar-dialog]')?.addEventListener('click', () => avatarDialog.close());
+  avatarDialog?.addEventListener('click', (event) => { if (event.target === avatarDialog) avatarDialog.close(); });
   avatarModeSelect?.addEventListener('change', () => {
     game.avatarMode = avatarModeSelect.value === 'manual' ? 'manual' : 'auto';
     renderAvatarFlowerOptions();
@@ -1096,6 +1100,11 @@
     save();
     updateAvatarDisplay();
   });
+  document.querySelectorAll('[data-settings-tab]').forEach((button) => button.addEventListener('click', () => {
+    const selected = button.dataset.settingsTab;
+    document.querySelectorAll('[data-settings-tab]').forEach((tab) => tab.setAttribute('aria-selected', String(tab === button)));
+    document.querySelectorAll('[data-settings-panel]').forEach((panel) => { panel.hidden = panel.dataset.settingsPanel !== selected; });
+  }));
   settingsToggle?.addEventListener('click', () => {
     const open = settingsPanel?.hidden !== false;
     if (open) {
