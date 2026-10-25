@@ -15,14 +15,22 @@
   const vertexSource = `
     attribute vec3 aPosition;
     attribute vec3 aColor;
+    attribute vec3 aNormal;
     attribute float aOpacity;
     uniform mat4 uProjection;
     uniform mat4 uView;
+    uniform vec3 uEyeDir;
+    uniform vec3 uSunDir;
+    uniform vec3 uAmbient;
+    uniform vec3 uSunColor;
     varying vec3 vColor;
     varying float vOpacity;
     void main() {
       gl_Position = uProjection * uView * vec4(aPosition, 1.0);
-      vColor = aColor;
+      vec3 n = normalize(aNormal);
+      if (dot(n, uEyeDir) < 0.0) n = -n;
+      float ndl = max(dot(n, normalize(uSunDir)), 0.0);
+      vColor = aColor * (uAmbient + uSunColor * ndl);
       vOpacity = aOpacity;
     }
   `;
@@ -63,15 +71,23 @@
     position: gl.getAttribLocation(program, 'aPosition'),
     color: gl.getAttribLocation(program, 'aColor'),
     opacity: gl.getAttribLocation(program, 'aOpacity'),
+    normal: gl.getAttribLocation(program, 'aNormal'),
     projection: gl.getUniformLocation(program, 'uProjection'),
     view: gl.getUniformLocation(program, 'uView'),
+    eyeDir: gl.getUniformLocation(program, 'uEyeDir'),
+    sunDir: gl.getUniformLocation(program, 'uSunDir'),
+    ambient: gl.getUniformLocation(program, 'uAmbient'),
+    sunColor: gl.getUniformLocation(program, 'uSunColor'),
   };
   const positionBuffer = gl.createBuffer();
   const colorBuffer = gl.createBuffer();
+  const normalBuffer = gl.createBuffer();
   const dronePositionBuffer = gl.createBuffer();
   const droneColorBuffer = gl.createBuffer();
+  const droneNormalBuffer = gl.createBuffer();
   const effectPositionBuffer = gl.createBuffer();
   const effectColorBuffer = gl.createBuffer();
+  const effectNormalBuffer = gl.createBuffer();
   const effectOpacityBuffer = gl.createBuffer();
   let vertexCount = 0;
   let droneVertexCount = 0;
@@ -991,6 +1007,8 @@
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, droneColorBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.DYNAMIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, droneNormalBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, calculateFaceNormals(positions), gl.DYNAMIC_DRAW);
     effectVertexCount = effectPositions.length / 3;
     const effectOpacities = new Float32Array(effectVertexCount).fill(1);
     for (const span of effectOpacitySpans) {
@@ -1002,6 +1020,29 @@
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(effectPositions), gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, effectColorBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(effectColors), gl.DYNAMIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, effectNormalBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, calculateFaceNormals(effectPositions), gl.DYNAMIC_DRAW);
+  }
+
+  function calculateFaceNormals(positions) {
+    const normals = new Float32Array(positions.length);
+    for (let i = 0; i + 8 < positions.length; i += 9) {
+      const ax = positions[i], ay = positions[i + 1], az = positions[i + 2];
+      const bx = positions[i + 3], by = positions[i + 4], bz = positions[i + 5];
+      const cx = positions[i + 6], cy = positions[i + 7], cz = positions[i + 8];
+      const abx = bx - ax, aby = by - ay, abz = bz - az;
+      const acx = cx - ax, acy = cy - ay, acz = cz - az;
+      let nx = aby * acz - abz * acy;
+      let ny = abz * acx - abx * acz;
+      let nz = abx * acy - aby * acx;
+      const length = Math.hypot(nx, ny, nz) || 1;
+      nx /= length; ny /= length; nz /= length;
+      for (let vertex = 0; vertex < 3; vertex += 1) {
+        const offset = i + vertex * 3;
+        normals[offset] = nx; normals[offset + 1] = ny; normals[offset + 2] = nz;
+      }
+    }
+    return normals;
   }
 
   function uploadWorld(time = performance.now()) {
@@ -1189,6 +1230,8 @@
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, calculateFaceNormals(positions), gl.STATIC_DRAW);
   }
 
   function perspective(fov, aspect, near, far) {
@@ -1409,6 +1452,9 @@
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
     gl.enableVertexAttribArray(locations.color);
     gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+    gl.enableVertexAttribArray(locations.normal);
+    gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
     gl.disableVertexAttribArray(locations.opacity);
     gl.vertexAttrib1f(locations.opacity, 1);
     const horizontal = Math.cos(pitch) * distance;
@@ -1417,11 +1463,28 @@
     currentView = cameraMode === '2d' ? lookAt(eye, [targetX, 0, targetZ], [0, 0, -1]) : lookAt(eye, [targetX, 0, targetZ], [0, 1, 0]);
     gl.uniformMatrix4fv(locations.projection, false, currentProjection);
     gl.uniformMatrix4fv(locations.view, false, currentView);
+    const eyeLength = Math.hypot(eye[0] - targetX, eye[1], eye[2] - targetZ) || 1;
+    gl.uniform3f(locations.eyeDir, (eye[0] - targetX) / eyeLength, eye[1] / eyeLength, (eye[2] - targetZ) / eyeLength);
+    const daylight = Math.max(0, Math.min(1, environmentState.daylightProgress));
+    const rainDim = environmentState.rainBlend * 0.2;
+    const ambient = 0.1 + daylight * 0.34 - rainDim * 0.12;
+    const sunStrength = daylight * (environmentState.isRaining ? 0.48 : 0.78);
+    let sunR = sunStrength, sunG = sunStrength, sunB = sunStrength;
+    if (environmentState.phase === 'dawn' || environmentState.phase === 'dusk') {
+      sunG *= 0.72; sunB *= 0.48;
+    } else if (environmentState.isRaining) {
+      sunR *= 0.72; sunG *= 0.82;
+    }
+    gl.uniform3f(locations.sunDir, -0.42, 0.82, 0.38);
+    gl.uniform3f(locations.ambient, ambient, ambient * (environmentState.phase === 'night' ? 0.86 : 1), ambient * (environmentState.phase === 'night' ? 1.12 : 1));
+    gl.uniform3f(locations.sunColor, sunR, sunG, sunB);
     gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
     gl.bindBuffer(gl.ARRAY_BUFFER, effectPositionBuffer);
     gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, effectColorBuffer);
     gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, effectNormalBuffer);
+    gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, effectOpacityBuffer);
     gl.enableVertexAttribArray(locations.opacity);
     gl.vertexAttribPointer(locations.opacity, 1, gl.FLOAT, false, 0, 0);
@@ -1434,6 +1497,8 @@
     gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, droneColorBuffer);
     gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, droneNormalBuffer);
+    gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
     gl.drawArrays(gl.TRIANGLES, 0, droneVertexCount);
     requestAnimationFrame(draw);
   }
@@ -1932,7 +1997,7 @@
         frame.style.background = background;
         environmentBackground = background;
       }
-      canvas.style.filter = `brightness(${0.84 + environmentState.lightLevel * 0.16})`;
+      canvas.style.filter = 'brightness(1)';
       // Keep gameplay rain state separate from its five-second visual blend.
       if (rainChanged || phaseChanged || sunflowerTurnChanged) uploadWorld();
     },
