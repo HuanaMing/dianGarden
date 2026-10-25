@@ -1514,14 +1514,11 @@ try {
     localStorage.setItem('sky-garden-guest-save-v1', JSON.stringify(save));
   }, plotTabSave());
   await legacyPlantPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
-  await legacyPlantPage.waitForFunction(() => {
-    const saved = JSON.parse(localStorage.getItem('sky-garden-guest-save-v1'));
-    return Array.isArray(saved?.plots?.[4]?.plants);
-  }, null, { timeout: 8000 });
-  const migratedLegacyPlant = await legacyPlantPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots[4]);
-  if (migratedLegacyPlant.plants.length !== 1 || migratedLegacyPlant.plants[0].crop !== 0
-    || migratedLegacyPlant.plants[0].plantedAt !== migratedLegacyPlant.plantedAt) {
-    throw new Error('任務228：舊版單株手動地塊存檔遷移遺失資料');
+  await legacyPlantPage.evaluate(() => window.onSkyPlotActivate?.(4));
+  await legacyPlantPage.locator('#farm-dialog[open] .manual-plant-card-heading strong').waitFor({ state: 'visible', timeout: 8000 });
+  const migratedLegacyPlantTitle = await legacyPlantPage.locator('#farm-dialog .manual-plant-card-heading strong').innerText();
+  if (!migratedLegacyPlantTitle.includes('向日葵') || !migratedLegacyPlantTitle.includes('已成熟')) {
+    throw new Error('任務228：舊版單株手動地塊存檔遷移未保留花種或成熟狀態：' + migratedLegacyPlantTitle);
   }
   checks.push('任務228：舊版單株手動地塊存檔自動遷移通過');
   await legacyPlantPage.close();
