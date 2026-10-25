@@ -1793,3 +1793,11 @@
 - `tests/browser-smoke.mjs` 新增連通群組、孤立地塊及下層地塊的判定測試。
 - 程式提交 `39543bd0e3c3acc96ed2b9e8c0709dc2e0a5d07f`；測試提交 `2a309acec86c3380714613dd1380c812bcb7b7f1`；任務文件 `tasks/done/234-connected-landmass-bottom.md`。
 - 自動瀏覽器測試結果尚未確認；未手動觸發 GitHub Pages 部署。
+
+
+## 2026-10-25 — 任務235：手機版引路者介面緊湊化驗收完成
+
+- 使用者確認「任務驗收完成」。根因是手機寬度 524px 未觸發原本的 `max-width:520px` 媒體查詢；使用者自行將同一檔案的斷點調整為 700px，並完成實機驗收。
+- 移除臨時診斷面板程式碼（`src/cloud-save.js`），避免正式遊戲保留除錯 UI。
+- 完成紀錄已建立於 `tasks/done/235-mobile-guide-interface.md`，確認內容完整後移除 `tasks/active/235-mobile-guide-interface.md`；同步更新目前任務與專案狀態。
+- 未手動觸發 GitHub Pages 正式部署。
