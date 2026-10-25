@@ -43,5 +43,10 @@
 7. Browser smoke 與 Worker smoke tests 通過；未執行的部署或線上測試須如實註明。
 8. 不手動部署 GitHub Pages；若需變更 Cloudflare 生產資料庫／部署設定，先確認 migration 相容性及所需操作，不假稱已部署。
 
+## 已確認的實作取捨（2026-10-25）
+使用者選擇 B：維持 GitHub Pages + Cloudflare Worker + D1，不新增自訂網域或外部認證服務；以簡單、易維護為優先，接受 JavaScript 可讀取瀏覽器長期更新憑證的 XSS 風險。仍保留基本的憑證雜湊、期限、輪替及登出撤銷，不把 API 開放成無需驗證。
+
+實作採用遊戲專用的不透明存取／更新憑證：15 分鐘存取期限、30 天閒置期限；更新憑證存在 localStorage，伺服器只保存 SHA-256 雜湊。更新時輪替更新憑證；舊憑證重播時撤銷工作階段。Google ID Token 僅用於首次登入建立工作階段。正式 Cloudflare D1 migration 與 Worker 部署不在本次自動執行範圍，須先驗證程式與 migration，再由使用者操作／確認生產環境變更。
+
 ## 狀態
-已確認沿用 Cloudflare Worker + D1，不新增外部認證服務。尚待確認長期更新憑證的安全儲存方式；確認前不寫入正式認證實作。
+已獲使用者確認 B 方案，開始實作；尚未完成程式修改、測試或部署。
