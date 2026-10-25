@@ -762,7 +762,7 @@ try {
   if (!(await page.locator('#world-buy-manual-plot').isVisible())) throw new Error('農地管理面板未顯示手動地塊購買入口');
   if (!(await page.locator('#world-expand').isVisible())) throw new Error('農地管理面板未顯示自動地塊購買入口');
   const desktopFarmTabs = await page.evaluate(() => ({
-    columns: getComputedStyle(document.querySelector('#plot-selector')).gridTemplateColumns.trim().split(/\\s+/).length,
+    columns: getComputedStyle(document.querySelector('#plot-selector')).gridTemplateColumns.trim().split(/\s+/).length,
     autoSelected: document.querySelector('#farm-tab-auto').getAttribute('aria-selected'),
     autoLabels: [...document.querySelectorAll('#plot-selector [data-plot-button]')].map(button => button.getAttribute('aria-label')),
   }));
@@ -972,7 +972,7 @@ try {
   await maturePage.locator('#farm-tab-manual').click();
   const mobileManualTab = await maturePage.evaluate(() => ({
     selected: document.querySelector('#farm-tab-manual').getAttribute('aria-selected'),
-    columns: getComputedStyle(document.querySelector('#plot-selector')).gridTemplateColumns.trim().split(/\\s+/).length,
+    columns: getComputedStyle(document.querySelector('#plot-selector')).gridTemplateColumns.trim().split(/\s+/).length,
     labels: [...document.querySelectorAll('#plot-selector [data-plot-button]')].map(button => button.getAttribute('aria-label')),
     bounds: [...document.querySelectorAll('#plot-selector [data-plot-button]')].map(button => {
       const rect = button.getBoundingClientRect();
