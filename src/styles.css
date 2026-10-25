@@ -854,3 +854,26 @@ input, [contenteditable="true"]{
   .startup-own-garden .cloud-save-signin{min-height:36px;margin:5px 0 1px}
   .startup-guest-button{min-height:36px;margin-top:4px;padding:8px 11px}
 }
+
+
+/* 任務235修正：以對話框 ID 提高手機樣式優先權，明顯收緊引路者版面。 */
+@media(max-width:520px){
+  #startup-garden-dialog{
+    width:calc(100% - 20px);
+    max-width:460px;
+    padding:12px;
+    gap:6px;
+    border-radius:18px;
+  }
+  #startup-garden-dialog .seed-dialog-heading{gap:6px}
+  #startup-garden-dialog .seed-dialog-heading .eyebrow{margin:0 0 2px;font-size:8px;line-height:1.2;letter-spacing:1.2px}
+  #startup-garden-dialog .seed-dialog-heading h2{font-size:18px;line-height:1.25}
+  #startup-garden-dialog .seed-dialog-description{margin:0;font-size:12px;line-height:1.4}
+  #startup-garden-dialog .startup-own-garden,
+  #startup-garden-dialog .startup-guest-garden{padding:8px 9px;border-radius:11px}
+  #startup-garden-dialog .startup-own-garden h3,
+  #startup-garden-dialog .startup-guest-garden h3{margin:0 0 2px;font-size:12px;line-height:1.35}
+  #startup-garden-dialog .startup-guest-garden p{margin:2px 0;font-size:11px;line-height:1.35}
+  #startup-garden-dialog .startup-own-garden .cloud-save-signin{min-height:32px;margin:2px 0 0}
+  #startup-garden-dialog .startup-guest-button{min-height:34px;margin-top:3px;padding:7px 10px;font-size:12px}
+}
