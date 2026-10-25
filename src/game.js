@@ -993,10 +993,13 @@
     if (hasActivePlotJob(index)) { renderFarmDialog(); notify('無人機正在此地工作，工作結束後才能切換農地性質。'); return; }
     const oldMode = plotMode(plot);
     if (oldMode === 'auto') { notify('自動地塊不能轉換為手動地塊或草地。'); return; }
-    const crop = plot.crop === null ? null : crops[plot.crop] || crops[0];
-    const mature = Boolean(crop && growthElapsed(plot) >= crop.growTime);
-    if (oldMode === 'manual' && crop && !mature) {
-      notify('植物成熟後才能將手動地塊切換成草地。');
+    const plotPlants = getPlotPlants(plot);
+    const mature = plotPlants.length === 0 || plotPlants.every((plant, plantIndex) => {
+      const crop = crops[plant.crop] || crops[0];
+      return growthElapsed(plot, Date.now(), plantIndex) >= crop.growTime;
+    });
+    if (oldMode === 'manual' && plotPlants.length > 0 && !mature) {
+      notify('所有花株成熟後才能將手動地塊切換成草地。');
       return;
     }
     const newMode = oldMode === 'manual' ? 'grass' : 'manual';
