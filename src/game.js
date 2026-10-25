@@ -227,6 +227,11 @@
   const coinsDisplay = document.querySelector('#coins');
   const toast = document.querySelector('#toast');
   const saveStatus = document.querySelector('#save-status');
+  let cloudSessionExpired = false;
+  window.addEventListener('diangarden:cloud-session-state', (event) => {
+    cloudSessionExpired = Boolean(event.detail?.expired);
+    updateSaveStatus();
+  });
   const jobStatus = document.querySelector('#job-status');
   const jobQueueDisplay = document.querySelector('#job-queue');
   const expandButton = document.querySelector('#world-expand');
@@ -318,7 +323,7 @@
     catch (_) { persistenceAvailable = false; persistenceWarning = '自動儲存失敗；重新整理可能會遺失本次進度。'; updateSaveStatus(); notify(persistenceWarning); return false; }
   }
   function notify(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(toastTimeout); toastTimeout = setTimeout(() => toast.classList.remove('show'), 2100); }
-  function updateSaveStatus() { if (!saveStatus) return; saveStatus.textContent = persistenceWarning || '進度會自動儲存'; saveStatus.classList.toggle('save-warning', !persistenceAvailable); }
+  function updateSaveStatus() { if (!saveStatus) return; saveStatus.textContent = persistenceWarning || (cloudSessionExpired ? '暫停同步雲端進度' : '進度會自動儲存'); saveStatus.classList.toggle('save-warning', !persistenceAvailable || cloudSessionExpired); }
   if (offlineReport) save();
   window.addEventListener('pagehide', () => { if (!isResetting && !skipSaveOnExit) save(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && !isResetting && !skipSaveOnExit) save(); });
