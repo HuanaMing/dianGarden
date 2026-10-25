@@ -105,12 +105,17 @@
   const effectPositionBuffer = gl.createBuffer();
   const effectColorBuffer = gl.createBuffer();
   const effectOpacityBuffer = gl.createBuffer();
+  const skyPositionBuffer = gl.createBuffer();
+  const skyColorBuffer = gl.createBuffer();
+  const skyOpacityBuffer = gl.createBuffer();
+  const skyNormalBuffer = gl.createBuffer();
   const normalBuffer = gl.createBuffer();
   const droneNormalBuffer = gl.createBuffer();
   const effectNormalBuffer = gl.createBuffer();
   let vertexCount = 0;
   let droneVertexCount = 0;
   let effectVertexCount = 0;
+  let skyVertexCount = 0;
   let landCount = galleryMode ? 1 : 3;
   let plotPositions = galleryMode ? [{ x: 0, z: 0, y: 0 }] : [{ x: -1, z: 0, y: 0 }, { x: 0, z: 0, y: 0 }, { x: 1, z: 0, y: 0 }];
   let galleryFlowerIndex = 0;
@@ -153,7 +158,7 @@
   window.dianGardenManualPlantPlacement = Object.freeze({
     getPosition(positionIndex) { return manualPlantCoordinate(positionIndex); },
   });
-  let environmentState = { phase: 'day', isDay: true, isRaining: false, rainBlend: 0, daylightProgress: 1, phaseProgress: 0, lightLevel: 1, sunflowerYaw: 0 };
+  let environmentState = { phase: 'day', isDay: true, isRaining: false, rainBlend: 0, daylightProgress: 1, phaseProgress: 0, lightLevel: 1, sunflowerYaw: 0, worldTimeMs: 60_000 };
   let environmentBackground = '';
   const SKY_PALETTES = {
     day: ['#c9ecfa', '#e6f6f5', '#f2f8e9'],
@@ -1043,6 +1048,60 @@
     gl.bufferData(gl.ARRAY_BUFFER, calculateFaceNormals(effectPositions), gl.DYNAMIC_DRAW);
   }
 
+  function uploadSky(time) {
+    if (galleryMode) { skyVertexCount = 0; return; }
+    const positions = [];
+    const colors = [];
+    const opacities = [];
+    const addCloud = (x, y, z, drift, scale = 1) => {
+      const start = positions.length / 3;
+      const cloudColor = environmentState.isRaining ? [0.62, 0.72, 0.76] : [0.86, 0.93, 0.96];
+      addOctahedron(positions, colors, x + drift, y, z, 1.12 * scale, 0.24 * scale, 0.58 * scale, cloudColor);
+      addOctahedron(positions, colors, x - 0.62 * scale + drift, y + 0.08 * scale, z + 0.08 * scale, 0.72 * scale, 0.3 * scale, 0.52 * scale, cloudColor.map((channel) => Math.min(1, channel * 1.04)));
+      addOctahedron(positions, colors, x + 0.56 * scale + drift, y + 0.02 * scale, z - 0.06 * scale, 0.78 * scale, 0.27 * scale, 0.48 * scale, cloudColor.map((channel) => channel * 0.96));
+      for (let i = start; i < positions.length / 3; i += 1) opacities.push(environmentState.isRaining ? 0.28 : 0.34);
+    };
+    const elapsed = time * 0.000012;
+    const clouds = [
+      { x: -9.2, y: 5.2, z: -5.5, speed: 0.34, phase: 0.3, scale: 1.0 },
+      { x: -3.4, y: 6.3, z: -10.0, speed: 0.22, phase: 2.4, scale: 0.82 },
+      { x: 4.8, y: 4.9, z: -7.4, speed: 0.28, phase: 4.7, scale: 1.08 },
+      { x: 10.0, y: 6.6, z: -1.8, speed: 0.18, phase: 1.4, scale: 0.9 },
+      { x: -8.0, y: 5.8, z: 5.2, speed: 0.25, phase: 3.5, scale: 0.76 },
+      { x: 3.1, y: 6.0, z: 8.4, speed: 0.31, phase: 5.2, scale: 0.92 },
+    ];
+    for (const cloud of clouds) {
+      const drift = ((elapsed * cloud.speed + cloud.phase) % 18) - 9;
+      addCloud(cloud.x, cloud.y, cloud.z, drift, cloud.scale);
+    }
+
+    const cycle = window.skyEnvironment?.DAY_CYCLE_MS || 16 * 60_000;
+    const cycleTime = ((environmentState.worldTimeMs % cycle) + cycle) % cycle;
+    const angle = cycleTime / cycle * Math.PI * 2;
+    const sunX = Math.cos(angle) * 11.5;
+    const sunY = 2.0 + Math.sin(angle) * 6.2;
+    const sunZ = -12.0;
+    const moonX = Math.cos(angle + Math.PI) * 11.5;
+    const moonY = 2.0 + Math.sin(angle + Math.PI) * 6.2;
+    const moonZ = -12.0;
+    const sunStart = positions.length / 3;
+    addIcosahedron(positions, colors, sunX, sunY, sunZ, 0.68, environmentState.phase === 'dawn' || environmentState.phase === 'dusk' ? [1, 0.64, 0.34] : [1, 0.82, 0.38]);
+    for (let i = sunStart; i < positions.length / 3; i += 1) opacities.push(environmentState.isRaining ? 0.45 * environmentState.daylightProgress : 0.98 * environmentState.daylightProgress);
+    const moonStart = positions.length / 3;
+    addIcosahedron(positions, colors, moonX, moonY, moonZ, 0.5, [0.78, 0.86, 0.98]);
+    for (let i = moonStart; i < positions.length / 3; i += 1) opacities.push(0.88 * (1 - environmentState.daylightProgress));
+
+    skyVertexCount = positions.length / 3;
+    gl.bindBuffer(gl.ARRAY_BUFFER, skyPositionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, skyColorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.DYNAMIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, skyOpacityBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(opacities), gl.DYNAMIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, skyNormalBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, calculateFaceNormals(positions), gl.DYNAMIC_DRAW);
+  }
+
   function calculateFaceNormals(positions) {
     const normals = new Float32Array(positions.length);
     for (let i = 0; i + 8 < positions.length; i += 9) {
@@ -1482,6 +1541,7 @@
     currentView = cameraMode === '2d' ? lookAt(eye, [targetX, 0, targetZ], [0, 0, -1]) : lookAt(eye, [targetX, 0, targetZ], [0, 1, 0]);
     gl.uniformMatrix4fv(locations.projection, false, currentProjection);
     gl.uniformMatrix4fv(locations.view, false, currentView);
+    uploadSky(time);
     const eyeLength = Math.hypot(eye[0] - targetX, eye[1], eye[2] - targetZ) || 1;
     gl.uniform3f(locations.eyeDir, (eye[0] - targetX) / eyeLength, eye[1] / eyeLength, (eye[2] - targetZ) / eyeLength);
     const daylight = Math.max(0, Math.min(1, environmentState.daylightProgress));
@@ -1517,6 +1577,26 @@
     gl.uniform3fv(locations.droneLightPos, new Float32Array(droneLightPositions));
     gl.uniform1fv(locations.droneLightStrength, new Float32Array(droneLightStrengths));
     gl.uniform1f(locations.droneSelfIllumination, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, skyPositionBuffer);
+    gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, skyColorBuffer);
+    gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, skyNormalBuffer);
+    gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, skyOpacityBuffer);
+    gl.enableVertexAttribArray(locations.opacity);
+    gl.vertexAttribPointer(locations.opacity, 1, gl.FLOAT, false, 0, 0);
+    gl.depthMask(false);
+    gl.drawArrays(gl.TRIANGLES, 0, skyVertexCount);
+    gl.depthMask(true);
+    gl.disableVertexAttribArray(locations.opacity);
+    gl.vertexAttrib1f(locations.opacity, 1);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+    gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
     gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
     gl.bindBuffer(gl.ARRAY_BUFFER, effectPositionBuffer);
     gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, 0, 0);
@@ -2028,6 +2108,7 @@
         phaseProgress: Number.isFinite(state.phaseProgress) ? state.phaseProgress : 0,
         lightLevel: Number.isFinite(state.lightLevel) ? state.lightLevel : 1,
         sunflowerYaw,
+        worldTimeMs: Number.isFinite(state.worldTimeMs) ? state.worldTimeMs : environmentState.worldTimeMs,
       };
       frame.classList.toggle('is-raining', rainBlend > 0);
       frame.style.setProperty('--rain-blend', String(rainBlend));
