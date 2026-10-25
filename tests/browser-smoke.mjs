@@ -1571,11 +1571,16 @@ try {
     await manualUpgradePage.locator('#farm-dialog [data-manual-seed-options] .seed-option').first().click();
   }
   const fullCapacity = await manualUpgradePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots[3]);
+  // 重新開啟操作視窗，驗證滿載後實際呈現的 UI，而非依賴上一個按鈕事件的暫存 DOM。
+  await manualUpgradePage.evaluate(() => window.onSkyPlotActivate?.(3));
+  await manualUpgradePage.locator('#farm-dialog[open] .manual-plant-card').first().waitFor({ state: 'visible', timeout: 8000 });
+  const visiblePlantCardsAtCapacity = await manualUpgradePage.locator('#farm-dialog .manual-plant-card').count();
   const seedOptionsAtCapacity = await manualUpgradePage.locator('#farm-dialog [data-manual-seed-options] .seed-option').count();
-  if (fullCapacity.plants.length !== 4 || seedOptionsAtCapacity !== 0) {
+  if (fullCapacity.plants.length !== 4 || visiblePlantCardsAtCapacity !== 4 || seedOptionsAtCapacity !== 0) {
     throw new Error('任務229：容量滿載後仍可新增花株，或容量限制不正確：' + JSON.stringify({
       plantCount: fullCapacity.plants?.length,
       capacityLevel: fullCapacity.capacityLevel,
+      visiblePlantCardsAtCapacity,
       seedOptionsAtCapacity,
       coins: (await manualUpgradePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')))).coins,
     }));
