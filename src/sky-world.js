@@ -598,16 +598,16 @@
     const rampLogic = window.dianGardenGrassRampLogic;
     const hasPlotBelow = rampLogic.hasPlotBelow(plotPositions, index);
     const groupBottomY = rampLogic.getConnectedGroupBottomY(plotPositions, index, TILE, 0.5);
-    // Any lower tile in this column prevents this tile from growing side walls downward.
+    // Every tile keeps its original 0.5-unit side thickness; only the bottom-most tile extends to the group base.
+    const localBottomY = Math.min(y, ...edges.flatMap((edge) => edge.points.map((point) => point.y))) - 0.5;
+    const bottomY = hasPlotBelow ? localBottomY : Math.min(localBottomY, groupBottomY);
+    edges.forEach((edge) => {
+      const first = edge.points[0], second = edge.points[1];
+      const firstBottom = [first.x, bottomY, first.z], secondBottom = [second.x, bottomY, second.z];
+      addTriangle(positions, colors, firstBottom, secondBottom, second.top, edge.color);
+      addTriangle(positions, colors, firstBottom, second.top, first.top, edge.color);
+    });
     if (!hasPlotBelow) {
-      const localBottomY = Math.min(y, ...edges.flatMap((edge) => edge.points.map((point) => point.y))) - 0.5;
-      const bottomY = Math.min(localBottomY, groupBottomY);
-      edges.forEach((edge) => {
-        const first = edge.points[0], second = edge.points[1];
-        const firstBottom = [first.x, bottomY, first.z], secondBottom = [second.x, bottomY, second.z];
-        addTriangle(positions, colors, firstBottom, secondBottom, second.top, edge.color);
-        addTriangle(positions, colors, firstBottom, second.top, first.top, edge.color);
-      });
       addBox(positions, colors, x - half, bottomY - 0.01, z - half, x + half, bottomY, z + half, {
         top: [0.4, 0.28, 0.24], front: [0.4, 0.28, 0.24], right: [0.4, 0.28, 0.24], back: [0.4, 0.28, 0.24], left: [0.4, 0.28, 0.24], bottom: [0.4, 0.28, 0.24],
       });
