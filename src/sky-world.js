@@ -528,15 +528,14 @@
       connected.forEach((plotIndex) => { lowestY = Math.min(lowestY, positions[plotIndex].y || 0); });
       return Number.isFinite(lowestY) ? lowestY - tileSize * 0.5 : 0;
     },
-    hasPlotDirectlyBelow(positions, states, index, tileSize = 1) {
+    hasPlotDirectlyBelow(positions, index, tileSize = 1) {
       const source = positions?.[index];
       if (!source || !Array.isArray(positions)) return false;
       const epsilon = 1e-8;
-      // Every tile type blocks side extension, including grass-only tiles.
+      // Position-based check intentionally treats grass-only and farm tiles alike.
       return positions.some((candidate, candidateIndex) => candidateIndex !== index && candidate
         && Math.abs(candidate.x - source.x) <= epsilon && Math.abs(candidate.z - source.z) <= epsilon
-        && Math.abs((source.y || 0) - (candidate.y || 0) - tileSize * 0.5) <= epsilon
-        && (states?.[candidateIndex]?.grassOnly === true || states?.[candidateIndex]?.grassOnly === false || !states?.[candidateIndex]));
+        && Math.abs((source.y || 0) - (candidate.y || 0) - tileSize * 0.5) <= epsilon);
     },
     getPlantBaseHeight(surfaceHeightAt, x, z, grassOnly) {
       const groundHeight = surfaceHeightAt(x, z);
@@ -596,7 +595,7 @@
     ].map((edge) => ({ ...edge, points: edge.indices.map((cornerIndex) => corners[cornerIndex]) }));
     const center = { x, z, y, u: 0.5, v: 0.5, top: [x, y, z] };
     const rampLogic = window.dianGardenGrassRampLogic;
-    const hasPlotBelow = rampLogic.hasPlotDirectlyBelow(plotPositions, plotStates, index, TILE);
+    const hasPlotBelow = rampLogic.hasPlotDirectlyBelow(plotPositions, index, TILE);
     const groupBottomY = rampLogic.getConnectedGroupBottomY(plotPositions, index, TILE, 0.5);
     // A tile with another tile directly below must not grow side walls downward.
     if (!hasPlotBelow) {
