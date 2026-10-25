@@ -20,7 +20,7 @@ function corsHeaders(request, env) {
   if (!origin || !allowedOrigins(env).includes(origin)) return {};
   return {
     "access-control-allow-origin": origin,
-    "access-control-allow-methods": "GET, PUT, OPTIONS",
+    "access-control-allow-methods": "GET, PUT, POST, OPTIONS",
     "access-control-allow-headers": "Authorization, Content-Type, X-DianGarden-Opened-At",
     "access-control-max-age": "86400",
     "vary": "Origin",
@@ -49,6 +49,79 @@ async function getGoogleJwks() {
   cachedJwks = jwks;
   cachedJwksExpiresAt = Date.now() + Math.min(maxAge, 3600) * 1000;
   return jwks;
+}
+
+
+const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
+const IDLE_TTL_SECONDS = 30 * 24 * 60 * 60;
+function randomSecret() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, "0")).join("");
+}
+function makeSessionToken(sessionId) { return sessionId + "." + randomSecret(); }
+function tokenSessionId(token) {
+  if (typeof token !== "string") return null;
+  const separator = token.indexOf(".");
+  return separator > 0 && separator <= 128 && separator < token.length - 1 ? token.slice(0, separator) : null;
+}
+async function hashToken(token) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
+  return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
+}
+async function readSessionToken(request, property) {
+  try { const body = await readRequestJson(request); return typeof body?.[property] === "string" ? body[property] : ""; }
+  catch (_) { return ""; }
+}
+async function createSession(userId, env) {
+  const now = Math.floor(Date.now() / 1000);
+  const sessionId = crypto.randomUUID();
+  const accessToken = makeSessionToken(sessionId);
+  const refreshToken = makeSessionToken(sessionId);
+  const accessHash = await hashToken(accessToken);
+  const refreshHash = await hashToken(refreshToken);
+  await env.DB.prepare("INSERT INTO player_sessions (session_id, user_id, refresh_token_hash, access_token_hash, access_expires_at, idle_expires_at, created_at, last_seen_at, revoked_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)")
+    .bind(sessionId, userId, refreshHash, accessHash, now + ACCESS_TOKEN_TTL_SECONDS, now + IDLE_TTL_SECONDS, now, now).run();
+  return jsonResponse({ accessToken, accessExpiresAt: now + ACCESS_TOKEN_TTL_SECONDS, refreshToken, idleExpiresAt: now + IDLE_TTL_SECONDS, userId }, 201);
+}
+async function refreshSession(refreshToken, env) {
+  const sessionId = tokenSessionId(refreshToken);
+  if (!sessionId) return jsonResponse({ error: "invalid_refresh_token" }, 401);
+  const row = await env.DB.prepare("SELECT session_id, user_id, refresh_token_hash, access_token_hash, access_expires_at, idle_expires_at, revoked_at FROM player_sessions WHERE session_id = ?").bind(sessionId).first();
+  const now = Math.floor(Date.now() / 1000);
+  if (!row || row.revoked_at != null || row.idle_expires_at <= now) return jsonResponse({ error: "session_expired" }, 401);
+  const presentedHash = await hashToken(refreshToken);
+  if (presentedHash !== row.refresh_token_hash) {
+    await env.DB.prepare("UPDATE player_sessions SET revoked_at = ? WHERE session_id = ? AND revoked_at IS NULL").bind(now, sessionId).run();
+    return jsonResponse({ error: "refresh_token_reused" }, 401);
+  }
+  const accessToken = makeSessionToken(sessionId);
+  const nextRefreshToken = makeSessionToken(sessionId);
+  const accessHash = await hashToken(accessToken);
+  const refreshHash = await hashToken(nextRefreshToken);
+  const accessExpiresAt = now + ACCESS_TOKEN_TTL_SECONDS;
+  const idleExpiresAt = now + IDLE_TTL_SECONDS;
+  const result = await env.DB.prepare("UPDATE player_sessions SET refresh_token_hash = ?, access_token_hash = ?, access_expires_at = ?, idle_expires_at = ?, last_seen_at = ? WHERE session_id = ? AND refresh_token_hash = ? AND revoked_at IS NULL")
+    .bind(refreshHash, accessHash, accessExpiresAt, idleExpiresAt, now, sessionId, presentedHash).run();
+  if (result.meta?.changes !== 1) return jsonResponse({ error: "session_expired" }, 401);
+  return jsonResponse({ accessToken, accessExpiresAt, refreshToken: nextRefreshToken, idleExpiresAt, userId: row.user_id });
+}
+async function revokeSession(refreshToken, env) {
+  const sessionId = tokenSessionId(refreshToken);
+  if (sessionId) await env.DB.prepare("UPDATE player_sessions SET revoked_at = ? WHERE session_id = ? AND revoked_at IS NULL").bind(Math.floor(Date.now() / 1000), sessionId).run();
+  return jsonResponse({ status: "signed_out" });
+}
+async function authenticateAccessToken(request, env) {
+  const match = (request.headers.get("Authorization") || "").match(/^Bearer\\s+(.+)$/i);
+  if (!match) return { response: jsonResponse({ error: "authentication_required" }, 401) };
+  const token = match[1];
+  const sessionId = tokenSessionId(token);
+  if (!sessionId) return { response: jsonResponse({ error: "invalid_access_token" }, 401) };
+  const row = await env.DB.prepare("SELECT session_id, user_id, refresh_token_hash, access_token_hash, access_expires_at, idle_expires_at, revoked_at FROM player_sessions WHERE session_id = ?").bind(sessionId).first();
+  const now = Math.floor(Date.now() / 1000);
+  if (!row || row.revoked_at != null || row.idle_expires_at <= now) return { response: jsonResponse({ error: "session_expired" }, 401) };
+  if (await hashToken(token) !== row.access_token_hash) return { response: jsonResponse({ error: "invalid_access_token" }, 401) };
+  if (row.access_expires_at <= now) return { response: jsonResponse({ error: "access_token_expired" }, 401) };
+  await env.DB.prepare("UPDATE player_sessions SET idle_expires_at = ?, last_seen_at = ? WHERE session_id = ? AND revoked_at IS NULL").bind(now + IDLE_TTL_SECONDS, now, sessionId).run();
+  return { userId: row.user_id };
 }
 
 async function verifyGoogleIdToken(token, expectedAudience) {
@@ -183,21 +256,36 @@ export default {
     const headers = corsHeaders(request, env);
     if (origin && !origins.includes(origin)) return jsonResponse({ error: "origin_not_allowed" }, 403);
     const url = new URL(request.url);
-    if (url.pathname !== "/api/save") return jsonResponse({ error: "not_found" }, 404, headers);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
-    if (!["GET", "PUT"].includes(request.method)) return jsonResponse({ error: "method_not_allowed" }, 405, { allow: "GET, PUT, OPTIONS", ...headers });
+    if (!["/api/save", "/api/session", "/api/session/refresh", "/api/session/logout"].includes(url.pathname)) return jsonResponse({ error: "not_found" }, 404, headers);
     if (!env.DB) return jsonResponse({ error: "database_not_configured" }, 503, headers);
-    if (!env.GOOGLE_CLIENT_ID) return jsonResponse({ error: "google_sign_in_not_configured" }, 503, headers);
-
-    const authorization = request.headers.get("Authorization") || "";
-    const match = authorization.match(/^Bearer\s+(.+)$/i);
-    if (!match) return jsonResponse({ error: "authentication_required" }, 401, headers);
-    let userId;
-    try { userId = await verifyGoogleIdToken(match[1], env.GOOGLE_CLIENT_ID); }
-    catch (_) { return jsonResponse({ error: "invalid_google_id_token" }, 401, headers); }
-
     try {
-      const response = request.method === "GET" ? await handleGetSave(userId, request, env) : await handlePutSave(userId, request, env);
+      let response;
+      if (url.pathname === "/api/session") {
+        if (request.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405, { allow: "POST, OPTIONS", ...headers });
+        if (!env.GOOGLE_CLIENT_ID) return jsonResponse({ error: "google_sign_in_not_configured" }, 503, headers);
+        const idToken = await readSessionToken(request, "idToken");
+        if (!idToken) return jsonResponse({ error: "authentication_required" }, 401, headers);
+        let userId;
+        try { userId = await verifyGoogleIdToken(idToken, env.GOOGLE_CLIENT_ID); }
+        catch (_) { return jsonResponse({ error: "invalid_google_id_token" }, 401, headers); }
+        response = await createSession(userId, env);
+      } else if (url.pathname === "/api/session/refresh") {
+        if (request.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405, { allow: "POST, OPTIONS", ...headers });
+        response = await refreshSession(await readSessionToken(request, "refreshToken"), env);
+      } else if (url.pathname === "/api/session/logout") {
+        if (request.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405, { allow: "POST, OPTIONS", ...headers });
+        response = await revokeSession(await readSessionToken(request, "refreshToken"), env);
+      } else {
+        if (!["GET", "PUT"].includes(request.method)) return jsonResponse({ error: "method_not_allowed" }, 405, { allow: "GET, PUT, OPTIONS", ...headers });
+        const auth = await authenticateAccessToken(request, env);
+        if (auth.response) {
+          const responseHeaders = new Headers(auth.response.headers);
+          for (const [key, value] of Object.entries(headers)) responseHeaders.set(key, value);
+          return new Response(auth.response.body, { status: auth.response.status, headers: responseHeaders });
+        }
+        response = request.method === "GET" ? await handleGetSave(auth.userId, request, env) : await handlePutSave(auth.userId, request, env);
+      }
       const responseHeaders = new Headers(response.headers);
       for (const [key, value] of Object.entries(headers)) responseHeaders.set(key, value);
       return new Response(response.body, { status: response.status, headers: responseHeaders });
