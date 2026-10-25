@@ -1,12 +1,12 @@
 {
-  "name": "任務233：限制無人機平台的點選範圍",
+  "name": "任務234：連接地塊形成整體底座",
   "status": "completed",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務233程式修改已提交；建議在瀏覽器確認平台頂面可選取、無人機本體與周圍空白不會誤選。未手動觸發GitHub Pages部署。",
-  "taskFile": "tasks/done/233-drone-dock-hit-area.md",
-  "result": "src/sky-world.js 的 findDockAt 移除寬鬆中心半徑，僅命中平台頂面投影四邊形。Commit 3b16e1b6f6256ec596adfe79316dca3031321873。尚未執行人工瀏覽器驗收，CI結果待確認。"
+  "nextAction": "任務234程式與底面判定測試已提交；待 GitHub Actions 瀏覽器測試確認。未手動觸發 GitHub Pages 部署。",
+  "taskFile": "tasks/done/234-connected-landmass-bottom.md",
+  "result": "新增連接群組最低底面計算及直接下方地塊判定，並在 browser-smoke 加入測試案例；CI 結果待確認。"
 }
