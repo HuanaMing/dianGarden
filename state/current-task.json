@@ -1,10 +1,10 @@
 {
-  "name": "任務202～204：頭像彈窗、設定分頁、登入入口顯示",
-  "status": "completed",
+  "name": "任務205：管理介面、頭像自動選擇與同步狀態整理",
+  "status": "planned",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務202、203、204已完成並歸檔；等待使用者指定下一項工作。",
-  "taskFile": "tasks/done/202-avatar-settings-dialog.md",
-  "result": "使用者於2026-10-25明確確認任務202～204通過。三項任務已移至 tasks/done/，Playwright 瀏覽器驗收 run 40145259395 通過，Pages 部署工作流程 run 40145153851 成功。"
+  "nextAction": "任務205已建立於 tasks/inbox/，尚未開始修改程式；開始時先重現無人機工作佇列消失問題，再依任務文件完成五項修正與瀏覽器回歸驗收。",
+  "taskFile": "tasks/inbox/205-management-ui-sync-avatar-fixes.md",
+  "result": "2026-10-25：依使用者五項需求建立規劃文件，尚未修改遊戲程式或執行測試。"
 }
