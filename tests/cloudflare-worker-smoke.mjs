@@ -84,15 +84,15 @@ const env = {
 
 const testSessionOpenedAt = Date.now();
 
-async function call(method, { token, body, origin = "https://example.test", path = "/api/save" } = {}) {
+async function call(method, { token, body, origin = "https://example.test", path = "/api/save", openedAt = testSessionOpenedAt } = {}) {
   const headers = new Headers();
   if (origin) headers.set("Origin", origin);
   if (token) {
     headers.set("Authorization", "Bearer " + token);
-    if (method === "GET" || method === "PUT") headers.set("X-DianGarden-Opened-At", String(testSessionOpenedAt));
+    if (method === "GET" || method === "PUT") headers.set("X-DianGarden-Opened-At", String(openedAt));
   }
   if (body !== undefined) headers.set("Content-Type", "application/json");
-  const payload = body === undefined ? undefined : { ...body, openedAt: body.openedAt ?? testSessionOpenedAt, savedAt: body.savedAt ?? testSessionOpenedAt };
+  const payload = body === undefined ? undefined : { ...body, openedAt: body.openedAt ?? openedAt, savedAt: body.savedAt ?? openedAt };
   return worker.fetch(new Request("https://worker.example" + path, {
     method,
     headers,
@@ -140,7 +140,22 @@ assert.deepEqual(await anotherUser.json(), { status: "not_found", revision: 0 })
 const badAudience = await call("GET", { token: await makeToken("google-user-1", { aud: "wrong-client-id" }) });
 assert.equal(badAudience.status, 401);
 
+const expiredToken = await makeToken("google-user-1", { exp: Math.floor(Date.now() / 1000) - 30 });
+assert.equal((await call("GET", { token: expiredToken })).status, 401);
+
 const tooLarge = await call("PUT", { token, body: { ...initialSave, baseRevision: 2, saveData: JSON.stringify({ value: "x".repeat(270_000) }) } });
 assert.equal(tooLarge.status, 400);
 
-console.log("Cloudflare Worker smoke tests passed: CORS, auth, isolated users, save/load, revision conflicts, validation.");
+const newerSessionOpenedAt = testSessionOpenedAt + 1000;
+const newerSession = await call("GET", { token, openedAt: newerSessionOpenedAt });
+assert.equal(newerSession.status, 200);
+assert.equal((await newerSession.json()).openedAt, newerSessionOpenedAt);
+const oldSessionWrite = await call("PUT", {
+  token,
+  openedAt: testSessionOpenedAt,
+  body: { ...initialSave, baseRevision: 2, saveData: JSON.stringify({ coins: 250, plots: [] }) },
+});
+assert.equal(oldSessionWrite.status, 409);
+assert.equal((await oldSessionWrite.json()).error, "stale_session");
+
+console.log("Cloudflare Worker smoke tests passed: CORS, auth, expired-token rejection, isolated users, save/load, revision conflicts, session ownership, validation.");
