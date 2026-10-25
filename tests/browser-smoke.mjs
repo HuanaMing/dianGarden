@@ -548,7 +548,61 @@ try {
   if (cloudRequests.filter(method => method === 'GET').length !== 2 || cloudRequests.includes('PUT')) {
     throw new Error('重新整理後的離線狀態仍產生非預期雲端請求：' + JSON.stringify(cloudRequests));
   }
-  checks.push('任務212：主畫面與設定頁「輕搖風鈴」均重新載入頁面並保留本機存檔');
+  checks.push('任務212：手機版主畫面與設定頁「輕搖風鈴」均重新載入頁面並保留本機存檔');
+
+  await staleSessionPage.setViewportSize({ width: 1280, height: 800 });
+  await staleSessionPage.evaluate(() => {
+    const payload = btoa(JSON.stringify({ sub: 'task212-desktop-test-account' })).replace(/=/g, '');
+    window.__task211CredentialCallback({ credential: `header.${payload}.signature` });
+  });
+  await staleSessionPage.waitForFunction(() => !document.querySelector('#cloud-session-banner')?.hidden && !document.querySelector('#cloud-session-banner-settings')?.hidden);
+  const desktopBannerLayout = await staleSessionPage.evaluate(() => {
+    const banner = document.querySelector('#cloud-session-banner');
+    const button = document.querySelector('#cloud-session-refresh-main');
+    const rect = element => {
+      const box = element.getBoundingClientRect();
+      return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height };
+    };
+    const bannerRect = rect(banner);
+    const buttonRect = rect(button);
+    const lines = [...banner.querySelectorAll('.cloud-session-banner-line')];
+    return {
+      viewportWidth: innerWidth,
+      banner: bannerRect,
+      button: buttonRect,
+      linesFit: lines.every(line => line.scrollWidth <= line.clientWidth + 1),
+      buttonInside: buttonRect.left >= bannerRect.left && buttonRect.right <= bannerRect.right
+        && buttonRect.top >= bannerRect.top && buttonRect.bottom <= bannerRect.bottom,
+      hitTarget: (() => {
+        const target = document.elementFromPoint(buttonRect.left + buttonRect.width / 2, buttonRect.top + buttonRect.height / 2);
+        return target === button || button.contains(target);
+      })(),
+    };
+  });
+  if (desktopBannerLayout.banner.left < 0 || desktopBannerLayout.banner.right > desktopBannerLayout.viewportWidth
+    || !desktopBannerLayout.linesFit || !desktopBannerLayout.buttonInside || !desktopBannerLayout.hitTarget) {
+    throw new Error('桌面版主畫面蒲公英提示或風鈴按鈕超出範圍／被遮擋：' + JSON.stringify(desktopBannerLayout));
+  }
+  await staleSessionPage.locator('#settings-toggle').click();
+  const desktopSettingsLayout = await staleSessionPage.evaluate(() => {
+    const banner = document.querySelector('#cloud-session-banner-settings');
+    const button = document.querySelector('#cloud-session-refresh');
+    const bannerRect = banner.getBoundingClientRect();
+    const buttonRect = button.getBoundingClientRect();
+    const lines = [...banner.querySelectorAll('.cloud-session-banner-line')];
+    const target = document.elementFromPoint(buttonRect.left + buttonRect.width / 2, buttonRect.top + buttonRect.height / 2);
+    return {
+      visible: !banner.hidden,
+      linesFit: lines.every(line => line.scrollWidth <= line.clientWidth + 1),
+      buttonInside: buttonRect.left >= bannerRect.left && buttonRect.right <= bannerRect.right
+        && buttonRect.top >= bannerRect.top && buttonRect.bottom <= bannerRect.bottom,
+      hitTarget: target === button || button.contains(target),
+    };
+  });
+  if (!desktopSettingsLayout.visible || !desktopSettingsLayout.linesFit || !desktopSettingsLayout.buttonInside || !desktopSettingsLayout.hitTarget) {
+    throw new Error('桌面版設定頁蒲公英提示或風鈴按鈕超出範圍／被遮擋：' + JSON.stringify(desktopSettingsLayout));
+  }
+  checks.push('任務212：桌面版主畫面與設定頁提示文字不裁切，風鈴按鈕可直接操作');
   await staleSessionPage.close();
   const displayedVersions = await page.evaluate(() => ({ current: document.querySelector('#current-version')?.textContent?.trim(), latest: document.querySelector('#latest-version')?.textContent?.trim() }));
   if (!/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.current || '') || !/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.latest || '')) throw new Error('設定面板版本號未使用每日更新序號格式：' + JSON.stringify(displayedVersions));
