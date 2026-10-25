@@ -237,7 +237,8 @@ try {
     const queue = document.querySelector('#job-queue');
     const panelRect = panel.getBoundingClientRect();
     const cardRect = card?.getBoundingClientRect();
-    const columns = getComputedStyle(fleet).gridTemplateColumns.trim().split(/\\s+/).length;
+    const gridTemplateColumns = getComputedStyle(fleet).gridTemplateColumns;
+    const columns = gridTemplateColumns.trim().split(/\\s+/).length;
     const initialPanel = { x: panelRect.x, y: panelRect.y, width: panelRect.width, height: panelRect.height };
     for (let index = 0; index < 30; index += 1) {
       const item = document.createElement('li');
@@ -248,6 +249,10 @@ try {
     const afterRect = panel.getBoundingClientRect();
     const result = {
       columns,
+      gridTemplateColumns,
+      fleetDisplay: getComputedStyle(fleet).display,
+      fleetWidth: fleet.getBoundingClientRect().width,
+      cardBounds: cardRect ? { width: cardRect.width, height: cardRect.height } : null,
       cardRatio: cardRect ? Math.abs(cardRect.width - cardRect.height) : null,
       initialPanel,
       afterPanel: { x: afterRect.x, y: afterRect.y, width: afterRect.width, height: afterRect.height },
