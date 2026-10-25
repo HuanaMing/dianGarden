@@ -1040,6 +1040,10 @@ try {
       await route.fulfill({ status: 204, headers: oldWorkerHeaders });
       return;
     }
+    if (path === '/api/session' && method === 'POST') {
+      await route.fulfill({ status: 404, headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' }, body: JSON.stringify({ error: 'not_found' }) });
+      return;
+    }
     legacyRequests.push({ path, method: request.method(), authorization: request.headers()['authorization'] });
     await route.fulfill({
       status: 200,
