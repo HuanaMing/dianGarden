@@ -1,12 +1,12 @@
 {
-  "name": "任務234：連接地塊形成整體底座（任意垂直距離判定）",
+  "name": "任務234：連接地塊整體底座與原始側面厚度",
   "status": "completed",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "已修正為：同一垂直柱中，只要下方任何距離存在地塊（包含草地或農地），上層地塊就不生成側面延伸；最底層地塊仍延伸至連通群組底部。瀏覽器 CI 待確認，未手動觸發 GitHub Pages 部署。",
+  "nextAction": "上層地塊下方任意距離存在草地或農地時，側面保留原本0.5單位厚度，不再延伸至群組底部；最底層地塊仍延伸至群組底部。瀏覽器 CI 待確認，未手動觸發 GitHub Pages 部署。",
   "taskFile": "tasks/done/234-connected-landmass-bottom.md",
-  "result": "hasPlotBelow 改為檢查相同 X/Z 座標下是否存在任何較低地塊，不再限定相差半個 TILE；回歸測試使用高度差 2 的堆疊案例驗證。"
+  "result": "addGrassRamp 現在所有地塊都繪製側面；只有最底層地塊把側面底端延伸至連通群組底部並繪製底板。上層地塊的 bottomY 使用 localBottomY，保留0.5單位厚度。"
 }
