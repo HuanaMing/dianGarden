@@ -58,7 +58,10 @@
                   <div><dt>最新版本號</dt><dd id="latest-version">檢查中…</dd></div>
                 </dl>
                 <p id="version-check-status" class="version-check-status" role="status" aria-live="polite">正在檢查版本…</p>
-                <button id="force-update-button" class="force-update-button" type="button">立即更新</button>
+                <div class="version-update-actions">
+                  <button id="force-update-button" class="force-update-button" type="button">立即更新</button>
+                  <label class="auto-update-toggle" for="auto-update-toggle"><input id="auto-update-toggle" type="checkbox" checked><span>自動更新</span></label>
+                </div>
               </section>
               <section class="cloud-save-settings" aria-label="跨裝置雲端存檔">
                 <h3>跨裝置存檔</h3>
