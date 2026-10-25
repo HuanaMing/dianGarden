@@ -1175,26 +1175,21 @@
     const rect = canvas.getBoundingClientRect();
     const xAtCanvas = (clientX - rect.left) * canvas.clientWidth / Math.max(rect.width, 1);
     const yAtCanvas = (clientY - rect.top) * canvas.clientHeight / Math.max(rect.height, 1);
-    const candidates = [];
-    const hitRadius = Math.max(72, Math.min(104, Math.min(canvas.clientWidth, canvas.clientHeight) * 0.18));
-    for (let index = 0; index < droneCount; index += 1) {
+    // Only the platform's top face is interactive; the drone, platform sides,
+    // and nearby empty space must not accidentally select the dock.
+    for (let index = droneCount - 1; index >= 0; index -= 1) {
       if (droneDocks[index]?.deployed === false) continue;
       const [dockX, dockZ] = getDockPosition(index);
       const platformY = 1.366 + getDockHeight(index);
-      const center = projectPoint([dockX, platformY, dockZ]);
-      if (!center) continue;
       const polygon = [
         projectPoint([dockX - 0.34, platformY, dockZ - 0.3]),
         projectPoint([dockX + 0.34, platformY, dockZ - 0.3]),
         projectPoint([dockX + 0.34, platformY, dockZ + 0.3]),
         projectPoint([dockX - 0.34, platformY, dockZ + 0.3]),
       ];
-      const onPlatform = polygon.every(Boolean) && pointInPolygon(xAtCanvas, yAtCanvas, polygon);
-      const distanceToCenter = Math.hypot(xAtCanvas - center.x, yAtCanvas - center.y);
-      if (onPlatform || distanceToCenter <= hitRadius) candidates.push({ index, onPlatform, distanceToCenter });
+      if (polygon.every(Boolean) && pointInPolygon(xAtCanvas, yAtCanvas, polygon)) return index;
     }
-    candidates.sort((a, b) => Number(b.onPlatform) - Number(a.onPlatform) || a.distanceToCenter - b.distanceToCenter);
-    return candidates[0]?.index ?? null;
+    return null;
   }
 
   function screenToGround(clientX, clientY, groundY = 0.08) {
