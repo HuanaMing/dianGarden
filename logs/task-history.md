@@ -1724,3 +1724,11 @@
 - 回歸測試：加入取消選取、草地及手動農地經週期重繪後仍維持正確選取的 Playwright 案例。
 - 驗收：使用者明確確認「驗收完成」。程式與測試腳本語法解析通過；使用者驗收為最終通過依據。
 - 檔案：`src/game.js`、`tests/browser-smoke.mjs`、`tasks/done/223-auto-plot-selection.md`。
+
+
+## 2026-10-25 — 任務224：登入與更新期間暫停場景繪圖
+
+- 結果：場景繪圖新增可疊加的暫停原因；啟動花園選擇期間先暫停，完成首輪狀態同步後恢復；版本更新及雲端存檔套用期間暫停舊場景，更新／還原失敗時解除對應暫停原因。
+- 測試：Playwright 驗證啟動選擇期間 WebGL 不繪圖、選擇訪客花園後恢復；另以靜態斷言檢查版本更新與雲端還原的失敗恢復路徑。手機長按環測試原先與 500ms 快捷圓環手勢互相干擾，將兩項測試隔離後，桌面／手機完整 Playwright 驗收通過：[run 40168665969](https://github.com/HuanaMing/dianGarden/actions/runs/40168665969)。
+- 限制：未連接真實 Google 帳戶或真實雲端存檔環境進行手動端到端測試。
+- 檔案：`src/sky-world.js`、`src/game.js`、`src/version-check.js`、`src/cloud-save.js`、`tests/browser-smoke.mjs`、`tasks/done/224-pause-rendering-during-login-update.md`。
