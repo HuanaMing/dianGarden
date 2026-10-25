@@ -87,6 +87,22 @@
       worldTimeMs: Number.isFinite(state.worldTimeMs) ? state.worldTimeMs : 60_000,
       worldTimeAnchor: Number.isFinite(state.worldTimeAnchor) ? state.worldTimeAnchor : departureAt,
     }, time);
+    const plantsFor = (plot) => {
+      if (!plot) return [];
+      if (plot.manual === true && Array.isArray(plot.plants)) return plot.plants;
+      return plot.crop === null || plot.crop === undefined ? [] : [plot];
+    };
+    const syncPrimaryPlant = (plot) => {
+      if (plot?.manual !== true) return;
+      const first = Array.isArray(plot.plants) ? plot.plants[0] : null;
+      const fields = ['crop', 'plantedAt', 'plantHeight', 'variantId', 'variantName', 'variantColor', 'watered', 'waterSource', 'waterWetnessStart', 'growthBonusMs'];
+      const defaults = { crop: null, plantedAt: null, plantHeight: null, variantId: null, variantName: null, variantColor: null, watered: false, waterSource: null, waterWetnessStart: null, growthBonusMs: 0 };
+      fields.forEach((field) => { plot[field] = first && first[field] !== undefined ? first[field] : defaults[field]; });
+      ['waterStartedAt', 'waterUntil'].forEach((field) => {
+        if (Number.isFinite(first?.[field])) plot[field] = first[field];
+        else delete plot[field];
+      });
+    };
     const growthElapsed = (plot, time) => {
       if (!plot || plot.crop === null || !Number.isFinite(plot.plantedAt)) return 0;
       let elapsed = Math.max(0, time - plot.plantedAt) + (plot.growthBonusMs || 0);
@@ -96,10 +112,13 @@
       return elapsed;
     };
     const settleWater = (plot, time) => {
-      if (!Number.isFinite(plot.waterStartedAt) || !Number.isFinite(plot.waterUntil) || time < plot.waterUntil) return;
-      plot.growthBonusMs = (plot.growthBonusMs || 0) + Math.max(0, plot.waterUntil - plot.waterStartedAt) * (WATER_GROWTH_RATE - 1);
-      delete plot.waterStartedAt;
-      delete plot.waterUntil;
+      plantsFor(plot).forEach((plant) => {
+        if (!Number.isFinite(plant.waterStartedAt) || !Number.isFinite(plant.waterUntil) || time < plant.waterUntil) return;
+        plant.growthBonusMs = (plant.growthBonusMs || 0) + Math.max(0, plant.waterUntil - plant.waterStartedAt) * (WATER_GROWTH_RATE - 1);
+        delete plant.waterStartedAt;
+        delete plant.waterUntil;
+      });
+      syncPrimaryPlant(plot);
     };
     const clearCrop = (plot) => {
       plot.crop = null; plot.plantedAt = null; plot.plantHeight = null;
@@ -231,12 +250,14 @@
     };
     const applyRain = (time) => {
       state.plots.forEach((plot) => {
-        if (plot.crop === null) return;
-        if (Number.isFinite(plot.waterStartedAt) && Number.isFinite(plot.waterUntil)) {
-          plot.growthBonusMs = (plot.growthBonusMs || 0) + Math.max(0, Math.min(time, plot.waterUntil) - plot.waterStartedAt) * (WATER_GROWTH_RATE - 1);
-        }
-        plot.watered = true; plot.waterSource = 'rain'; plot.waterWetnessStart = 1;
-        plot.waterStartedAt = time; plot.waterUntil = time + WATER_DURATION;
+        plantsFor(plot).forEach((plant) => {
+          if (Number.isFinite(plant.waterStartedAt) && Number.isFinite(plant.waterUntil)) {
+            plant.growthBonusMs = (plant.growthBonusMs || 0) + Math.max(0, Math.min(time, plant.waterUntil) - plant.waterStartedAt) * (WATER_GROWTH_RATE - 1);
+          }
+          plant.watered = true; plant.waterSource = 'rain'; plant.waterWetnessStart = 1;
+          plant.waterStartedAt = time; plant.waterUntil = time + WATER_DURATION;
+        });
+        syncPrimaryPlant(plot);
       });
     };
     let time = departureAt;
@@ -297,13 +318,15 @@
       const nextRainAt = simulationEnd + nextRainDelay;
       if (nextRainAt <= now) {
         state.plots.forEach((plot) => {
-          if (plot.crop !== null && plot.watered !== true) {
-            if (Number.isFinite(plot.waterStartedAt) && Number.isFinite(plot.waterUntil)) {
-              plot.growthBonusMs = (plot.growthBonusMs || 0) + Math.max(0, Math.min(nextRainAt, plot.waterUntil) - plot.waterStartedAt) * (WATER_GROWTH_RATE - 1);
+          plantsFor(plot).forEach((plant) => {
+            if (plant.watered === true) return;
+            if (Number.isFinite(plant.waterStartedAt) && Number.isFinite(plant.waterUntil)) {
+              plant.growthBonusMs = (plant.growthBonusMs || 0) + Math.max(0, Math.min(nextRainAt, plant.waterUntil) - plant.waterStartedAt) * (WATER_GROWTH_RATE - 1);
             }
-            plot.watered = true; plot.waterSource = 'rain';
-            plot.waterStartedAt = nextRainAt; plot.waterUntil = nextRainAt + WATER_DURATION;
-          }
+            plant.watered = true; plant.waterSource = 'rain';
+            plant.waterStartedAt = nextRainAt; plant.waterUntil = nextRainAt + WATER_DURATION;
+          });
+          syncPrimaryPlant(plot);
         });
       }
     }
