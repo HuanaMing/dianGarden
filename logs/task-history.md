@@ -1706,3 +1706,13 @@
 - 修正：發現 `src/management-panels.css` 覆蓋了提示本體的 `pointer-events`，已修正為提示本體不攔截場景操作、風鈴按鈕仍可命中；設定面板提示維持面板內並使用一致配色。
 - 驗收：桌面與手機 Playwright 驗證提示位置、色彩、文字不裁切、圖示載入與尺寸、按鈕命中；設定面板圖示載入通過。GitHub Actions [run 40164617403 通過](https://github.com/HuanaMing/dianGarden/actions/runs/40164617403)。
 - 檔案：`src/index.html`、`src/styles.css`、`src/management-panels.css`、`tests/browser-smoke.mjs`、`tasks/done/219-cloud-session-wind-chime-notice.md`、`state/project.json`、`state/current-task.json`。
+
+## 2026-10-25 — 任務220～222驗收完成
+
+- 使用者確認任務220、221驗收完成；已將任務220與221的完成紀錄建立於 `tasks/done/`，驗證完成版內容後移除 `tasks/active/` 原檔。
+- 任務220：頂部 HUD 與快捷圓環收合入口使用 `assets/btn/收合.png`，保留既有收合操作與無障礙狀態。
+- 任務221：頂部按鈕與快捷圓環依介面狀態切換 `assets/btn/收合.png`／`assets/btn/展開.png`。
+- 任務222：快捷圓環旋轉入口改用 `assets/btn/旋轉.png`，移除旋轉 emoji，保留 `aria-label="旋轉"`、`aria-pressed` 與原有長按／滑動／放開旋轉流程。
+- 回歸測試更新：檢查旋轉素材載入、桌面六個圓環圖示、手機六個 32×32 圖示及徑向位置；同步調整任務220／221頂部圖示的狀態斷言。
+- 驗收：GitHub Actions Playwright 桌面／手機完整測試通過：[run 40166239723](https://github.com/HuanaMing/dianGarden/actions/runs/40166239723)，日誌結果為 `PASS`。既有旋轉模式啟動與放開退出測試通過。
+- 任務222完成版已建立並驗證，之後移除 active 原檔。未手動觸發 GitHub Pages 部署；既有部署需使用者明確批准的限制維持不變。
