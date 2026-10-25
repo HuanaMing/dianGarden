@@ -393,6 +393,13 @@
     if (!Number.isInteger(index) || index < 0 || index >= game.plots.length) return;
     dockIsSelected = false;
     activePlotIndex = index;
+    const targetTab = game.plots[index].manual === true ? 'manual' : 'auto';
+    if (activeFarmTab !== targetTab) {
+      activeFarmTab = targetTab;
+      syncFarmManagementTabs();
+      render();
+      return;
+    }
     plotSelector.querySelectorAll('[data-plot-button]').forEach((button) => {
       const selected = Number(button.dataset.plotButton) === index;
       button.classList.toggle('is-selected', selected);
