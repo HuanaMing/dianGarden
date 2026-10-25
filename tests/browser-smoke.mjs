@@ -984,6 +984,77 @@ try {
     checks.push(`${flowerName}（索引 ${index}）可選取並產生模型截圖`);
   }
 
+  const fullscreenButton = page.locator('#preview-fullscreen-toggle');
+  if (!(await fullscreenButton.isVisible())) throw new Error('圖鑑預覽右下角沒有全螢幕按鈕');
+  await fullscreenButton.click();
+  await page.waitForFunction(() => {
+    const preview = document.querySelector('.encyclopedia-world');
+    return document.fullscreenElement === preview || preview?.classList.contains('is-preview-expanded');
+  }, null, { timeout: 5000 });
+  const fullscreenState = await page.evaluate(() => {
+    const preview = document.querySelector('.encyclopedia-world');
+    const button = document.querySelector('#preview-fullscreen-toggle');
+    const rect = preview.getBoundingClientRect();
+    const buttonRect = button.getBoundingClientRect();
+    return {
+      active: document.fullscreenElement === preview || preview.classList.contains('is-preview-expanded'),
+      pressed: button.getAttribute('aria-pressed'),
+      previewBounds: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+      buttonRightGap: window.innerWidth - buttonRect.right,
+      buttonBottomGap: window.innerHeight - buttonRect.bottom,
+    };
+  });
+  if (!fullscreenState.active || fullscreenState.pressed !== 'true'
+    || fullscreenState.previewBounds.x > 1 || fullscreenState.previewBounds.y > 1
+    || fullscreenState.previewBounds.width < 1438 || fullscreenState.previewBounds.height < 998
+    || Math.abs(fullscreenState.buttonRightGap - 12) > 2 || Math.abs(fullscreenState.buttonBottomGap - 12) > 2) {
+    throw new Error('圖鑑預覽全螢幕範圍或右下角退出按鈕位置不正確：' + JSON.stringify(fullscreenState));
+  }
+  await fullscreenButton.click();
+  await page.waitForFunction(() => {
+    const preview = document.querySelector('.encyclopedia-world');
+    return document.fullscreenElement !== preview && !preview?.classList.contains('is-preview-expanded');
+  }, null, { timeout: 5000 });
+  checks.push('任務217：桌面圖鑑預覽可進入／退出全螢幕，控制位於右下角');
+
+  const mobileGalleryPage = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
+  await mobileGalleryPage.addInitScript(() => {
+    Object.defineProperty(Element.prototype, 'requestFullscreen', {
+      configurable: true,
+      value: () => Promise.reject(new Error('測試全螢幕 API fallback')),
+    });
+  });
+  await mobileGalleryPage.goto(`${baseURL}/encyclopedia.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await mobileGalleryPage.locator('.encyclopedia-card').first().waitFor({ state: 'visible' });
+  await mobileGalleryPage.locator('#preview-fullscreen-toggle').click();
+  const fallbackFullscreen = await mobileGalleryPage.evaluate(() => {
+    const preview = document.querySelector('.encyclopedia-world');
+    const rect = preview.getBoundingClientRect();
+    return {
+      active: preview.classList.contains('is-preview-expanded'),
+      pressed: document.querySelector('#preview-fullscreen-toggle').getAttribute('aria-pressed'),
+      bounds: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+    };
+  });
+  if (!fallbackFullscreen.active || fallbackFullscreen.pressed !== 'true'
+    || fallbackFullscreen.bounds.x !== 0 || fallbackFullscreen.bounds.y !== 0
+    || fallbackFullscreen.bounds.width < 388 || fallbackFullscreen.bounds.height < 842) {
+    throw new Error('手機瀏覽器全螢幕 API 不可用時，替代全螢幕模式未填滿視窗：' + JSON.stringify(fallbackFullscreen));
+  }
+  await mobileGalleryPage.locator('#preview-fullscreen-toggle').click();
+  if (await mobileGalleryPage.locator('.encyclopedia-world').evaluate(el => el.classList.contains('is-preview-expanded'))) throw new Error('手機替代全螢幕模式無法退出');
+  await mobileGalleryPage.locator('#flower-picker-toggle').click();
+  if (!(await mobileGalleryPage.locator('.encyclopedia-layout').evaluate(el => el.classList.contains('is-preview-collapsed')))
+    || await mobileGalleryPage.locator('#flower-picker-toggle').getAttribute('aria-expanded') !== 'false'
+    || await mobileGalleryPage.locator('.encyclopedia-preview-column').isVisible()) throw new Error('手機點擊「選擇花種」標題後未收合預覽');
+  await mobileGalleryPage.locator('.encyclopedia-card[data-flower-index="1"] .encyclopedia-card-select').click();
+  await mobileGalleryPage.waitForFunction(() => !document.querySelector('.encyclopedia-layout')?.classList.contains('is-preview-collapsed')
+    && document.querySelector('#selected-flower-status')?.textContent?.includes(window.flowerCatalog[1].name));
+  if (await mobileGalleryPage.locator('#flower-picker-toggle').getAttribute('aria-expanded') !== 'true'
+    || !(await mobileGalleryPage.locator('.encyclopedia-preview-column').isVisible())) throw new Error('手機選擇花種後未恢復預覽原排版');
+  checks.push('任務217：手機可收合預覽、API 失敗時可替代全螢幕，選花後恢復排版');
+  await mobileGalleryPage.close();
+
   const versionPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await versionPage.addInitScript(() => { localStorage.setItem('sky-garden-guest-mode-v1', 'true'); localStorage.setItem('diangarden-seen-version-v1', '000000, 001'); localStorage.setItem('diangarden-auto-update-v1', 'false'); });
   await versionPage.route('**/version.json*', route => route.fulfill({
