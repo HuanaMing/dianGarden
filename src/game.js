@@ -224,6 +224,9 @@
   }
   const offlineReport = simulateOfflineProgress(game);
   const plotSelector = document.querySelector('#plot-selector');
+  const farmTabManual = document.querySelector('#farm-tab-manual');
+  const farmTabAuto = document.querySelector('#farm-tab-auto');
+  let activeFarmTab = 'auto';
   const coinsDisplay = document.querySelector('#coins');
   const toast = document.querySelector('#toast');
   const saveStatus = document.querySelector('#save-status');
@@ -610,6 +613,22 @@
     }
     panel.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
+  }
+  function syncFarmManagementTabs() {
+    const manualSelected = activeFarmTab === 'manual';
+    farmTabManual?.setAttribute('aria-selected', String(manualSelected));
+    farmTabManual?.setAttribute('tabindex', manualSelected ? '0' : '-1');
+    farmTabAuto?.setAttribute('aria-selected', String(!manualSelected));
+    farmTabAuto?.setAttribute('tabindex', manualSelected ? '-1' : '0');
+    plotSelector?.setAttribute('aria-labelledby', manualSelected ? 'farm-tab-manual' : 'farm-tab-auto');
+  }
+  function setFarmManagementTab(tab) {
+    if (tab !== 'manual' && tab !== 'auto') return;
+    activeFarmTab = tab;
+    const firstMatchingIndex = game.plots.findIndex(plot => tab === 'manual' ? plot.manual === true : plot.manual !== true);
+    if (firstMatchingIndex >= 0) activePlotIndex = firstMatchingIndex;
+    syncFarmManagementTabs();
+    render();
   }
   function updateHudCollapse() {
     document.querySelector('.world-frame')?.classList.toggle('is-hud-collapsed', game.hudCollapsed);
@@ -1010,10 +1029,11 @@
   }
   function render() {
     settleExpiredWaterBoosts();
-    updateHud(); updateAutoModeButton(); updateHudCollapse(); renderDroneFleet(); plotSelector.replaceChildren();
+    updateHud(); updateAutoModeButton(); updateHudCollapse(); renderDroneFleet(); syncFarmManagementTabs(); plotSelector.replaceChildren();
     game.plots.forEach((plot, index) => {
-      if (plot.manual === true) return;
-      const automaticPlotNumber = game.plots.slice(0, index + 1).filter((item) => item.manual !== true).length;
+      const isManualPlot = plot.manual === true;
+      if ((activeFarmTab === 'manual') !== isManualPlot) return;
+      const plotNumber = game.plots.slice(0, index + 1).filter((item) => activeFarmTab === 'manual' ? item.manual === true : item.manual !== true).length;
       const crop = plot.crop === null ? null : getPlantedCrop(plot);
       const elapsed = crop ? growthElapsed(plot) : 0;
       const ready = crop && elapsed >= crop.growTime;
@@ -1026,19 +1046,32 @@
       button.className = 'world-plot-button';
       button.type = 'button';
       button.dataset.plotButton = index;
-      button.setAttribute('aria-label', `${getPlotLabel(index)}，${state}。開啟操作`);
+      const plotLabel = activeFarmTab === 'manual' ? `手動地塊 ${plotNumber}` : `自動地塊 ${plotNumber}`;
+      button.setAttribute('aria-label', `${plotLabel}，${state}。開啟操作`);
       button.setAttribute('aria-pressed', 'false');
-      button.innerHTML = `<span class="world-plot-number">${String(automaticPlotNumber).padStart(2, '0')}</span><span class="world-plot-icon" aria-hidden="true">${crop ? ready ? flowerIconMarkup(crop, 'flower-pixel-icon plot-pixel-icon') : crop.seedIcon : '＋'}</span><span class="world-plot-state">${plotMode(plot) === 'grass' ? '草地' : plotMode(plot) === 'manual' ? '手動' : !crop ? '空地' : rainWet ? '雨中濕潤' : ready ? '可收成' : `${remaining}s`}</span>${crop ? `<span class="world-plot-progress" aria-hidden="true"><span style="width:${progress}%"></span></span>` : ''}`;
+      button.innerHTML = `<span class="world-plot-number">${String(plotNumber).padStart(2, '0')}</span><span class="world-plot-icon" aria-hidden="true">${crop ? ready ? flowerIconMarkup(crop, 'flower-pixel-icon plot-pixel-icon') : crop.seedIcon : '＋'}</span><span class="world-plot-state">${plotMode(plot) === 'grass' ? '草地' : plotMode(plot) === 'manual' ? '手動' : !crop ? '空地' : rainWet ? '雨中濕潤' : ready ? '可收成' : `${remaining}s`}</span>${crop ? `<span class="world-plot-progress" aria-hidden="true"><span style="width:${progress}%"></span></span>` : ''}`;
       button.addEventListener('click', () => openPlotDialog(index));
       plotSelector.append(button);
     });
+    if (!plotSelector.querySelector('[data-plot-button]')) {
+      const emptyState = document.createElement('p');
+      emptyState.className = 'farm-empty-state';
+      emptyState.textContent = activeFarmTab === 'manual' ? '目前沒有手動地塊，可使用下方按鈕購買。' : '目前沒有自動地塊。';
+      plotSelector.append(emptyState);
+    }
     if (dockIsSelected) {
       plotSelector.querySelectorAll('[data-plot-button]').forEach((button) => {
         button.classList.remove('is-selected');
         button.setAttribute('aria-pressed', 'false');
       });
     } else {
-      selectPlot(Math.min(activePlotIndex, game.plots.length - 1));
+      const activePlot = game.plots[activePlotIndex];
+      const activePlotMatchesTab = activePlot && (activeFarmTab === 'manual' ? activePlot.manual === true : activePlot.manual !== true);
+      if (activePlotMatchesTab) selectPlot(activePlotIndex);
+      else {
+        const firstVisiblePlotIndex = game.plots.findIndex(plot => activeFarmTab === 'manual' ? plot.manual === true : plot.manual !== true);
+        if (firstVisiblePlotIndex >= 0) selectPlot(firstVisiblePlotIndex);
+      }
     }
     if (dialogContext?.type === 'plot' && game.plots[dialogContext.index]?.crop !== null) renderFarmDialog();
   }
@@ -1071,6 +1104,9 @@
     render();
     notify('新無人機與專屬停靠坪台已加入花園。');
   }
+  farmTabManual?.addEventListener('click', () => setFarmManagementTab('manual'));
+  farmTabAuto?.addEventListener('click', () => setFarmManagementTab('auto'));
+  syncFarmManagementTabs();
   document.querySelector('#farm-management-toggle')?.addEventListener('click', () => {
     const panel = document.querySelector('#farm-management-panel');
     if (!panel) return;
