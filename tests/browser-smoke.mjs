@@ -1275,10 +1275,6 @@ try {
   checks.push('任務212：手機版主畫面與設定頁「輕搖風鈴」均重新載入頁面並保留本機存檔');
 
   await staleSessionPage.setViewportSize({ width: 1280, height: 800 });
-  await staleSessionPage.evaluate(() => {
-    const payload = btoa(JSON.stringify({ iss: 'https://accounts.google.com', aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com', exp: Math.floor(Date.now() / 1000) + 3600, sub: 'task212-desktop-test-account' })).replace(/=/g, '');
-    window.__task211CredentialCallback({ credential: `header.${payload}.signature` });
-  });
   await staleSessionPage.waitForFunction(() => !document.querySelector('#cloud-session-banner')?.hidden && !document.querySelector('#cloud-session-banner-settings')?.hidden);
   const desktopBannerLayout = await staleSessionPage.evaluate(() => {
     const banner = document.querySelector('#cloud-session-banner');
