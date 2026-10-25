@@ -603,6 +603,7 @@ input, [contenteditable="true"]{
 .cloud-session-refresh:hover{background:#dcefd9}
 .cloud-session-refresh:focus-visible{outline:2px solid #527763;outline-offset:2px}
 .cloud-session-settings-banner{display:grid;justify-items:center;gap:6px;padding:10px 12px;border:1px solid #cfe1d1;border-radius:12px;background:#f7fbf0;color:#527763;text-align:center}
+.cloud-session-settings-banner[hidden]{display:none}
 @media(max-width:700px){.cloud-session-banner{bottom:48px;font-size:11px;padding:8px 10px;max-width:calc(100% - 16px)}.cloud-session-settings-banner{font-size:11px}.cloud-session-wind-chime-icon{width:32px;height:32px}}
 
 
