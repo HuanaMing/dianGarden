@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 202,
-  "nextAction": "任務202頭像彈窗、任務203設定雙分頁、任務204登入後隱藏 Google 登入入口已完成；Playwright 瀏覽器驗收通過，Pages 部署工作流程成功，等待使用者實際遊玩驗收。",
+  "activeTask": null,
+  "nextAction": "任務202、203、204已由使用者驗收通過並歸檔；目前無指定的進行中任務。等待使用者提出下一項任務。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
