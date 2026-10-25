@@ -19,3 +19,5 @@
 - 修正版於 `src/styles.css` 使用 `#startup-garden-dialog` 提高選擇器優先權，將手機版對話框內距改為 12px、區塊間距改為 6px，並明顯縮小兩個選項卡片、標題、說明、Google 登入區與訪客按鈕的留白。
 - 修正版程式提交：`cd386ac96f01798696a8f9dc1d6657fe99b677f7`。
 - 已重新讀取 CSS 確認修正版規則存在；尚未確認 GitHub Pages 部署結果，也未執行真實手機瀏覽器視覺驗收。
+- 第三版依使用者實機截圖定位問題：只縮小內距沒有阻止 Grid 將內容列／卡片拉伸。已加入手機專屬 `height:max-content`、`max-height:calc(100dvh - 32px)`、`grid-template-rows:max-content`、`align-content:start`，並限制各直接子元素 `height:auto; min-height:0; align-self:start`，讓對話框高度依內容決定並在矮螢幕內可捲動。
+- 第三版 CSS 提交：`fd86f0b3b4ad6dfbb331eb2bfe65698ac9c0546f`。尚未進行真實手機瀏覽器視覺驗收；不可視為已通過。
