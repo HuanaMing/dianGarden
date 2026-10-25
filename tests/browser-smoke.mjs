@@ -230,6 +230,39 @@ try {
   await page.locator('#drone-panel-toggle').click();
   if (!(await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) ) || await page.locator('#settings-panel').isVisible() || await page.locator('#farm-management-panel').isVisible()) throw new Error('無人機面板沒有關閉其他兩個面板');
   await assertManagementPanelSize('#drone-jobs');
+  const droneLayoutCheck = await page.evaluate(() => {
+    const panel = document.querySelector('#drone-jobs');
+    const fleet = document.querySelector('#drone-fleet');
+    const card = fleet?.querySelector('.drone-fleet-item');
+    const queue = document.querySelector('#job-queue');
+    const panelRect = panel.getBoundingClientRect();
+    const cardRect = card?.getBoundingClientRect();
+    const columns = getComputedStyle(fleet).gridTemplateColumns.trim().split(/\\s+/).length;
+    const initialPanel = { x: panelRect.x, y: panelRect.y, width: panelRect.width, height: panelRect.height };
+    for (let index = 0; index < 30; index += 1) {
+      const item = document.createElement('li');
+      item.dataset.testOverflow = 'true';
+      item.textContent = `測試佇列工作 ${index + 1}`;
+      queue.append(item);
+    }
+    const afterRect = panel.getBoundingClientRect();
+    const result = {
+      columns,
+      cardRatio: cardRect ? Math.abs(cardRect.width - cardRect.height) : null,
+      initialPanel,
+      afterPanel: { x: afterRect.x, y: afterRect.y, width: afterRect.width, height: afterRect.height },
+      queueOverflow: queue.scrollHeight > queue.clientHeight,
+      queueOverflowStyle: getComputedStyle(queue).overflowY,
+    };
+    queue.querySelectorAll('[data-test-overflow]').forEach(item => item.remove());
+    return result;
+  });
+  if (droneLayoutCheck.columns !== 4 || droneLayoutCheck.cardRatio === null || droneLayoutCheck.cardRatio > 2
+    || JSON.stringify(droneLayoutCheck.initialPanel) !== JSON.stringify(droneLayoutCheck.afterPanel)
+    || !droneLayoutCheck.queueOverflow || droneLayoutCheck.queueOverflowStyle !== 'hidden') {
+    throw new Error('任務214：無人機面板固定尺寸、四欄方形卡片或佇列溢出隱藏不符合預期：' + JSON.stringify(droneLayoutCheck));
+  }
+  checks.push('任務214：無人機面板固定尺寸、四欄方形卡片與佇列超出後隱藏通過');
   await page.waitForTimeout(5200);
   if (!(await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open'))) || !(await page.locator('#job-queue').isVisible()) || await page.locator('#job-queue > li').count() === 0) throw new Error('無人機管理面板在閒置 5 秒後消失，或工作佇列沒有空佇列提示');
   checks.push('任務205：無人機管理面板閒置超過5秒仍可見，空佇列提示正常');
