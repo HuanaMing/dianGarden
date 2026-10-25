@@ -6,10 +6,57 @@
   const message = document.querySelector('#variant-message');
   const variantList = document.querySelector('#saved-variants');
   const selectedFlowerStatus = document.querySelector('#selected-flower-status');
+  const encyclopediaLayout = document.querySelector('.encyclopedia-layout');
+  const previewWorld = document.querySelector('.encyclopedia-world');
+  const fullscreenToggle = document.querySelector('#preview-fullscreen-toggle');
+  const pickerToggle = document.querySelector('#flower-picker-toggle');
   const variantsKey = 'sky-garden-flower-variants-v1';
   const autoCropKey = 'sky-garden-auto-crops-v1';
   const maxVariants = 30;
   if (!grid || !Array.isArray(window.flowerCatalog)) return;
+  function syncPreviewFullscreenButton() {
+    const active = Boolean(previewWorld && (document.fullscreenElement === previewWorld || previewWorld.classList.contains('is-preview-expanded')));
+    if (!fullscreenToggle) return;
+    fullscreenToggle.setAttribute('aria-pressed', String(active));
+    fullscreenToggle.setAttribute('aria-label', active ? '退出全螢幕預覽' : '進入全螢幕預覽');
+    fullscreenToggle.title = active ? '退出全螢幕預覽' : '進入全螢幕預覽';
+    fullscreenToggle.textContent = active ? '⤡' : '⛶';
+  }
+  function setPreviewCollapsed(collapsed) {
+    if (!encyclopediaLayout || !window.matchMedia('(max-width: 760px)').matches) return;
+    encyclopediaLayout.classList.toggle('is-preview-collapsed', collapsed);
+    pickerToggle?.setAttribute('aria-expanded', String(!collapsed));
+  }
+  fullscreenToggle?.addEventListener('click', async () => {
+    if (!previewWorld) return;
+    const active = document.fullscreenElement === previewWorld || previewWorld.classList.contains('is-preview-expanded');
+    if (active) {
+      if (document.fullscreenElement === previewWorld && typeof document.exitFullscreen === 'function') {
+        try { await document.exitFullscreen(); } catch (_) { previewWorld.classList.remove('is-preview-expanded'); }
+      } else previewWorld.classList.remove('is-preview-expanded');
+      syncPreviewFullscreenButton();
+      return;
+    }
+    try {
+      if (typeof previewWorld.requestFullscreen !== 'function') throw new Error('Fullscreen API 不可用');
+      await previewWorld.requestFullscreen();
+    } catch (_) {
+      previewWorld.classList.add('is-preview-expanded');
+    }
+    syncPreviewFullscreenButton();
+  });
+  document.addEventListener('fullscreenchange', syncPreviewFullscreenButton);
+  pickerToggle?.addEventListener('click', () => {
+    if (!encyclopediaLayout || !window.matchMedia('(max-width: 760px)').matches) return;
+    setPreviewCollapsed(!encyclopediaLayout.classList.contains('is-preview-collapsed'));
+  });
+  window.addEventListener('resize', () => {
+    if (window.matchMedia('(min-width: 761px)').matches) {
+      encyclopediaLayout?.classList.remove('is-preview-collapsed');
+      pickerToggle?.setAttribute('aria-expanded', 'true');
+    }
+  });
+  syncPreviewFullscreenButton();
 
   let selectedIndex = 0;
   let variants = [];
@@ -177,6 +224,7 @@
     const index = Number(card.dataset.flowerIndex);
     const flower = window.flowerCatalog[index];
     if (!flower) return;
+    setPreviewCollapsed(false);
     setSelectedCard(index);
     colorInput.value = flower.color;
     nameInput.value = '';
