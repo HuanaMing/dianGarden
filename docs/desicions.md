@@ -733,3 +733,12 @@
 - 決定：未自動登入時暫停遊戲初始化，顯示「回到自己的花園（Google 登入）」與「去新花園逛逛」入口；不再以固定 timeout 當作登入流程完成。
 - 決定：訪客花園使用獨立 localStorage 命名空間與持久模式旗標；雲端模組在訪客模式不啟動 Google 登入或同步。設定面板可返回自己的花園，清除訪客旗標後重新走正常登入流程。
 - 原因：讓新玩家能先體驗遊戲，同時確保既有本機進度與帳號雲端花園不會被訪客存檔覆蓋。
+
+
+## 2026-10-25：任務231—同分頁延續 Google 雲端登入
+
+- 決定：將 Google ID token、token 的 `exp`、`sub` 與 `sessionOpenedAt` 以版本化紀錄暫存於 `sessionStorage`；不寫入 `localStorage`，不儲存 Google 密碼或長效 refresh token。
+- 恢復條件：只接受同分頁內、格式有效且尚有至少 60 秒有效期的紀錄；檢查 token payload 的 `iss`、`aud`、`sub`、`exp`，恢復原有 `sessionOpenedAt`，再向雲端 API 驗證工作階段。這些前端檢查只用於提早拒絕錯誤資料，不取代伺服器簽章驗證。
+- 權限保護：Cloudflare Worker 仍驗證 Google ID token 的簽章、issuer、audience 及有效期限；雲端讀寫仍受 `opened_at` 所有權與 revision 衝突檢查保護。`stale_session`、登出或伺服器拒絕憑證時清除暫存紀錄並停止同步；過期／損壞的紀錄不會自動沿用。
+- 原因：主畫面與圖鑑是不同 HTML 文件，頁面導覽會清除記憶體狀態；同分頁 `sessionStorage` 可在頁面重新載入時延續短效 token 與原雲端工作階段，同時在分頁結束後清除。
+- 影響：不改變遊戲存檔格式，不把 token 放入 URL 或永久儲存，不自動合併或覆蓋本機／訪客存檔；無法使用 `sessionStorage` 時仍可在當前頁面登入，但跨頁延續可能退回重新登入流程。
