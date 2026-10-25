@@ -1508,7 +1508,7 @@
       const batteryFactor = Math.max(0, Math.min(1, (dock?.battery ?? 100) / 35));
       const active = deployed && state;
       const lightPosition = active
-        ? [state.location[0], state.y + 0.02, state.location[1]]
+        ? [state.location[0], state.y + 0.155, state.location[1]]
         : [0, -100, 0];
       droneLightPositions.push(...lightPosition);
       // A small warm pool of light, visible only at night and softened by battery level.
@@ -1538,7 +1538,7 @@
     gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, droneNormalBuffer);
     gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
-    gl.uniform1f(locations.droneSelfIllumination, nightFactor * 0.48);
+    gl.uniform1f(locations.droneSelfIllumination, nightFactor * 0.624);
     gl.drawArrays(gl.TRIANGLES, 0, droneVertexCount);
     requestAnimationFrame(draw);
   }
