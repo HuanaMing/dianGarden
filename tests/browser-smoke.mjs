@@ -96,7 +96,21 @@ await startupPage.close();
 
 const droneTeleportPage = await browser.newPage({ viewport: { width: 1000, height: 800 }, deviceScaleFactor: 1 });
 await droneTeleportPage.addInitScript(() => {
+  const now = Date.now();
   localStorage.setItem('sky-garden-guest-mode-v1', 'true');
+  localStorage.setItem('sky-garden-guest-save-v1', JSON.stringify({
+    coins: 5000, cropCatalogVersion: 4, gardenName: '八機返航路徑測試', autoMode: false, autoCropSelection: [0],
+    worldTimeMs: 60000, worldTimeAnchor: now, lastObservedRaining: false, droneCount: 8,
+    deploymentSequence: 8, dockPosition: { x: -2.8, z: 2, y: 0 },
+    drones: Array.from({ length: 8 }, (_, index) => ({
+      dockPosition: { x: -2.8 + index * 0.8, z: 2, y: 0 }, deployed: true,
+      deploymentOrder: index + 1, battery: 100, batteryUpdatedAt: now,
+    })),
+    plots: Array.from({ length: 8 }, (_, index) => ({
+      crop: null, plantedAt: null, manual: false, grassOnly: false,
+      x: -2.8 + index * 0.8, z: -1.5, y: 0,
+    })),
+  }));
   window.__dgWebglBuffers = [];
   window.__dgDroneFrames = [];
   window.__dgBoundBuffer = null;
