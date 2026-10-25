@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "第三版已修正手機引路者對話框高度由內容決定、Grid 不再拉伸卡片；待檢查線上部署狀態並由使用者手機驗收。",
+  "nextAction": "臨時手機診斷面板已提交；待 GitHub Pages 自動部署後，請使用者開啟帶 ?debug-startup=1 的網址並截圖診斷數據，再根據實際計算樣式定位版面問題。",
   "taskFile": "tasks/active/235-mobile-guide-interface.md",
-  "result": "src/styles.css 第三版提交 fd86f0b3b4ad6dfbb331eb2bfe65698ac9c0546f：手機版 #startup-garden-dialog 設定 height:max-content、max-height:calc(100dvh - 32px)、grid-template-rows:max-content、align-content:start，直接子元素高度自動且不拉伸。任務文件已記錄。尚未確認 Pages 部署與實機視覺效果。"
+  "result": "加入 src/cloud-save.js 的 opt-in 診斷面板，僅在網址查詢參數 debug-startup=1 時顯示，輸出 viewport、對話框及子元素尺寸、computed CSS、Grid rows 與 inline style。提交 acc5063e08cc7b026a1c84406bef92444b3f267c。尚未手機實測，等待部署與診斷截圖。"
 }
