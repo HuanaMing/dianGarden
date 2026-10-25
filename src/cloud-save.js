@@ -7,6 +7,8 @@
   const VARIANTS_KEY = 'sky-garden-flower-variants-v1';
   const AUTO_CROPS_KEY = 'sky-garden-auto-crops-v1';
   const SYNC_META_KEY = 'sky-garden-cloud-sync-v1';
+  const AUTH_SESSION_KEY = 'sky-garden-auth-session-v1';
+  const TOKEN_EXPIRY_SKEW_MS = 60 * 1000;
   const LEGACY_BROWSER_ID_KEY = 'sky-garden-browser-id-v1';
   let sessionOpenedAt = 0;
   try { localStorage.removeItem(LEGACY_BROWSER_ID_KEY); } catch (_) { /* Ignore unavailable local storage. */ }
@@ -77,6 +79,8 @@
     sessionRefreshButton.hidden = !expired;
     if (mainSessionRefreshButton) mainSessionRefreshButton.hidden = !expired;
     if (expired) {
+      clearStoredAuthSession();
+      sessionOpenedAt = 0;
       syncEnabled = false;
       clearTimeout(pendingSyncTimer);
       setStatus('雲端同步已暫停；本機進度仍會保留。', 'warning');
@@ -137,6 +141,72 @@
     }
   }
 
+  function clearStoredAuthSession() {
+    try { sessionStorage.removeItem(AUTH_SESSION_KEY); } catch (_) { /* Ignore unavailable session storage. */ }
+  }
+
+  function validAuthSession(record) {
+    if (!record || typeof record !== 'object' || typeof record.idToken !== 'string'
+      || typeof record.currentSub !== 'string' || !Number.isSafeInteger(record.sessionOpenedAt)
+      || record.sessionOpenedAt <= 0 || !Number.isSafeInteger(record.exp)) return false;
+    const claims = parseJwtPayload(record.idToken);
+    return Boolean(claims && claims.sub === record.currentSub && claims.exp === record.exp
+      && claims.aud === config.googleClientId
+      && ['accounts.google.com', 'https://accounts.google.com'].includes(claims.iss)
+      && claims.exp * 1000 > Date.now() + TOKEN_EXPIRY_SKEW_MS);
+  }
+
+  function persistAuthSession() {
+    const claims = parseJwtPayload(idToken || '');
+    if (!validAuthSession({ idToken, currentSub, sessionOpenedAt, exp: claims?.exp })) {
+      clearStoredAuthSession();
+      return false;
+    }
+    try {
+      sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
+        version: 1,
+        idToken,
+        currentSub,
+        exp: claims.exp,
+        sessionOpenedAt,
+      }));
+      return true;
+    } catch (_) {
+      clearStoredAuthSession();
+      return false;
+    }
+  }
+
+  function restoreAuthSession() {
+    let record;
+    try { record = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY) || 'null'); }
+    catch (_) { clearStoredAuthSession(); return false; }
+    if (!record) return false;
+    if (record.version !== 1 || !validAuthSession(record)) {
+      clearStoredAuthSession();
+      return false;
+    }
+    idToken = record.idToken;
+    currentSub = record.currentSub;
+    sessionOpenedAt = record.sessionOpenedAt;
+    return true;
+  }
+
+  function clearAuthentication() {
+    clearStoredAuthSession();
+    idToken = null;
+    currentSub = null;
+    sessionOpenedAt = 0;
+    cloudSave = null;
+    cloudRevision = 0;
+    syncEnabled = false;
+    clearTimeout(pendingSyncTimer);
+    setSessionExpired(false);
+    signinNode.hidden = false;
+    if (startupSigninNode) startupSigninNode.hidden = false;
+    updateButtons(false);
+  }
+
   function updateButtons(visible) {
     const authenticated = Boolean(visible && idToken && !sessionExpired);
     const needsChoice = authenticated && statusNode.dataset.state === 'choice';
@@ -155,6 +225,13 @@
     const baseUrl = String(config.apiBaseUrl || '').trim().replace(/\/$/, '');
     if (!baseUrl) throw new Error('cloud_api_not_configured');
     if (!idToken) throw new Error('login_required');
+    const claims = parseJwtPayload(idToken);
+    if (!claims || !Number.isFinite(claims.exp) || claims.exp * 1000 <= Date.now() + TOKEN_EXPIRY_SKEW_MS
+      || claims.sub !== currentSub || claims.aud !== config.googleClientId
+      || !['accounts.google.com', 'https://accounts.google.com'].includes(claims.iss)) {
+      clearAuthentication();
+      throw new Error('invalid_google_id_token');
+    }
     const response = await fetch(baseUrl + '/api/save', {
       method,
       headers: {
@@ -250,11 +327,8 @@
         setStatus(messageForError(error), 'warning');
       }
       if (error.message === 'invalid_google_id_token' || error.message === 'authentication_required') {
-        idToken = null;
-        currentSub = null;
-        signinNode.hidden = false;
-        if (startupSigninNode) startupSigninNode.hidden = false;
-        updateButtons(false);
+        clearAuthentication();
+        showStartupChoice('Google 登入已失效，請重新登入後再繼續同步。');
       }
     } finally {
       syncBusy = false;
@@ -288,11 +362,8 @@
       } else {
         setStatus(messageForError(error), 'warning');
         if (error.message === 'invalid_google_id_token' || error.message === 'authentication_required') {
-          idToken = null;
-          currentSub = null;
-          signinNode.hidden = false;
-          if (startupSigninNode) startupSigninNode.hidden = false;
-          updateButtons(false);
+          clearAuthentication();
+          showStartupChoice('Google 登入已失效，請重新登入後再繼續同步。');
         }
       }
       if (error.message === 'revision_conflict') await checkCloud({ quiet: true });
@@ -348,7 +419,9 @@
       return;
     }
     const claims = parseJwtPayload(response.credential);
-    if (!claims || typeof claims.sub !== 'string') {
+    if (!claims || typeof claims.sub !== 'string' || claims.aud !== config.googleClientId
+      || !['accounts.google.com', 'https://accounts.google.com'].includes(claims.iss)
+      || !Number.isFinite(claims.exp) || claims.exp * 1000 <= Date.now() + TOKEN_EXPIRY_SKEW_MS) {
       setStatus('無法讀取 Google 登入資訊，請再試一次。', 'warning');
       if (startupLoginHint) startupLoginHint.textContent = '無法讀取 Google 登入資訊，請重新登入或選擇訪客花園。';
       return;
@@ -360,6 +433,7 @@
     setSessionExpired(false);
     // Claim session ownership when login succeeds, not when this tab first opened.
     sessionOpenedAt = Date.now();
+    persistAuthSession();
     syncEnabled = false;
     setStatus('Google 登入成功，正在檢查雲端花園…');
     if (startupLoginHint) startupLoginHint.textContent = '登入成功，正在確認你的花園…';
@@ -418,6 +492,15 @@
     }
     if (guestNoticeNode) guestNoticeNode.hidden = true;
     if (returnToOwnGardenButton) returnToOwnGardenButton.hidden = true;
+    if (restoreAuthSession()) {
+      signinNode.hidden = true;
+      if (startupSigninNode) startupSigninNode.hidden = true;
+      setSessionExpired(false);
+      setStatus('已恢復本分頁的 Google 登入，正在確認雲端工作階段…');
+      updateButtons(true);
+      checkCloud({ quiet: true });
+      return;
+    }
     signinNode.hidden = false;
     if (window.google?.accounts?.id) {
       initializeGoogle();
@@ -471,14 +554,7 @@
   });
 
   signoutButton.addEventListener('click', () => {
-    idToken = null;
-    currentSub = null;
-    signinNode.hidden = false;
-    if (startupSigninNode) startupSigninNode.hidden = false;
-    cloudSave = null;
-    cloudRevision = 0;
-    syncEnabled = false;
-    setSessionExpired(false);
+    clearAuthentication();
     if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect();
     setStatus('已登出雲端存檔；本機花園仍會自動儲存。');
     updateButtons(false);
