@@ -1048,45 +1048,26 @@
     gl.bufferData(gl.ARRAY_BUFFER, calculateFaceNormals(effectPositions), gl.DYNAMIC_DRAW);
   }
 
-  function uploadSky(time) {
+  function uploadSky() {
     if (galleryMode) { skyVertexCount = 0; return; }
     const positions = [];
     const colors = [];
     const opacities = [];
-    const horizontal = Math.cos(pitch) * distance;
-    const eye = cameraMode === '2d' ? [targetX, topDownHeight, targetZ] : [targetX + Math.sin(yaw) * horizontal, Math.sin(pitch) * distance, targetZ + Math.cos(yaw) * horizontal];
-    const addCloud = (x, y, z, drift, scale = 1) => {
-      const start = positions.length / 3;
-      const cloudColor = environmentState.isRaining ? [0.62, 0.72, 0.76] : [0.86, 0.93, 0.96];
-      addOctahedron(positions, colors, x + drift, y, z, 1.12 * scale, 0.24 * scale, 0.58 * scale, cloudColor);
-      addOctahedron(positions, colors, x - 0.62 * scale + drift, y + 0.08 * scale, z + 0.08 * scale, 0.72 * scale, 0.3 * scale, 0.52 * scale, cloudColor.map((channel) => Math.min(1, channel * 1.04)));
-      addOctahedron(positions, colors, x + 0.56 * scale + drift, y + 0.02 * scale, z - 0.06 * scale, 0.78 * scale, 0.27 * scale, 0.48 * scale, cloudColor.map((channel) => channel * 0.96));
-      for (let i = start; i < positions.length / 3; i += 1) opacities.push(environmentState.isRaining ? 0.36 : 0.42);
-    };
-    // Use seconds-scale phase progression so the cloud drift is visibly slow, not nearly imperceptible.
-    const elapsed = time * 0.001;
-    // Keep clouds camera-relative, but much closer to eye height so they visibly sit lower in the sky.
-    const clouds = [
-      { x: -46, y: -24.0, z: -42, speed: 0.14, phase: 0.2, scale: 3.0 },
-      { x: -30, y: 3.0, z: -50, speed: 0.18, phase: 1.1, scale: 3.3 },
-      { x: -14, y: -18.0, z: -44, speed: 0.12, phase: 2.2, scale: 3.6 },
-      { x: 4, y: 5.0, z: -52, speed: 0.16, phase: 3.3, scale: 3.9 },
-      { x: 22, y: -22.0, z: -40, speed: 0.2, phase: 4.4, scale: 3.2 },
-      { x: 42, y: 2.0, z: -48, speed: 0.13, phase: 5.1, scale: 3.7 },
-      { x: 50, y: 4.0, z: -20, speed: 0.17, phase: 0.8, scale: 3.4 },
-      { x: -48, y: 1.0, z: -12, speed: 0.15, phase: 2.7, scale: 3.8 },
-      { x: -26, y: -10.0, z: 8, speed: 0.19, phase: 4, scale: 3.1 },
-      { x: -5, y: -8.0, z: 22, speed: 0.14, phase: 5.5, scale: 3.5 },
-      { x: 18, y: 6.0, z: 40, speed: 0.16, phase: 1.6, scale: 4.0 },
-      { x: 40, y: -6.0, z: 30, speed: 0.12, phase: 3.8, scale: 3.6 },
-      { x: -42, y: -19.0, z: 38, speed: 0.18, phase: 5.9, scale: 3.3 },
-      { x: -18, y: -14.0, z: 48, speed: 0.13, phase: 2.9, scale: 3.9 },
-      { x: 12, y: -20.0, z: 50, speed: 0.2, phase: 0.5, scale: 3.4 },
-      { x: 36, y: -12.0, z: 46, speed: 0.15, phase: 4.8, scale: 3.7 },
+
+    // 固定於世界座標的背景小島：不隨相機位置或時間漂移，也不進入地塊／選取資料。
+    const islands = [
+      { x: -14.5, z: -18, y: -1.55, rx: 3.35, rz: 2.65, rock: [0.43, 0.40, 0.34], grass: [0.40, 0.64, 0.36] },
+      { x: 15.5, z: -20, y: -2.0, rx: 4.05, rz: 3.05, rock: [0.39, 0.38, 0.34], grass: [0.37, 0.59, 0.34] },
+      { x: 19, z: 11.5, y: -1.35, rx: 2.75, rz: 2.25, rock: [0.46, 0.42, 0.36], grass: [0.44, 0.66, 0.39] },
     ];
-    for (const cloud of clouds) {
-      const drift = Math.sin(elapsed * cloud.speed + cloud.phase) * 2.4;
-      addCloud(eye[0] + cloud.x, eye[1] + cloud.y, eye[2] + cloud.z, drift, cloud.scale);
+    for (const island of islands) {
+      const { x, z, y, rx, rz, rock, grass } = island;
+      const start = positions.length / 3;
+      addOctahedron(positions, colors, x, y - 0.55, z, rx * 0.86, 1.2 + rx * 0.08, rz * 0.86, rock);
+      addOctahedron(positions, colors, x, y + 0.06, z, rx, 0.34, rz, grass);
+      // 小塊岩石色面讓島體有低面數層次，不加入任何互動或碰撞。
+      addOctahedron(positions, colors, x + rx * 0.34, y - 0.52, z + rz * 0.18, rx * 0.22, 0.46, rz * 0.2, rock.map((channel) => Math.min(1, channel * 1.12)));
+      for (let i = start; i < positions.length / 3; i += 1) opacities.push(1);
     }
 
     skyVertexCount = positions.length / 3;
@@ -1099,7 +1080,6 @@
     gl.bindBuffer(gl.ARRAY_BUFFER, skyNormalBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, calculateFaceNormals(positions), gl.DYNAMIC_DRAW);
   }
-
   function calculateFaceNormals(positions) {
     const normals = new Float32Array(positions.length);
     for (let i = 0; i + 8 < positions.length; i += 9) {
