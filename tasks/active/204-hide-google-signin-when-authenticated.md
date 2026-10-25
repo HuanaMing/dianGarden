@@ -16,6 +16,8 @@ Google 登入成功後，不再顯示 Google 提供的「以某某的身份登�
 
 ## 執行紀錄
 - 已修改 `src/cloud-save.js`，登入成功時隱藏兩個登入入口，明確登出後恢復登入入口。
-- 已更新 `tests/browser-smoke.mjs` 的相關驗收範圍；後續將補充登入狀態測試並執行完整瀏覽器驗收。
+- 已在 `tests/browser-smoke.mjs` 加入登入成功隱藏兩個入口、明確登出後恢復入口的程式規格檢查；完整瀏覽器回歸驗收通過（[run 40145259395](https://github.com/HuanaMing/dianGarden/actions/runs/40145259395)）。CI 不會使用真實 Google 帳號登入，因此未宣稱完成真實帳號的端到端登入驗證。
+- Pages 部署工作流程成功（[run 40145153851](https://github.com/HuanaMing/dianGarden/actions/runs/40145153851)）。
+- 狀態：程式與自動化驗收完成，等待使用者實際遊玩驗收。
 - 程式提交：`586ea23792acce489c0ce8e58bf91ccf451dad28`、`ae0bcc2c848be27e50a28aec45f6b6f8e69cfa14`。
 - 狀態：等待自動化驗收及使用者實際遊玩驗收。
