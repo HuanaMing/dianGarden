@@ -356,6 +356,26 @@ try {
     throw new Error('自動儲存提示沒有移入跨裝置存檔區，或一般狀態文案異常：' + JSON.stringify(saveStatusPlacement));
   }
   checks.push('任務209：自動儲存提示位於跨裝置存檔區且只顯示一次');
+  const saveWarningPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await saveWarningPage.addInitScript(() => {
+    localStorage.setItem('sky-garden-guest-mode-v1', 'true');
+    localStorage.setItem('sky-garden-guest-save-v1', '{invalid-json');
+  });
+  await saveWarningPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await saveWarningPage.locator('#settings-toggle').click();
+  const saveWarningState = await saveWarningPage.locator('#save-status').evaluate(element => ({
+    insideCloudSave: Boolean(element.closest('.cloud-save-settings')),
+    text: element.textContent.trim(),
+    warning: element.classList.contains('save-warning'),
+    color: getComputedStyle(element).color,
+    background: getComputedStyle(element).backgroundColor,
+  }));
+  if (!saveWarningState.insideCloudSave || !saveWarningState.warning || !saveWarningState.text.includes('存檔格式無法讀取')
+    || saveWarningState.color !== 'rgb(155, 63, 45)' || saveWarningState.background !== 'rgb(255, 240, 235)') {
+    throw new Error('本機存檔警告未在跨裝置存檔區清楚顯示：' + JSON.stringify(saveWarningState));
+  }
+  checks.push('任務209：本機存檔讀取失敗時，跨裝置存檔區顯示醒目警告');
+  await saveWarningPage.close();
   const displayedVersions = await page.evaluate(() => ({ current: document.querySelector('#current-version')?.textContent?.trim(), latest: document.querySelector('#latest-version')?.textContent?.trim() }));
   if (!/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.current || '') || !/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.latest || '')) throw new Error('設定面板版本號未使用每日更新序號格式：' + JSON.stringify(displayedVersions));
   checks.push('設定同步分頁顯示版本資訊、存檔與重置進度');
