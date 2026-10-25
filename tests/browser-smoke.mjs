@@ -331,7 +331,13 @@ try {
   await page.locator('#garden-avatar').click();
   if (!(await page.locator('#avatar-dialog[open]').isVisible())) throw new Error('點擊花園頭像未開啟獨立頭像設定');
   if (await page.locator('.avatar-flower-option').count() !== 11) throw new Error('頭像選擇清單未顯示 11 種花卉');
-  if (await page.locator('#avatar-flower-picker').isVisible()) throw new Error('自動頭像模式未隱藏花卉選擇介面');
+  if (!(await page.locator('#avatar-flower-picker').isVisible())) throw new Error('自動頭像模式應仍顯示全部花卉清單');
+  if (await page.locator('.avatar-flower-name').count() !== 11) throw new Error('頭像花種清單未顯示全部花名');
+  const autoAvatar = page.locator('#garden-avatar img');
+  const autoSelectedOption = page.locator('.avatar-flower-option.is-auto-selected');
+  if (await autoSelectedOption.count() !== 1 || !(await autoSelectedOption.isDisabled()) || await autoSelectedOption.getAttribute('aria-pressed') !== 'true') throw new Error('自動模式沒有唯一標示目前選中的花卉，或仍允許手動指定');
+  if (!(await page.locator('#avatar-current-flower').innerText()).includes('目前自動選擇：')) throw new Error('自動頭像狀態文字沒有說明目前選中的花卉');
+  if (!(await autoSelectedOption.locator('img').getAttribute('src')) || await autoSelectedOption.locator('img').getAttribute('src') !== await autoAvatar.getAttribute('src')) throw new Error('自動選中標示與花園名稱旁的實際頭像不一致');
   const avatarImages = await page.locator('.avatar-flower-image').evaluateAll(images => images.map(image => ({ loaded: image.complete && image.naturalWidth > 0, pixelated: getComputedStyle(image).imageRendering === 'pixelated' })));
   if (avatarImages.length !== 11 || avatarImages.some(image => !image.loaded || !image.pixelated)) throw new Error('頭像選擇中的花卉點陣圖未全部載入或未使用 pixelated');
   await page.locator('#avatar-mode').selectOption('manual');
@@ -344,7 +350,8 @@ try {
   await page.locator('#garden-avatar').click();
   if (await page.locator('#avatar-mode').inputValue() !== 'manual' || await page.locator('#avatar-flower-picker').isHidden() || await page.locator('[data-avatar-crop="3"]').getAttribute('aria-pressed') !== 'true' || !(await page.locator('#garden-avatar img').getAttribute('src')).endsWith('玫瑰.png')) throw new Error('自訂花卉頭像未在重新載入後保存');
   await page.locator('#avatar-mode').selectOption('auto');
-  if (await page.locator('#avatar-flower-picker').isVisible() || !(await page.locator('.avatar-flower-option').first().isDisabled())) throw new Error('自動頭像模式未隱藏或仍允許指定花種');
+  if (!(await page.locator('#avatar-flower-picker').isVisible()) || !(await page.locator('.avatar-flower-option').first().isDisabled())) throw new Error('切換至自動模式後未保留花種清單，或仍允許手動指定');
+  if (await page.locator('.avatar-flower-option.is-auto-selected').count() !== 1 || !(await page.locator('#avatar-current-flower').innerText()).includes('目前自動選擇：')) throw new Error('切換自動模式後未更新目前自動頭像標示');
   await page.locator('[data-close-avatar-dialog]').click();
   checks.push('任務202：頭像獨立彈出、11種點陣圖、模式切換及存檔通過');
   await page.locator('#settings-toggle').click();
