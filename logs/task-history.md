@@ -1732,3 +1732,11 @@
 - 測試：Playwright 驗證啟動選擇期間 WebGL 不繪圖、選擇訪客花園後恢復；另以靜態斷言檢查版本更新與雲端還原的失敗恢復路徑。手機長按環測試原先與 500ms 快捷圓環手勢互相干擾，將兩項測試隔離後，桌面／手機完整 Playwright 驗收通過：[run 40168665969](https://github.com/HuanaMing/dianGarden/actions/runs/40168665969)。
 - 限制：未連接真實 Google 帳戶或真實雲端存檔環境進行手動端到端測試。
 - 檔案：`src/sky-world.js`、`src/game.js`、`src/version-check.js`、`src/cloud-save.js`、`tests/browser-smoke.mjs`、`tasks/done/224-pause-rendering-during-login-update.md`。
+
+
+## 2026-10-25 — 任務225：修正多台無人機異常瞬移
+
+- 根因：遊戲每秒更新無人機電量時，場景原本會因電量欄位變化而重新計算返航路徑；多機同時移動時，路徑長度／航點被替換但動畫時間沿用舊進度，造成位置跳變。
+- 修正：僅在無人機停靠 X/Z 座標實際改變時更新返航路徑，電量與其他非位置欄位更新不再重設路徑插值。
+- 驗收：GitHub Actions Playwright 桌面／手機完整測試通過：[run 40169170602](https://github.com/HuanaMing/dianGarden/actions/runs/40169170602)。新增八台無人機動畫與持續電量更新的瀏覽器測試，70 個取樣的最大相鄰位置位移為 0.080 世界單位，低於 0.8 的異常跳位門檻。
+- 檔案：`src/sky-world.js`、`tests/browser-smoke.mjs`、`tasks/done/225-drone-teleportation.md`。
