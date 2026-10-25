@@ -320,6 +320,8 @@
     }
     idToken = response.credential;
     currentSub = claims.sub;
+    signinNode.hidden = true;
+    if (startupSigninNode) startupSigninNode.hidden = true;
     setSessionExpired(false);
     // Claim session ownership when login succeeds, not when this tab first opened.
     sessionOpenedAt = Date.now();
