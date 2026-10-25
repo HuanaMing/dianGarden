@@ -1024,6 +1024,75 @@ try {
   checks.push('未成熟植物存在時禁止切換成草地');
   await immaturePage.close();
 
+  const plotTabSave = (now = Date.now()) => ({
+    coins: 5000, cropCatalogVersion: 4, gardenName: '地塊分頁測試', autoMode: false, autoCropSelection: [0],
+    worldTimeMs: 60000, worldTimeAnchor: now, lastObservedRaining: false, droneCount: 1,
+    deploymentSequence: 1, dockPosition: { x: 0, z: 2, y: 0 },
+    drones: [{ dockPosition: { x: 0, z: 2, y: 0 }, deployed: true, deploymentOrder: 1, battery: 100, batteryUpdatedAt: now }],
+    plots: [
+      { crop: null, plantedAt: null, manual: false, grassOnly: false, x: -2, z: 0, y: 0 },
+      { crop: null, plantedAt: null, manual: false, grassOnly: false, x: -1, z: 0, y: 0 },
+      { crop: null, plantedAt: null, manual: false, grassOnly: false, x: 0, z: 0, y: 0 },
+      { crop: null, plantedAt: null, manual: true, grassOnly: false, x: 1, z: 0, y: 0 },
+      { crop: 0, plantedAt: now - 200000, manual: true, grassOnly: false, x: 2, z: 0, y: 0, plantHeight: 1, watered: false }
+    ]
+  });
+  const plotTabsPage = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+  await plotTabsPage.addInitScript(save => {
+    localStorage.setItem('sky-garden-guest-mode-v1', 'true');
+    localStorage.setItem('sky-garden-guest-save-v1', JSON.stringify(save));
+  }, plotTabSave());
+  await plotTabsPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await plotTabsPage.locator('#farm-management-toggle').click();
+  const autoTab = plotTabsPage.locator('#farm-tab-auto');
+  const manualTab = plotTabsPage.locator('#farm-tab-manual');
+  if (await autoTab.getAttribute('aria-selected') !== 'true' || await plotTabsPage.locator('#plot-selector [data-plot-button]').count() !== 3) {
+    throw new Error('任務218：預設自動地塊分頁未正確顯示三塊自動地');
+  }
+  const desktopPlotGrid = await plotTabsPage.locator('#plot-selector').evaluate(el => ({
+    columns: getComputedStyle(el).gridTemplateColumns.trim().split(/\\s+/).length,
+    overflowX: getComputedStyle(el).overflowX,
+    scrollWidth: el.scrollWidth,
+    clientWidth: el.clientWidth
+  }));
+  if (desktopPlotGrid.columns !== 5 || desktopPlotGrid.overflowX === 'visible' || desktopPlotGrid.scrollWidth > desktopPlotGrid.clientWidth + 1) {
+    throw new Error('任務218：桌面地塊網格未維持五欄或出現水平溢出：' + JSON.stringify(desktopPlotGrid));
+  }
+  const plotsBeforeTabs = await plotTabsPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots.map(({ manual, x, z, crop }) => ({ manual, x, z, crop })));
+  await manualTab.click();
+  if (await manualTab.getAttribute('aria-selected') !== 'true' || await autoTab.getAttribute('aria-selected') !== 'false') throw new Error('任務218：手動地塊分頁的 aria-selected 狀態錯誤');
+  const manualPlotIndexes = await plotTabsPage.locator('#plot-selector [data-plot-button]').evaluateAll(nodes => nodes.map(node => Number(node.dataset.plotButton)));
+  if (JSON.stringify(manualPlotIndexes) !== JSON.stringify([3, 4])) throw new Error('任務218：手動分頁顯示錯誤地塊：' + JSON.stringify(manualPlotIndexes));
+  await autoTab.click();
+  const autoPlotIndexes = await plotTabsPage.locator('#plot-selector [data-plot-button]').evaluateAll(nodes => nodes.map(node => Number(node.dataset.plotButton)));
+  if (JSON.stringify(autoPlotIndexes) !== JSON.stringify([0, 1, 2])) throw new Error('任務218：自動分頁顯示錯誤地塊：' + JSON.stringify(autoPlotIndexes));
+  const plotsAfterTabs = await plotTabsPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots.map(({ manual, x, z, crop }) => ({ manual, x, z, crop })));
+  if (JSON.stringify(plotsAfterTabs) !== JSON.stringify(plotsBeforeTabs)) throw new Error('任務218：切換分頁改動了存檔地塊資料');
+  checks.push('任務218：桌面手動／自動分頁分類、五欄網格與存檔不變通過');
+  await plotTabsPage.close();
+
+  const mobilePlotTabsPage = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
+  await mobilePlotTabsPage.addInitScript(save => {
+    localStorage.setItem('sky-garden-guest-mode-v1', 'true');
+    localStorage.setItem('sky-garden-guest-save-v1', JSON.stringify(save));
+  }, plotTabSave());
+  await mobilePlotTabsPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await mobilePlotTabsPage.locator('#farm-management-toggle').click();
+  await mobilePlotTabsPage.locator('#farm-tab-manual').click();
+  const mobilePlotLayout = await mobilePlotTabsPage.locator('#plot-selector').evaluate(el => {
+    const panel = el.getBoundingClientRect();
+    const cards = [...el.querySelectorAll('[data-plot-button]')].map(node => {
+      const rect = node.getBoundingClientRect();
+      return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
+    });
+    return { columns: getComputedStyle(el).gridTemplateColumns.trim().split(/\\s+/).length, panel: { left: panel.left, right: panel.right }, cards };
+  });
+  if (mobilePlotLayout.columns !== 3 || mobilePlotLayout.cards.length !== 2 || mobilePlotLayout.cards.some(rect => rect.left < mobilePlotLayout.panel.left - 1 || rect.right > mobilePlotLayout.panel.right + 1)) {
+    throw new Error('任務218：手機地塊分頁未能正常排列或超出清單：' + JSON.stringify(mobilePlotLayout));
+  }
+  checks.push('任務218：手機手動／自動分頁可操作且地塊卡片不水平溢出通過');
+  await mobilePlotTabsPage.close();
+
   await page.goto(`${baseURL}/encyclopedia.html`, { waitUntil: 'networkidle', timeout: 30000 });
   const galleryViewport = await page.locator('meta[name="viewport"]').getAttribute('content');
   if (!galleryViewport?.includes('user-scalable=no') || !galleryViewport.includes('maximum-scale=1')) throw new Error('花卉圖鑑 viewport 未限制瀏覽器頁面縮放');
