@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 231,
-  "nextAction": "任務231執行中：已修正圖鑑展開／收合圖示映射與瀏覽器測試預期；登入狀態延續需先確認 sessionStorage 暫存短效 Google ID token 的安全取捨。既有待批准事項仍有效：任務109需確認付費雲端Mac；任務212 GitHub Pages手動部署需明確批准。",
+  "activeTask": null,
+  "nextAction": "任務231已完成並歸檔：圖鑑展開／收合圖示修正、同分頁登入狀態延續與憑證／雲端工作階段保護均已實作，Worker smoke tests 與 Playwright 桌面／手機回歸驗收通過。等待使用者下一項指示。既有待批准事項仍有效：任務109需確認付費雲端Mac；任務212 GitHub Pages手動部署需明確批准。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的 GitHub Pages 部署：需使用者明確批准後手動觸發。"
