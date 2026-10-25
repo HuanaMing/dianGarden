@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 232,
-  "nextAction": "任務232：長期登入工作階段核心程式已提交，Worker smoke tests 通過；瀏覽器回歸驗收仍在修正／確認中。已建立 D1 migration，尚未套用生產資料庫或部署 Cloudflare Worker。GitHub Pages 依 main push 自動部署；前端保留舊 Worker 相容降級。下一步完成 CI，再等待使用者批准生產 D1 migration 與 Worker 部署。",
+  "activeTask": null,
+  "nextAction": "任務232核心程式與 CI 已完成，任務文件移至 tasks/blocked/232-long-term-login-session.md。等待使用者明確批准將 cloudflare/migrations/002-player-sessions.sql 套用至生產 D1 並部署新版 Cloudflare Worker；未手動觸發 GitHub Pages 部署（Pages 由 main push 自動部署）。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的 GitHub Pages 部署：需使用者明確批准後手動觸發。"
