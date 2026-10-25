@@ -536,7 +536,7 @@
     } catch (error) {
       // Older deployed Workers reject the new POST endpoint at CORS preflight.
       // Fall back to the existing short-lived Google token flow until the Worker is updated.
-      if (error instanceof TypeError) {
+      if (error instanceof TypeError || ['not_found', 'method_not_allowed'].includes(error.message)) {
         persistLegacyAuthSession(response.credential, claims);
         signinNode.hidden = true;
         if (startupSigninNode) startupSigninNode.hidden = true;
