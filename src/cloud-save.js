@@ -17,6 +17,61 @@
   let resolveStartupCloud;
   window.diangardenCloudReady = new Promise((resolve) => { resolveStartupCloud = resolve; });
   const startupDialog = document.querySelector('#startup-garden-dialog');
+
+  // Temporary task 235 mobile diagnostics; enabled only with ?debug-startup=1.
+  if (startupDialog && new URLSearchParams(window.location.search).get('debug-startup') === '1') {
+    const panel = document.createElement('section');
+    panel.id = 'startup-layout-debug-panel';
+    panel.setAttribute('aria-label', '引路者版面診斷');
+    panel.style.cssText = 'position:fixed;z-index:2147483647;left:8px;right:8px;bottom:8px;max-height:44dvh;overflow:auto;padding:10px;border:2px solid #315d3b;border-radius:10px;background:#fffef5;color:#183c2b;font:11px/1.4 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:0 4px 24px #0004;';
+    const heading = document.createElement('strong');
+    heading.textContent = '引路者診斷（截圖此區即可）';
+    heading.style.cssText = 'display:block;font: bold 13px/1.4 sans-serif;margin-bottom:6px;';
+    const refresh = document.createElement('button');
+    refresh.type = 'button';
+    refresh.textContent = '重新讀取數據';
+    refresh.style.cssText = 'padding:6px 10px;margin:0 0 6px;border:1px solid #8aa58c;border-radius:6px;background:#e8f4e6;color:#183c2b;font-weight:bold;';
+    const output = document.createElement('pre');
+    output.style.cssText = 'margin:0;font:inherit;white-space:pre-wrap;';
+    panel.append(heading, refresh, output);
+    document.body.append(panel);
+
+    const describe = (element) => {
+      if (!element) return '元素不存在';
+      const css = getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      return {
+        tag: element.tagName.toLowerCase(),
+        class: typeof element.className === 'string' ? element.className : '',
+        rect: { x: Math.round(rect.x), y: Math.round(rect.y), width: Math.round(rect.width), height: Math.round(rect.height) },
+        css: {
+          display: css.display, position: css.position, height: css.height,
+          minHeight: css.minHeight, maxHeight: css.maxHeight, boxSizing: css.boxSizing,
+          gridTemplateRows: css.gridTemplateRows, gridAutoRows: css.gridAutoRows,
+          alignContent: css.alignContent, alignItems: css.alignItems,
+          margin: css.margin, padding: css.padding, gap: css.gap, overflowY: css.overflowY
+        },
+        inlineStyle: element.getAttribute('style')
+      };
+    };
+    const update = () => {
+      const dialog = document.querySelector('#startup-garden-dialog');
+      const children = dialog ? Array.from(dialog.children).map((element) => ({
+        label: element.getAttribute('aria-label') || element.id || element.className || element.tagName.toLowerCase(),
+        ...describe(element)
+      })) : [];
+      output.textContent = JSON.stringify({
+        viewport: { innerWidth: window.innerWidth, innerHeight: window.innerHeight, visualViewportHeight: window.visualViewport?.height ?? null },
+        dialog: describe(dialog),
+        children
+      }, null, 2);
+    };
+    refresh.addEventListener('click', update);
+    window.addEventListener('resize', update);
+    const observer = new MutationObserver(update);
+    observer.observe(startupDialog, { attributes: true, attributeFilter: ['open', 'style', 'class'], childList: true, subtree: true });
+    update();
+  }
   const startupSigninNode = document.querySelector('#startup-google-signin');
   const startupLoginHint = document.querySelector('#startup-login-hint');
   const guestNoticeNode = document.querySelector('#guest-garden-notice');
