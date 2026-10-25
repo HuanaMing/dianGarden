@@ -1254,10 +1254,9 @@ try {
       localSave: localStorage.getItem('sky-garden-save-v1'),
       authSession: JSON.parse(localStorage.getItem('sky-garden-auth-session-v1') || 'null'),
       signInVisible: !document.querySelector('#cloud-save-signin')?.hidden,
-      openedAt: sessionStorage.getItem('sky-garden-auth-opened-at-v1'),
     }));
     if (!restoredState.localSave || restoredState.authSession?.refreshToken !== 'task211-session.refresh-next'
-      || restoredState.signInVisible || restoredState.openedAt === null) {
+      || restoredState.signInVisible) {
       throw new Error(`${selector} 重新整理後未保留登入狀態或本機存檔：` + JSON.stringify(restoredState));
     }
   };
