@@ -1,10 +1,10 @@
 {
-  "name": "任務211：修正帳號異地登入後的離線狀態行為",
+  "name": "任務212：設計蒲公英異地登入提示與風鈴重新整理按鈕",
   "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "追查 cloud-save.js 的 stale-session 事件、登入入口顯示控制、雲端上傳閘門與 game.js 自動儲存狀態；加入可重複的 Playwright 模擬測試，驗收後才開始任務212。",
-  "taskFile": "tasks/active/211-session-expired-state-behavior.md",
-  "result": "任務210已完成並歸檔，瀏覽器驗收與 Pages 部署通過；任務211已移至 active，正在開始檢查異地登入狀態流程。"
+  "nextAction": "將主畫面異地登入提示改成指定雙行文案並加入「輕搖風鈴」按鈕；在設定頁面提供相同提示與重新整理操作，補上桌面／手機 Playwright 驗收。",
+  "taskFile": "tasks/active/212-dandelion-session-banner-and-refresh-button.md",
+  "result": "任務210、211已完成並歸檔；任務212已由 inbox 移至 active，開始實作雙行蒲公英提示與重新整理按鈕。"
 }
