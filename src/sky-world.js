@@ -1886,9 +1886,13 @@
       wheel.style.left = `${Math.max(margin, Math.min(rect.width - margin, clientX - rect.left))}px`;
       wheel.style.top = `${Math.max(margin, Math.min(rect.height - margin, clientY - rect.top))}px`;
       const collapseItem = wheel.querySelector('[data-wheel-action="collapse"]');
+      const collapseIcon = wheel.querySelector('[data-wheel-icon="collapse"] img');
       const isCollapsed = document.querySelector('#hud-toggle')?.getAttribute('aria-expanded') === 'false';
       if (collapseItem) {
         collapseItem.setAttribute('aria-label', isCollapsed ? '展開介面' : '收合介面');
+      }
+      if (collapseIcon) {
+        collapseIcon.src = isCollapsed ? 'assets/btn/展開.png' : 'assets/btn/收合.png';
       }
       wheel.hidden = false; wheel.classList.add('is-active');
       pointerId = id; origin = { x: clientX, y: clientY }; selected = null;
