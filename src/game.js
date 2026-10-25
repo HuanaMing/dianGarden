@@ -271,6 +271,41 @@
   function getPlotCapacity(plot) {
     return plot?.manual === true && Number.isSafeInteger(plot.capacityLevel) && plot.capacityLevel >= 1 ? plot.capacityLevel : 1;
   }
+  function getManualPlotUpgradeCost(plot) {
+    return Math.round(40 * getPlotCapacity(plot) ** 1.4);
+  }
+  function manualUpgradePanelMarkup(plot) {
+    if (plot?.manual !== true || plot.grassOnly === true) return '';
+    const level = getPlotCapacity(plot);
+    const nextLevel = level + 1;
+    const safeNextLevel = Number.isSafeInteger(nextLevel);
+    const cost = getManualPlotUpgradeCost(plot);
+    const canAfford = Number.isFinite(cost) && cost >= 0 && game.coins >= cost;
+    const detail = safeNextLevel
+      ? `升級至 ${nextLevel} 株 · ${cost} 金幣`
+      : '容量已超出目前存檔可安全表示的範圍';
+    const label = safeNextLevel ? `升級容量 · ${cost} 🪙` : '容量無法再增加';
+    return `<section class="manual-upgrade-panel"><div class="manual-upgrade-copy"><strong>目前容量：${level} 株</strong><small>${detail}</small></div><button class="action-button manual-upgrade-button" type="button" data-upgrade-manual-plot ${!safeNextLevel || !canAfford ? 'disabled' : ''}>${label}</button></section>`;
+  }
+  function upgradeManualPlot(index) {
+    const plot = game.plots[index];
+    if (!plot || plot.manual !== true || plot.grassOnly === true) return;
+    const currentLevel = getPlotCapacity(plot);
+    const nextLevel = currentLevel + 1;
+    if (!Number.isSafeInteger(nextLevel)) return notify('此容量已超出目前存檔可安全表示的範圍。');
+    const cost = getManualPlotUpgradeCost(plot);
+    if (!Number.isFinite(cost) || cost < 0) return notify('無法計算這次升級費用。');
+    if (game.coins < cost) return notify(`升級需要 ${cost} 枚金幣，你目前有 ${game.coins} 枚。`);
+    game.coins -= cost;
+    plot.capacityLevel = nextLevel;
+    save();
+    render();
+    if (dialog.open && dialogContext?.type === 'plot' && dialogContext.index === index) renderFarmDialog();
+    notify(`手動地塊容量已升級至 ${nextLevel} 株，花費 ${cost} 金幣。`);
+  }
+  function attachManualPlotUpgrade(index) {
+    dialogContent.querySelector('[data-upgrade-manual-plot]')?.addEventListener('click', () => upgradeManualPlot(index));
+  }
   function getPlantedCrop(plot, plantIndex = 0) {
     const plant = getPlantState(plot, plantIndex);
     const base = crops[plant?.crop] || crops[0];
@@ -498,7 +533,7 @@
     const deleteAction = game.plots.length > 1
       ? `<button class="dialog-delete-plot" type="button" data-delete-plot ${hasDroneJobs() ? 'disabled' : ''}>${hasDroneJobs() ? '無人機工作時無法刪除' : '刪除這塊地'}</button>`
       : '';
-    dialogContent.innerHTML = `${plotModeSettingMarkup(plot, index)}
+    dialogContent.innerHTML = `${plotModeSettingMarkup(plot, index)}${manualUpgradePanelMarkup(plot)}
       <p class="seed-dialog-description">手動地塊可同時種植 ${plants.length}/${capacity} 株；每株花卉的成長、澆水及收成都獨立計算。</p>
       <div class="manual-plant-list" data-manual-plant-list></div>
       <p class="manual-seed-heading">${plants.length < capacity ? '選擇要再種下的花種' : '目前種植名額已滿'}</p>
@@ -590,6 +625,7 @@
     }
     dialogContent.querySelector('[data-delete-plot]')?.addEventListener('click', () => deletePlot(index));
     attachPlotModeSwitch(index);
+    attachManualPlotUpgrade(index);
   }
   function renderFarmDialog() {
     if (!dialog.open || !dialogContext) return;
@@ -616,7 +652,7 @@
     if (plot.crop === null) {
       dialog.classList.add('has-seed-picker');
       const deleteAction = game.plots.length > 1 ? `<button class="dialog-delete-plot" type="button" data-delete-plot ${hasDroneJobs() ? 'disabled' : ''}>${hasDroneJobs() ? '無人機工作時無法刪除' : '刪除這塊地'}</button>` : '';
-      dialogContent.innerHTML = `${plotModeSettingMarkup(plot, index)}<p class="seed-dialog-description">${plot.grassOnly ? '草地地塊無法種植；切換地塊性質後即可播種。' : `選擇要種下的花種。你目前有 ${game.coins} 枚金幣。`}</p><div class="seed-picker-layout"><div class="seed-picker-main"><div class="seed-options"></div></div><aside class="variant-picker-panel" id="variant-picker-panel" hidden><div class="variant-picker-heading"><h3 id="variant-picker-title">選擇花種變種</h3><button class="variant-picker-close" type="button" aria-label="關閉變種選單">×</button></div><div class="variant-seed-options" id="variant-seed-options"></div></aside></div>${deleteAction}`;
+      dialogContent.innerHTML = `${plotModeSettingMarkup(plot, index)}${manualUpgradePanelMarkup(plot)}<p class="seed-dialog-description">${plot.grassOnly ? '草地地塊無法種植；切換地塊性質後即可播種。' : `選擇要種下的花種。你目前有 ${game.coins} 枚金幣。`}</p><div class="seed-picker-layout"><div class="seed-picker-main"><div class="seed-options"></div></div><aside class="variant-picker-panel" id="variant-picker-panel" hidden><div class="variant-picker-heading"><h3 id="variant-picker-title">選擇花種變種</h3><button class="variant-picker-close" type="button" aria-label="關閉變種選單">×</button></div><div class="variant-seed-options" id="variant-seed-options"></div></aside></div>${deleteAction}`;
       const options = dialogContent.querySelector('.seed-options');
       const variantPanel = dialogContent.querySelector('#variant-picker-panel');
       const variantPanelTitle = dialogContent.querySelector('#variant-picker-title');
@@ -665,6 +701,7 @@
       dialogContent.querySelector('.variant-picker-close').addEventListener('click', () => { variantPanel.hidden = true; dialog.classList.remove('has-variant-panel'); dialogContent.querySelectorAll('.seed-variant-trigger').forEach((button) => button.setAttribute('aria-expanded', 'false')); });
       dialogContent.querySelector('[data-delete-plot]')?.addEventListener('click', () => deletePlot(index));
       attachPlotModeSwitch(index);
+      attachManualPlotUpgrade(index);
       return;
     }
     const crop = getPlantedCrop(plot);
