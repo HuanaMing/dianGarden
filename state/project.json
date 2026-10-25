@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "任務239重做：16組雲層，高度範圍 -24 至 6",
-  "nextAction": "最新程式提交 dd89e57aa14e7d47e6fa7da07a4c78315fc20cb4：16組雲，相對相機 Y 偏移 -24 至 6，尺寸係數 3.0–4.0，保留緩慢飄動。待自動化驗收與使用者實機視覺驗收；任務240尚未開始。",
+  "activeTask": "無；任務239已完成，任務240待開始",
+  "nextAction": "任務239已由使用者完成實機視覺驗收，完成版歸檔至 tasks/done/239-world-space-sky.md。下一項待辦為 tasks/inbox/240-distant-islands.md：新增 2–3 座不可互動的遠方背景小島。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署：需使用者明確批准後手動觸發。",
