@@ -81,14 +81,14 @@
   };
   const positionBuffer = gl.createBuffer();
   const colorBuffer = gl.createBuffer();
-  const normalBuffer = gl.createBuffer();
   const dronePositionBuffer = gl.createBuffer();
   const droneColorBuffer = gl.createBuffer();
-  const droneNormalBuffer = gl.createBuffer();
   const effectPositionBuffer = gl.createBuffer();
   const effectColorBuffer = gl.createBuffer();
-  const effectNormalBuffer = gl.createBuffer();
   const effectOpacityBuffer = gl.createBuffer();
+  const normalBuffer = gl.createBuffer();
+  const droneNormalBuffer = gl.createBuffer();
+  const effectNormalBuffer = gl.createBuffer();
   let vertexCount = 0;
   let droneVertexCount = 0;
   let effectVertexCount = 0;
