@@ -1036,6 +1036,72 @@ try {
   checks.push('立即更新使用完整頁面導覽，重新初始化遊戲且只保留一個畫布');
   await forceUpdatePage.close();
 
+  const autoUpdatePreferencePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await autoUpdatePreferencePage.addInitScript(() => localStorage.setItem('sky-garden-guest-mode-v1', 'true'));
+  await autoUpdatePreferencePage.route('**/version.json*', route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ version: '261023, 002' }),
+  }));
+  await autoUpdatePreferencePage.route(url => url.pathname.endsWith('/build-version.js'), route => route.fulfill({
+    status: 200, contentType: 'application/javascript', body: "window.__DIANGARDEN_BUILD_VERSION__ = '261023, 002';",
+  }));
+  await autoUpdatePreferencePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await autoUpdatePreferencePage.locator('#settings-toggle').click();
+  const autoUpdateToggle = autoUpdatePreferencePage.locator('#auto-update-toggle');
+  if (!(await autoUpdateToggle.isChecked())) throw new Error('自動更新預設應為開啟');
+  const updateControlGeometry = await autoUpdatePreferencePage.evaluate(() => {
+    const update = document.querySelector('#force-update-button').getBoundingClientRect();
+    const toggle = document.querySelector('.auto-update-toggle').getBoundingClientRect();
+    return { updateY: update.y, toggleY: toggle.y, updateRight: update.right, toggleX: toggle.x };
+  });
+  if (Math.abs(updateControlGeometry.updateY - updateControlGeometry.toggleY) > 2 || updateControlGeometry.toggleX < updateControlGeometry.updateRight) {
+    throw new Error('自動更新開關沒有與立即更新按鈕並排：' + JSON.stringify(updateControlGeometry));
+  }
+  await autoUpdateToggle.uncheck();
+  if (await autoUpdatePreferencePage.evaluate(() => localStorage.getItem('diangarden-auto-update-v1')) !== 'false') throw new Error('關閉自動更新後未保存偏好');
+  await autoUpdatePreferencePage.reload({ waitUntil: 'networkidle', timeout: 30000 });
+  await autoUpdatePreferencePage.locator('#settings-toggle').click();
+  if (await autoUpdatePreferencePage.locator('#auto-update-toggle').isChecked()) throw new Error('重新載入後自動更新偏好未被保留');
+  checks.push('任務216：自動更新開關預設啟用、與立即更新並排且偏好可保存');
+  await autoUpdatePreferencePage.close();
+
+  const autoUpdatePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await autoUpdatePage.addInitScript(() => {
+    localStorage.setItem('sky-garden-guest-mode-v1', 'true');
+    localStorage.setItem('diangarden-auto-update-v1', 'true');
+  });
+  await autoUpdatePage.route('**/version.json*', route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ version: '261023, 002' }),
+  }));
+  let buildVersionRequestCount = 0;
+  await autoUpdatePage.route(url => url.pathname.endsWith('/build-version.js'), route => {
+    buildVersionRequestCount += 1;
+    const version = buildVersionRequestCount === 1 ? '000000, 001' : '261023, 002';
+    return route.fulfill({ status: 200, contentType: 'application/javascript', body: `window.__DIANGARDEN_BUILD_VERSION__ = '${version}';` });
+  });
+  await autoUpdatePage.route(url => url.pathname.endsWith('/index.html') && url.searchParams.has('__dg_update'), route => route.fulfill({
+    status: 200, contentType: 'text/html; charset=utf-8', body: freshIndexHtml,
+  }));
+  await autoUpdatePage.goto(`${baseURL}/index.html`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await autoUpdatePage.waitForURL(url => url.searchParams.has('__dg_force_refresh'), { timeout: 15000 });
+  await autoUpdatePage.locator('#sky-canvas').waitFor({ state: 'visible', timeout: 10000 });
+  await autoUpdatePage.waitForFunction(() => document.querySelector('#current-version')?.textContent === '261023, 002', null, { timeout: 10000 });
+  if (buildVersionRequestCount < 2 || await autoUpdatePage.locator('.diangarden-version-update').count() !== 0) {
+    throw new Error('偵測到新版本後未自動完整重新載入至最新版本：' + JSON.stringify({ buildVersionRequestCount, url: autoUpdatePage.url() }));
+  }
+  checks.push('任務216：啟用自動更新時偵測版本差異後自動完整重新載入');
+  await autoUpdatePage.close();
+
+  const versionFailurePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await versionFailurePage.addInitScript(() => {
+    localStorage.setItem('sky-garden-guest-mode-v1', 'true');
+    localStorage.setItem('diangarden-auto-update-v1', 'true');
+  });
+  await versionFailurePage.route('**/version.json*', route => route.fulfill({ status: 503, contentType: 'text/plain', body: 'unavailable' }));
+  await versionFailurePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await versionFailurePage.locator('#sky-canvas').waitFor({ state: 'visible', timeout: 10000 });
+  checks.push('任務216：版本檢查失敗不會阻擋遊戲啟動');
+  await versionFailurePage.close();
+
   if (errors.length) throw new Error(`瀏覽器發現錯誤：\n${errors.join('\n')}`);
   console.log(JSON.stringify({ result: 'PASS', checks, screenshots: [
     `${outputDir}/garden-desktop.png`,
