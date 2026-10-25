@@ -94,6 +94,92 @@ if (guestIsolation.guestMode !== 'true' || guestIsolation.originalSave !== '{"pr
 checks.push('未自動登入時先顯示入口選擇；進入訪客模式不會覆寫原有本機存檔');
 await startupPage.close();
 
+const droneTeleportPage = await browser.newPage({ viewport: { width: 1000, height: 800 }, deviceScaleFactor: 1 });
+await droneTeleportPage.addInitScript(() => {
+  localStorage.setItem('sky-garden-guest-mode-v1', 'true');
+  window.__dgWebglBuffers = [];
+  window.__dgDroneFrames = [];
+  window.__dgBoundBuffer = null;
+  const originalCreateBuffer = WebGLRenderingContext.prototype.createBuffer;
+  WebGLRenderingContext.prototype.createBuffer = function (...args) {
+    const buffer = originalCreateBuffer.apply(this, args);
+    window.__dgWebglBuffers.push(buffer);
+    return buffer;
+  };
+  const originalBindBuffer = WebGLRenderingContext.prototype.bindBuffer;
+  WebGLRenderingContext.prototype.bindBuffer = function (target, buffer) {
+    window.__dgBoundBuffer = buffer;
+    return originalBindBuffer.call(this, target, buffer);
+  };
+  const originalBufferData = WebGLRenderingContext.prototype.bufferData;
+  WebGLRenderingContext.prototype.bufferData = function (target, data, usage) {
+    const result = originalBufferData.call(this, target, data, usage);
+    if (window.__dgWebglBuffers[2] && window.__dgBoundBuffer === window.__dgWebglBuffers[2]
+      && data instanceof Float32Array && window.__dgDroneFrames.length < 100) {
+      window.__dgDroneFrames.push(Array.from(data));
+    }
+    return result;
+  };
+});
+await droneTeleportPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+await droneTeleportPage.locator('#sky-canvas').waitFor({ state: 'visible' });
+await droneTeleportPage.waitForFunction(() => window.__dgDroneFrames.length > 3, null, { timeout: 8000 });
+await droneTeleportPage.evaluate(async () => {
+  const docks = Array.from({ length: 8 }, (_, index) => ({
+    x: -2.8 + index * 0.8, z: 2, y: 0, deployed: true, deploymentOrder: index + 1, battery: 100,
+  }));
+  const plots = Array.from({ length: 8 }, (_, index) => ({ x: -2.8 + index * 0.8, z: -1.5, y: 0 }));
+  window.skyWorld.setDockPosition({ x: docks[0].x, z: docks[0].z, y: 0 });
+  window.skyWorld.setLandCount(8);
+  window.skyWorld.setPlotPositions(plots);
+  window.skyWorld.setDroneCount(8);
+  window.skyWorld.setDroneDocks(docks);
+  for (let index = 0; index < 8; index += 1) {
+    window.skyWorld.animatePlant(index, () => {}, () => {}, () => true, index);
+  }
+  for (let tick = 1; tick <= 24; tick += 1) {
+    window.skyWorld.setDroneDocks(docks.map((dock, index) => ({
+      ...dock, battery: Math.max(10, 100 - tick * 0.35 - index * 0.1),
+    })));
+    await new Promise(resolve => setTimeout(resolve, 150));
+  }
+});
+const droneMotion = await droneTeleportPage.evaluate(() => {
+  const frames = window.__dgDroneFrames;
+  if (frames.length < 10) return { frameCount: frames.length, maxStep: Infinity, invalid: true };
+  const positions = frames.map(values => {
+    const vertices = values.length / 3;
+    const perDrone = vertices / 8;
+    if (!Number.isInteger(perDrone)) return null;
+    return Array.from({ length: 8 }, (_, droneIndex) => {
+      let x = 0, z = 0, count = 0;
+      for (let vertex = droneIndex * perDrone; vertex < (droneIndex + 1) * perDrone; vertex += 1) {
+        x += values[vertex * 3];
+        z += values[vertex * 3 + 2];
+        count += 1;
+      }
+      return [x / count, z / count];
+    });
+  });
+  if (positions.some(frame => !frame)) return { frameCount: frames.length, maxStep: Infinity, invalid: true };
+  let maxStep = 0;
+  for (let frame = 1; frame < positions.length; frame += 1) {
+    for (let drone = 0; drone < 8; drone += 1) {
+      const distance = Math.hypot(
+        positions[frame][drone][0] - positions[frame - 1][drone][0],
+        positions[frame][drone][1] - positions[frame - 1][drone][1],
+      );
+      maxStep = Math.max(maxStep, distance);
+    }
+  }
+  return { frameCount: frames.length, maxStep, invalid: false };
+});
+if (droneMotion.invalid || droneMotion.maxStep > 0.8) {
+  throw new Error('任務225：八台無人機連續派工／返航時偵測到非預期跳位：' + JSON.stringify(droneMotion));
+}
+checks.push(`任務225：八台無人機持續更新電量時位置連續（${droneMotion.frameCount} 個取樣，最大位移 ${droneMotion.maxStep.toFixed(3)}）`);
+await droneTeleportPage.close();
+
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
 await page.addInitScript(() => {
   localStorage.setItem('sky-garden-guest-mode-v1', 'true');
