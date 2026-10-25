@@ -1,10 +1,10 @@
 {
-  "name": "任務205：管理介面、頭像自動選擇與同步狀態整理",
-  "status": "planned",
+  "name": "任務205：修復無人機管理工作佇列消失",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務205已建立於 tasks/inbox/，尚未開始修改程式；開始時先重現無人機工作佇列消失問題，再依任務文件完成五項修正與瀏覽器回歸驗收。",
-  "taskFile": "tasks/inbox/205-management-ui-sync-avatar-fixes.md",
-  "result": "2026-10-25：依使用者五項需求建立規劃文件，尚未修改遊戲程式或執行測試。"
+  "nextAction": "任務205已修改 src/game.js，移除無人機面板閒置5秒自動關閉並加入空佇列提示；Playwright回歸測試已新增，等待GitHub Actions驗收。完成後依序執行任務206、207、208、209。",
+  "taskFile": "tasks/active/205-drone-job-queue-visibility.md",
+  "result": "2026-10-25：將原需求拆為任務205～209。任務205已開始修改，測試工作流程仍在執行，尚未驗收完成。"
 }
