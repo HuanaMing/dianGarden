@@ -16,8 +16,12 @@ if (indexHtml.includes('登入 Google 後，可在其他裝置找回同一座花
 }
 if (!cloudSaveSource.includes("const needsChoice = authenticated && statusNode.dataset.state === 'choice';")
   || !cloudSaveSource.includes("error.message === 'invalid_google_id_token' || error.message === 'authentication_required'")
-  || !cloudSaveSource.includes("if (expired) {\n      syncEnabled = false;\n      clearTimeout(pendingSyncTimer);")) {
-  throw new Error('同步操作未依目前狀態精簡顯示，或登入失效恢復入口的邏輯缺失');
+  || !cloudSaveSource.includes("if (expired) {\n      syncEnabled = false;\n      clearTimeout(pendingSyncTimer);")
+  || !cloudSaveSource.includes("signinNode.hidden = true;\n      if (startupSigninNode) startupSigninNode.hidden = true;")
+  || !cloudSaveSource.includes("if (!idToken || sessionExpired) return;")
+  || !cloudSaveSource.includes("sessionRefreshButton.addEventListener('click', () => window.location.reload());")
+  || !gameSource.includes("cloudSessionExpired ? '暫停同步雲端進度' : '進度會自動儲存'")) {
+  throw new Error('同步狀態、異地登入後隱藏登入入口、停止雲端請求或暫停同步提示邏輯缺失');
 }
 if (!cloudSaveSource.includes("localStorage.setItem(GUEST_MODE_KEY, 'true')")
   || !cloudSaveSource.includes("localStorage.removeItem(GUEST_MODE_KEY)")
@@ -421,6 +425,68 @@ try {
   }
   checks.push('任務209：本機存檔讀取失敗時，跨裝置存檔區顯示醒目警告');
   await saveWarningPage.close();
+
+  const staleSessionPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await staleSessionPage.addInitScript(() => {
+    localStorage.removeItem('sky-garden-guest-mode-v1');
+    window.google = { accounts: { id: {
+      initialize(options) { window.__task211CredentialCallback = options.callback; },
+      renderButton() {},
+      prompt() {},
+      disableAutoSelect() {},
+    } } };
+  });
+  const cloudRequests = [];
+  await staleSessionPage.route('https://diangarden-cloud-save.ry15968.workers.dev/api/save', async route => {
+    const method = route.request().method();
+    cloudRequests.push(method);
+    const corsHeaders = {
+      'access-control-allow-origin': '*',
+      'access-control-allow-methods': 'GET, PUT, OPTIONS',
+      'access-control-allow-headers': 'authorization,content-type,x-diangarden-opened-at',
+      'access-control-max-age': '600',
+    };
+    if (method === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: corsHeaders });
+      return;
+    }
+    await route.fulfill({
+      status: 409,
+      headers: { ...corsHeaders, 'content-type': 'application/json' },
+      body: JSON.stringify({ error: 'stale_session' }),
+    });
+  });
+  await staleSessionPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await staleSessionPage.waitForFunction(() => typeof window.__task211CredentialCallback === 'function');
+  await staleSessionPage.evaluate(() => {
+    const payload = btoa(JSON.stringify({ sub: 'task211-test-account' })).replace(/=/g, '');
+    window.__task211CredentialCallback({ credential: `header.${payload}.signature` });
+  });
+  await staleSessionPage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('帳號已在他處登入'));
+  await staleSessionPage.locator('#settings-toggle').click();
+  await staleSessionPage.locator('#cloud-session-refresh').waitFor({ state: 'visible' });
+  const staleSessionState = await staleSessionPage.evaluate(() => ({
+    loginHidden: document.querySelector('#cloud-save-signin')?.hidden,
+    startupLoginHidden: document.querySelector('#startup-google-signin')?.hidden,
+    refreshVisible: !document.querySelector('#cloud-session-refresh')?.hidden,
+    mainBannerVisible: !document.querySelector('#cloud-session-banner')?.hidden,
+    saveStatus: document.querySelector('#save-status')?.textContent.trim(),
+    saveWarning: document.querySelector('#save-status')?.classList.contains('save-warning'),
+  }));
+  if (!staleSessionState.loginHidden || !staleSessionState.startupLoginHidden || !staleSessionState.refreshVisible
+    || !staleSessionState.mainBannerVisible || staleSessionState.saveStatus !== '暫停同步雲端進度' || !staleSessionState.saveWarning) {
+    throw new Error('異地登入後的離線介面狀態錯誤：' + JSON.stringify(staleSessionState));
+  }
+  await staleSessionPage.locator('#garden-avatar').click();
+  await staleSessionPage.locator('#avatar-mode').selectOption('manual');
+  const localSaveAfterOfflineEdit = await staleSessionPage.evaluate(() => localStorage.getItem('sky-garden-save-v1'));
+  if (!localSaveAfterOfflineEdit) throw new Error('異地登入後仍無法寫入本機遊戲存檔');
+  await staleSessionPage.waitForTimeout(2800);
+  if (cloudRequests.filter(method => method === 'GET').length !== 1 || cloudRequests.includes('PUT')) {
+    throw new Error('異地登入後仍繼續發送雲端讀寫請求：' + JSON.stringify(cloudRequests));
+  }
+  checks.push('任務211：模擬 stale_session 後隱藏登入、顯示重新整理、暫停雲端同步且本機存檔仍可寫入');
+  await staleSessionPage.close();
   const displayedVersions = await page.evaluate(() => ({ current: document.querySelector('#current-version')?.textContent?.trim(), latest: document.querySelector('#latest-version')?.textContent?.trim() }));
   if (!/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.current || '') || !/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.latest || '')) throw new Error('設定面板版本號未使用每日更新序號格式：' + JSON.stringify(displayedVersions));
   checks.push('設定同步分頁顯示版本資訊、存檔與重置進度');
