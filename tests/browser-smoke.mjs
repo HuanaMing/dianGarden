@@ -1544,7 +1544,10 @@ try {
   const manualUpgradePage = await browser.newPage({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 1 });
   await manualUpgradePage.addInitScript(save => {
     localStorage.setItem('sky-garden-guest-mode-v1', 'true');
-    localStorage.setItem('sky-garden-guest-save-v1', JSON.stringify(save));
+    // addInitScript 也會在 reload 時執行；只初始化空存檔，避免覆寫升級後的實際進度。
+    if (!localStorage.getItem('sky-garden-guest-save-v1')) {
+      localStorage.setItem('sky-garden-guest-save-v1', JSON.stringify(save));
+    }
   }, upgradeSave);
   await manualUpgradePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   await manualUpgradePage.evaluate(() => window.onSkyPlotActivate?.(0));
