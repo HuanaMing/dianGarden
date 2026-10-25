@@ -39,6 +39,16 @@
   const signoutButton = document.querySelector('#cloud-save-signout');
 
   if (!statusNode || !signinNode || !actionsNode) return;
+  const sessionRefreshButton = document.querySelector('#cloud-session-refresh') || (() => {
+    const button = document.createElement('button');
+    button.id = 'cloud-session-refresh';
+    button.className = 'cloud-session-refresh';
+    button.type = 'button';
+    button.textContent = '重新整理遊戲';
+    button.hidden = true;
+    statusNode.insertAdjacentElement('afterend', button);
+    return button;
+  })();
 
   let idToken = null;
   let currentSub = null;
@@ -58,14 +68,13 @@
 
   function setSessionExpired(expired) {
     sessionExpired = expired;
+    sessionRefreshButton.hidden = !expired;
     if (expired) {
       syncEnabled = false;
       clearTimeout(pendingSyncTimer);
       setStatus('帳號已在他處登入，花園進入離線模式。', 'warning');
-      if (!GUEST_MODE_ACTIVE) {
-        signinNode.hidden = false;
-        if (startupSigninNode) startupSigninNode.hidden = false;
-      }
+      signinNode.hidden = true;
+      if (startupSigninNode) startupSigninNode.hidden = true;
     }
     window.dispatchEvent(new CustomEvent('diangarden:cloud-session-state', {
       detail: { expired, message: expired ? '帳號已在他處登入，花園進入離線模式。' : '' },
@@ -184,7 +193,7 @@
   }
 
   async function checkCloud({ quiet = false } = {}) {
-    if (!idToken || (sessionExpired && !quiet)) return;
+    if (!idToken || sessionExpired) return;
     syncBusy = true;
     updateButtons(true);
     if (!quiet) setStatus('正在檢查雲端存檔…');
@@ -269,8 +278,6 @@
       syncEnabled = false;
       if (error.message === 'stale_session') {
         setSessionExpired(true);
-        // Read-only in intent: the stale timestamp is rejected by the Worker before ownership can change.
-        await checkCloud({ quiet: true });
       } else {
         setStatus(messageForError(error), 'warning');
         if (error.message === 'invalid_google_id_token' || error.message === 'authentication_required') {
@@ -433,6 +440,7 @@
   uploadButton.addEventListener('click', () => uploadLocal());
   downloadButton.addEventListener('click', downloadCloud);
   refreshButton.addEventListener('click', () => checkCloud());
+  sessionRefreshButton.addEventListener('click', () => window.location.reload());
   if (startGuestGardenButton) startGuestGardenButton.addEventListener('click', () => {
     try {
       localStorage.setItem(GUEST_MODE_KEY, 'true');
