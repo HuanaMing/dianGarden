@@ -68,6 +68,7 @@
 
   function setSessionExpired(expired) {
     sessionExpired = expired;
+    window.diangardenCloudSessionExpired = expired;
     sessionRefreshButton.hidden = !expired;
     if (expired) {
       syncEnabled = false;
