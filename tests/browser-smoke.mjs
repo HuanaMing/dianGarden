@@ -503,6 +503,26 @@ try {
   checks.push('任務211：模擬 stale_session 後隱藏登入、暫停雲端同步且本機存檔仍可寫入');
 
   const assertRefreshButtonReloads = async selector => {
+    const hitTest = await staleSessionPage.evaluate(selector => {
+      const button = document.querySelector(selector);
+      const rect = button.getBoundingClientRect();
+      const target = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      return {
+        exists: Boolean(button),
+        hidden: button?.hidden,
+        disabled: button?.disabled,
+        targetIsButton: target === button || button.contains(target),
+        targetTag: target?.tagName,
+        targetId: target?.id,
+        targetClass: typeof target?.className === 'string' ? target.className : '',
+        avatarDialogOpen: document.querySelector('#avatar-dialog')?.open,
+        settingsHidden: document.querySelector('#settings-panel')?.hidden,
+      };
+    }, selector);
+    if (!hitTest.exists || hitTest.hidden || hitTest.disabled || !hitTest.targetIsButton
+      || hitTest.avatarDialogOpen || (selector === '#cloud-session-refresh-main' && !hitTest.settingsHidden)) {
+      throw new Error(`${selector} 風鈴按鈕無法直接操作：` + JSON.stringify(hitTest));
+    }
     const reloaded = staleSessionPage.waitForEvent('load');
     await staleSessionPage.locator(selector).click();
     await reloaded;
