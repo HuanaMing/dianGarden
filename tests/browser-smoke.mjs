@@ -832,10 +832,11 @@ try {
       version: 1, idToken: token, currentSub: 'task231-session-account', exp, sessionOpenedAt: openedAt,
     }));
     window.__task231GoogleInitializeCalls = 0;
+    window.__task231GooglePromptCalls = 0;
     window.google = { accounts: { id: {
       initialize() { window.__task231GoogleInitializeCalls += 1; },
       renderButton() {},
-      prompt() {},
+      prompt() { window.__task231GooglePromptCalls += 1; },
       disableAutoSelect() {},
     } } };
   }, { token: restoredAuthToken, exp: restoredAuthExp, openedAt: restoredAuthOpenedAt });
@@ -863,12 +864,13 @@ try {
   const restoredAuthState = await restoredAuthPage.evaluate(() => ({
     session: JSON.parse(sessionStorage.getItem('sky-garden-auth-session-v1') || 'null'),
     googleInitializeCalls: window.__task231GoogleInitializeCalls,
+    googlePromptCalls: window.__task231GooglePromptCalls,
     startupDialogOpen: Boolean(document.querySelector('#startup-garden-dialog')?.open),
   }));
   if (restoredAuthRequests.length !== 1 || restoredAuthRequests[0].method !== 'GET'
     || restoredAuthRequests[0].authorization !== 'Bearer ' + restoredAuthToken
     || restoredAuthRequests[0].openedAt !== String(restoredAuthOpenedAt)
-    || restoredAuthState.googleInitializeCalls !== 0 || restoredAuthState.startupDialogOpen
+    || restoredAuthState.googleInitializeCalls !== 1 || restoredAuthState.googlePromptCalls !== 0 || restoredAuthState.startupDialogOpen
     || restoredAuthState.session?.sessionOpenedAt !== restoredAuthOpenedAt) {
     throw new Error('任務231：有效 sessionStorage 登入未恢復原雲端工作階段：' + JSON.stringify({ restoredAuthRequests, restoredAuthState }));
   }
@@ -898,13 +900,14 @@ try {
   await credentialPersistencePage.addInitScript(() => {
     localStorage.removeItem('sky-garden-guest-mode-v1');
     window.__task231GoogleInitializeCalls = 0;
+    window.__task231GooglePromptCalls = 0;
     window.google = { accounts: { id: {
       initialize(options) {
         window.__task231GoogleInitializeCalls += 1;
         window.__task231CredentialCallback = options.callback;
       },
       renderButton() {},
-      prompt() {},
+      prompt() { window.__task231GooglePromptCalls += 1; },
       disableAutoSelect() {},
     } } };
   });
@@ -943,12 +946,13 @@ try {
   const reloadedLogin = await credentialPersistencePage.evaluate(() => ({
     session: JSON.parse(sessionStorage.getItem('sky-garden-auth-session-v1') || 'null'),
     googleInitializeCalls: window.__task231GoogleInitializeCalls,
+    googlePromptCalls: window.__task231GooglePromptCalls,
   }));
   if (credentialPersistenceRequests.length !== 2
     || credentialPersistenceRequests[1].authorization !== 'Bearer ' + loginToken
     || credentialPersistenceRequests[1].openedAt !== String(persistedLogin.sessionOpenedAt)
     || reloadedLogin.session?.sessionOpenedAt !== persistedLogin.sessionOpenedAt
-    || reloadedLogin.googleInitializeCalls !== 0) {
+    || reloadedLogin.googleInitializeCalls !== 1 || reloadedLogin.googlePromptCalls !== 0) {
     throw new Error('任務231：頁面重新載入後未恢復同一登入憑證與雲端工作階段：' + JSON.stringify({ credentialPersistenceRequests, reloadedLogin }));
   }
   checks.push('任務231：Google 登入成功後保存短效憑證，重新載入後沿用相同 sessionOpenedAt');
@@ -1000,6 +1004,14 @@ try {
     sessionStorage.setItem('sky-garden-auth-session-v1', JSON.stringify({
       version: 1, idToken: token, currentSub: 'task231-server-rejected-account', exp, sessionOpenedAt: Date.now(),
     }));
+    window.__task231GoogleInitializeCalls = 0;
+    window.__task231GooglePromptCalls = 0;
+    window.google = { accounts: { id: {
+      initialize() { window.__task231GoogleInitializeCalls += 1; },
+      renderButton() {},
+      prompt() { window.__task231GooglePromptCalls += 1; },
+      disableAutoSelect() {},
+    } } };
   });
   await rejectedAuthPage.route('https://diangarden-cloud-save.ry15968.workers.dev/api/save', async route => {
     if (route.request().method() === 'OPTIONS') {
