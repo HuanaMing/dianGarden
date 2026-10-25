@@ -407,6 +407,28 @@ try {
   const grassFarmSeam = await page.evaluate(() => { const f=window.dianGardenGrassRampLogic.getSharedCornerHeight; const p=[{x:0,z:0,y:0},{x:1,z:0,y:0.5}], s=[{grassOnly:true},{grassOnly:false}]; return f(p,s,0,0.5,-0.5)===0.25 && f(p,s,1,0.5,-0.5)===0.25; });
   if (!grassFarmSeam) throw new Error('草地與農地交界沒有貼齊農地頂面');
   checks.push('草地與農地交界共用同一個坡面角點高度');
+  const connectedLandBottom = await page.evaluate(() => {
+    const logic = window.dianGardenGrassRampLogic;
+    const positions = [
+      { x: 0, z: 0, y: 0 },
+      { x: 1, z: 0, y: 0.5 },
+      { x: 2, z: 0, y: 0 },
+      { x: 0, z: 0, y: 0.5 },
+      { x: 6, z: 0, y: 2 },
+    ];
+    return {
+      bottom: logic.getConnectedGroupBottomY(positions, 0, 1, 0.5),
+      upperHasBelow: logic.hasPlotDirectlyBelow(positions, 3, 1),
+      lowerHasBelow: logic.hasPlotDirectlyBelow(positions, 0, 1),
+      isolatedBottom: logic.getConnectedGroupBottomY(positions, 4, 1, 0.5),
+    };
+  });
+  if (connectedLandBottom.bottom !== -0.5 || !connectedLandBottom.upperHasBelow
+    || connectedLandBottom.lowerHasBelow
+    || connectedLandBottom.isolatedBottom !== 1.5) {
+    throw new Error('連接地塊整體底面／下方地塊判定失敗：' + JSON.stringify(connectedLandBottom));
+  }
+  checks.push('連接地塊共用最低底面；上方地塊辨識下方地塊並保留獨立地塊底面');
   const farmRampGeometry = await page.evaluate(() => {
     const source = document.querySelector('script[src*="sky-world.js"]')?.src;
     return Boolean(source && window.dianGardenGrassRampLogic?.getSharedCornerHeight);
