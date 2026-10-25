@@ -1,12 +1,12 @@
 {
   "name": "任務235：手機版引路者介面緊湊化",
-  "status": "in_progress",
+  "status": "completed",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "臨時手機診斷面板已提交；待 GitHub Pages 自動部署後，請使用者開啟帶 ?debug-startup=1 的網址並截圖診斷數據，再根據實際計算樣式定位版面問題。",
-  "taskFile": "tasks/active/235-mobile-guide-interface.md",
-  "result": "加入 src/cloud-save.js 的 opt-in 診斷面板，僅在網址查詢參數 debug-startup=1 時顯示，輸出 viewport、對話框及子元素尺寸、computed CSS、Grid rows 與 inline style。提交 acc5063e08cc7b026a1c84406bef92444b3f267c。尚未手機實測，等待部署與診斷截圖。"
+  "nextAction": "任務235已由使用者完成實機驗收並歸檔；等待使用者指定下一項任務。",
+  "taskFile": "tasks/done/235-mobile-guide-interface.md",
+  "result": "使用者確認驗收完成；根因為手機寬度 524px 未觸發原 max-width:520px 媒體查詢，使用者自行將斷點調整為 700px。已移除臨時診斷面板程式碼。使用者已實機驗收通過；未手動觸發正式部署。"
 }
