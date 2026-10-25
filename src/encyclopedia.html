@@ -16,11 +16,12 @@
         <p class="encyclopedia-hint">拖曳場景旋轉花卉模型，滾輪縮放。</p>
       </header>
       <div class="encyclopedia-layout">
-        <section class="encyclopedia-preview-column" aria-label="花卉模型與自訂花色">
+        <section class="encyclopedia-preview-column" id="encyclopedia-preview-column" aria-label="花卉模型與自訂花色">
           <section class="encyclopedia-world" aria-label="可旋轉的十種花卉 3D 模型">
             <div class="world-frame">
               <a class="encyclopedia-back" href="index.html">← 返回花園</a>
               <canvas id="sky-canvas" data-mode="gallery" aria-label="可拖曳旋轉及縮放的花卉 3D 模型場景"></canvas>
+              <button id="preview-fullscreen-toggle" class="preview-fullscreen-toggle" type="button" aria-label="進入全螢幕預覽" title="進入全螢幕預覽" aria-pressed="false">⛶</button>
               <div class="world-message" id="world-message" role="status">正在載入花卉模型…</div>
             </div>
           </section>
@@ -34,7 +35,7 @@
           </section>
         </section>
         <aside class="flower-picker-panel" aria-label="選擇花種">
-          <h2 class="flower-picker-heading">選擇花種</h2>
+          <button class="flower-picker-heading" id="flower-picker-toggle" type="button" aria-expanded="true" aria-controls="encyclopedia-preview-column">選擇花種<span class="flower-picker-collapse-indicator" aria-hidden="true">⌃</span></button>
           <div class="flower-picker-scroll">
             <section class="encyclopedia-grid" id="flower-cards" aria-label="花卉資料"></section>
             <p class="encyclopedia-disclaimer">花語為文化脈絡中的例子與靈感，顏色、地區及來源不同時可能有其他解讀。模型高度以遊戲土地寬度為基準；每株植株高度會在基準的 ±10% 內浮動。</p>
