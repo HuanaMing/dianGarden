@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": "任務240：新增遠方背景小島並移除文字雲",
-  "nextAction": "在 src/sky-world.js 以現有 WebGL 幾何加入2–3座不可互動的遠方背景小島，並移除原本文字雲；補上必要的瀏覽器回歸驗收。",
+  "nextAction": "任務240程式實作已完成初版：src/sky-world.js 新增三座固定世界座標背景小島並移除舊雲層，測試斷言與架構文件已同步。下一步確認 GitHub Actions Playwright 桌面／手機驗收，再等待使用者實機視覺驗收。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署：需使用者明確批准後手動觸發。",
