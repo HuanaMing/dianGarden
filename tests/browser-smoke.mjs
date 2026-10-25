@@ -11,8 +11,10 @@ const skyWorldSource = await fs.readFile('src/sky-world.js', 'utf8');
 const versionCheckSource = await fs.readFile('src/version-check.js', 'utf8');
 if (!indexHtml.includes('id="startup-garden-dialog"') || !indexHtml.includes('id="start-guest-garden"')
   || !indexHtml.includes('id="return-to-own-garden"')) throw new Error('登入入口／訪客花園控制項缺失');
-if (!cloudSaveSource.includes("signinNode.hidden = true;\n    if (startupSigninNode) startupSigninNode.hidden = true;")
-  || !cloudSaveSource.includes("signinNode.hidden = false;\n    if (startupSigninNode) startupSigninNode.hidden = false;")) throw new Error('Google 登入成功隱藏入口或登出後恢復入口的邏輯缺失');
+if (!cloudSaveSource.includes("signinNode.hidden = true;")
+  || !cloudSaveSource.includes("signinNode.hidden = false;")
+  || !cloudSaveSource.includes("if (startupSigninNode) startupSigninNode.hidden = true;")
+  || !cloudSaveSource.includes("if (startupSigninNode) startupSigninNode.hidden = false;")) throw new Error('Google 登入成功隱藏入口或登出後恢復入口的邏輯缺失');
 if (indexHtml.includes('登入 Google 後，可在其他裝置找回同一座花園') || indexHtml.includes('雲端同步需要網路。同步失敗不會阻止遊玩')) {
   throw new Error('跨裝置存檔區仍包含已移除的常駐說明文字');
 }
