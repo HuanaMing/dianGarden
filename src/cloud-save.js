@@ -62,6 +62,10 @@
       syncEnabled = false;
       clearTimeout(pendingSyncTimer);
       setStatus('帳號已在他處登入，花園進入離線模式。', 'warning');
+      if (!GUEST_MODE_ACTIVE) {
+        signinNode.hidden = false;
+        if (startupSigninNode) startupSigninNode.hidden = false;
+      }
     }
     window.dispatchEvent(new CustomEvent('diangarden:cloud-session-state', {
       detail: { expired, message: expired ? '帳號已在他處登入，花園進入離線模式。' : '' },
@@ -118,7 +122,13 @@
   }
 
   function updateButtons(visible) {
-    actionsNode.hidden = !visible;
+    const authenticated = Boolean(visible && idToken && !sessionExpired);
+    const needsChoice = authenticated && statusNode.dataset.state === 'choice';
+    actionsNode.hidden = !authenticated;
+    uploadButton.hidden = !needsChoice;
+    downloadButton.hidden = !needsChoice || !cloudSave;
+    refreshButton.hidden = !needsChoice;
+    signoutButton.hidden = !authenticated;
     uploadButton.disabled = syncBusy;
     downloadButton.disabled = syncBusy || !cloudSave;
     refreshButton.disabled = syncBusy;
@@ -223,9 +233,11 @@
       } else {
         setStatus(messageForError(error), 'warning');
       }
-      if (error.message === 'invalid_google_id_token') {
+      if (error.message === 'invalid_google_id_token' || error.message === 'authentication_required') {
         idToken = null;
         currentSub = null;
+        signinNode.hidden = false;
+        if (startupSigninNode) startupSigninNode.hidden = false;
         updateButtons(false);
       }
     } finally {
@@ -261,6 +273,13 @@
         await checkCloud({ quiet: true });
       } else {
         setStatus(messageForError(error), 'warning');
+        if (error.message === 'invalid_google_id_token' || error.message === 'authentication_required') {
+          idToken = null;
+          currentSub = null;
+          signinNode.hidden = false;
+          if (startupSigninNode) startupSigninNode.hidden = false;
+          updateButtons(false);
+        }
       }
       if (error.message === 'revision_conflict') await checkCloud({ quiet: true });
     } finally {
