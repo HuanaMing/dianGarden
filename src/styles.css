@@ -841,3 +841,16 @@ input, [contenteditable="true"]{
 .manual-upgrade-button{flex-shrink:0;padding:9px 11px;font-size:11px;white-space:nowrap}
 .manual-upgrade-button:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:520px){.manual-upgrade-panel{align-items:flex-start;flex-direction:column}.manual-upgrade-button{width:100%}}
+
+
+/* 任務235：手機版引路者入口收緊留白，讓登入與訪客選項排列更緊湊。 */
+@media(max-width:520px){
+  .startup-garden-dialog{gap:9px;padding:16px}
+  .startup-garden-dialog .seed-dialog-heading h2{font-size:18px;line-height:1.3}
+  .startup-garden-dialog .seed-dialog-description{font-size:12px;line-height:1.45}
+  .startup-own-garden,.startup-guest-garden{padding:9px 10px;border-radius:12px}
+  .startup-own-garden h3,.startup-guest-garden h3{margin-bottom:3px;font-size:12px;line-height:1.4}
+  .startup-own-garden p,.startup-guest-garden p{margin:3px 0;line-height:1.45}
+  .startup-own-garden .cloud-save-signin{min-height:36px;margin:5px 0 1px}
+  .startup-guest-button{min-height:36px;margin-top:4px;padding:8px 11px}
+}
