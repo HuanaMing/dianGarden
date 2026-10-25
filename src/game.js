@@ -487,6 +487,107 @@
     });
     window.skyWorld?.setSelectedPlot(index);
   }
+  function renderManualPlotDialog(index, plot) {
+    const plants = getPlotPlants(plot);
+    const capacity = getPlotCapacity(plot);
+    dialogTitle.textContent = getPlotLabel(index);
+    dialog.classList.add('has-seed-picker');
+    const deleteAction = game.plots.length > 1
+      ? `<button class="dialog-delete-plot" type="button" data-delete-plot ${hasDroneJobs() ? 'disabled' : ''}>${hasDroneJobs() ? '無人機工作時無法刪除' : '刪除這塊地'}</button>`
+      : '';
+    dialogContent.innerHTML = `${plotModeSettingMarkup(plot, index)}
+      <p class="seed-dialog-description">手動地塊可同時種植 ${plants.length}/${capacity} 株；每株花卉的成長、澆水及收成都獨立計算。</p>
+      <div class="manual-plant-list" data-manual-plant-list></div>
+      <p class="manual-seed-heading">${plants.length < capacity ? '選擇要再種下的花種' : '目前種植名額已滿'}</p>
+      <div class="seed-options" data-manual-seed-options></div>${deleteAction}`;
+    const list = dialogContent.querySelector('[data-manual-plant-list]');
+    plants.forEach((plant, plantIndex) => {
+      const crop = getPlantedCrop(plot, plantIndex);
+      const elapsed = growthElapsed(plot, Date.now(), plantIndex);
+      const progress = Math.min(100, Math.floor(elapsed / crop.growTime * 100));
+      const ready = elapsed >= crop.growTime;
+      const remaining = Math.max(0, Math.ceil((crop.growTime - elapsed) / 1000));
+      const card = document.createElement('section');
+      card.className = 'manual-plant-card';
+      const heading = document.createElement('div');
+      heading.className = 'manual-plant-card-heading';
+      const title = document.createElement('strong');
+      title.textContent = `第 ${plantIndex + 1} 株 · ${crop.name}${ready ? '（已成熟）' : ''}`;
+      const status = document.createElement('small');
+      status.textContent = ready ? `可收成，預計獲得 ${getHarvestReward(crop)} 金幣` : `還需 ${remaining} 秒成熟`;
+      heading.append(title, status);
+      const track = document.createElement('div');
+      track.className = 'progress-track';
+      const fill = document.createElement('div');
+      fill.className = 'progress-fill';
+      fill.style.width = `${progress}%`;
+      track.append(fill);
+      const actions = document.createElement('div');
+      actions.className = 'manual-plant-actions';
+      if (ready) {
+        const harvestButton = document.createElement('button');
+        harvestButton.className = 'action-button harvest';
+        harvestButton.type = 'button';
+        harvestButton.textContent = '收成';
+        harvestButton.addEventListener('click', () => harvest(index, plantIndex));
+        actions.append(harvestButton);
+      } else {
+        const waterButton = document.createElement('button');
+        waterButton.className = 'action-button water';
+        waterButton.type = 'button';
+        const raining = window.skyEnvironment.getState(game).isRaining;
+        waterButton.disabled = raining || plant.watered === true;
+        waterButton.textContent = raining ? '陰雨中自然濕潤' : plant.watered ? '已澆水' : '澆水（30 秒加速）';
+        waterButton.addEventListener('click', () => water(index, plantIndex));
+        actions.append(waterButton);
+      }
+      card.append(heading, track, actions);
+      list.append(card);
+    });
+    const options = dialogContent.querySelector('[data-manual-seed-options]');
+    if (plants.length < capacity && !plot.grassOnly) {
+      crops.forEach((crop, cropIndex) => {
+        const option = document.createElement('button');
+        option.className = 'seed-option';
+        option.type = 'button';
+        option.disabled = game.coins < crop.seedCost;
+        option.innerHTML = `<span class="seed-option-icon">${flowerIconMarkup(crop, 'flower-pixel-icon seed-pixel-icon')}</span><span class="seed-option-copy"><strong>${crop.name}</strong><small>種子 ${crop.seedCost} 🪙 · 生長約 ${crop.growTime / 1000} 秒</small></span>`;
+        option.addEventListener('click', () => {
+          plant(index, cropIndex);
+          if (dialog.open) renderFarmDialog();
+        });
+        options.append(option);
+        game.flowerVariants.filter((variant) => variant.cropIndex === cropIndex).forEach((variant) => {
+          const variantOption = document.createElement('button');
+          variantOption.className = 'variant-seed-option';
+          variantOption.type = 'button';
+          variantOption.disabled = game.coins < crop.seedCost;
+          const swatch = document.createElement('span');
+          swatch.className = 'variant-seed-swatch';
+          swatch.style.backgroundColor = variant.color;
+          const copy = document.createElement('span');
+          copy.className = 'variant-seed-copy';
+          const name = document.createElement('strong');
+          name.textContent = `${crop.name}・${variant.name}`;
+          const details = document.createElement('small');
+          details.textContent = `種子 ${crop.seedCost} 🪙`;
+          copy.append(name, details);
+          variantOption.append(swatch, copy);
+          variantOption.addEventListener('click', () => {
+            plant(index, cropIndex, variant.id);
+            if (dialog.open) renderFarmDialog();
+          });
+          options.append(variantOption);
+        });
+      });
+    } else if (plot.grassOnly) {
+      options.textContent = '純草地無法種植。';
+    } else {
+      options.textContent = '升級這塊手動地塊即可增加種植名額。';
+    }
+    dialogContent.querySelector('[data-delete-plot]')?.addEventListener('click', () => deletePlot(index));
+    attachPlotModeSwitch(index);
+  }
   function renderFarmDialog() {
     if (!dialog.open || !dialogContext) return;
     dialog.classList.remove('has-variant-panel', 'has-seed-picker');
@@ -505,6 +606,10 @@
     if (!plot) { dialog.close(); return; }
     selectPlot(index);
     dialogTitle.textContent = getPlotLabel(index);
+    if (plot.manual === true && getPlotPlants(plot).length > 0) {
+      renderManualPlotDialog(index, plot);
+      return;
+    }
     if (plot.crop === null) {
       dialog.classList.add('has-seed-picker');
       const deleteAction = game.plots.length > 1 ? `<button class="dialog-delete-plot" type="button" data-delete-plot ${hasDroneJobs() ? 'disabled' : ''}>${hasDroneJobs() ? '無人機工作時無法刪除' : '刪除這塊地'}</button>` : '';
@@ -738,7 +843,9 @@
   function getAvatarCropIndex() {
     if (game.avatarMode === 'manual') return Number.isInteger(game.avatarCrop) && game.avatarCrop >= 0 && game.avatarCrop < crops.length ? game.avatarCrop : 0;
     const counts = Array(crops.length).fill(0);
-    game.plots.forEach((plot) => { if (Number.isInteger(plot.crop) && plot.crop >= 0 && plot.crop < counts.length) counts[plot.crop] += 1; });
+    game.plots.forEach((plot) => getPlotPlants(plot).forEach((plant) => {
+      if (Number.isInteger(plant.crop) && plant.crop >= 0 && plant.crop < counts.length) counts[plant.crop] += 1;
+    }));
     return counts.reduce((best, count, index) => count > counts[best] ? index : best, 0);
   }
   function updateAvatarDisplay() {
@@ -1072,33 +1179,71 @@
   }
   function plant(index, cropIndex, variantId = null) {
     const plot = game.plots[index], crop = crops[cropIndex];
-    if (!crop || !plot || plot.crop !== null) return;
+    if (!crop || !plot) return;
     if (plot.grassOnly) return notify('草地地塊無法種植；請先關閉草地設定。');
     if (variantId && !game.flowerVariants.some((variant) => variant.id === variantId && variant.cropIndex === cropIndex)) return;
     if (game.coins < crop.seedCost) return notify(`${crop.name}種子需要 ${crop.seedCost} 枚金幣。`);
     if (plot.manual) {
+      const plants = getPlotPlants(plot);
+      if (plants.length >= getPlotCapacity(plot)) return notify(`這塊手動地塊已種滿 ${getPlotCapacity(plot)} 株，請先收成或升級容量。`);
       const variant = variantId ? game.flowerVariants.find((item) => item.id === variantId) : null;
-      game.coins -= crop.seedCost; plot.crop = cropIndex; plot.variantId = variant?.id || null; plot.variantName = variant?.name || null; plot.variantColor = variant?.color || null; plot.plantedAt = Date.now(); plot.plantHeight = 0.9 + Math.random() * 0.2; plot.watered = false; plot.waterSource = null; plot.growthBonusMs = 0; save(); render(); notify(`已手動種下${variant ? `${crop.name}・${variant.name}` : crop.name}。`); return;
+      const positionIndex = Number.isSafeInteger(plot.nextPlantPosition) && plot.nextPlantPosition >= 1 ? plot.nextPlantPosition : Math.max(1, ...plants.map((plant) => (plant.positionIndex || 0) + 1));
+      const plantState = {
+        crop: cropIndex, variantId: variant?.id || null, variantName: variant?.name || null, variantColor: variant?.color || null,
+        plantedAt: Date.now(), plantHeight: 0.9 + Math.random() * 0.2, positionIndex,
+        watered: false, waterSource: null, waterWetnessStart: null, growthBonusMs: 0,
+      };
+      plot.plants = [...plants, plantState];
+      plot.nextPlantPosition = positionIndex + 1;
+      game.coins -= crop.seedCost;
+      syncManualPrimary(plot);
+      save(); render();
+      if (dialog.open && dialogContext?.type === 'plot' && dialogContext.index === index) renderFarmDialog();
+      notify(`已手動種下${variant ? `${crop.name}・${variant.name}` : crop.name}。`);
+      return;
     }
+    if (plot.crop !== null) return;
     enqueueJob({ kind: 'plant', index, cropIndex, variantId });
   }
-  function harvest(index) {
-    const plot = game.plots[index]; if (!plot || plot.crop === null) return;
-    const crop = crops[plot.crop] || crops[0]; if (growthElapsed(plot) < crop.growTime) return;
+  function harvest(index, plantIndex = 0) {
+    const plot = game.plots[index];
+    const plant = getPlantState(plot, plantIndex);
+    if (!plot || !plant) return;
+    const crop = crops[plant.crop] || crops[0];
+    if (growthElapsed(plot, Date.now(), plantIndex) < crop.growTime) return;
     if (isDroneExcluded(plot)) {
-      const plantedCrop = getPlantedCrop(plot);
-      const reward = getHarvestReward(crop); game.coins += reward; plot.crop = null; plot.variantId = null; plot.variantName = null; plot.variantColor = null; plot.plantedAt = null; plot.plantHeight = null; plot.watered = false; plot.growthBonusMs = 0; delete plot.waterStartedAt; delete plot.waterUntil; save(); render(); notify(`手動收成了${plantedCrop.name}！獲得 ${reward} 金幣 ✨`); return;
+      const plantedCrop = getPlantedCrop(plot, plantIndex);
+      const reward = getHarvestReward(crop); game.coins += reward;
+      if (plot.manual === true) {
+        plot.plants.splice(plantIndex, 1);
+        syncManualPrimary(plot);
+      } else {
+        plot.crop = null; plot.variantId = null; plot.variantName = null; plot.variantColor = null;
+        plot.plantedAt = null; plot.plantHeight = null; plot.watered = false; plot.waterSource = null;
+        plot.growthBonusMs = 0; delete plot.waterStartedAt; delete plot.waterUntil;
+      }
+      save(); render();
+      if (dialog.open && dialogContext?.type === 'plot' && dialogContext.index === index) renderFarmDialog();
+      notify(`手動收成了${plantedCrop.name}！獲得 ${reward} 金幣 ✨`); return;
     }
     enqueueJob({ kind: 'harvest', index });
   }
-  function water(index) {
+  function water(index, plantIndex = 0) {
     const plot = game.plots[index];
+    const plant = getPlantState(plot, plantIndex);
     if (window.skyEnvironment.getState(game).isRaining) return;
-    if (!plot || plot.crop === null || plot.watered) return;
-    const crop = crops[plot.crop] || crops[0];
-    if (growthElapsed(plot) >= crop.growTime) return notify('花已成熟，可以直接收成。');
+    if (!plot || !plant || plant.watered) return;
+    const crop = crops[plant.crop] || crops[0];
+    if (growthElapsed(plot, Date.now(), plantIndex) >= crop.growTime) return notify('花已成熟，可以直接收成。');
     if (hasPendingJob('water', index)) return;
-    if (isDroneExcluded(plot)) { plot.watered = true; plot.waterSource = 'manual'; plot.waterWetnessStart = 1; plot.waterStartedAt = Date.now(); plot.waterUntil = plot.waterStartedAt + WATER_DURATION; save(); render(); notify('手動澆水完成！這株花接下來 30 秒會以 1.2 倍速度生長。'); return; }
+    if (isDroneExcluded(plot)) {
+      plant.watered = true; plant.waterSource = 'manual'; plant.waterWetnessStart = 1;
+      plant.waterStartedAt = Date.now(); plant.waterUntil = plant.waterStartedAt + WATER_DURATION;
+      if (plot.manual === true) syncManualPrimary(plot);
+      save(); render();
+      if (dialog.open && dialogContext?.type === 'plot' && dialogContext.index === index) renderFarmDialog();
+      notify('手動澆水完成！這株花接下來 30 秒會以 1.2 倍速度生長。'); return;
+    }
     enqueueJob({ kind: 'water', index });
   }
   function deletePlot(index) {
