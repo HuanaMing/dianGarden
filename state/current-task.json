@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務237已實作動態法線光照與日夜／天氣 uniform；正在確認修正 buffer 索引相容性後的 Playwright 瀏覽器驗收結果。",
+  "nextAction": "任務237的 GitHub Actions Playwright 瀏覽器回歸已通過；等待使用者實機驗收日間方向光、夜間暗度及黎明／黃昏色調。",
   "taskFile": "tasks/active/237-dynamic-world-lighting.md",
-  "result": "src/sky-world.js 已新增三角形面法線、相機方向判定、方向光及環境光；夜間大幅降低 shader 光照，黎明／黃昏採暖色，雨天降低直射光。首輪測試暴露既有 WebGL buffer 索引相容性問題，已修正 buffer 建立順序，第二輪驗收執行中。"
+  "result": "src/sky-world.js 已新增三角形面法線、相機方向判定、方向光與環境光 uniform。日夜與雨天改變 shader 光照，canvas CSS brightness 改為中性值。首輪測試發現新增 buffer 改變索引，已修正並在 run 40200937808 通過 Playwright；Pages push 自動工作流程 run 40200937734 成功。尚待使用者實機視覺驗收。"
 }
