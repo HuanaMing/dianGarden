@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 225,
-  "nextAction": "任務223已由使用者驗收並歸檔；任務224已完成，完整 Playwright 桌面／手機驗收通過（run 40168665969）。現在執行任務225：修正多台無人機返航路徑在電量更新時被反覆重算造成的瞬移，接著新增回歸檢查並執行完整驗收。既有待批准事項維持不變。",
+  "activeTask": null,
+  "nextAction": "任務223–225已全部完成並歸檔。任務224的完整 Playwright 桌面／手機驗收通過（run 40168665969）；任務225的八台無人機位置連續性與完整 Playwright 驗收通過（run 40169170602）。tasks/active 與 tasks/inbox 已無待執行任務（僅保留 .gitkeep）。既有待批准事項維持不變：任務109需先確認付費雲端 Mac，任務212最新版本的 GitHub Pages 手動部署仍需明確批准。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的 GitHub Pages 部署：需使用者明確批准後手動觸發。"
