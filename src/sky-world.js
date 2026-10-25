@@ -1821,16 +1821,19 @@
       if (!Array.isArray(docks) || !docks.length || docks.some((dock) => !Number.isFinite(dock?.x) || !Number.isFinite(dock?.z))) return;
       const unchanged = docks.length === droneDocks.length && docks.every((dock, index) => dock.x === droneDocks[index]?.x && dock.z === droneDocks[index]?.z && (dock.y || 0) === (droneDocks[index]?.y || 0) && (dock.deployed !== false) === (droneDocks[index]?.deployed !== false) && dock.deploymentOrder === droneDocks[index]?.deploymentOrder && Math.abs((dock.battery ?? 100) - (droneDocks[index]?.battery ?? 100)) < 0.001);
       if (unchanged) return;
+      const dockPositionsChanged = docks.map((dock, index) => {
+        const previous = droneDocks[index];
+        return !previous || Math.abs(dock.x - previous.x) > 0.0001 || Math.abs(dock.z - previous.z) > 0.0001;
+      });
       droneDocks = docks.map(({ x, z, y = 0, deployed, deploymentOrder, battery }) => ({ x, z, y, deployed: deployed !== false, deploymentOrder, battery: Math.max(0, Math.min(100, battery ?? 100)) }));
       droneDocks[0] = { ...droneDocks[0], ...dockPosition };
       droneDocks.forEach((dock, index) => {
         const animation = droneStates[index]?.animation;
         if (!animation) droneStates[index].location = [dock.x, dock.z];
-        else {
+        else if (dockPositionsChanged[index]) {
+          // Battery/deployment updates arrive frequently; they must not replace an in-flight route.
           animation.idlePosition = { x: dock.x, z: dock.z };
-          if (animation.returning) {
-            animation.returnRoute = findDroneRoute(animation.target, [dock.x, dock.z], index);
-          }
+          if (animation.returning) animation.returnRoute = findDroneRoute(animation.target, [dock.x, dock.z], index);
         }
       });
       uploadWorld();
