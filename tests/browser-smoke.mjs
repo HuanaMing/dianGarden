@@ -987,6 +987,47 @@ try {
   checks.push('任務231：過期登入憑證會清除並回到 Google 登入流程');
   await expiredAuthPage.close();
 
+  const rejectedAuthPage = await browser.newPage({ viewport: { width: 900, height: 900 } });
+  await rejectedAuthPage.addInitScript(() => {
+    localStorage.removeItem('sky-garden-guest-mode-v1');
+    const exp = Math.floor(Date.now() / 1000) + 3600;
+    const encode = value => btoa(JSON.stringify(value)).replace(/=/g, '').replaceAll('+', '-').replaceAll('/', '_');
+    const token = 'header.' + encode({
+      iss: 'https://accounts.google.com',
+      aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com',
+      sub: 'task231-server-rejected-account', exp,
+    }) + '.signature';
+    sessionStorage.setItem('sky-garden-auth-session-v1', JSON.stringify({
+      version: 1, idToken: token, currentSub: 'task231-server-rejected-account', exp, sessionOpenedAt: Date.now(),
+    }));
+  });
+  await rejectedAuthPage.route('https://diangarden-cloud-save.ry15968.workers.dev/api/save', async route => {
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: {
+        'access-control-allow-origin': '*',
+        'access-control-allow-methods': 'GET, PUT, OPTIONS',
+        'access-control-allow-headers': 'authorization,content-type,x-diangarden-opened-at',
+      } });
+      return;
+    }
+    await route.fulfill({ status: 401, headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' },
+      body: JSON.stringify({ error: 'invalid_google_id_token' }) });
+  });
+  await rejectedAuthPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await rejectedAuthPage.locator('#startup-garden-dialog[open]').waitFor({ state: 'visible', timeout: 8000 });
+  const rejectedAuthState = await rejectedAuthPage.evaluate(() => ({
+    session: sessionStorage.getItem('sky-garden-auth-session-v1'),
+    signInVisible: !document.querySelector('#cloud-save-signin')?.hidden,
+    startupSignInVisible: !document.querySelector('#startup-google-signin')?.hidden,
+    status: document.querySelector('#cloud-save-status')?.textContent.trim(),
+  }));
+  if (rejectedAuthState.session !== null || !rejectedAuthState.signInVisible || !rejectedAuthState.startupSignInVisible
+    || rejectedAuthState.status !== 'Google 登入已失效，請重新登入。') {
+    throw new Error('任務231：伺服器拒絕 ID token 後未清除登入狀態或恢復登入入口：' + JSON.stringify(rejectedAuthState));
+  }
+  checks.push('任務231：伺服器拒絕 ID token 後清除暫存並要求重新登入');
+  await rejectedAuthPage.close();
+
   const staleSessionPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await staleSessionPage.addInitScript(() => {
     localStorage.removeItem('sky-garden-guest-mode-v1');
