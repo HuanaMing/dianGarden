@@ -820,3 +820,14 @@ input, [contenteditable="true"]{
   }
   .farm-management-tabs [role="tab"]{min-height:40px;padding:8px 5px}
 }
+
+
+/* 任務228：手動地塊中的每株花各自顯示生長與照料狀態。 */
+.manual-plant-list{display:grid;gap:8px;max-height:34vh;overflow:auto;margin:10px 0}
+.manual-plant-card{display:grid;gap:8px;padding:11px;border:1px solid #e3eadc;border-radius:12px;background:#fbfcf6}
+.manual-plant-card-heading{display:grid;gap:3px}
+.manual-plant-card-heading strong{font-size:13px;color:#3f6550}
+.manual-plant-card-heading small{font-size:11px;color:#7a9180}
+.manual-plant-actions{display:flex;justify-content:flex-end;gap:8px}
+.manual-plant-actions .action-button{padding:7px 11px;font-size:11px}
+.manual-seed-heading{margin:12px 0 6px;color:#718678;font-size:11px;font-weight:800}
