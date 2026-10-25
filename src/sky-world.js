@@ -1444,10 +1444,20 @@
       const isTouchPointer = event.pointerType === 'touch';
       emptyTouchRotateTimer = setTimeout(() => {
         const singleTouchStillHeld = !isTouchPointer || (touchPoints.has(pressPointerId) && touchPoints.size === 1);
-        if (dragging && singleTouchStillHeld && !pointerMoved
-          && pointerPlotIndex === null && dockHitAtPointer === null) {
-          window.gardenMenuWheel?.openAt?.(pointerStartX, pointerStartY, pressPointerId);
+        if (!dragging || !singleTouchStillHeld || pointerMoved
+          || pointerPlotIndex !== null || dockHitAtPointer !== null) return;
+        if (galleryMode) {
+          // In the encyclopedia, hold first, then drag to rotate the flower preview.
+          // Do not open the garden's radial menu or start rotation before the hold threshold.
+          rotateHoldGesture = true;
+          pointerMoved = true;
+          lastPointerX = pointerStartX;
+          lastPointerY = pointerStartY;
+          canvas.dataset.rotateHoldActive = 'true';
+          clearPointerHoldRings();
+          return;
         }
+        window.gardenMenuWheel?.openAt?.(pointerStartX, pointerStartY, pressPointerId);
       }, 500);
     }
     canvas.setPointerCapture(event.pointerId);
@@ -1544,6 +1554,10 @@
   canvas.addEventListener('pointerup', (event) => {
     endPointerFeedback(event);
     if (event.pointerType === 'touch') touchPoints.delete(event.pointerId);
+    if (galleryMode && canvas.dataset.rotateHoldActive === 'true') {
+      delete canvas.dataset.rotateHoldActive;
+      rotateHoldGesture = false;
+    }
     if (suppressTouchTap) {
       clearTimeout(emptyTouchRotateTimer);
       rotateHoldGesture = false;
