@@ -1639,3 +1639,13 @@
 - 建立 `tasks/done/182-cloud-save-sync.md` 完成紀錄；更新 `state/project.json`、`state/current-task.json`、`README.md`、`docs/architecture.md` 與 `docs/desicions.md`。
 - 排查反覆出現的 GitHub 寫入安全檢查阻擋：本輪重新讀取最新內容後，將一般文件／狀態寫入逐檔、單次操作重試，相關更新成功。先前遭阻擋的原因尚無工具回傳的具體分類，不能斷言是特定內容或刪除操作所致。
 - 已完成：確認 `tasks/active/182-anonymous-google-cloud-save-sync.md` 已移除、完成版仍存在；已在 `AGENTS.md` 補充安全重試規範。此次未獨立重跑 CI 或探測線上 API。
+
+
+## 2026-10-25 — 任務201驗收通過；任務202、203、204實作
+
+- 任務201：使用者明確確認三個管理面板全畫面覆蓋驗收通過，已將文件由 `tasks/active/201-fullscreen-management-panels.md` 歸檔至 `tasks/done/201-fullscreen-management-panels.md`。
+- 任務202：頭像改為可點擊按鈕，獨立開啟自訂頭像對話框；保留自動／手動模式、11種花卉素材與既有存檔行為。
+- 任務203：設定改分為「同步」與「輔助功能」；同步含版本、雲端存檔與重置進度，輔助功能含2D模式、省電模式及操作說明。
+- 任務204：Google credential 驗證成功後隱藏設定與啟動對話框中的登入入口；明確登出後恢復登入入口。
+- 驗收：Playwright 瀏覽器自動驗收通過（[run 40145259395](https://github.com/HuanaMing/dianGarden/actions/runs/40145259395)）；Pages 部署工作流程成功（[run 40145153851](https://github.com/HuanaMing/dianGarden/actions/runs/40145153851)）。瀏覽器驗收包含頭像彈窗、花卉選擇與存檔、設定分頁切換、省電模式與登入入口程式規格檢查；未使用真實 Google 帳號執行端到端登入。
+- 狀態：任務202–204的程式、自動化驗收與部署工作流程已完成，等待使用者實際遊玩驗收，暫留在 `tasks/active/`。
