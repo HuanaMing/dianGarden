@@ -1,11 +1,12 @@
 {
-  "name": "任務226：修正圖鑑全螢幕與手機選花面板",
-  "status": "completed",
+  "name": "任務227–230：需求拆分與執行規劃",
+  "status": "planned",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
-    "任務212最新程式版本的 GitHub Pages 部署：需使用者明確批准後手動觸發。"
+    "任務212最新程式版本的 GitHub Pages 部署：需使用者明確批准後手動觸發。",
+    "任務229：手動地塊升級價格曲線需在實作付款前由使用者確認。"
   ],
-  "nextAction": "任務226已完成並歸檔。圖鑑全螢幕持續繪圖、手機選花面板上拉／下拉／點擊切換及選花後恢復排版，完整 Playwright 桌面／手機驗收通過（run 40170657617）。tasks/active 與 tasks/inbox 無待執行任務（僅保留 .gitkeep）；既有待批准事項維持不變。",
-  "taskFile": "tasks/done/226-encyclopedia-fullscreen-and-picker.md",
-  "result": "修正圖鑑頁面誤受遊戲啟動繪圖暫停影響；手機選花面板改為可上拉覆蓋預覽、下拉恢復原排版，並保留點擊切換。完整 Playwright 桌面／手機驗收通過（run 40170657617）。"
+  "nextAction": "待執行順序：任務227恢復圖鑑長按旋轉 → 任務230加入選花標題收合／展開像素圖 → 任務228多株資料模型與穩定位置演算法 → 任務229手動地塊容量升級。任務228先於229是因升級容量必須建立在可儲存多株的資料模型上。",
+  "taskFile": "tasks/inbox/227-encyclopedia-long-press-rotation.md",
+  "result": "已建立四份待辦任務文件，記錄需求、修改範圍、依賴與驗收條件。未開始程式修改。"
 }
