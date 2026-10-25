@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 212,
-  "nextAction": "任務210、211均已完成：字級穩定性及異地登入離線狀態的 Playwright 驗收通過，Pages 部署成功。現在執行任務212：主畫面與設定頁面統一蒲公英雙行提示及「輕搖風鈴」重新整理按鈕。",
+  "activeTask": null,
+  "nextAction": "任務210～212已依序完成並歸檔。字級穩定、異地登入離線同步行為、主畫面與設定頁蒲公英雙行提示及風鈴重新整理按鈕均通過 Playwright 驗收；Pages 部署成功。等待下一項指示。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
