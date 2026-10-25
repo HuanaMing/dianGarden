@@ -5,7 +5,7 @@
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的 GitHub Pages 部署：需使用者明確批准後手動觸發。"
   ],
-  "nextAction": "已修正明確取消選取後的狀態保留邏輯，並在 tests/browser-smoke.mjs 加入回歸案例；等待 GitHub Actions Playwright 驗收，確認通過後再完成歸檔。",
+  "nextAction": "已修正明確取消選取後的狀態保留邏輯，並在 tests/browser-smoke.mjs 加入回歸案例；src/game.js 與測試腳本的 JavaScript 語法解析通過。GitHub Actions 瀏覽器驗收的 run 狀態目前無法由可用工具讀取，故任務維持執行中，尚未歸檔。",
   "taskFile": "tasks/active/223-auto-plot-selection.md",
-  "result": "根因候選已定位：render() 在 activePlotIndex 為 -1（玩家刻意取消選取）時，仍會回退選取目前分頁第一塊地。已調整為只在原選取索引仍有效但不符合目前分頁時才回退，並在取消選取時清除清單按鈕及場景選取。測試結果待 CI。"
+  "result": "根因候選已定位：render() 在 activePlotIndex 為 -1（玩家刻意取消選取）時，仍會回退選取目前分頁第一塊地。已調整為只在原選取索引仍有效但不符合目前分頁時才回退，並在取消選取時清除清單按鈕及場景選取。語法解析通過；瀏覽器 CI 結果尚無法確認。"
 }
