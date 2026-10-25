@@ -1069,9 +1069,12 @@
       const activePlot = game.plots[activePlotIndex];
       const activePlotMatchesTab = activePlot && (activeFarmTab === 'manual' ? activePlot.manual === true : activePlot.manual !== true);
       if (activePlotMatchesTab) selectPlot(activePlotIndex);
-      else {
+      else if (activePlotIndex >= 0) {
         const firstVisiblePlotIndex = game.plots.findIndex(plot => activeFarmTab === 'manual' ? plot.manual === true : plot.manual !== true);
         if (firstVisiblePlotIndex >= 0) selectPlot(firstVisiblePlotIndex);
+        else window.skyWorld?.setSelectedPlot(null);
+      } else {
+        window.skyWorld?.setSelectedPlot(null);
       }
     }
     if (dialogContext?.type === 'plot' && game.plots[dialogContext.index]?.crop !== null) renderFarmDialog();
@@ -1265,6 +1268,7 @@
       button.classList.remove('is-selected');
       button.setAttribute('aria-pressed', 'false');
     });
+    window.skyWorld?.setSelectedPlot(null);
   };
   window.onSkyDockSelect = () => {
     dockIsSelected = true;
