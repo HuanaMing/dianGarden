@@ -199,22 +199,24 @@ try {
   await page.locator('#drone-panel-toggle').click();
   if (await page.locator('#drone-panel-toggle').textContent() !== '🚁') throw new Error('無人機按鈕圖示異常，不應變成文字');
   await page.locator('#drone-panel-toggle').click();
-  const assertFullscreenPanel = async selector => {
+  const assertManagementPanelSize = async selector => {
     await page.waitForTimeout(220);
     const bounds = await page.locator(selector).evaluate(element => { const rect = element.getBoundingClientRect(); return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }; });
-    const frame = await page.locator('.world-frame').boundingBox();
-    if (!frame || bounds.width < frame.width - 2 || bounds.height < frame.height - 2 || Math.abs(bounds.x - frame.x) > 2 || Math.abs(bounds.y - frame.y) > 2) throw new Error('管理面板未覆蓋整個遊戲畫面：' + selector + ' ' + JSON.stringify({ bounds, frame }));
+    const viewport = page.viewportSize();
+    if (!viewport || bounds.width > 522 || bounds.width < Math.min(300, viewport.width - 28) || Math.abs(bounds.x + bounds.width / 2 - viewport.width / 2) > 2 || Math.abs(bounds.y + bounds.height / 2 - viewport.height / 2) > 2 || bounds.height > viewport.height * 0.82 + 2) {
+      throw new Error('管理面板尺寸或置中位置未符合自訂頭像對話框規格：' + selector + ' ' + JSON.stringify({ bounds, viewport }));
+    }
   };
   await page.locator('#settings-toggle').click();
   if (!(await page.locator('#settings-panel').isVisible())) throw new Error('設定按鈕未能開啟設定面板');
-  await assertFullscreenPanel('#settings-panel');
+  await assertManagementPanelSize('#settings-panel');
   if (await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) || await page.locator('#farm-management-panel').isVisible()) throw new Error('開啟設定時未關閉無人機或農地管理面板');
   await page.locator('#farm-management-toggle').click();
   if (!(await page.locator('#farm-management-panel').isVisible()) || await page.locator('#settings-panel').isVisible() || await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open'))) throw new Error('農地管理面板沒有關閉其他兩個面板');
-  await assertFullscreenPanel('#farm-management-panel');
+  await assertManagementPanelSize('#farm-management-panel');
   await page.locator('#drone-panel-toggle').click();
   if (!(await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) ) || await page.locator('#settings-panel').isVisible() || await page.locator('#farm-management-panel').isVisible()) throw new Error('無人機面板沒有關閉其他兩個面板');
-  await assertFullscreenPanel('#drone-jobs');
+  await assertManagementPanelSize('#drone-jobs');
   await page.waitForTimeout(5200);
   if (!(await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open'))) || !(await page.locator('#job-queue').isVisible()) || await page.locator('#job-queue > li').count() === 0) throw new Error('無人機管理面板在閒置 5 秒後消失，或工作佇列沒有空佇列提示');
   checks.push('任務205：無人機管理面板閒置超過5秒仍可見，空佇列提示正常');
