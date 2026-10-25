@@ -92,3 +92,8 @@
 .avatar-dialog .avatar-dialog-note{font-size:12px!important;line-height:1.5;overflow-wrap:anywhere}
 .avatar-dialog .avatar-flower-option,
 .avatar-dialog .avatar-flower-name{font-size:11px!important;line-height:1.3;overflow-wrap:anywhere}
+/* 任務211：異地登入時顯示明確的重新整理入口。 */
+.cloud-session-refresh{display:block;width:100%;margin:8px 0;padding:9px 12px;border:1px solid #b8d0b6;border-radius:10px;background:#5e9270;color:#fff;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
+.cloud-session-refresh:hover{background:#4c805f}
+.cloud-session-refresh:focus-visible{outline:3px solid #547f65;outline-offset:2px}
+.cloud-session-refresh[hidden]{display:none!important}
