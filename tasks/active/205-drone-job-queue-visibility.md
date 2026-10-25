@@ -26,4 +26,8 @@
 - `tests/browser-smoke.mjs`
 
 ## 執行紀錄
-- 2026-10-25：由總任務拆分並開始執行；已讀取 AGENTS.md、README、專案狀態、相關任務、遊戲程式與瀏覽器測試。尚未修改程式。
+- 2026-10-25：由總任務拆分並開始執行；已讀取 AGENTS.md、README、專案狀態、相關任務、遊戲程式與瀏覽器測試。已完成程式修改與驗收，詳細結果如下：
+
+- 2026-10-25：修正 `src/game.js`，移除無人機管理面板閒置 5 秒自動關閉機制，避免玩家閱讀工作佇列時面板自行消失；等待佇列為空時加入明確提示，區分無待辦與已有工作正在執行的狀態。
+- 2026-10-25：`tests/browser-smoke.mjs` 新增閒置超過 5 秒後確認面板仍開啟、工作佇列可見且至少有狀態項目的回歸測試。
+- 驗收：GitHub Actions Playwright 瀏覽器驗收通過，run [40147602156](https://github.com/HuanaMing/dianGarden/actions/runs/40147602156)；Pages 部署成功，run [40147589752](https://github.com/HuanaMing/dianGarden/actions/runs/40147589752)。
