@@ -279,3 +279,13 @@ Cloudflare Worker／D1 已由使用者確認成功部署，且跨裝置雲端存
 ## 手動地塊多株資料模型與穩定株位（任務228）
 
 手動地塊以 `plants` 陣列保存每株花卉的花種、種植時間、株高、變種、澆水與生長加速狀態，並以 `positionIndex` 作為穩定株位索引；`nextPlantPosition` 單調遞增，收成一株不會讓其他花株重新排列。舊版存檔仍以 `crop`、`plantedAt` 等單株欄位保存的花卉會在載入時轉成陣列第一項，並將首株欄位同步保留作為相容鏡像。容量等級 `capacityLevel` 舊存檔預設為 1。成長、澆水、雨水與收成以單株狀態計算；手動地塊不進入無人機作物派工。主場景使用穩定的確定性位置函數，第一株固定在土壤床中心，後續株位採帶擾動的低差異分布，座標允許有限度超出土壤床邊界。Playwright 驗收覆蓋多株呈現、重載後株位穩定及舊版單株存檔相容性。
+
+
+## 長期登入工作階段（任務232，實作中）
+
+Google ID Token 僅送往 `POST /api/session` 用於首次登入；Worker 驗證 Google 簽章、issuer、audience 與期限後，在 D1 建立遊戲專用工作階段。前端將不透明更新憑證與 Google subject 存於 `localStorage`，短效存取憑證只留在記憶體。後續 `/api/save` 使用遊戲存取憑證，不再依賴 Google ID Token 持續有效。
+
+Worker 的 `POST /api/session/refresh` 會輪替存取與更新憑證；D1 只保存更新憑證及存取憑證的 SHA-256 雜湊。存取憑證效期 15 分鐘，閒置期限 30 天；`POST /api/session/logout` 撤銷工作階段。已輪替的更新憑證再次使用時會撤銷該工作階段。此方案刻意維持 GitHub Pages + Cloudflare Worker 的現有跨來源架構，接受前端 JavaScript 可讀取更新憑證的 XSS 風險，不需要自訂網域或外部認證服務。
+
+D1 新增表格定義於 `cloudflare/schema.sql`，增量 migration 為 `cloudflare/migrations/002-player-sessions.sql`。更新 Worker 上線前，必須先將 migration 套用到既有 D1；僅將 SQL 提交至 GitHub 不會自動變更生產資料庫。本任務不會手動觸發 GitHub Pages 部署，也不會宣稱 Cloudflare 生產環境已更新。
+
