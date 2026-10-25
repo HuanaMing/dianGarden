@@ -759,11 +759,12 @@ input, [contenteditable="true"]{
 .flower-picker-heading{width:100%;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;appearance:none}
 .flower-picker-heading:focus-visible{outline:3px solid #547f65;outline-offset:-3px}
 @media(max-width:760px){
+  .encyclopedia-layout{position:relative}
+  .flower-picker-heading{touch-action:none;user-select:none;cursor:grab}
   .flower-picker-collapse-indicator{display:inline-block;flex:none;transition:transform .15s ease}
-  .encyclopedia-layout.is-preview-collapsed{grid-template-rows:minmax(0,1fr)}
-  .encyclopedia-layout.is-preview-collapsed .encyclopedia-preview-column{display:none}
-  .encyclopedia-layout.is-preview-collapsed .flower-picker-panel{min-height:0}
-  .encyclopedia-layout.is-preview-collapsed .flower-picker-collapse-indicator{transform:rotate(180deg)}
+  .encyclopedia-layout.is-picker-expanded .flower-picker-panel{position:absolute;inset:0;z-index:10;min-height:0;border-radius:14px;background:#f7f8f1f5;box-shadow:0 8px 26px #31594f24}
+  .encyclopedia-layout.is-picker-expanded .flower-picker-heading{cursor:grabbing}
+  .encyclopedia-layout.is-picker-expanded .flower-picker-collapse-indicator{transform:rotate(180deg)}
 }
 
 /* 任務218：農地管理依地塊類型切換，桌面列表固定五欄。 */
