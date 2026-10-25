@@ -18,4 +18,5 @@
 - 已修改 `src/index.html`、`src/game.js`、`src/styles.css`，將頭像控制移入獨立對話框。
 - 已更新 `tests/browser-smoke.mjs`，加入彈出、花卉素材、模式切換及存檔檢查。
 - 程式提交：`b082c64479ab01f99b8ffa46b06366c799cae828`、`a16c550e1045c974b89b7a2051ff19925888eda6`、`9818ccc1b0d4312d9039239d6b9c4fa92a061a5b`。
-- 狀態：等待自動化驗收及使用者實際遊玩驗收。
+- 驗收：Playwright 瀏覽器驗收通過（[run 40145259395](https://github.com/HuanaMing/dianGarden/actions/runs/40145259395)）；Pages 部署工作流程成功（[run 40145153851](https://github.com/HuanaMing/dianGarden/actions/runs/40145153851)）。
+- 狀態：程式與自動化驗收完成，等待使用者實際遊玩驗收。
