@@ -55,6 +55,7 @@
   const mainSessionRefreshButton = document.querySelector('#cloud-session-refresh-main');
 
   let accessToken = null;
+  let legacyIdToken = null;
   let refreshToken = null;
   let accessExpiresAt = 0;
   let authRefreshPromise = null;
@@ -146,7 +147,34 @@
 
   function clearStoredAuthSession() {
     try { localStorage.removeItem(AUTH_SESSION_KEY); } catch (_) { /* Ignore unavailable local storage. */ }
+    try { sessionStorage.removeItem(AUTH_SESSION_KEY); } catch (_) { /* Ignore unavailable session storage. */ }
     try { sessionStorage.removeItem(AUTH_OPENED_AT_KEY); } catch (_) { /* Ignore unavailable session storage. */ }
+  }
+
+  function restoreLegacyAuthSession() {
+    try {
+      const record = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY) || 'null');
+      const claims = record && typeof record.idToken === 'string' ? parseJwtPayload(record.idToken) : null;
+      if (!record || record.version !== 1 || !claims || claims.sub !== record.currentSub
+        || claims.aud !== config.googleClientId || !Number.isFinite(claims.exp)
+        || claims.exp * 1000 <= Date.now() + TOKEN_EXPIRY_SKEW_MS
+        || !Number.isSafeInteger(record.sessionOpenedAt) || record.sessionOpenedAt <= 0) return false;
+      legacyIdToken = record.idToken;
+      currentSub = record.currentSub;
+      sessionOpenedAt = record.sessionOpenedAt;
+      return true;
+    } catch (_) { return false; }
+  }
+
+  function persistLegacyAuthSession(token, claims) {
+    legacyIdToken = token;
+    currentSub = claims.sub;
+    sessionOpenedAt = Date.now();
+    try {
+      sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({
+        version: 1, idToken: token, currentSub, exp: claims.exp, sessionOpenedAt,
+      }));
+    } catch (_) { /* Legacy fallback lasts for this page only. */ }
   }
 
   function readStoredAuthSession() {
@@ -253,6 +281,7 @@
   function clearAuthentication() {
     clearStoredAuthSession();
     accessToken = null;
+    legacyIdToken = null;
     refreshToken = null;
     accessExpiresAt = 0;
     authRefreshPromise = null;
@@ -269,7 +298,7 @@
   }
 
   function updateButtons(visible) {
-    const authenticated = Boolean(visible && accessToken && !sessionExpired);
+    const authenticated = Boolean(visible && (accessToken || legacyIdToken) && !sessionExpired);
     const needsChoice = authenticated && statusNode.dataset.state === 'choice';
     actionsNode.hidden = !authenticated;
     uploadButton.hidden = !needsChoice;
@@ -285,13 +314,13 @@
   async function apiRequest(method, body) {
     const baseUrl = String(config.apiBaseUrl || '').trim().replace(/\/$/, '');
     if (!baseUrl) throw new Error('cloud_api_not_configured');
-    if (!accessToken || accessExpiresAt <= Date.now() + TOKEN_EXPIRY_SKEW_MS) {
+    if (!legacyIdToken && (!accessToken || accessExpiresAt <= Date.now() + TOKEN_EXPIRY_SKEW_MS)) {
       await refreshGameSession();
     }
     const send = async () => fetch(baseUrl + '/api/save', {
       method,
       headers: {
-        Authorization: 'Bearer ' + accessToken,
+        Authorization: 'Bearer ' + (accessToken || legacyIdToken),
         ...(body ? { 'Content-Type': 'application/json' } : {}),
         'X-DianGarden-Opened-At': String(sessionOpenedAt),
       },
@@ -345,7 +374,7 @@
   }
 
   async function checkCloud({ quiet = false } = {}) {
-    if (!accessToken || sessionExpired) return;
+    if (!(accessToken || legacyIdToken) || sessionExpired) return;
     syncBusy = true;
     updateButtons(true);
     if (!quiet) setStatus('正在檢查雲端存檔…');
@@ -400,12 +429,12 @@
       }
     } finally {
       syncBusy = false;
-      updateButtons(Boolean(accessToken));
+      updateButtons(Boolean(accessToken || legacyIdToken));
     }
   }
 
   async function uploadLocal({ automatic = false } = {}) {
-    if (!accessToken || syncBusy || sessionExpired) return;
+    if (!(accessToken || legacyIdToken) || syncBusy || sessionExpired) return;
     const local = readLocalSave();
     if (!local) {
       setStatus('目前沒有可用的本機存檔；請先開始遊玩。', 'warning');
@@ -438,7 +467,7 @@
     } finally {
       syncBusy = false;
       updateButtons(Boolean(accessToken));
-      if (syncEnabled && accessToken) {
+      if (syncEnabled && (accessToken || legacyIdToken)) {
         const latestSignature = signatureOf(readLocalSave());
         if (latestSignature && latestSignature !== lastUploadedSignature) {
           clearTimeout(pendingSyncTimer);
@@ -505,6 +534,18 @@
       updateButtons(true);
       await checkCloud();
     } catch (error) {
+      // Older deployed Workers reject the new POST endpoint at CORS preflight.
+      // Fall back to the existing short-lived Google token flow until the Worker is updated.
+      if (error instanceof TypeError) {
+        persistLegacyAuthSession(response.credential, claims);
+        signinNode.hidden = true;
+        if (startupSigninNode) startupSigninNode.hidden = true;
+        setSessionExpired(false);
+        setStatus('已使用目前雲端 API 登入；重新部署登入服務後即可啟用長期登入。', 'warning');
+        updateButtons(true);
+        await checkCloud();
+        return;
+      }
       clearAuthentication();
       setStatus(messageForError(error), 'warning');
       showStartupChoice('登入未完成，請再試一次；也可以進入獨立訪客花園。');
@@ -563,6 +604,24 @@
     }
     if (guestNoticeNode) guestNoticeNode.hidden = true;
     if (returnToOwnGardenButton) returnToOwnGardenButton.hidden = true;
+    if (restoreLegacyAuthSession()) {
+      signinNode.hidden = true;
+      if (startupSigninNode) startupSigninNode.hidden = true;
+      setSessionExpired(false);
+      setStatus('已恢復目前雲端 API 的登入，正在確認雲端花園…');
+      updateButtons(true);
+      if (window.google?.accounts?.id) initializeGoogle({ prompt: false });
+      else {
+        const legacyScript = document.createElement('script');
+        legacyScript.src = 'https://accounts.google.com/gsi/client';
+        legacyScript.async = true;
+        legacyScript.defer = true;
+        legacyScript.onload = () => initializeGoogle({ prompt: false });
+        document.head.appendChild(legacyScript);
+      }
+      await checkCloud({ quiet: true });
+      return;
+    }
     const stored = readStoredAuthSession();
     if (stored) {
       refreshToken = stored.refreshToken;
@@ -662,7 +721,7 @@
   });
 
   window.addEventListener('diangarden:save', () => {
-    if (!syncEnabled || !accessToken || syncBusy || sessionExpired) return;
+    if (!syncEnabled || !(accessToken || legacyIdToken) || syncBusy || sessionExpired) return;
     clearTimeout(pendingSyncTimer);
     pendingSyncTimer = setTimeout(() => {
       const local = readLocalSave();
