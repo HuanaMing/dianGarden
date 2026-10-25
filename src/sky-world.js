@@ -1071,25 +1071,33 @@
       { x: 3.1, y: 6.0, z: 8.4, speed: 0.31, phase: 5.2, scale: 0.92 },
     ];
     for (const cloud of clouds) {
-      const drift = ((elapsed * cloud.speed + cloud.phase) % 18) - 9;
+      const drift = Math.sin(elapsed * cloud.speed + cloud.phase) * 3.5;
       addCloud(cloud.x, cloud.y, cloud.z, drift, cloud.scale);
     }
 
     const cycle = window.skyEnvironment?.DAY_CYCLE_MS || 16 * 60_000;
     const cycleTime = ((environmentState.worldTimeMs % cycle) + cycle) % cycle;
-    const angle = cycleTime / cycle * Math.PI * 2;
-    const sunX = Math.cos(angle) * 11.5;
-    const sunY = 2.0 + Math.sin(angle) * 6.2;
+    const dayProgress = Math.max(0, Math.min(1, cycleTime / (10 * 60_000)));
+    const dayAngle = -Math.PI / 2 + dayProgress * Math.PI;
+    const sunX = Math.sin(dayAngle) * 11.5;
+    const sunY = -1.0 + Math.cos(dayAngle) * 7.2;
     const sunZ = -12.0;
-    const moonX = Math.cos(angle + Math.PI) * 11.5;
-    const moonY = 2.0 + Math.sin(angle + Math.PI) * 6.2;
+    const nightDuration = cycle - 10 * 60_000;
+    const nightProgress = (((cycleTime - 10 * 60_000) % nightDuration) + nightDuration) % nightDuration / nightDuration;
+    const moonAngle = -Math.PI / 2 + nightProgress * Math.PI;
+    const moonX = Math.sin(moonAngle) * 11.5;
+    const moonY = -1.0 + Math.cos(moonAngle) * 7.2;
     const moonZ = -12.0;
+    const sunHorizon = Math.max(0, Math.min(1, (sunY + 1.0) / 1.5));
+    const moonHorizon = Math.max(0, Math.min(1, (moonY + 1.0) / 1.5));
     const sunStart = positions.length / 3;
     addIcosahedron(positions, colors, sunX, sunY, sunZ, 0.68, environmentState.phase === 'dawn' || environmentState.phase === 'dusk' ? [1, 0.64, 0.34] : [1, 0.82, 0.38]);
-    for (let i = sunStart; i < positions.length / 3; i += 1) opacities.push(environmentState.isRaining ? 0.45 * environmentState.daylightProgress : 0.98 * environmentState.daylightProgress);
+    const sunOpacity = (environmentState.isRaining ? 0.45 : 0.98) * environmentState.daylightProgress * sunHorizon;
+    for (let i = sunStart; i < positions.length / 3; i += 1) opacities.push(sunOpacity);
     const moonStart = positions.length / 3;
     addIcosahedron(positions, colors, moonX, moonY, moonZ, 0.5, [0.78, 0.86, 0.98]);
-    for (let i = moonStart; i < positions.length / 3; i += 1) opacities.push(0.88 * (1 - environmentState.daylightProgress));
+    const moonOpacity = 0.88 * (1 - environmentState.daylightProgress) * moonHorizon;
+    for (let i = moonStart; i < positions.length / 3; i += 1) opacities.push(moonOpacity);
 
     skyVertexCount = positions.length / 3;
     gl.bindBuffer(gl.ARRAY_BUFFER, skyPositionBuffer);
