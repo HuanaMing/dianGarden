@@ -116,6 +116,7 @@
   let droneVertexCount = 0;
   let effectVertexCount = 0;
   let skyVertexCount = 0;
+  let skyGeometryInitialized = false;
   let landCount = galleryMode ? 1 : 3;
   let plotPositions = galleryMode ? [{ x: 0, z: 0, y: 0 }] : [{ x: -1, z: 0, y: 0 }, { x: 0, z: 0, y: 0 }, { x: 1, z: 0, y: 0 }];
   let galleryFlowerIndex = 0;
@@ -1050,6 +1051,7 @@
 
   function uploadSky() {
     if (galleryMode) { skyVertexCount = 0; return; }
+    if (skyGeometryInitialized) return;
     const positions = [];
     const colors = [];
     const opacities = [];
@@ -1079,6 +1081,7 @@
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(opacities), gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, skyNormalBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, calculateFaceNormals(positions), gl.DYNAMIC_DRAW);
+    skyGeometryInitialized = true;
   }
   function calculateFaceNormals(positions) {
     const normals = new Float32Array(positions.length);
