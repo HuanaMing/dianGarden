@@ -49,6 +49,7 @@
     statusNode.insertAdjacentElement('afterend', button);
     return button;
   })();
+  const mainSessionRefreshButton = document.querySelector('#cloud-session-refresh-main');
 
   let idToken = null;
   let currentSub = null;
@@ -70,15 +71,16 @@
     sessionExpired = expired;
     window.diangardenCloudSessionExpired = expired;
     sessionRefreshButton.hidden = !expired;
+    if (mainSessionRefreshButton) mainSessionRefreshButton.hidden = !expired;
     if (expired) {
       syncEnabled = false;
       clearTimeout(pendingSyncTimer);
-      setStatus('帳號已在他處登入，花園進入離線模式。', 'warning');
+      setStatus('雲端同步已暫停；本機進度仍會保留。', 'warning');
       signinNode.hidden = true;
       if (startupSigninNode) startupSigninNode.hidden = true;
     }
     window.dispatchEvent(new CustomEvent('diangarden:cloud-session-state', {
-      detail: { expired, message: expired ? '帳號已在他處登入，花園進入離線模式。' : '' },
+      detail: { expired, message: expired ? '雲端同步已暫停；本機進度仍會保留。' : '' },
     }));
   }
 
@@ -174,7 +176,7 @@
     if (error.message === 'cloud_api_not_configured') return '雲端 API 尚未設定；目前仍使用本機自動存檔。';
     if (error.message === 'login_required') return '請先登入 Google。';
     if (error.message === 'revision_conflict') return '雲端存檔版本已更新，已停止這次上傳。請重新載入最新雲端存檔。';
-    if (error.message === 'stale_session') return '帳號已在他處登入，花園進入離線模式。';
+    if (error.message === 'stale_session') return '雲端同步已暫停；本機進度仍會保留。';
     if (error.message === 'invalid_google_id_token' || error.message === 'authentication_required') return 'Google 登入已失效，請重新登入。';
     if (error.message === 'storage_unavailable') return '雲端資料庫暫時無法使用；本機進度仍安全保留。';
     if (error.message === 'origin_not_allowed') return '目前網站網址尚未加入雲端 API 允許清單。';
@@ -433,15 +435,18 @@
   }
 
   const sessionBanner = document.querySelector('#cloud-session-banner');
+  const sessionSettingsBanner = document.querySelector('#cloud-session-banner-settings');
   window.addEventListener('diangarden:cloud-session-state', (event) => {
-    if (!sessionBanner) return;
-    sessionBanner.hidden = !event.detail?.expired;
+    const expired = Boolean(event.detail?.expired);
+    if (sessionBanner) sessionBanner.hidden = !expired;
+    if (sessionSettingsBanner) sessionSettingsBanner.hidden = !expired;
   });
 
   uploadButton.addEventListener('click', () => uploadLocal());
   downloadButton.addEventListener('click', downloadCloud);
   refreshButton.addEventListener('click', () => checkCloud());
   sessionRefreshButton.addEventListener('click', () => window.location.reload());
+  mainSessionRefreshButton?.addEventListener('click', () => window.location.reload());
   if (startGuestGardenButton) startGuestGardenButton.addEventListener('click', () => {
     try {
       localStorage.setItem(GUEST_MODE_KEY, 'true');
