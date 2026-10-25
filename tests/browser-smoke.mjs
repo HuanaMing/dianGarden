@@ -345,7 +345,6 @@ try {
   await page.locator('[data-close-avatar-dialog]').click();
   checks.push('任務202：頭像獨立彈出、11種點陣圖、模式切換及存檔通過');
   await page.locator('#settings-toggle').click();
-  await page.locator('#settings-toggle').click();
   await page.locator('#settings-tab-accessibility').click();
   await page.locator('#power-save-toggle').click();
   if (await page.locator('#power-save-toggle').getAttribute('aria-pressed') !== 'true') throw new Error('省電模式未能開啟');
