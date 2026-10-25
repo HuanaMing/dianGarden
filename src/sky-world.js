@@ -1067,14 +1067,22 @@
     const elapsed = time * 0.001;
     // Keep clouds camera-relative, but much closer to eye height so they visibly sit lower in the sky.
     const clouds = [
-      { x: -34, y: -4.0, z: -30, speed: 0.22, phase: 0.3, scale: 3.0 },
-      { x: -10, y: -2.5, z: -43, speed: 0.16, phase: 2.4, scale: 3.4 },
-      { x: 25, y: -1.0, z: -35, speed: 0.19, phase: 4.7, scale: 3.7 },
-      { x: 43, y: 0.5, z: -5, speed: 0.14, phase: 1.4, scale: 3.2 },
-      { x: -39, y: 1.5, z: 10, speed: 0.18, phase: 3.5, scale: 3.8 },
-      { x: -18, y: 4.0, z: 35, speed: 0.15, phase: 5.2, scale: 4.0 },
-      { x: 17, y: -3.0, z: 39, speed: 0.2, phase: 1.8, scale: 3.3 },
-      { x: 39, y: 2.5, z: 27, speed: 0.13, phase: 4.1, scale: 3.6 },
+      { x: -46, y: -12.0, z: -42, speed: 0.14, phase: 0.2, scale: 3.0 },
+      { x: -30, y: -10.0, z: -50, speed: 0.18, phase: 1.1, scale: 3.3 },
+      { x: -14, y: -8.0, z: -44, speed: 0.12, phase: 2.2, scale: 3.6 },
+      { x: 4, y: -6.0, z: -52, speed: 0.16, phase: 3.3, scale: 3.9 },
+      { x: 22, y: -11.0, z: -40, speed: 0.2, phase: 4.4, scale: 3.2 },
+      { x: 42, y: -9.0, z: -48, speed: 0.13, phase: 5.1, scale: 3.7 },
+      { x: 50, y: -5.0, z: -20, speed: 0.17, phase: 0.8, scale: 3.4 },
+      { x: -48, y: -2.0, z: -12, speed: 0.15, phase: 2.7, scale: 3.8 },
+      { x: -26, y: 1.0, z: 8, speed: 0.19, phase: 4, scale: 3.1 },
+      { x: -5, y: 3.0, z: 22, speed: 0.14, phase: 5.5, scale: 3.5 },
+      { x: 18, y: 6.0, z: 40, speed: 0.16, phase: 1.6, scale: 4.0 },
+      { x: 40, y: 4.0, z: 30, speed: 0.12, phase: 3.8, scale: 3.6 },
+      { x: -42, y: -7.0, z: 38, speed: 0.18, phase: 5.9, scale: 3.3 },
+      { x: -18, y: -3.0, z: 48, speed: 0.13, phase: 2.9, scale: 3.9 },
+      { x: 12, y: -9.0, z: 50, speed: 0.2, phase: 0.5, scale: 3.4 },
+      { x: 36, y: -1.0, z: 46, speed: 0.15, phase: 4.8, scale: 3.7 },
     ];
     for (const cloud of clouds) {
       const drift = Math.sin(elapsed * cloud.speed + cloud.phase) * 2.4;
