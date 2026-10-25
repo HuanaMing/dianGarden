@@ -1,10 +1,10 @@
 {
-  "name": "任務209：將自動儲存狀態移至跨裝置存檔區",
-  "status": "in_progress",
+  "name": "任務210～212：介面字級與異地登入提示改善",
+  "status": "planned",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "自動儲存提示已位於設定→同步→跨裝置存檔；已補上卡片內狀態樣式與存檔讀取失敗警告驗收。等待最新 Playwright 與 Pages 工作流程完成，通過後歸檔任務209。",
-  "taskFile": "tasks/active/209-autosave-status-placement.md",
-  "result": "任務209實作與測試更新已提交；一般提示只顯示於跨裝置存檔區，並新增本機存檔讀取失敗時警告樣式與回歸測試。最新驗收仍在執行。"
+  "nextAction": "依序執行任務210（固定無人機、設定、農地管理與頭像介面字級）、任務211（異地登入後停止雲端同步、隱藏登入並顯示暫停同步狀態）、任務212（主畫面與設定頁雙行蒲公英提示及「輕搖風鈴」重新整理按鈕）。",
+  "taskFile": "tasks/inbox/210-fixed-management-interface-typography.md",
+  "result": "已建立並驗證 tasks/inbox 中的任務210、211、212。尚未開始程式修改。"
 }
