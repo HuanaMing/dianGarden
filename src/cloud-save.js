@@ -466,7 +466,7 @@
       if (error.message === 'revision_conflict') await checkCloud({ quiet: true });
     } finally {
       syncBusy = false;
-      updateButtons(Boolean(accessToken));
+      updateButtons(Boolean(accessToken || legacyIdToken));
       if (syncEnabled && (accessToken || legacyIdToken)) {
         const latestSignature = signatureOf(readLocalSave());
         if (latestSignature && latestSignature !== lastUploadedSignature) {
@@ -575,12 +575,12 @@
     if (startupLoginHint) startupLoginHint.textContent = '若未自動登入，請點擊下方 Google 登入按鈕。';
     setStatus('Google 登入已準備好；若未自動登入，請點擊登入按鈕。');
     window.google.accounts.id.prompt((notification) => {
-      if (!accessToken && (notification.isNotDisplayed?.() || notification.isSkippedMoment?.() || notification.isDismissedMoment?.())) {
+      if (!(accessToken || legacyIdToken) && (notification.isNotDisplayed?.() || notification.isSkippedMoment?.() || notification.isDismissedMoment?.())) {
         setStatus('Google 未能自動登入，請點擊 Google 登入按鈕。');
       }
     });
     window.setTimeout(() => {
-      if (!accessToken && !hasResolvedStartupCloud) showStartupChoice('尚未自動登入，請登入 Google 回到自己的花園，或選擇進入訪客花園。');
+      if (!(accessToken || legacyIdToken) && !hasResolvedStartupCloud) showStartupChoice('尚未自動登入，請登入 Google 回到自己的花園，或選擇進入訪客花園。');
     }, 3500);
   }
 
@@ -667,7 +667,7 @@
     setStatus('正在載入 Google 登入…');
     if (startupLoginHint) startupLoginHint.textContent = '正在準備 Google 登入…';
     window.setTimeout(() => {
-      if (!accessToken && !hasResolvedStartupCloud && !startupDialog?.open) showStartupChoice('Google 登入尚未完成，請選擇登入或進入訪客花園。');
+      if (!(accessToken || legacyIdToken) && !hasResolvedStartupCloud && !startupDialog?.open) showStartupChoice('Google 登入尚未完成，請選擇登入或進入訪客花園。');
     }, 3500);
   }
 
