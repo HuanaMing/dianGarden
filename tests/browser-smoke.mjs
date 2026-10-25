@@ -135,6 +135,10 @@ if (!(await pickerIndicator.getAttribute('src'))?.endsWith('assets/btn/展開.pn
   || await pickerHeading.getAttribute('aria-expanded') !== 'false') {
   throw new Error('手機圖鑑收合狀態應顯示展開像素圖及 aria-expanded=false');
 }
+await pickerIndicator.evaluate(image => image.decode());
+if (!(await pickerIndicator.evaluate(image => image.naturalWidth > 0 && image.naturalHeight > 0))) {
+  throw new Error('圖鑑選花標題的展開像素圖無法載入');
+}
 const pickerPanel = encyclopediaPage.locator('.flower-picker-panel');
 const previewWorld = encyclopediaPage.locator('.encyclopedia-world');
 const originalPickerBounds = await pickerPanel.boundingBox();
