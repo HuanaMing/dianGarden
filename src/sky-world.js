@@ -23,6 +23,8 @@
     uniform vec3 uSunDir;
     uniform vec3 uAmbient;
     uniform vec3 uSunColor;
+    uniform vec3 uDroneLightPos[8];
+    uniform float uDroneLightStrength[8];
     varying vec3 vColor;
     varying float vOpacity;
     void main() {
@@ -30,7 +32,18 @@
       vec3 n = normalize(aNormal);
       if (dot(n, uEyeDir) < 0.0) n = -n;
       float ndl = max(dot(n, normalize(uSunDir)), 0.0);
-      vColor = aColor * (uAmbient + uSunColor * ndl);
+      vec3 lighting = uAmbient + uSunColor * ndl;
+      for (int i = 0; i < 8; i++) {
+        vec3 toDroneLight = uDroneLightPos[i] - aPosition;
+        float lightDistance = length(toDroneLight);
+        if (lightDistance < 3.2 && uDroneLightStrength[i] > 0.0) {
+          vec3 lightDirection = normalize(toDroneLight);
+          float diffuse = max(dot(n, lightDirection), 0.0);
+          float attenuation = 1.0 - smoothstep(0.35, 3.2, lightDistance);
+          lighting += vec3(1.0, 0.82, 0.52) * diffuse * attenuation * uDroneLightStrength[i];
+        }
+      }
+      vColor = aColor * lighting;
       vOpacity = aOpacity;
     }
   `;
@@ -78,6 +91,8 @@
     sunDir: gl.getUniformLocation(program, 'uSunDir'),
     ambient: gl.getUniformLocation(program, 'uAmbient'),
     sunColor: gl.getUniformLocation(program, 'uSunColor'),
+    droneLightPos: gl.getUniformLocation(program, 'uDroneLightPos[0]'),
+    droneLightStrength: gl.getUniformLocation(program, 'uDroneLightStrength[0]'),
   };
   const positionBuffer = gl.createBuffer();
   const colorBuffer = gl.createBuffer();
@@ -1479,6 +1494,24 @@
     gl.uniform3f(locations.sunDir, -0.42, 0.82, 0.38);
     gl.uniform3f(locations.ambient, ambient, ambient * (environmentState.phase === 'night' ? 0.86 : 1), ambient * (environmentState.phase === 'night' ? 1.12 : 1));
     gl.uniform3f(locations.sunColor, sunR, sunG, sunB);
+    const nightFactor = Math.max(0, 1 - daylight);
+    const droneLightPositions = [];
+    const droneLightStrengths = [];
+    for (let index = 0; index < 8; index += 1) {
+      const state = droneStates[index];
+      const dock = droneDocks[index];
+      const deployed = index < droneCount && dock?.deployed !== false;
+      const batteryFactor = Math.max(0, Math.min(1, (dock?.battery ?? 100) / 35));
+      const active = deployed && state;
+      const lightPosition = active
+        ? [state.location[0], state.y + 0.02, state.location[1]]
+        : [0, -100, 0];
+      droneLightPositions.push(...lightPosition);
+      // A small warm pool of light, visible only at night and softened by battery level.
+      droneLightStrengths.push(active ? nightFactor * 0.34 * batteryFactor : 0);
+    }
+    gl.uniform3fv(locations.droneLightPos, new Float32Array(droneLightPositions));
+    gl.uniform1fv(locations.droneLightStrength, new Float32Array(droneLightStrengths));
     gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
     gl.bindBuffer(gl.ARRAY_BUFFER, effectPositionBuffer);
     gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, 0, 0);
