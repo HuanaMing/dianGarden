@@ -462,20 +462,33 @@ try {
     const payload = btoa(JSON.stringify({ sub: 'task211-test-account' })).replace(/=/g, '');
     window.__task211CredentialCallback({ credential: `header.${payload}.signature` });
   });
-  await staleSessionPage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('帳號已在他處登入'));
+  await staleSessionPage.waitForFunction(() => !document.querySelector('#cloud-session-banner')?.hidden && !document.querySelector('#cloud-session-banner-settings')?.hidden);
   await staleSessionPage.locator('#settings-toggle').click();
   await staleSessionPage.locator('#cloud-session-refresh').waitFor({ state: 'visible' });
   const staleSessionState = await staleSessionPage.evaluate(() => ({
     loginHidden: document.querySelector('#cloud-save-signin')?.hidden,
     startupLoginHidden: document.querySelector('#startup-google-signin')?.hidden,
     refreshVisible: !document.querySelector('#cloud-session-refresh')?.hidden,
+    mainRefreshVisible: !document.querySelector('#cloud-session-refresh-main')?.hidden,
     mainBannerVisible: !document.querySelector('#cloud-session-banner')?.hidden,
+    settingsBannerVisible: !document.querySelector('#cloud-session-banner-settings')?.hidden,
+    mainLines: [...document.querySelectorAll('#cloud-session-banner .cloud-session-banner-line')].map(node => node.textContent.trim()),
+    settingsLines: [...document.querySelectorAll('#cloud-session-banner-settings .cloud-session-banner-line')].map(node => node.textContent.trim()),
+    mainButtonText: document.querySelector('#cloud-session-refresh-main')?.textContent.trim(),
+    settingsButtonText: document.querySelector('#cloud-session-refresh')?.textContent.trim(),
+    cloudStatus: document.querySelector('#cloud-save-status')?.textContent.trim(),
     saveStatus: document.querySelector('#save-status')?.textContent.trim(),
     saveWarning: document.querySelector('#save-status')?.classList.contains('save-warning'),
   }));
+  const expectedSessionLines = ['蒲公英捎來你在彼岸駐足的信', '回家時，請搖響風鈴，讓時間再度流動。'];
   if (!staleSessionState.loginHidden || !staleSessionState.startupLoginHidden || !staleSessionState.refreshVisible
-    || !staleSessionState.mainBannerVisible || staleSessionState.saveStatus !== '暫停同步雲端進度' || !staleSessionState.saveWarning) {
-    throw new Error('異地登入後的離線介面狀態錯誤：' + JSON.stringify(staleSessionState));
+    || !staleSessionState.mainRefreshVisible || !staleSessionState.mainBannerVisible || !staleSessionState.settingsBannerVisible
+    || JSON.stringify(staleSessionState.mainLines) !== JSON.stringify(expectedSessionLines)
+    || JSON.stringify(staleSessionState.settingsLines) !== JSON.stringify(expectedSessionLines)
+    || staleSessionState.mainButtonText !== '輕搖風鈴' || staleSessionState.settingsButtonText !== '輕搖風鈴'
+    || staleSessionState.cloudStatus !== '雲端同步已暫停；本機進度仍會保留。'
+    || staleSessionState.saveStatus !== '暫停同步雲端進度' || !staleSessionState.saveWarning) {
+    throw new Error('異地登入後的雙處提示、風鈴按鈕或離線存檔狀態錯誤：' + JSON.stringify(staleSessionState));
   }
   await staleSessionPage.locator('#garden-avatar').click();
   await staleSessionPage.locator('#avatar-mode').selectOption('manual');
