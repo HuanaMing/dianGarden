@@ -814,6 +814,110 @@ try {
   checks.push('任務209：本機存檔讀取失敗時，跨裝置存檔區顯示醒目警告');
   await saveWarningPage.close();
 
+  const restoredAuthPage = await browser.newPage({ viewport: { width: 900, height: 900 } });
+  const restoredAuthOpenedAt = Date.now() - 5000;
+  const restoredAuthExp = Math.floor(Date.now() / 1000) + 3600;
+  const restoredAuthToken = await restoredAuthPage.evaluate(({ exp }) => {
+    const encode = value => btoa(JSON.stringify(value)).replace(/=/g, '').replace(/\\+/g, '-').replace(/\\//g, '_');
+    return 'header.' + encode({
+      iss: 'https://accounts.google.com',
+      aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com',
+      sub: 'task231-session-account',
+      exp,
+    }) + '.signature';
+  }, { exp: restoredAuthExp });
+  await restoredAuthPage.addInitScript(({ token, exp, openedAt }) => {
+    localStorage.removeItem('sky-garden-guest-mode-v1');
+    sessionStorage.setItem('sky-garden-auth-session-v1', JSON.stringify({
+      version: 1, idToken: token, currentSub: 'task231-session-account', exp, sessionOpenedAt: openedAt,
+    }));
+    window.__task231GoogleInitializeCalls = 0;
+    window.google = { accounts: { id: {
+      initialize() { window.__task231GoogleInitializeCalls += 1; },
+      renderButton() {},
+      prompt() {},
+      disableAutoSelect() {},
+    } } };
+  }, { token: restoredAuthToken, exp: restoredAuthExp, openedAt: restoredAuthOpenedAt });
+  const restoredAuthRequests = [];
+  await restoredAuthPage.route('https://diangarden-cloud-save.ry15968.workers.dev/api/save', async route => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: {
+        'access-control-allow-origin': '*',
+        'access-control-allow-methods': 'GET, PUT, OPTIONS',
+        'access-control-allow-headers': 'authorization,content-type,x-diangarden-opened-at',
+      } });
+      return;
+    }
+    restoredAuthRequests.push({
+      method: request.method(),
+      authorization: request.headers()['authorization'],
+      openedAt: request.headers()['x-diangarden-opened-at'],
+    });
+    await route.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' },
+      body: JSON.stringify({ status: 'not_found', revision: 0 }) });
+  });
+  await restoredAuthPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await restoredAuthPage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('雲端還沒有存檔'));
+  const restoredAuthState = await restoredAuthPage.evaluate(() => ({
+    session: JSON.parse(sessionStorage.getItem('sky-garden-auth-session-v1') || 'null'),
+    googleInitializeCalls: window.__task231GoogleInitializeCalls,
+    startupDialogOpen: Boolean(document.querySelector('#startup-garden-dialog')?.open),
+  }));
+  if (restoredAuthRequests.length !== 1 || restoredAuthRequests[0].method !== 'GET'
+    || restoredAuthRequests[0].authorization !== 'Bearer ' + restoredAuthToken
+    || restoredAuthRequests[0].openedAt !== String(restoredAuthOpenedAt)
+    || restoredAuthState.googleInitializeCalls !== 0 || restoredAuthState.startupDialogOpen
+    || restoredAuthState.session?.sessionOpenedAt !== restoredAuthOpenedAt) {
+    throw new Error('任務231：有效 sessionStorage 登入未恢復原雲端工作階段：' + JSON.stringify({ restoredAuthRequests, restoredAuthState }));
+  }
+  await restoredAuthPage.locator('#settings-toggle').click();
+  await restoredAuthPage.locator('#cloud-save-signout').click();
+  const signedOutAuthState = await restoredAuthPage.evaluate(() => ({
+    session: sessionStorage.getItem('sky-garden-auth-session-v1'),
+    signInVisible: !document.querySelector('#cloud-save-signin')?.hidden,
+    actionsHidden: document.querySelector('#cloud-save-actions')?.hidden,
+  }));
+  if (signedOutAuthState.session !== null || !signedOutAuthState.signInVisible || !signedOutAuthState.actionsHidden) {
+    throw new Error('任務231：登出未清除 sessionStorage 登入資訊或未關閉雲端操作：' + JSON.stringify(signedOutAuthState));
+  }
+  checks.push('任務231：恢復同分頁登入時保留 sessionOpenedAt，登出會清除短效憑證');
+  await restoredAuthPage.close();
+
+  const expiredAuthPage = await browser.newPage({ viewport: { width: 900, height: 900 } });
+  await expiredAuthPage.addInitScript(() => {
+    localStorage.removeItem('sky-garden-guest-mode-v1');
+    const exp = Math.floor(Date.now() / 1000) - 120;
+    const encode = value => btoa(JSON.stringify(value)).replace(/=/g, '').replace(/\\+/g, '-').replace(/\\//g, '_');
+    const token = 'header.' + encode({
+      iss: 'https://accounts.google.com',
+      aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com',
+      sub: 'task231-expired-account', exp,
+    }) + '.signature';
+    sessionStorage.setItem('sky-garden-auth-session-v1', JSON.stringify({
+      version: 1, idToken: token, currentSub: 'task231-expired-account', exp, sessionOpenedAt: Date.now(),
+    }));
+    window.__task231GoogleInitializeCalls = 0;
+    window.google = { accounts: { id: {
+      initialize() { window.__task231GoogleInitializeCalls += 1; },
+      renderButton() {},
+      prompt() {},
+      disableAutoSelect() {},
+    } } };
+  });
+  await expiredAuthPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await expiredAuthPage.waitForFunction(() => window.__task231GoogleInitializeCalls > 0);
+  const expiredAuthState = await expiredAuthPage.evaluate(() => ({
+    session: sessionStorage.getItem('sky-garden-auth-session-v1'),
+    googleInitializeCalls: window.__task231GoogleInitializeCalls,
+  }));
+  if (expiredAuthState.session !== null || expiredAuthState.googleInitializeCalls !== 1) {
+    throw new Error('任務231：過期的 sessionStorage 憑證未清除或未回到登入流程：' + JSON.stringify(expiredAuthState));
+  }
+  checks.push('任務231：過期登入憑證會清除並回到 Google 登入流程');
+  await expiredAuthPage.close();
+
   const staleSessionPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await staleSessionPage.addInitScript(() => {
     localStorage.removeItem('sky-garden-guest-mode-v1');
