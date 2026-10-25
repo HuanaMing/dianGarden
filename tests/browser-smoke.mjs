@@ -1050,7 +1050,7 @@ try {
     throw new Error('任務218：預設自動地塊分頁未正確顯示三塊自動地');
   }
   const desktopPlotGrid = await plotTabsPage.locator('#plot-selector').evaluate(el => ({
-    columns: getComputedStyle(el).gridTemplateColumns.trim().split(/\\s+/).length,
+    columns: getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length,
     overflowX: getComputedStyle(el).overflowX,
     scrollWidth: el.scrollWidth,
     clientWidth: el.clientWidth
@@ -1085,7 +1085,7 @@ try {
       const rect = node.getBoundingClientRect();
       return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
     });
-    return { columns: getComputedStyle(el).gridTemplateColumns.trim().split(/\\s+/).length, panel: { left: panel.left, right: panel.right }, cards };
+    return { columns: getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length, panel: { left: panel.left, right: panel.right }, cards };
   });
   if (mobilePlotLayout.columns !== 3 || mobilePlotLayout.cards.length !== 2 || mobilePlotLayout.cards.some(rect => rect.left < mobilePlotLayout.panel.left - 1 || rect.right > mobilePlotLayout.panel.right + 1)) {
     throw new Error('任務218：手機地塊分頁未能正常排列或超出清單：' + JSON.stringify(mobilePlotLayout));
