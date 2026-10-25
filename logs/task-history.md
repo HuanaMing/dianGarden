@@ -1698,3 +1698,11 @@
 - 任務221：展開介面入口改用 `assets/btn/展開.png`，涵蓋收合後恢復入口與快捷圓環入口。
 - 任務222：快捷圓環旋轉入口改用 `assets/btn/旋轉.png`，保留原有觸控／滑鼠旋轉流程。
 - 狀態：四份任務規格已建立於 `tasks/inbox/219.md` 至 `tasks/inbox/222.md`；下一步依序執行任務219。尚未修改遊戲程式，亦未觸發部署。
+
+
+## 2026-10-25 — 任務219：調整輕搖風鈴提示樣式
+
+- 結果：主畫面風鈴提示移至場景中下方置中，改用柔和綠色通知配色；主畫面及設定面板提示加入 32×32 的 `assets/btn/風鈴.png`。保留原文案、雲端存檔狀態與可存取按鈕名稱。
+- 修正：發現 `src/management-panels.css` 覆蓋了提示本體的 `pointer-events`，已修正為提示本體不攔截場景操作、風鈴按鈕仍可命中；設定面板提示維持面板內並使用一致配色。
+- 驗收：桌面與手機 Playwright 驗證提示位置、色彩、文字不裁切、圖示載入與尺寸、按鈕命中；設定面板圖示載入通過。GitHub Actions [run 40164617403 通過](https://github.com/HuanaMing/dianGarden/actions/runs/40164617403)。
+- 檔案：`src/index.html`、`src/styles.css`、`src/management-panels.css`、`tests/browser-smoke.mjs`、`tasks/done/219-cloud-session-wind-chime-notice.md`、`state/project.json`、`state/current-task.json`。
