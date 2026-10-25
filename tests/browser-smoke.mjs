@@ -1108,7 +1108,7 @@ try {
       { crop: null, plantedAt: null, manual: false, grassOnly: false, x: -2, z: 0, y: 0 },
       { crop: null, plantedAt: null, manual: false, grassOnly: false, x: -1, z: 0, y: 0 },
       { crop: null, plantedAt: null, manual: false, grassOnly: false, x: 0, z: 0, y: 0 },
-      { crop: null, plantedAt: null, manual: true, grassOnly: false, x: 1, z: 0, y: 0 },
+      { crop: null, plantedAt: null, manual: true, grassOnly: true, x: 1, z: 0, y: 0 },
       { crop: 0, plantedAt: now - 200000, manual: true, grassOnly: false, x: 2, z: 0, y: 0, plantHeight: 1, watered: false }
     ]
   });
@@ -1141,6 +1141,23 @@ try {
   await autoTab.click();
   const autoPlotIndexes = await plotTabsPage.locator('#plot-selector [data-plot-button]').evaluateAll(nodes => nodes.map(node => Number(node.dataset.plotButton)));
   if (JSON.stringify(autoPlotIndexes) !== JSON.stringify([0, 1, 2])) throw new Error('任務218：自動分頁顯示錯誤地塊：' + JSON.stringify(autoPlotIndexes));
+  await plotTabsPage.evaluate(() => window.onSkyPlotSelect?.(3));
+  await plotTabsPage.waitForFunction(() => document.querySelector('#farm-tab-manual')?.getAttribute('aria-selected') === 'true'
+    && document.querySelector('#plot-selector [data-plot-button="3"]')?.getAttribute('aria-pressed') === 'true');
+  await plotTabsPage.waitForTimeout(1100);
+  const selectedGrassIndex = await plotTabsPage.locator('#plot-selector [data-plot-button].is-selected').getAttribute('data-plot-button');
+  if (selectedGrassIndex !== '3' || await manualTab.getAttribute('aria-selected') !== 'true') {
+    throw new Error('任務223：選取草地後被自動地塊1覆蓋：' + JSON.stringify({ selectedGrassIndex, tab: await manualTab.getAttribute('aria-selected') }));
+  }
+  await plotTabsPage.evaluate(() => window.onSkyPlotSelect?.(4));
+  await plotTabsPage.waitForFunction(() => document.querySelector('#plot-selector [data-plot-button="4"]')?.getAttribute('aria-pressed') === 'true');
+  await plotTabsPage.waitForTimeout(1100);
+  const selectedManualIndex = await plotTabsPage.locator('#plot-selector [data-plot-button].is-selected').getAttribute('data-plot-button');
+  if (selectedManualIndex !== '4' || await manualTab.getAttribute('aria-selected') !== 'true') {
+    throw new Error('任務223：選取手動農地後被自動地塊1覆蓋：' + JSON.stringify({ selectedManualIndex, tab: await manualTab.getAttribute('aria-selected') }));
+  }
+  checks.push('任務223：草地與手動農地選取在週期重繪後仍保持正確');
+  await autoTab.click();
   await plotTabsPage.evaluate(() => {
     window.onSkyEmptySelect?.();
     window.dispatchEvent(new StorageEvent('storage', {
