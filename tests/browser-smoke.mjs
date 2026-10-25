@@ -20,7 +20,7 @@ if (indexHtml.includes('登入 Google 後，可在其他裝置找回同一座花
 }
 if (!cloudSaveSource.includes("const needsChoice = authenticated && statusNode.dataset.state === 'choice';")
   || !cloudSaveSource.includes("error.message === 'invalid_google_id_token' || error.message === 'authentication_required'")
-  || !cloudSaveSource.includes("if (expired) {\n      clearStoredAuthSession();\n      sessionOpenedAt = 0;\n      syncEnabled = false;\n      clearTimeout(pendingSyncTimer);")
+  || !cloudSaveSource.includes("if (expired) {\n      // A stale cloud-save owner is not an expired login. Keep the long-lived\n      // game session so a page reload can rotate its refresh token and recover.\n      if (refreshToken) {\n        try { sessionStorage.removeItem(AUTH_OPENED_AT_KEY); } catch (_) { /* Start a fresh save claim after reload. */ }\n      } else {\n        // Legacy Google-ID-token sessions cannot survive a reload safely.\n        clearStoredAuthSession();\n      }\n      sessionOpenedAt = 0;\n      syncEnabled = false;\n      clearTimeout(pendingSyncTimer);")
   || !cloudSaveSource.includes("signinNode.hidden = true;\n      if (startupSigninNode) startupSigninNode.hidden = true;")
   || !cloudSaveSource.includes("if (!(accessToken || legacyIdToken) || sessionExpired) return;")
   || !cloudSaveSource.includes("function refreshCurrentPage() {\n    window.location.href = window.location.href;\n  }")
