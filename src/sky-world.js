@@ -1243,7 +1243,7 @@
 
   let previousTime = 0;
   let powerSaveMode = false;
-  const renderingPauseReasons = new Set(['startup']);
+  const renderingPauseReasons = new Set(galleryMode ? [] : ['startup']);
   function isRenderingPaused() { return powerSaveMode || renderingPauseReasons.size > 0; }
   function setRenderingPaused(reason, paused) {
     if (typeof reason !== 'string' || !reason.trim()) return;
