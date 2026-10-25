@@ -223,6 +223,28 @@ try {
   await page.locator('#settings-toggle').click();
   if (!(await page.locator('#settings-panel').isVisible()) || await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) || await page.locator('#farm-management-panel').isVisible()) throw new Error('設定面板沒有關閉其他兩個面板');
   await page.locator('#settings-toggle').click();
+  const mobilePanelPage = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
+  await mobilePanelPage.addInitScript(() => localStorage.setItem('sky-garden-guest-mode-v1', 'true'));
+  await mobilePanelPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  const assertMobilePanelSize = async selector => {
+    await mobilePanelPage.waitForTimeout(120);
+    const bounds = await mobilePanelPage.locator(selector).evaluate(element => { const rect = element.getBoundingClientRect(); return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }; });
+    const viewport = mobilePanelPage.viewportSize();
+    if (!viewport || bounds.width > viewport.width - 26 || bounds.x < -1 || bounds.y < -1 || bounds.x + bounds.width > viewport.width + 1 || bounds.y + bounds.height > viewport.height + 1 || Math.abs(bounds.x + bounds.width / 2 - viewport.width / 2) > 2 || Math.abs(bounds.y + bounds.height / 2 - viewport.height / 2) > 2) {
+      throw new Error('手機管理面板尺寸超出視窗或未置中：' + selector + ' ' + JSON.stringify({ bounds, viewport }));
+    }
+  };
+  await mobilePanelPage.locator('#settings-toggle').click();
+  await assertMobilePanelSize('#settings-panel');
+  await mobilePanelPage.locator('#settings-toggle').click();
+  await mobilePanelPage.locator('#farm-management-toggle').click();
+  await assertMobilePanelSize('#farm-management-panel');
+  await mobilePanelPage.locator('#farm-management-close').click();
+  await mobilePanelPage.locator('#drone-panel-toggle').click();
+  await assertMobilePanelSize('#drone-jobs');
+  await mobilePanelPage.locator('#drone-panel-toggle').click();
+  await mobilePanelPage.close();
+  checks.push('任務207：桌面與手機管理面板均符合頭像對話框尺寸並置中');
   const wheelActions = await page.locator('#garden-menu-wheel [data-wheel-action]').evaluateAll(nodes => nodes.map(node => node.dataset.wheelAction));
   if (wheelActions.join(',') !== 'drone,farm,settings,catalog,collapse,rotate') throw new Error('快捷輪盤選項不完整或順序錯誤：' + wheelActions.join(','));
   const buttonAssetChecks = await page.locator('.wheel-button-image, .topbar-actions .btn-icon-image').evaluateAll(images => images.map(image => ({
