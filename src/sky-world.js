@@ -1068,13 +1068,13 @@
     // Keep clouds camera-relative, but much closer to eye height so they visibly sit lower in the sky.
     const clouds = [
       { x: -46, y: -24.0, z: -42, speed: 0.14, phase: 0.2, scale: 3.0 },
-      { x: -30, y: -21.0, z: -50, speed: 0.18, phase: 1.1, scale: 3.3 },
+      { x: -30, y: 3.0, z: -50, speed: 0.18, phase: 1.1, scale: 3.3 },
       { x: -14, y: -18.0, z: -44, speed: 0.12, phase: 2.2, scale: 3.6 },
-      { x: 4, y: -15.0, z: -52, speed: 0.16, phase: 3.3, scale: 3.9 },
+      { x: 4, y: 5.0, z: -52, speed: 0.16, phase: 3.3, scale: 3.9 },
       { x: 22, y: -22.0, z: -40, speed: 0.2, phase: 4.4, scale: 3.2 },
-      { x: 42, y: -20.0, z: -48, speed: 0.13, phase: 5.1, scale: 3.7 },
-      { x: 50, y: -16.0, z: -20, speed: 0.17, phase: 0.8, scale: 3.4 },
-      { x: -48, y: -13.0, z: -12, speed: 0.15, phase: 2.7, scale: 3.8 },
+      { x: 42, y: 2.0, z: -48, speed: 0.13, phase: 5.1, scale: 3.7 },
+      { x: 50, y: 4.0, z: -20, speed: 0.17, phase: 0.8, scale: 3.4 },
+      { x: -48, y: 1.0, z: -12, speed: 0.15, phase: 2.7, scale: 3.8 },
       { x: -26, y: -10.0, z: 8, speed: 0.19, phase: 4, scale: 3.1 },
       { x: -5, y: -8.0, z: 22, speed: 0.14, phase: 5.5, scale: 3.5 },
       { x: 18, y: 6.0, z: 40, speed: 0.16, phase: 1.6, scale: 4.0 },
