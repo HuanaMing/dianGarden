@@ -62,6 +62,7 @@
   async function forceRefresh() {
     if (isRefreshing) return;
     isRefreshing = true;
+    window.skyWorld?.setRenderingPaused?.('version-update', true);
     if (forceUpdateButton) {
       forceUpdateButton.disabled = true;
       forceUpdateButton.textContent = '正在更新…';
@@ -94,6 +95,7 @@
       window.location.replace(pageUrl.href);
     } catch (_) {
       isRefreshing = false;
+      window.skyWorld?.setRenderingPaused?.('version-update', false);
       if (forceUpdateButton) {
         forceUpdateButton.disabled = false;
         forceUpdateButton.textContent = '立即更新';
