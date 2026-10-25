@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "等待任務236 GitHub Actions 瀏覽器驗收結果；依結果修正並準備使用者實機驗收。",
+  "nextAction": "任務236的 GitHub Actions Playwright 桌面／手機瀏覽器回歸已通過；等待使用者實機驗收巡航高度、避障與多機高度協調效果。",
   "taskFile": "tasks/active/236-drone-minimum-clear-cruise-height.md",
-  "result": "src/sky-world.js 已新增巡航高度計算、障礙物高度檢查與水平巡航高度預約／釋放。GitHub Actions 瀏覽器驗收執行中；未手動觸發部署，尚未完成人工驗收。"
+  "result": "src/sky-world.js 已新增巡航高度計算、地塊／草地／植物高度檢查與水平巡航高度預約／釋放。GitHub Actions run 40199664310 通過；Pages push 自動工作流程 run 40199664355 成功，未手動觸發部署。尚未完成人工實機驗收。"
 }
