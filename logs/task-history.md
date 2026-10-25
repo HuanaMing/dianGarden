@@ -1659,3 +1659,12 @@
 - 任務204：Google 登入成功後隱藏登入入口，明確登出後恢復入口。
 - Playwright 瀏覽器回歸驗收通過：[run 40145259395](https://github.com/HuanaMing/dianGarden/actions/runs/40145259395)；GitHub Pages 部署工作流程成功：[run 40145153851](https://github.com/HuanaMing/dianGarden/actions/runs/40145153851)。
 - 三份任務文件已從 `tasks/active/` 正式移至 `tasks/done/`，完成版已驗證後才移除 active 原檔。
+
+
+## 2026-10-25 — 任務210、211完成；任務212開始
+
+- 任務210：固定無人機管理、農地管理、設定及頭像介面的字級；新增桌面與手機 Playwright 字級穩定性驗收。瀏覽器驗收通過：[run 40151680717](https://github.com/HuanaMing/dianGarden/actions/runs/40151680717)，Pages 部署通過：[run 40151618826](https://github.com/HuanaMing/dianGarden/actions/runs/40151618826)。
+- 任務211：模擬 `stale_session` 後隱藏 Google 登入入口、停止雲端讀寫、顯示重新整理入口，並將自動儲存狀態改為「暫停同步雲端進度」；確認本機存檔仍可寫入。Playwright 驗收通過：[run 40152399816](https://github.com/HuanaMing/dianGarden/actions/runs/40152399816)，Pages 部署通過：[run 40152399814](https://github.com/HuanaMing/dianGarden/actions/runs/40152399814)。
+- 兩項任務完成版均已建立、驗證後歸檔至 `tasks/done/`。
+- 任務212已移至 `tasks/active/`，開始統一主畫面與設定頁面的蒲公英雙行提示及「輕搖風鈴」按鈕。
+- 任務109的 Xcode／付費雲端 Mac 批准仍維持待處理。
