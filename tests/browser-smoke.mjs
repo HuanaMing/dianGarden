@@ -347,6 +347,15 @@ try {
     if (!(await page.locator(selector).isVisible())) throw new Error('同步分頁缺少版本、存檔或重置控制：' + selector);
   }
   if ((await page.locator('#current-version').innerText()).trim() === '' || (await page.locator('#latest-version').innerText()).trim() === '') throw new Error('設定面板版本號沒有顯示內容');
+  const saveStatusPlacement = await page.locator('#save-status').evaluate(element => ({
+    insideCloudSave: Boolean(element.closest('.cloud-save-settings')),
+    text: element.textContent.trim(),
+    warning: element.classList.contains('save-warning'),
+  }));
+  if (!saveStatusPlacement.insideCloudSave || saveStatusPlacement.text !== '進度會自動儲存' || await page.locator('#settings-sync > #save-status').count() !== 0) {
+    throw new Error('自動儲存提示沒有移入跨裝置存檔區，或一般狀態文案異常：' + JSON.stringify(saveStatusPlacement));
+  }
+  checks.push('任務209：自動儲存提示位於跨裝置存檔區且只顯示一次');
   const displayedVersions = await page.evaluate(() => ({ current: document.querySelector('#current-version')?.textContent?.trim(), latest: document.querySelector('#latest-version')?.textContent?.trim() }));
   if (!/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.current || '') || !/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.latest || '')) throw new Error('設定面板版本號未使用每日更新序號格式：' + JSON.stringify(displayedVersions));
   checks.push('設定同步分頁顯示版本資訊、存檔與重置進度');
