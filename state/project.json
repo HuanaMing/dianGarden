@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 205,
-  "nextAction": "依序執行任務205～209。當前任務205：修復無人機管理工作佇列消失，等待瀏覽器自動驗收結果。",
+  "activeTask": null,
+  "nextAction": "任務205～209已依序完成並歸檔，Playwright瀏覽器驗收及相關Pages部署均通過。等待使用者提出下一項任務。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
