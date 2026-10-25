@@ -160,7 +160,7 @@
       : Number.isInteger(plot.crop) && plot.crop >= 0 && plot.crop < crops.length && Number.isFinite(plot.plantedAt) && plot.plantedAt >= 0)
       && (plot.capacityLevel === undefined || (Number.isSafeInteger(plot.capacityLevel) && plot.capacityLevel >= 1))
       && (plot.nextPlantPosition === undefined || (Number.isSafeInteger(plot.nextPlantPosition) && plot.nextPlantPosition >= 1))
-      && (plot.plants === undefined || (plot.manual === true && Array.isArray(plot.plants) && plot.plants.length <= 100
+      && (plot.plants === undefined || (plot.manual === true && Array.isArray(plot.plants) 
         && plot.plants.every((plant) => plant && Number.isInteger(plant.crop) && plant.crop >= 0 && plant.crop < crops.length
           && Number.isFinite(plant.plantedAt) && plant.plantedAt >= 0
           && (plant.positionIndex === undefined || (Number.isSafeInteger(plant.positionIndex) && plant.positionIndex >= 1))
@@ -512,7 +512,7 @@
       const heading = document.createElement('div');
       heading.className = 'manual-plant-card-heading';
       const title = document.createElement('strong');
-      title.textContent = `第 ${plantIndex + 1} 株 · ${crop.name}${ready ? '（已成熟）' : ''}`;
+      title.textContent = `第 ${plant.positionIndex || plantIndex + 1} 株 · ${crop.name}${ready ? '（已成熟）' : ''}`;
       const status = document.createElement('small');
       status.textContent = ready ? `可收成，預計獲得 ${getHarvestReward(crop)} 金幣` : `還需 ${remaining} 秒成熟`;
       heading.append(title, status);
