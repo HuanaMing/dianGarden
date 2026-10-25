@@ -1588,7 +1588,15 @@ try {
   await manualUpgradePage.reload({ waitUntil: 'networkidle', timeout: 30000 });
   const persistedUpgrade = await manualUpgradePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots[3]);
   if (persistedUpgrade.capacityLevel !== 4 || persistedUpgrade.plants.length !== 4) {
-    throw new Error('任務229：升級等級／容量在重新載入後未保留');
+    throw new Error('任務229：升級等級／容量在重新載入後未保留：' + JSON.stringify({
+      capacityLevel: persistedUpgrade.capacityLevel,
+      plantCount: persistedUpgrade.plants?.length,
+      crop: persistedUpgrade.crop,
+      plantedAt: persistedUpgrade.plantedAt,
+      manual: persistedUpgrade.manual,
+      grassOnly: persistedUpgrade.grassOnly,
+      saveCoins: (await manualUpgradePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')))).coins,
+    }));
   }
   checks.push('任務229：升級價格40／106／186、連續付款、容量滿載限制、自動地塊隔離與重載持久性通過');
   await manualUpgradePage.close();
