@@ -1,12 +1,12 @@
 {
-  "name": "任務237：WebGL 動態光照與夜間照明",
+  "name": "任務238：夜晚無人機作為微弱的光源照亮周圍",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "已依使用者回饋微調任務237光照參數，降低方向光並提高柔和環境補光；等待使用者再次實機驗收花色自然度、日夜明暗及黎明／黃昏色調。",
-  "taskFile": "tasks/active/237-dynamic-world-lighting.md",
-  "result": "src/sky-world.js 動態光照已完成首輪實作並通過 Playwright 瀏覽器回歸。依使用者回饋花朵略帶金屬感，已追加小幅 shader 參數微調：日間方向光 0.78→0.38、雨天 0.48→0.3，環境光改為 0.12 + daylight × 0.4，黎明／黃昏色偏柔和。最新微調尚待自動回歸與使用者實機視覺驗收。"
+  "nextAction": "任務238的局部暖色光照已提交並通過 GitHub Actions Playwright 瀏覽器回歸；等待使用者實機驗收夜間照明強度與自然度。",
+  "taskFile": "tasks/active/238-drone-night-light.md",
+  "result": "src/sky-world.js 已加入最多 8 台無人機的夜間局部暖色光照，依位置、部署狀態、電量與日照進度更新；光照半徑約 3.2 個世界單位。GitHub Actions 瀏覽器自動驗收成功（run 40202984299），尚待使用者實機視覺驗收。"
 }
