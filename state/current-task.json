@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務239依使用者回饋重做完成初版：日月幾何已移除，雲層移至相機常規縮放距離之外並加大；等待 Playwright 瀏覽器自動驗收與 Pages 部署結果，再請使用者實機驗收。",
+  "nextAction": "Playwright 瀏覽器驗收 run 40211548277 與 GitHub Pages 部署 run 40211527905 均成功；等待使用者實機驗收遠景雲層可見度、空島前後層次與飄動觀感。",
   "taskFile": "tasks/active/239-world-space-sky.md",
-  "result": "src/sky-world.js 已移除太陽、月亮幾何模型；8 組雲層移至世界座標遠景高空（超出常規最大縮放距離 24），尺寸係數提高至 2.5–3.1，透明度提高。tests/browser-smoke.mjs 已更新規格斷言。重做版本尚待自動測試與使用者實機驗收。"
+  "result": "src/sky-world.js 已移除太陽、月亮幾何模型；8 組雲層移至世界座標遠景高空（常規最大縮放距離 24 之外），尺寸係數提高至 2.5–3.1，透明度提高。tests/browser-smoke.mjs 已更新並通過。Pages 部署成功。尚待使用者實機視覺驗收。"
 }
