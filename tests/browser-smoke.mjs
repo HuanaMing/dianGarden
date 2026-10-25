@@ -238,7 +238,7 @@ try {
     const panelRect = panel.getBoundingClientRect();
     const cardRect = card?.getBoundingClientRect();
     const gridTemplateColumns = getComputedStyle(fleet).gridTemplateColumns;
-    const columns = gridTemplateColumns.trim().split(/\\s+/).length;
+    const columns = gridTemplateColumns.trim().split(/\s+/).length;
     const initialPanel = { x: panelRect.x, y: panelRect.y, width: panelRect.width, height: panelRect.height };
     for (let index = 0; index < 30; index += 1) {
       const item = document.createElement('li');
