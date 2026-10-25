@@ -41,3 +41,54 @@
     padding:12px!important;
   }
 }
+/* 任務210：固定四種管理介面的字級；長文以換行及面板捲動處理。 */
+.farm-management-panel,
+.settings-panel,
+.drone-jobs,
+.avatar-dialog{
+  font-size:12px!important;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+.farm-management-heading strong,
+.settings-panel>h2{font-size:16px!important;line-height:1.4}
+.drone-jobs>strong{font-size:14px!important;line-height:1.45}
+.drone-jobs li,
+.drone-fleet-item{font-size:12px!important;line-height:1.5;overflow-wrap:anywhere}
+.drone-jobs button,
+.drone-fleet-item button{font-size:12px!important;line-height:1.4;white-space:normal;overflow-wrap:anywhere}
+.farm-management-panel .world-plot-button{font-size:12px!important}
+.farm-management-panel .world-plot-number,
+.farm-management-panel .world-plot-state{font-size:11px!important;line-height:1.4;overflow-wrap:anywhere}
+.farm-management-panel .land-purchase-actions button{font-size:12px!important;line-height:1.4;white-space:normal;overflow-wrap:anywhere}
+.settings-panel .settings-tab{font-size:13px!important;line-height:1.4}
+.settings-panel .version-settings h3,
+.settings-panel .avatar-settings h3,
+.settings-panel .cloud-save-settings h3,
+.settings-panel .operation-help h3{font-size:14px!important;line-height:1.4}
+.settings-panel .version-details dt,
+.settings-panel .version-details dd,
+.settings-panel .version-check-status,
+.settings-panel .cloud-save-description,
+.settings-panel .cloud-save-note,
+.settings-panel .cloud-save-actions button,
+.settings-panel .operation-help p,
+.settings-panel .avatar-settings label,
+.settings-panel .avatar-settings .avatar-flower-label,
+.settings-panel .save-status{font-size:12px!important;line-height:1.5;overflow-wrap:anywhere}
+.settings-panel .camera-mode,
+.settings-panel .reset-progress-button,
+.settings-panel .power-save-toggle,
+.settings-panel .force-update-button{font-size:12px!important;line-height:1.4;white-space:normal;overflow-wrap:anywhere}
+.settings-panel .avatar-settings select{font-size:13px!important;line-height:1.4}
+.settings-panel .avatar-flower-option,
+.settings-panel .avatar-flower-name{font-size:11px!important;line-height:1.3;overflow-wrap:anywhere}
+.avatar-dialog .seed-dialog-heading h2{font-size:20px!important;line-height:1.35}
+.avatar-dialog .avatar-settings h3{font-size:14px!important;line-height:1.4}
+.avatar-dialog .avatar-settings label,
+.avatar-dialog .avatar-flower-label{font-size:12px!important;line-height:1.4}
+.avatar-dialog .avatar-settings select{font-size:13px!important;line-height:1.4}
+.avatar-dialog .avatar-current-flower,
+.avatar-dialog .avatar-dialog-note{font-size:12px!important;line-height:1.5;overflow-wrap:anywhere}
+.avatar-dialog .avatar-flower-option,
+.avatar-dialog .avatar-flower-name{font-size:11px!important;line-height:1.3;overflow-wrap:anywhere}
