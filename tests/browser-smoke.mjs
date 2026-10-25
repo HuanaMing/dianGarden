@@ -131,7 +131,7 @@ checks.push('任務226：圖鑑模型在一般與全螢幕狀態持續繪製，�
 await encyclopediaPage.setViewportSize({ width: 390, height: 844 });
 const pickerHeading = encyclopediaPage.locator('#flower-picker-toggle');
 const pickerIndicator = encyclopediaPage.locator('.flower-picker-collapse-indicator');
-if (!(await pickerIndicator.getAttribute('src'))?.endsWith('assets/btn/展開.png')
+if (!(await pickerIndicator.getAttribute('src'))?.endsWith('assets/btn/收合.png')
   || await pickerHeading.getAttribute('aria-expanded') !== 'false') {
   throw new Error('手機圖鑑收合狀態應顯示展開像素圖及 aria-expanded=false');
 }
@@ -160,7 +160,7 @@ await dragHeading(-120);
 if (!(await encyclopediaPage.locator('.encyclopedia-layout').evaluate(element => element.classList.contains('is-picker-expanded')))) {
   throw new Error('手機選花標題上拉後未展開面板');
 }
-if (!(await pickerIndicator.getAttribute('src'))?.endsWith('assets/btn/收合.png')
+if (!(await pickerIndicator.getAttribute('src'))?.endsWith('assets/btn/展開.png')
   || await pickerHeading.getAttribute('aria-expanded') !== 'true') {
   throw new Error('手機圖鑑展開狀態應顯示收合像素圖及 aria-expanded=true');
 }
@@ -173,14 +173,14 @@ await dragHeading(120);
 if (await encyclopediaPage.locator('.encyclopedia-layout').evaluate(element => element.classList.contains('is-picker-expanded'))) {
   throw new Error('手機選花標題下拉後未恢復原始排版');
 }
-if (!(await pickerIndicator.getAttribute('src'))?.endsWith('assets/btn/展開.png')) {
+if (!(await pickerIndicator.getAttribute('src'))?.endsWith('assets/btn/收合.png')) {
   throw new Error('手機圖鑑下拉收合後未切回展開像素圖');
 }
 await pickerHeading.click();
 if (!(await encyclopediaPage.locator('.encyclopedia-layout').evaluate(element => element.classList.contains('is-picker-expanded')))) {
   throw new Error('手機選花標題點擊無法展開面板');
 }
-if (!(await pickerIndicator.getAttribute('src'))?.endsWith('assets/btn/收合.png')) {
+if (!(await pickerIndicator.getAttribute('src'))?.endsWith('assets/btn/展開.png')) {
   throw new Error('手機圖鑑點擊展開後未切換收合像素圖');
 }
 await pickerHeading.click();
