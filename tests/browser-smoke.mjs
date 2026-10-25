@@ -1141,6 +1141,20 @@ try {
   await autoTab.click();
   const autoPlotIndexes = await plotTabsPage.locator('#plot-selector [data-plot-button]').evaluateAll(nodes => nodes.map(node => Number(node.dataset.plotButton)));
   if (JSON.stringify(autoPlotIndexes) !== JSON.stringify([0, 1, 2])) throw new Error('任務218：自動分頁顯示錯誤地塊：' + JSON.stringify(autoPlotIndexes));
+  await plotTabsPage.evaluate(() => {
+    window.onSkyEmptySelect?.();
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'sky-garden-guest-auto-crops-v1',
+      newValue: '[0]'
+    }));
+  });
+  await plotTabsPage.waitForTimeout(1100);
+  const selectedPlotsAfterEmptyClick = await plotTabsPage.locator('#plot-selector [data-plot-button].is-selected').count();
+  const pressedPlotsAfterEmptyClick = await plotTabsPage.locator('#plot-selector [data-plot-button][aria-pressed="true"]').count();
+  if (selectedPlotsAfterEmptyClick !== 0 || pressedPlotsAfterEmptyClick !== 0) {
+    throw new Error('任務223：取消場景地塊選取後，重新繪製又選取了自動地塊：' + JSON.stringify({ selectedPlotsAfterEmptyClick, pressedPlotsAfterEmptyClick }));
+  }
+  checks.push('任務223：取消場景選取後，週期重繪不會重新選取自動地塊1');
   const plotsAfterTabs = await plotTabsPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots.map(({ manual, x, z, crop }) => ({ manual, x, z, crop })));
   if (JSON.stringify(plotsAfterTabs) !== JSON.stringify(plotsBeforeTabs)) throw new Error('任務218：切換分頁改動了存檔地塊資料');
   checks.push('任務218：桌面手動／自動分頁分類、五欄網格與存檔不變通過');
