@@ -30,4 +30,5 @@
 - `src/game.js`：新增共用自動頭像索引計算，讓頭像圖片、花種選中狀態及狀態文字使用同一個結果；自動模式不再隱藏花種清單，仍禁止點選；花種選項新增可見名稱。
 - `src/styles.css`：新增自動選中高亮、標記及狀態訊息樣式。
 - `tests/browser-smoke.mjs`：更新驗收，檢查自動模式仍顯示11種花、唯一自動選中項、選中項與實際頭像一致，且切回自動模式時狀態文字更新。
-- 初次回歸測試 run [40147826294](https://github.com/HuanaMing/dianGarden/actions/runs/40147826294) 通過；之後又修正每個花種的無障礙標籤，最新程式提交的驗收仍待執行。
+- 初次回歸測試 run [40147826294](https://github.com/HuanaMing/dianGarden/actions/runs/40147826294) 通過；之後修正每個花種的無障礙標籤。
+- 最終 Playwright 瀏覽器驗收通過：[run 40147878582](https://github.com/HuanaMing/dianGarden/actions/runs/40147878582)；Pages 部署成功：[run 40147878628](https://github.com/HuanaMing/dianGarden/actions/runs/40147878628)。
