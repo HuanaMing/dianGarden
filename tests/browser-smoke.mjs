@@ -208,7 +208,7 @@ try {
   if (await hudCollapseIcon.getAttribute('src') !== 'assets/btn/收合.png' || !(await hudCollapseIcon.evaluate(image => image.complete && image.naturalWidth > 0))) throw new Error('頂部收合按鈕未載入指定圖示');
   await page.locator('#hud-toggle').click();
   if (!(await page.locator('#hud-toggle').isVisible()) || await page.locator('#hud-toggle').getAttribute('aria-expanded') !== 'false'
-    || await hudCollapseIcon.getAttribute('src') !== 'assets/btn/收合.png') throw new Error('收合介面後沒有保留正確圖示的可復原按鈕');
+    || await hudCollapseIcon.getAttribute('src') !== 'assets/btn/展開.png') throw new Error('收合介面後沒有顯示正確展開圖示的可復原按鈕');
   await page.locator('#hud-toggle').click();
   if (await page.locator('#hud-toggle').getAttribute('aria-expanded') !== 'true' || await hudCollapseIcon.getAttribute('src') !== 'assets/btn/收合.png') throw new Error('再次點擊收合按鈕未恢復介面或圖示遺失');
   checks.push('任務220：桌面頂部收合按鈕圖示載入正確，收合／恢復行為及 aria-expanded 正常');
@@ -330,7 +330,7 @@ try {
   const mobileHudIcon = mobilePanelPage.locator('#hud-toggle img.btn-icon-image');
   if (await mobileHudIcon.getAttribute('src') !== 'assets/btn/收合.png' || !(await mobileHudIcon.evaluate(image => image.complete && image.naturalWidth > 0))) throw new Error('任務220：手機頂部收合圖示未正確載入');
   await mobilePanelPage.locator('#hud-toggle').click();
-  if (await mobilePanelPage.locator('#hud-toggle').getAttribute('aria-expanded') !== 'false') throw new Error('任務220：手機收合介面操作失效');
+  if (await mobilePanelPage.locator('#hud-toggle').getAttribute('aria-expanded') !== 'false' || await mobileHudIcon.getAttribute('src') !== 'assets/btn/展開.png') throw new Error('任務221：手機收合後未顯示展開圖示');
   await mobilePanelPage.locator('#hud-toggle').click();
   if (await mobilePanelPage.locator('#hud-toggle').getAttribute('aria-expanded') !== 'true'
     || await mobileHudIcon.getAttribute('src') !== 'assets/btn/收合.png') throw new Error('任務220：手機恢復介面操作失效或收合圖示遺失');
@@ -421,8 +421,9 @@ try {
     'assets/btn/設定.png': 2,
     'assets/btn/圖鑑.png': 2,
     'assets/btn/收合.png': 2,
+    'assets/btn/旋轉.png': 1,
   };
-  if (buttonAssetChecks.length !== 10 || buttonAssetChecks.some(image => !image.loaded)
+  if (buttonAssetChecks.length !== 11 || buttonAssetChecks.some(image => !image.loaded)
     || Object.entries(expectedButtonAssetCounts).some(([src, count]) => buttonAssetChecks.filter(image => image.src === src).length !== count)) {
     throw new Error('輪盤及頂部介面的按鈕素材數量須符合目前實際配置且全部成功載入：' + JSON.stringify(buttonAssetChecks));
   }
@@ -447,13 +448,15 @@ try {
     filter: getComputedStyle(node.querySelector('img')).filter,
     loaded: node.querySelector('img').complete && node.querySelector('img').naturalWidth > 0,
   })));
-  if (wheelOverlayStyle.length !== 5 || wheelOverlayStyle.some(icon => icon.clipPath !== 'none' || icon.pointerEvents !== 'none' || icon.zIndex < 1
+  if (wheelOverlayStyle.length !== 6 || wheelOverlayStyle.some(icon => icon.clipPath !== 'none' || icon.pointerEvents !== 'none' || icon.zIndex < 1
     || icon.imageWidth !== 35 || icon.imageHeight !== 35 || !icon.filter.includes('drop-shadow') || !icon.filter.includes('rgb(255, 255, 255)') || !icon.loaded)
     || wheelOverlayStyle.filter(icon => icon.action === 'collapse').length !== 1
-    || wheelOverlayStyle.find(icon => icon.action === 'collapse')?.src !== 'assets/btn/收合.png') {
+    || wheelOverlayStyle.find(icon => icon.action === 'collapse')?.src !== 'assets/btn/收合.png'
+    || wheelOverlayStyle.filter(icon => icon.action === 'rotate').length !== 1
+    || wheelOverlayStyle.find(icon => icon.action === 'rotate')?.src !== 'assets/btn/旋轉.png') {
     throw new Error('桌面版五個圖示需位於不受扇形裁切的獨立覆蓋層、尺寸35px並具白色外框，收合入口使用指定素材：' + JSON.stringify(wheelOverlayStyle));
   }
-  checks.push('任務220：快捷圓環收合入口使用已載入的35px收合圖示，五個圖示皆位於裁切層外並具白框');
+  checks.push('任務220／222：快捷圓環收合與旋轉入口使用指定且已載入的35px圖示，六個圖示皆位於裁切層外並具白框');
   if (await page.locator('#garden-menu-wheel .garden-menu-wreath').getAttribute('src') !== 'assets/wreath.webp') throw new Error('快捷輪盤未沿用花草環素材');
   const wheelGeometry = await page.evaluate(async () => {
     const wheel = document.querySelector('#garden-menu-wheel');
@@ -890,15 +893,16 @@ try {
     const wheel = document.querySelector('#garden-menu-wheel').getBoundingClientRect();
     const dx = rect.left + rect.width / 2 - (wheel.left + wheel.width / 2);
     const dy = rect.top + rect.height / 2 - (wheel.top + wheel.height / 2);
-    return { action: node.dataset.wheelIcon, width: parseFloat(getComputedStyle(image).width), height: parseFloat(getComputedStyle(image).height), radius: Math.hypot(dx, dy), loaded: image.complete && image.naturalWidth > 0 };
+    return { action: node.dataset.wheelIcon, src: image.getAttribute('src'), width: parseFloat(getComputedStyle(image).width), height: parseFloat(getComputedStyle(image).height), radius: Math.hypot(dx, dy), loaded: image.complete && image.naturalWidth > 0 };
   }));
-  if (mobileWheelIcons.length !== 4 || mobileWheelIcons.some(icon => icon.width !== 32 || icon.height !== 32 || Math.abs(icon.radius - 100) > 2 || !icon.loaded)) {
-    throw new Error('手機版四個圖示需為32px並沿圓環外側定位：' + JSON.stringify(mobileWheelIcons));
+  if (mobileWheelIcons.length !== 6 || mobileWheelIcons.some(icon => icon.width !== 32 || icon.height !== 32 || Math.abs(icon.radius - 100) > 2 || !icon.loaded)
+    || mobileWheelIcons.find(icon => icon.action === 'rotate')?.src !== 'assets/btn/旋轉.png') {
+    throw new Error('手機版六個圖示需為32px並沿圓環外側定位，旋轉入口使用指定素材：' + JSON.stringify(mobileWheelIcons));
   }
   await page.screenshot({ path: `${outputDir}/garden-wheel-mobile.png`, fullPage: true });
   await page.keyboard.press('Escape');
   if (await page.locator('#garden-menu-wheel').isVisible()) throw new Error('手機版快捷輪盤無法透過 Escape 關閉');
-  checks.push('手機版四個圖示為32px，徑向距離100px且素材載入正常；輪盤可正常關閉');
+  checks.push('任務222：手機版六個圖示為32px，徑向距離100px且素材載入正常；旋轉入口使用指定素材，輪盤可正常關閉');
   await page.locator('#farm-management-toggle').click();
   await page.locator('[data-plot-button="0"]').click();
   const deleteButtonBounds = await page.locator('#farm-dialog [data-delete-plot]').boundingBox();
