@@ -22,6 +22,6 @@
 
 - 已修改 `src/sky-world.js`：新增水平線段與障礙物距離判定，考慮地塊／草地高度與花卉模型高度，並為同時巡航的無人機分配不同的最低可用高度。
 - 新任務會計算並預約巡航高度；動畫先垂直爬升，再水平移動。水平段結束時釋放高度預約，後續新任務重新計算。
-- GitHub Actions 瀏覽器驗收正在執行： https://github.com/HuanaMing/dianGarden/actions/runs/40199664310
-- GitHub Pages 的 push 自動工作流程已成功完成（run 40199664355）；未手動觸發部署，也未進行人工瀏覽器驗收。
-- 尚待確認瀏覽器驗收結果與必要回歸修正。
+- GitHub Actions Playwright 瀏覽器驗收通過（run 40199664310）：Cloudflare Worker smoke tests、靜態伺服器啟動及桌面／手機瀏覽器回歸均成功。
+- GitHub Pages 的 push 自動工作流程已成功完成（run 40199664355）；未手動觸發部署。
+- 尚未進行人工實機驗收；Playwright 通過不代表已直接驗證每種障礙排列下的巡航高度視覺效果。等待使用者驗收。
