@@ -1,12 +1,12 @@
 {
-  "name": "任務239重做：遠景雲層與移除日月幾何",
+  "name": "任務239重做：降低雲層並固定相機相對位置",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "Playwright 瀏覽器驗收 run 40211548277 與 GitHub Pages 部署 run 40211527905 均成功；等待使用者實機驗收遠景雲層可見度、空島前後層次與飄動觀感。",
+  "nextAction": "最新雲層程式已部署（Pages run 40212328657 成功）；Playwright run 40212328673 因測試仍要求舊版遠景距離／尺寸斷言而失敗。更新 tests/browser-smoke.mjs 遭安全檢查阻擋並已依規範停止重試；需在可安全修改測試後更新斷言，再重新驗收。",
   "taskFile": "tasks/active/239-world-space-sky.md",
-  "result": "src/sky-world.js 已移除太陽、月亮幾何模型；8 組雲層移至世界座標遠景高空（常規最大縮放距離 24 之外），尺寸係數提高至 2.5–3.1，透明度提高。tests/browser-smoke.mjs 已更新並通過。Pages 部署成功。尚待使用者實機視覺驗收。"
+  "result": "src/sky-world.js commit a85b85e70e2276c37b1673ef9200b6c3e64656f7：雲層垂直偏移降低 50%，每幀依相機 eye 位置維持固定相對偏移，尺寸係數改為 3.7–4.6，允許遮擋空島。Pages 部署成功。瀏覽器自動驗收未通過，原因是舊測試斷言尚未更新；未完成實機驗收。"
 }
