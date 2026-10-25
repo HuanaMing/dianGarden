@@ -227,8 +227,21 @@ try {
   await page.locator('#farm-management-toggle').click();
   if (!(await page.locator('#farm-management-panel').isVisible()) || await page.locator('#settings-panel').isVisible() || await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open'))) throw new Error('農地管理面板沒有關閉其他兩個面板');
   await assertManagementPanelSize('#farm-management-panel');
+  await page.locator('.farm-management-heading strong').click();
+  if (!(await page.locator('#farm-management-panel').isVisible())) throw new Error('點擊農地管理面板內部未能維持開啟狀態');
+  await page.mouse.click(20, 500);
+  if (await page.locator('#farm-management-panel').isVisible() || await page.locator('#farm-management-toggle').getAttribute('aria-expanded') !== 'false') throw new Error('點擊面板外空白處未關閉農地管理，或 aria-expanded 未同步');
+  await page.locator('#farm-management-toggle').click();
+  if (!(await page.locator('#farm-management-panel').isVisible())) throw new Error('農地管理面板在外部點擊關閉後無法重新開啟');
   await page.locator('#drone-panel-toggle').click();
   if (!(await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) ) || await page.locator('#settings-panel').isVisible() || await page.locator('#farm-management-panel').isVisible()) throw new Error('無人機面板沒有關閉其他兩個面板');
+  await assertManagementPanelSize('#drone-jobs');
+  await page.locator('#job-status').click();
+  if (!(await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')))) throw new Error('點擊無人機面板內部後面板意外關閉');
+  await page.mouse.click(20, 500);
+  if (await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) || await page.locator('#drone-panel-toggle').getAttribute('aria-expanded') !== 'false') throw new Error('點擊面板外空白處未關閉無人機管理，或 aria-expanded 未同步');
+  await page.locator('#drone-panel-toggle').click();
+  if (!(await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')))) throw new Error('無人機管理面板在外部點擊關閉後無法重新開啟');
   await assertManagementPanelSize('#drone-jobs');
   const droneLayoutCheck = await page.evaluate(() => {
     const panel = document.querySelector('#drone-jobs');
@@ -290,9 +303,19 @@ try {
   await mobilePanelPage.locator('#settings-toggle').click();
   await mobilePanelPage.locator('#farm-management-toggle').click();
   await assertMobilePanelSize('#farm-management-panel');
+  await mobilePanelPage.locator('.farm-management-heading strong').click();
+  if (!(await mobilePanelPage.locator('#farm-management-panel').isVisible())) throw new Error('手機點擊農地管理面板內部後面板意外關閉');
+  await mobilePanelPage.mouse.click(5, 400);
+  if (await mobilePanelPage.locator('#farm-management-panel').isVisible() || await mobilePanelPage.locator('#farm-management-toggle').getAttribute('aria-expanded') !== 'false') throw new Error('手機點擊面板外空白處未關閉農地管理，或 aria-expanded 未同步');
+  await mobilePanelPage.locator('#farm-management-toggle').click();
   await mobilePanelPage.locator('#farm-management-close').click();
   await mobilePanelPage.locator('#drone-panel-toggle').click();
   await assertMobilePanelSize('#drone-jobs');
+  await mobilePanelPage.locator('#job-status').click();
+  if (!(await mobilePanelPage.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')))) throw new Error('手機點擊無人機面板內部後面板意外關閉');
+  await mobilePanelPage.mouse.click(5, 400);
+  if (await mobilePanelPage.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) || await mobilePanelPage.locator('#drone-panel-toggle').getAttribute('aria-expanded') !== 'false') throw new Error('手機點擊面板外空白處未關閉無人機管理，或 aria-expanded 未同步');
+  await mobilePanelPage.locator('#drone-panel-toggle').click();
   await mobilePanelPage.locator('#drone-panel-toggle').click();
   const assertStableTypography = async (testPage, viewportName) => {
     const typography = await testPage.evaluate(() => {
