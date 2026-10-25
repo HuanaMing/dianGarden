@@ -157,7 +157,20 @@
         || (Number.isFinite(plot.waterStartedAt) && Number.isFinite(plot.waterUntil) && plot.waterUntil > plot.waterStartedAt && plot.watered === true))
       && (plot.crop === null
       ? plot.plantedAt === null || plot.plantedAt === undefined
-      : Number.isInteger(plot.crop) && plot.crop >= 0 && plot.crop < crops.length && Number.isFinite(plot.plantedAt) && plot.plantedAt >= 0));
+      : Number.isInteger(plot.crop) && plot.crop >= 0 && plot.crop < crops.length && Number.isFinite(plot.plantedAt) && plot.plantedAt >= 0)
+      && (plot.capacityLevel === undefined || (Number.isSafeInteger(plot.capacityLevel) && plot.capacityLevel >= 1))
+      && (plot.nextPlantPosition === undefined || (Number.isSafeInteger(plot.nextPlantPosition) && plot.nextPlantPosition >= 1))
+      && (plot.plants === undefined || (plot.manual === true && Array.isArray(plot.plants) && plot.plants.length <= 100
+        && plot.plants.every((plant) => plant && Number.isInteger(plant.crop) && plant.crop >= 0 && plant.crop < crops.length
+          && Number.isFinite(plant.plantedAt) && plant.plantedAt >= 0
+          && (plant.positionIndex === undefined || (Number.isSafeInteger(plant.positionIndex) && plant.positionIndex >= 1))
+          && (plant.plantHeight === undefined || (Number.isFinite(plant.plantHeight) && plant.plantHeight >= 0.9 && plant.plantHeight <= 1.1))
+          && (plant.watered === undefined || typeof plant.watered === 'boolean')
+          && (plant.waterSource === undefined || plant.waterSource === null || ['rain', 'drone', 'manual'].includes(plant.waterSource))
+          && (plant.growthBonusMs === undefined || (Number.isFinite(plant.growthBonusMs) && plant.growthBonusMs >= 0))
+          && (plant.variantId === undefined || plant.variantId === null || flowerVariants.some((variant) => variant.id === plant.variantId && variant.cropIndex === plant.crop))
+          && ((plant.waterStartedAt === undefined && plant.waterUntil === undefined)
+            || (Number.isFinite(plant.waterStartedAt) && Number.isFinite(plant.waterUntil) && plant.waterUntil > plant.waterStartedAt && plant.watered === true)))));
   }
   function loadGame() {
     let flowerVariants = [];
@@ -170,16 +183,37 @@
     try { saved = JSON.parse(serialized); } catch (_) { persistenceAvailable = false; persistenceWarning = '存檔格式無法讀取；原存檔保留，本次進度只保留在此頁面。'; return { ...createFreshGame(), flowerVariants }; }
     if (!isValidSave(saved, flowerVariants)) { persistenceAvailable = false; persistenceWarning = '存檔資料不相容；原存檔保留，本次進度只保留在此頁面。'; return { ...createFreshGame(), flowerVariants }; }
     const legacyPositions = defaultPlotPositions(saved.plots.length);
-    const plots = saved.plots.map((plot, index) => ({
-      ...plot,
-      manual: plot.manual === true,
-      grassOnly: plot.grassOnly === true,
-      x: Number.isInteger(plot.x) ? plot.x : legacyPositions[index].x,
-      z: Number.isInteger(plot.z) ? plot.z : legacyPositions[index].z,
-      y: isHalfUnitHeight(plot.y) ? plot.y : 0,
-      plantedAt: plot.crop === null ? null : plot.plantedAt,
-      plantHeight: plot.crop === null ? null : Number.isFinite(plot.plantHeight) ? plot.plantHeight : 1,
-    }));
+    const plots = saved.plots.map((plot, index) => {
+      const manual = plot.manual === true;
+      const legacyPlants = plot.crop === null ? [] : [{
+        crop: plot.crop, plantedAt: plot.plantedAt, plantHeight: plot.plantHeight,
+        variantId: plot.variantId, variantName: plot.variantName, variantColor: plot.variantColor,
+        watered: plot.watered, waterSource: plot.waterSource, waterWetnessStart: plot.waterWetnessStart,
+        waterStartedAt: plot.waterStartedAt, waterUntil: plot.waterUntil, growthBonusMs: plot.growthBonusMs,
+      }];
+      const plants = manual ? (Array.isArray(plot.plants) ? plot.plants : legacyPlants).map((plant, plantIndex) => ({
+        ...plant,
+        positionIndex: Number.isSafeInteger(plant.positionIndex) && plant.positionIndex >= 1 ? plant.positionIndex : plantIndex + 1,
+        plantHeight: Number.isFinite(plant.plantHeight) ? plant.plantHeight : 1,
+        watered: plant.watered === true,
+        waterSource: plant.waterSource || null,
+        growthBonusMs: Number.isFinite(plant.growthBonusMs) ? plant.growthBonusMs : 0,
+      })) : undefined;
+      const maxPositionIndex = plants?.reduce((max, plant) => Math.max(max, plant.positionIndex), 0) || 0;
+      return {
+        ...plot,
+        manual,
+        grassOnly: plot.grassOnly === true,
+        x: Number.isInteger(plot.x) ? plot.x : legacyPositions[index].x,
+        z: Number.isInteger(plot.z) ? plot.z : legacyPositions[index].z,
+        y: isHalfUnitHeight(plot.y) ? plot.y : 0,
+        plantedAt: plot.crop === null ? null : plot.plantedAt,
+        plantHeight: plot.crop === null ? null : Number.isFinite(plot.plantHeight) ? plot.plantHeight : 1,
+        plants,
+        capacityLevel: manual && Number.isSafeInteger(plot.capacityLevel) && plot.capacityLevel >= 1 ? plot.capacityLevel : 1,
+        nextPlantPosition: manual ? Math.max(maxPositionIndex + 1, Number.isSafeInteger(plot.nextPlantPosition) && plot.nextPlantPosition >= 1 ? plot.nextPlantPosition : 1) : undefined,
+      };
+    });
     const dockPosition = saved.dockPosition ? { ...saved.dockPosition, y: Number.isInteger(saved.dockPosition.y) ? saved.dockPosition.y : 0 } : { x: 0, z: 1.55, y: 0 };
     const { drones, deploymentSequence } = normalizeDrones(saved, plots, dockPosition);
     // Older saves can contain stacked land or raised docks from before grass support was enforced.
@@ -210,15 +244,42 @@
       && new Set(savedSelection).size === savedSelection.length) game.autoCropSelection = savedSelection;
     else localStorage.setItem(AUTO_CROP_KEY, JSON.stringify(game.autoCropSelection));
   } catch (_) { /* Keep the selection loaded from the garden save when preference storage is unavailable. */ }
-  function getPlantedCrop(plot) {
-    const base = crops[plot?.crop] || crops[0];
-    const variant = game.flowerVariants.find((item) => item.id === plot?.variantId);
-    const variantName = variant?.name || plot?.variantName;
-    const variantColor = variant?.color || plot?.variantColor;
+  const PLANT_STATE_FIELDS = ['crop', 'plantedAt', 'plantHeight', 'variantId', 'variantName', 'variantColor', 'watered', 'waterSource', 'waterWetnessStart', 'waterStartedAt', 'waterUntil', 'growthBonusMs', 'waterVisualStartedAt'];
+  function getPlotPlants(plot) {
+    if (!plot) return [];
+    if (plot.manual === true && Array.isArray(plot.plants)) return plot.plants;
+    return plot.crop === null || plot.crop === undefined ? [] : [plot];
+  }
+  function getPlantState(plot, plantIndex = 0) {
+    if (!plot) return null;
+    if (plot.manual === true && Array.isArray(plot.plants)) return plot.plants[plantIndex] || null;
+    return plantIndex === 0 && plot.crop !== null && plot.crop !== undefined ? plot : null;
+  }
+  function syncManualPrimary(plot) {
+    if (!plot || plot.manual !== true) return;
+    const first = Array.isArray(plot.plants) ? plot.plants[0] : null;
+    const defaults = { crop: null, plantedAt: null, plantHeight: null, variantId: null, variantName: null, variantColor: null, watered: false, waterSource: null, waterWetnessStart: null, growthBonusMs: 0, waterVisualStartedAt: null };
+    for (const field of PLANT_STATE_FIELDS) {
+      if (field === 'waterStartedAt' || field === 'waterUntil') {
+        if (Number.isFinite(first?.[field])) plot[field] = first[field];
+        else delete plot[field];
+      } else plot[field] = first && first[field] !== undefined ? first[field] : defaults[field] ?? null;
+    }
+  }
+  function getPlotCapacity(plot) {
+    return plot?.manual === true && Number.isSafeInteger(plot.capacityLevel) && plot.capacityLevel >= 1 ? plot.capacityLevel : 1;
+  }
+  function getPlantedCrop(plot, plantIndex = 0) {
+    const plant = getPlantState(plot, plantIndex);
+    const base = crops[plant?.crop] || crops[0];
+    const variant = game.flowerVariants.find((item) => item.id === plant?.variantId);
+    const variantName = variant?.name || plant?.variantName;
+    const variantColor = variant?.color || plant?.variantColor;
     return variantName && variantColor
       ? { ...base, name: `${base.name}・${variantName}`, customColor: variantColor }
       : base;
   }
+  game.plots.forEach(syncManualPrimary);
   function simulateOfflineProgress(state, now = Date.now()) {
     return window.gardenEconomy.simulateOfflineProgress(state, now, crops, window.skyEnvironment);
   }
@@ -330,11 +391,12 @@
   if (offlineReport) save();
   window.addEventListener('pagehide', () => { if (!isResetting && !skipSaveOnExit) save(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && !isResetting && !skipSaveOnExit) save(); });
-  function growthElapsed(plot, now = Date.now()) {
-    if (!plot || plot.crop === null || !Number.isFinite(plot.plantedAt)) return 0;
-    let elapsed = Math.max(0, now - plot.plantedAt) + (plot.growthBonusMs || 0);
-    if (Number.isFinite(plot.waterStartedAt) && Number.isFinite(plot.waterUntil)) {
-      const boostedDuration = Math.max(0, Math.min(now, plot.waterUntil) - plot.waterStartedAt);
+  function growthElapsed(plot, now = Date.now(), plantIndex = 0) {
+    const plant = getPlantState(plot, plantIndex);
+    if (!plant || plant.crop === null || !Number.isFinite(plant.plantedAt)) return 0;
+    let elapsed = Math.max(0, now - plant.plantedAt) + (plant.growthBonusMs || 0);
+    if (Number.isFinite(plant.waterStartedAt) && Number.isFinite(plant.waterUntil)) {
+      const boostedDuration = Math.max(0, Math.min(now, plant.waterUntil) - plant.waterStartedAt);
       elapsed += boostedDuration * (WATER_GROWTH_RATE - 1);
     }
     return elapsed;
@@ -342,24 +404,31 @@
   function settleExpiredWaterBoosts(now = Date.now()) {
     let changed = false;
     game.plots.forEach((plot) => {
-      if (!Number.isFinite(plot.waterStartedAt) || !Number.isFinite(plot.waterUntil) || now < plot.waterUntil) return;
-      plot.growthBonusMs = (plot.growthBonusMs || 0) + (plot.waterUntil - plot.waterStartedAt) * (WATER_GROWTH_RATE - 1);
-      delete plot.waterStartedAt; delete plot.waterUntil; changed = true;
+      const plants = getPlotPlants(plot);
+      plants.forEach((plant) => {
+        if (!Number.isFinite(plant.waterStartedAt) || !Number.isFinite(plant.waterUntil) || now < plant.waterUntil) return;
+        plant.growthBonusMs = (plant.growthBonusMs || 0) + (plant.waterUntil - plant.waterStartedAt) * (WATER_GROWTH_RATE - 1);
+        delete plant.waterStartedAt; delete plant.waterUntil; changed = true;
+      });
+      if (plot.manual === true) syncManualPrimary(plot);
     });
     if (changed) save();
   }
   function applyRainMoisture(now = Date.now(), wetnessStart = 1) {
     game.plots.forEach((plot) => {
-      if (plot.crop === null) return;
-      if (Number.isFinite(plot.waterStartedAt) && Number.isFinite(plot.waterUntil)) {
-        const boostedDuration = Math.max(0, Math.min(now, plot.waterUntil) - plot.waterStartedAt);
-        plot.growthBonusMs = (plot.growthBonusMs || 0) + boostedDuration * (WATER_GROWTH_RATE - 1);
-      }
-      plot.watered = true;
-      plot.waterSource = 'rain';
-      plot.waterWetnessStart = Math.max(0, Math.min(1, wetnessStart));
-      plot.waterStartedAt = now;
-      plot.waterUntil = now + WATER_DURATION;
+      const plants = getPlotPlants(plot);
+      plants.forEach((plant) => {
+        if (Number.isFinite(plant.waterStartedAt) && Number.isFinite(plant.waterUntil)) {
+          const boostedDuration = Math.max(0, Math.min(now, plant.waterUntil) - plant.waterStartedAt);
+          plant.growthBonusMs = (plant.growthBonusMs || 0) + boostedDuration * (WATER_GROWTH_RATE - 1);
+        }
+        plant.watered = true;
+        plant.waterSource = 'rain';
+        plant.waterWetnessStart = Math.max(0, Math.min(1, wetnessStart));
+        plant.waterStartedAt = now;
+        plant.waterUntil = now + WATER_DURATION;
+      });
+      if (plot.manual === true) syncManualPrimary(plot);
     });
   }
   function updateHud() {
@@ -374,7 +443,18 @@
     window.skyWorld?.setDroneDocks(game.drones.map((drone) => ({ ...drone.dockPosition, deployed: drone.deployed, deploymentOrder: drone.deploymentOrder, battery: drone.battery })));
     updateBuyDroneButton();
     const now = Date.now();
-    window.skyWorld?.setPlots(game.plots.map((plot) => ({ ...plot, customColor: plot.crop === null ? null : getPlantedCrop(plot).customColor, elapsed: growthElapsed(plot, now), growTime: crops[plot.crop]?.growTime ?? crops[0].growTime })));
+    window.skyWorld?.setPlots(game.plots.map((plot) => ({
+      ...plot,
+      customColor: plot.crop === null ? null : getPlantedCrop(plot).customColor,
+      elapsed: growthElapsed(plot, now),
+      growTime: crops[plot.crop]?.growTime ?? crops[0].growTime,
+      plants: plot.manual === true ? getPlotPlants(plot).map((plant, plantIndex) => ({
+        ...plant,
+        elapsed: growthElapsed(plot, now, plantIndex),
+        growTime: crops[plant.crop]?.growTime ?? crops[0].growTime,
+        customColor: getPlantedCrop(plot, plantIndex).customColor,
+      })) : undefined,
+    })));
   }
   function updateEnvironmentDisplay(environment = window.skyEnvironment.getState(game)) {
     const now = Date.now();
