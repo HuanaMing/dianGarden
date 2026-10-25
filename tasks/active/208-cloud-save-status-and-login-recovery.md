@@ -24,3 +24,5 @@
 
 ## 執行紀錄
 - 2026-10-25：任務207已驗收通過，開始執行任務208。將先檢查登入失敗時 `#cloud-save-signin` 的隱藏狀態如何更新，再精簡跨裝置存檔區的一般說明，保留訪客入口及任務204的登入成功隱藏行為。
+
+- 驗收完成：Playwright run [40148412053](https://github.com/HuanaMing/dianGarden/actions/runs/40148412053) 通過；Pages 部署 run [40148377625](https://github.com/HuanaMing/dianGarden/actions/runs/40148377625) 成功。未使用真實 Google 帳號端到端測試。
