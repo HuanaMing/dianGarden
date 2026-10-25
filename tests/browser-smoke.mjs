@@ -251,7 +251,52 @@ try {
   await mobilePanelPage.locator('#drone-panel-toggle').click();
   await assertMobilePanelSize('#drone-jobs');
   await mobilePanelPage.locator('#drone-panel-toggle').click();
+  const assertStableTypography = async (testPage, viewportName) => {
+    const typography = await testPage.evaluate(() => {
+      const expected = [
+        ['#job-status', '14px'],
+        ['#buy-drone', '12px'],
+        ['.farm-management-heading strong', '16px'],
+        ['.world-plot-state', '11px'],
+        ['#settings-panel > h2', '16px'],
+        ['.settings-panel .settings-tab', '13px'],
+        ['#cloud-save-status', '12px'],
+        ['#avatar-dialog-title', '20px'],
+        ['#avatar-dialog .avatar-settings label', '12px'],
+        ['#avatar-mode', '13px'],
+        ['#avatar-current-flower', '12px'],
+        ['.avatar-flower-name', '11px'],
+        ['.avatar-dialog-note', '12px'],
+      ];
+      const elements = expected.map(([selector, size]) => {
+        const element = document.querySelector(selector);
+        return { selector, size, element, actual: element ? getComputedStyle(element).fontSize : null };
+      });
+      const missing = elements.filter(item => !item.element).map(item => item.selector);
+      const wrongSize = elements.filter(item => item.element && item.actual !== item.size)
+        .map(item => ({ selector: item.selector, expected: item.size, actual: item.actual }));
+      const mutations = elements.filter(item => item.element && !['#avatar-mode'].includes(item.selector));
+      const originals = mutations.map(item => ({ element: item.element, text: item.element.textContent }));
+      mutations.forEach(item => { item.element.textContent = '長內容字級穩定性驗收'.repeat(12); });
+      const changed = mutations.filter(item => getComputedStyle(item.element).fontSize !== item.actual)
+        .map(item => ({ selector: item.selector, before: item.actual, after: getComputedStyle(item.element).fontSize }));
+      originals.forEach(item => { item.element.textContent = item.text; });
+      return { missing, wrongSize, changed };
+    });
+    if (typography.missing.length || typography.wrongSize.length || typography.changed.length) {
+      throw new Error(`${viewportName}字級固定驗收失敗：` + JSON.stringify(typography));
+    }
+    checks.push(`任務210：${viewportName}無人機、農地、設定及頭像介面字級固定，長文不觸發縮字`);
+  };
+  await mobilePanelPage.locator('#garden-avatar').click();
+  await mobilePanelPage.locator('#avatar-dialog[open]').waitFor({ state: 'visible' });
+  await mobilePanelPage.locator('[data-close-avatar-dialog]').click();
+  await assertStableTypography(mobilePanelPage, '手機版');
   await mobilePanelPage.close();
+  await page.locator('#garden-avatar').click();
+  await page.locator('#avatar-dialog[open]').waitFor({ state: 'visible' });
+  await page.locator('[data-close-avatar-dialog]').click();
+  await assertStableTypography(page, '桌面版');
   checks.push('任務207：桌面與手機管理面板均符合頭像對話框尺寸並置中');
   const wheelActions = await page.locator('#garden-menu-wheel [data-wheel-action]').evaluateAll(nodes => nodes.map(node => node.dataset.wheelAction));
   if (wheelActions.join(',') !== 'drone,farm,settings,catalog,collapse,rotate') throw new Error('快捷輪盤選項不完整或順序錯誤：' + wheelActions.join(','));
