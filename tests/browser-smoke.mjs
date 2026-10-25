@@ -416,24 +416,32 @@ try {
       { x: 0, z: 0, y: 0.5 },
       { x: 6, z: 0, y: 2 },
     ];
+    const states = [
+      { grassOnly: true },
+      { grassOnly: false },
+      { grassOnly: false },
+      { grassOnly: false },
+      { grassOnly: true },
+    ];
     return {
       bottom: logic.getConnectedGroupBottomY(positions, 0, 1, 0.5),
       upperHasBelow: logic.hasPlotDirectlyBelow(positions, 3, 1),
       lowerHasBelow: logic.hasPlotDirectlyBelow(positions, 0, 1),
+      grassBelowUpper: states[0].grassOnly && logic.hasPlotDirectlyBelow(positions, 3, 1),
       isolatedBottom: logic.getConnectedGroupBottomY(positions, 4, 1, 0.5),
     };
   });
   if (connectedLandBottom.bottom !== -0.5 || !connectedLandBottom.upperHasBelow
-    || connectedLandBottom.lowerHasBelow
+    || connectedLandBottom.lowerHasBelow || !connectedLandBottom.grassBelowUpper
     || connectedLandBottom.isolatedBottom !== 1.5) {
-    throw new Error('連接地塊整體底面／下方地塊判定失敗：' + JSON.stringify(connectedLandBottom));
+    throw new Error('連接地塊整體底面／草地下方判定失敗：' + JSON.stringify(connectedLandBottom));
   }
   const stackedTileSideRule = await fs.readFile('src/sky-world.js', 'utf8');
   if (!stackedTileSideRule.includes('if (!hasPlotBelow) {')
     || !stackedTileSideRule.includes('// A tile with another tile directly below must not grow side walls downward.')) {
     throw new Error('下方已有地塊時仍可能產生側面延伸');
   }
-  checks.push('連接地塊共用最低底面；下方已有地塊時不生成側面延伸');
+  checks.push('連接地塊共用最低底面；下方有農地或草地時均不生成側面延伸');
   const farmRampGeometry = await page.evaluate(() => {
     const source = document.querySelector('script[src*="sky-world.js"]')?.src;
     return Boolean(source && window.dianGardenGrassRampLogic?.getSharedCornerHeight);
