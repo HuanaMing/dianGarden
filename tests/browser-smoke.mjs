@@ -58,6 +58,83 @@ const browser = await chromium.launch({ headless: true });
 const errors = [];
 const checks = [];
 checks.push('任務225：只有停靠座標改變才重算返航路徑，電量更新不再重設飛行插值');
+
+const encyclopediaPage = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
+await encyclopediaPage.addInitScript(() => {
+  window.__encyclopediaDrawCalls = 0;
+  const originalDrawArrays = WebGLRenderingContext.prototype.drawArrays;
+  WebGLRenderingContext.prototype.drawArrays = function (...args) {
+    window.__encyclopediaDrawCalls += 1;
+    return originalDrawArrays.apply(this, args);
+  };
+});
+await encyclopediaPage.goto(`${baseURL}/encyclopedia.html`, { waitUntil: 'networkidle', timeout: 30000 });
+await encyclopediaPage.locator('#sky-canvas').waitFor({ state: 'visible' });
+await encyclopediaPage.waitForFunction(() => window.__encyclopediaDrawCalls > 0, null, { timeout: 8000 });
+const initialEncyclopediaDrawCalls = await encyclopediaPage.evaluate(() => window.__encyclopediaDrawCalls);
+await encyclopediaPage.locator('#preview-fullscreen-toggle').click();
+await encyclopediaPage.waitForFunction(() => document.fullscreenElement === document.querySelector('.encyclopedia-world')
+  || document.querySelector('.encyclopedia-world')?.classList.contains('is-preview-expanded'), null, { timeout: 5000 });
+await encyclopediaPage.waitForFunction((initial) => window.__encyclopediaDrawCalls > initial + 5, initialEncyclopediaDrawCalls, { timeout: 5000 });
+const fullscreenCanvas = await encyclopediaPage.locator('#sky-canvas').evaluate(canvas => ({
+  width: canvas.width,
+  height: canvas.height,
+  rect: { width: canvas.getBoundingClientRect().width, height: canvas.getBoundingClientRect().height },
+}));
+if (fullscreenCanvas.width <= 0 || fullscreenCanvas.height <= 0 || fullscreenCanvas.rect.width < 300 || fullscreenCanvas.rect.height < 300) {
+  throw new Error('圖鑑全螢幕後 WebGL 畫布尺寸失效：' + JSON.stringify(fullscreenCanvas));
+}
+await encyclopediaPage.locator('#preview-fullscreen-toggle').click();
+await encyclopediaPage.waitForFunction(() => !document.fullscreenElement
+  && !document.querySelector('.encyclopedia-world')?.classList.contains('is-preview-expanded'), null, { timeout: 5000 });
+checks.push('任務226：圖鑑模型在一般與全螢幕狀態持續繪製，畫布尺寸有效且可正常退出');
+
+await encyclopediaPage.setViewportSize({ width: 390, height: 844 });
+const pickerHeading = encyclopediaPage.locator('#flower-picker-toggle');
+const pickerPanel = encyclopediaPage.locator('.flower-picker-panel');
+const previewWorld = encyclopediaPage.locator('.encyclopedia-world');
+const originalPickerBounds = await pickerPanel.boundingBox();
+const originalPreviewBounds = await previewWorld.boundingBox();
+if (!originalPickerBounds || !originalPreviewBounds || originalPickerBounds.y < originalPreviewBounds.y + originalPreviewBounds.height - 1) {
+  throw new Error('手機圖鑑原始排版應為預覽在上、選花清單在下');
+}
+const dragHeading = async (distance) => {
+  const bounds = await pickerHeading.boundingBox();
+  if (!bounds) throw new Error('無法取得手機選花標題位置');
+  const x = bounds.x + Math.min(80, bounds.width / 2);
+  const y = bounds.y + bounds.height / 2;
+  await encyclopediaPage.mouse.move(x, y);
+  await encyclopediaPage.mouse.down();
+  await encyclopediaPage.mouse.move(x, y + distance, { steps: 6 });
+  await encyclopediaPage.mouse.up();
+};
+await dragHeading(-120);
+if (!(await encyclopediaPage.locator('.encyclopedia-layout').evaluate(element => element.classList.contains('is-picker-expanded')))) {
+  throw new Error('手機選花標題上拉後未展開面板');
+}
+const expandedPickerBounds = await pickerPanel.boundingBox();
+if (!expandedPickerBounds || expandedPickerBounds.y > originalPreviewBounds.y + 2
+  || expandedPickerBounds.height <= originalPickerBounds.height) {
+  throw new Error('上拉後選花面板未覆蓋預覽區或未增加清單空間');
+}
+await dragHeading(120);
+if (await encyclopediaPage.locator('.encyclopedia-layout').evaluate(element => element.classList.contains('is-picker-expanded'))) {
+  throw new Error('手機選花標題下拉後未恢復原始排版');
+}
+await pickerHeading.click();
+if (!(await encyclopediaPage.locator('.encyclopedia-layout').evaluate(element => element.classList.contains('is-picker-expanded')))) {
+  throw new Error('手機選花標題點擊無法展開面板');
+}
+await pickerHeading.click();
+if (await encyclopediaPage.locator('.encyclopedia-layout').evaluate(element => element.classList.contains('is-picker-expanded'))) {
+  throw new Error('手機選花標題再次點擊無法恢復原始排版');
+}
+await encyclopediaPage.setViewportSize({ width: 1280, height: 900 });
+if (await encyclopediaPage.locator('.encyclopedia-layout').evaluate(element => element.classList.contains('is-picker-expanded'))) {
+  throw new Error('切換回桌面版後不應保留手機選花面板展開狀態');
+}
+checks.push('任務226：手機選花標題可上拉展開、下拉收回及點擊切換，桌面版排版不受影響');
+await encyclopediaPage.close();
 const startupPage = await browser.newPage({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 1 });
 await startupPage.addInitScript(() => {
   window.__startupWebglDrawCalls = 0;
