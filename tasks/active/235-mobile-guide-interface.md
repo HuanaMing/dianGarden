@@ -21,3 +21,5 @@
 - 已重新讀取 CSS 確認修正版規則存在；尚未確認 GitHub Pages 部署結果，也未執行真實手機瀏覽器視覺驗收。
 - 第三版依使用者實機截圖定位問題：只縮小內距沒有阻止 Grid 將內容列／卡片拉伸。已加入手機專屬 `height:max-content`、`max-height:calc(100dvh - 32px)`、`grid-template-rows:max-content`、`align-content:start`，並限制各直接子元素 `height:auto; min-height:0; align-self:start`，讓對話框高度依內容決定並在矮螢幕內可捲動。
 - 第三版 CSS 提交：`fd86f0b3b4ad6dfbb331eb2bfe65698ac9c0546f`。尚未進行真實手機瀏覽器視覺驗收；不可視為已通過。
+- 依使用者同意，加入臨時診斷面板：網址附加 `?debug-startup=1` 才顯示，讀取視窗及各直接子元素的實際尺寸、計算 CSS、Grid 列高與 inline style；可點「重新讀取數據」刷新。程式提交：`acc5063e08cc7b026a1c84406bef92444b3f267c`。
+- 診斷面板尚未經手機實際執行驗證；待 Pages 自動部署後，由使用者開啟診斷網址並提供截圖。
