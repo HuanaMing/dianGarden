@@ -519,6 +519,7 @@ try {
     throw new Error('本機存檔警告未在跨裝置存檔區清楚顯示：' + JSON.stringify(saveWarningState));
   }
   checks.push('任務209：本機存檔讀取失敗時，跨裝置存檔區顯示醒目警告');
+  checks.push('任務219：桌面／手機風鈴提示置中於畫面中下方、通知色系和諧、圖示 32×32 且按鈕可命中；設定面板圖示載入通過');
   await saveWarningPage.close();
 
   const staleSessionPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -558,6 +559,58 @@ try {
     window.__task211CredentialCallback({ credential: `header.${payload}.signature` });
   });
   await staleSessionPage.waitForFunction(() => !document.querySelector('#cloud-session-banner')?.hidden && !document.querySelector('#cloud-session-banner-settings')?.hidden);
+  const inspectWindChimeBanner = () => staleSessionPage.evaluate(() => {
+    const frame = document.querySelector('.world-frame');
+    const banner = document.querySelector('#cloud-session-banner');
+    const icon = banner?.querySelector('.cloud-session-wind-chime-icon');
+    const button = document.querySelector('#cloud-session-refresh-main');
+    const frameRect = frame.getBoundingClientRect();
+    const bannerRect = banner.getBoundingClientRect();
+    const iconRect = icon.getBoundingClientRect();
+    const buttonRect = button.getBoundingClientRect();
+    const hitTarget = document.elementFromPoint(buttonRect.left + buttonRect.width / 2, buttonRect.top + buttonRect.height / 2);
+    const style = getComputedStyle(banner);
+    return {
+      visible: !banner.hidden && bannerRect.width > 0 && bannerRect.height > 0,
+      centerGap: Math.abs((bannerRect.left + bannerRect.width / 2) - (frameRect.left + frameRect.width / 2)),
+      bottomGap: frameRect.bottom - bannerRect.bottom,
+      background: style.backgroundColor,
+      color: style.color,
+      pointerEvents: style.pointerEvents,
+      buttonPointerEvents: getComputedStyle(button).pointerEvents,
+      buttonHit: hitTarget === button || button.contains(hitTarget),
+      buttonVisible: !button.hidden && buttonRect.width > 0 && buttonRect.height > 0,
+      textNotClipped: [...banner.querySelectorAll('.cloud-session-banner-line')].every(line => line.scrollHeight <= line.clientHeight + 1),
+      icon: {
+        src: icon?.getAttribute('src'),
+        loaded: Boolean(icon?.complete && icon.naturalWidth > 0 && icon.naturalHeight > 0),
+        width: Number.parseFloat(getComputedStyle(icon).width),
+        height: Number.parseFloat(getComputedStyle(icon).height),
+        afterText: Boolean(icon && icon.previousSibling?.textContent?.includes('讓時間再度流動。')),
+      },
+    };
+  });
+  const mobileWindChimeBanner = await inspectWindChimeBanner();
+  if (!mobileWindChimeBanner.visible || mobileWindChimeBanner.centerGap > 2
+    || mobileWindChimeBanner.bottomGap < 46 || mobileWindChimeBanner.bottomGap > 50
+    || !mobileWindChimeBanner.background.startsWith('rgba(247, 251, 240')
+    || mobileWindChimeBanner.color !== 'rgb(82, 119, 99)'
+    || mobileWindChimeBanner.pointerEvents !== 'none' || mobileWindChimeBanner.buttonPointerEvents !== 'auto'
+    || !mobileWindChimeBanner.buttonHit || !mobileWindChimeBanner.buttonVisible || !mobileWindChimeBanner.textNotClipped
+    || mobileWindChimeBanner.icon.src !== 'assets/btn/風鈴.png' || !mobileWindChimeBanner.icon.loaded
+    || mobileWindChimeBanner.icon.width !== 32 || mobileWindChimeBanner.icon.height !== 32 || !mobileWindChimeBanner.icon.afterText) {
+    throw new Error('任務219：手機風鈴提示位置、通知色系、32×32 圖示或按鈕命中錯誤：' + JSON.stringify(mobileWindChimeBanner));
+  }
+  await staleSessionPage.setViewportSize({ width: 1440, height: 900 });
+  const desktopWindChimeBanner = await inspectWindChimeBanner();
+  if (!desktopWindChimeBanner.visible || desktopWindChimeBanner.centerGap > 2
+    || desktopWindChimeBanner.bottomGap < 46 || desktopWindChimeBanner.bottomGap > 50
+    || !desktopWindChimeBanner.background.startsWith('rgba(247, 251, 240')
+    || !desktopWindChimeBanner.buttonHit || !desktopWindChimeBanner.textNotClipped
+    || !desktopWindChimeBanner.icon.loaded || desktopWindChimeBanner.icon.width !== 32 || desktopWindChimeBanner.icon.height !== 32) {
+    throw new Error('任務219：桌面風鈴提示位置、通知色系、圖示尺寸或按鈕命中錯誤：' + JSON.stringify(desktopWindChimeBanner));
+  }
+  await staleSessionPage.setViewportSize({ width: 390, height: 844 });
   await staleSessionPage.locator('#settings-toggle').click();
   await staleSessionPage.locator('#cloud-session-refresh').waitFor({ state: 'visible' });
   const staleSessionState = await staleSessionPage.evaluate(() => ({
@@ -571,6 +624,7 @@ try {
     settingsLines: [...document.querySelectorAll('#cloud-session-banner-settings .cloud-session-banner-line')].map(node => node.textContent.trim()),
     mainButtonText: document.querySelector('#cloud-session-refresh-main')?.textContent.trim(),
     settingsButtonText: document.querySelector('#cloud-session-refresh')?.textContent.trim(),
+    settingsIcon: (() => { const image = document.querySelector('#cloud-session-banner-settings .cloud-session-wind-chime-icon'); return { src: image?.getAttribute('src'), loaded: Boolean(image?.complete && image.naturalWidth > 0 && image.naturalHeight > 0), width: Number.parseFloat(getComputedStyle(image).width), height: Number.parseFloat(getComputedStyle(image).height) }; })(),
     cloudStatus: document.querySelector('#cloud-save-status')?.textContent.trim(),
     saveStatus: document.querySelector('#save-status')?.textContent.trim(),
     saveWarning: document.querySelector('#save-status')?.classList.contains('save-warning'),
@@ -581,6 +635,7 @@ try {
     || JSON.stringify(staleSessionState.mainLines) !== JSON.stringify(expectedSessionLines)
     || JSON.stringify(staleSessionState.settingsLines) !== JSON.stringify(expectedSessionLines)
     || staleSessionState.mainButtonText !== '輕搖風鈴' || staleSessionState.settingsButtonText !== '輕搖風鈴'
+    || staleSessionState.settingsIcon.src !== 'assets/btn/風鈴.png' || !staleSessionState.settingsIcon.loaded || staleSessionState.settingsIcon.width !== 32 || staleSessionState.settingsIcon.height !== 32
     || staleSessionState.cloudStatus !== '雲端同步已暫停；本機進度仍會保留。'
     || staleSessionState.saveStatus !== '暫停同步雲端進度' || !staleSessionState.saveWarning) {
     throw new Error('異地登入後的雙處提示、風鈴按鈕或離線存檔狀態錯誤：' + JSON.stringify(staleSessionState));
