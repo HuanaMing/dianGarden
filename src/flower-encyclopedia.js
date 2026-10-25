@@ -62,6 +62,10 @@
   });
   if (window.matchMedia('(max-width: 760px)').matches) setPickerExpanded(false);
   else syncPickerIndicator(true);
+  window.addEventListener('resize', () => {
+    if (window.matchMedia('(max-width: 760px)').matches) setPickerExpanded(false);
+    else syncPickerIndicator(true);
+  });
   fullscreenToggle?.addEventListener('click', async () => {
     if (!previewWorld) return;
     const active = document.fullscreenElement === previewWorld || previewWorld.classList.contains('is-preview-expanded');
