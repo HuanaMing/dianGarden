@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": "任務239重做：遠景雲層與移除日月幾何",
-  "nextAction": "任務239重做版本已提交，等待 Playwright 瀏覽器自動驗收與 Pages 部署結果，再由使用者實機驗收；通過後再執行任務240遠處背景小島。任務232生產 D1 migration 與 Worker 部署仍待使用者明確批准。",
+  "nextAction": "任務239重做版本的 Playwright 瀏覽器自動驗收 run 40211548277 與 Pages 部署 run 40211527905 均成功；等待使用者實機視覺驗收，通過後再執行任務240遠處背景小島。任務232生產 D1 migration 與 Worker 部署仍待使用者明確批准。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署：需使用者明確批准後手動觸發。",
