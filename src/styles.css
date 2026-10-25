@@ -831,3 +831,13 @@ input, [contenteditable="true"]{
 .manual-plant-actions{display:flex;justify-content:flex-end;gap:8px}
 .manual-plant-actions .action-button{padding:7px 11px;font-size:11px}
 .manual-seed-heading{margin:12px 0 6px;color:#718678;font-size:11px;font-weight:800}
+
+
+/* 任務229：手動地塊容量升級資訊與操作入口。 */
+.manual-upgrade-panel{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0;padding:11px 12px;border:1px solid #dbe7d7;border-radius:12px;background:#f5f8ef}
+.manual-upgrade-copy{display:grid;gap:4px;min-width:0}
+.manual-upgrade-copy strong{font-size:12px;color:#3f6550}
+.manual-upgrade-copy small{font-size:11px;line-height:1.4;color:#718678}
+.manual-upgrade-button{flex-shrink:0;padding:9px 11px;font-size:11px;white-space:nowrap}
+.manual-upgrade-button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:520px){.manual-upgrade-panel{align-items:flex-start;flex-direction:column}.manual-upgrade-button{width:100%}}
