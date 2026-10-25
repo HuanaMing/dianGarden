@@ -1020,7 +1020,7 @@ try {
   await staleSessionPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   await staleSessionPage.waitForFunction(() => typeof window.__task211CredentialCallback === 'function');
   await staleSessionPage.evaluate(() => {
-    const payload = btoa(JSON.stringify({ sub: 'task211-test-account' })).replace(/=/g, '');
+    const payload = btoa(JSON.stringify({ iss: 'https://accounts.google.com', aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com', exp: Math.floor(Date.now() / 1000) + 3600, sub: 'task211-test-account' })).replace(/=/g, '');
     window.__task211CredentialCallback({ credential: `header.${payload}.signature` });
   });
   await staleSessionPage.waitForFunction(() => !document.querySelector('#cloud-session-banner')?.hidden && !document.querySelector('#cloud-session-banner-settings')?.hidden);
@@ -1154,7 +1154,7 @@ try {
   };
   await assertRefreshButtonReloads('#cloud-session-refresh-main');
   await staleSessionPage.evaluate(() => {
-    const payload = btoa(JSON.stringify({ sub: 'task211-test-account' })).replace(/=/g, '');
+    const payload = btoa(JSON.stringify({ iss: 'https://accounts.google.com', aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com', exp: Math.floor(Date.now() / 1000) + 3600, sub: 'task211-test-account' })).replace(/=/g, '');
     window.__task211CredentialCallback({ credential: `header.${payload}.signature` });
   });
   await staleSessionPage.waitForFunction(() => !document.querySelector('#cloud-session-banner')?.hidden && !document.querySelector('#cloud-session-banner-settings')?.hidden);
@@ -1168,7 +1168,7 @@ try {
 
   await staleSessionPage.setViewportSize({ width: 1280, height: 800 });
   await staleSessionPage.evaluate(() => {
-    const payload = btoa(JSON.stringify({ sub: 'task212-desktop-test-account' })).replace(/=/g, '');
+    const payload = btoa(JSON.stringify({ iss: 'https://accounts.google.com', aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com', exp: Math.floor(Date.now() / 1000) + 3600, sub: 'task212-desktop-test-account' })).replace(/=/g, '');
     window.__task211CredentialCallback({ credential: `header.${payload}.signature` });
   });
   await staleSessionPage.waitForFunction(() => !document.querySelector('#cloud-session-banner')?.hidden && !document.querySelector('#cloud-session-banner-settings')?.hidden);
