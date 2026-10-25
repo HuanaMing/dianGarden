@@ -494,6 +494,8 @@ try {
   await staleSessionPage.locator('#avatar-mode').selectOption('manual');
   const localSaveAfterOfflineEdit = await staleSessionPage.evaluate(() => localStorage.getItem('sky-garden-save-v1'));
   if (!localSaveAfterOfflineEdit) throw new Error('異地登入後仍無法寫入本機遊戲存檔');
+  await staleSessionPage.locator('[data-close-avatar-dialog]').click();
+  await staleSessionPage.locator('#settings-toggle').click();
   await staleSessionPage.waitForTimeout(2800);
   if (cloudRequests.filter(method => method === 'GET').length !== 1 || cloudRequests.includes('PUT')) {
     throw new Error('異地登入後仍繼續發送雲端讀寫請求：' + JSON.stringify(cloudRequests));
