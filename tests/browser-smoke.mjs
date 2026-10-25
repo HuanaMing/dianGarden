@@ -1018,22 +1018,41 @@ try {
     } } };
   });
   const cloudRequests = [];
-  await staleSessionPage.route('https://diangarden-cloud-save.ry15968.workers.dev/api/save', async route => {
-    const method = route.request().method();
-    cloudRequests.push(method);
+  await staleSessionPage.route('https://diangarden-cloud-save.ry15968.workers.dev/api/**', async route => {
+    const request = route.request();
+    const method = request.method();
+    const path = new URL(request.url()).pathname;
     const corsHeaders = {
       'access-control-allow-origin': '*',
-      'access-control-allow-methods': 'GET, PUT, OPTIONS',
+      'access-control-allow-methods': 'GET, PUT, POST, OPTIONS',
       'access-control-allow-headers': 'authorization,content-type,x-diangarden-opened-at',
       'access-control-max-age': '600',
+      'content-type': 'application/json',
     };
     if (method === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: corsHeaders });
       return;
     }
+    if (path === '/api/session') {
+      await route.fulfill({ status: 201, headers: corsHeaders, body: JSON.stringify({
+        accessToken: 'task211-session.access', accessExpiresAt: Math.floor(Date.now() / 1000) + 900,
+        refreshToken: 'task211-session.refresh', idleExpiresAt: Math.floor(Date.now() / 1000) + 2592000,
+        userId: 'task211-test-account',
+      }) });
+      return;
+    }
+    if (path === '/api/session/refresh') {
+      await route.fulfill({ status: 200, headers: corsHeaders, body: JSON.stringify({
+        accessToken: 'task211-session.access', accessExpiresAt: Math.floor(Date.now() / 1000) + 900,
+        refreshToken: 'task211-session.refresh-next', idleExpiresAt: Math.floor(Date.now() / 1000) + 2592000,
+        userId: 'task211-test-account',
+      }) });
+      return;
+    }
+    cloudRequests.push(method);
     await route.fulfill({
       status: 409,
-      headers: { ...corsHeaders, 'content-type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'stale_session' }),
     });
   });
