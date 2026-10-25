@@ -38,4 +38,8 @@
 - 執行可用的 Playwright 桌面／手機回歸測試；如無法執行，明確記錄限制，不宣稱已通過。
 
 ## 執行結果
-已開始執行：先修正圖鑑按鈕圖示映射；登入狀態延續方案仍在安全評估中。
+- 已提交 `src/encyclopedia.html`：圖鑑選花標題初始圖示由「收合.png」改為「展開.png」。
+- 已提交 `src/flower-encyclopedia.js`：展開狀態顯示「展開.png」、收合狀態顯示「收合.png」，反轉原有映射。
+- 已提交 `tests/browser-smoke.mjs`：更新手機版初始、拖曳及點擊展開／收合的圖示預期。
+- 登入持續性尚未修改。初步評估需跨頁保存短效 Google ID token 與 `sessionOpenedAt` 才能維持同一個雲端 session ownership；因這會把 bearer token 從記憶體擴大保存至同分頁 `sessionStorage`，先取得使用者確認再實作。
+- 自動瀏覽器驗收預期由 main 分支 push 觸發；尚未確認 workflow 結果。
