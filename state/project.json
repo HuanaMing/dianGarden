@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": null,
-  "nextAction": "任務210～212程式修改、Playwright 驗收與歸檔已完成。任務212最新程式提交尚未找到對應的 Pages 部署紀錄；正式部署需先取得使用者批准。",
+  "activeTask": 213,
+  "nextAction": "任務213：修復無人機按鈕圖示被 setDronePanelOpen() 覆寫的問題。程式與 Playwright 驗收已更新，等待最新瀏覽器自動驗收完成；通過後再歸檔並開始任務214。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的 GitHub Pages 部署：需使用者明確批准後手動觸發。"
