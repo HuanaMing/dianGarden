@@ -209,8 +209,9 @@ try {
   await page.locator('#hud-toggle').click();
   if (await page.locator('#hud-toggle').textContent() !== '🔼') throw new Error('再次點擊收合按鈕未恢復介面');
   await page.locator('#drone-panel-toggle').click();
-  if (await page.locator('#drone-panel-toggle').textContent() !== '🚁') throw new Error('無人機按鈕圖示異常，不應變成文字');
+  if (await page.locator('#drone-panel-toggle img.btn-icon-image').getAttribute('src') !== 'assets/btn/無人機管理.png') throw new Error('開啟無人機面板後，原始圖片圖示被替換或遺失');
   await page.locator('#drone-panel-toggle').click();
+  if (await page.locator('#drone-panel-toggle img.btn-icon-image').getAttribute('src') !== 'assets/btn/無人機管理.png') throw new Error('關閉無人機面板後，原始圖片圖示被替換或遺失');
   const assertManagementPanelSize = async selector => {
     await page.waitForTimeout(220);
     const bounds = await page.locator(selector).evaluate(element => { const rect = element.getBoundingClientRect(); return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }; });
