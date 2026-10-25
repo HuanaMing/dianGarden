@@ -227,7 +227,7 @@
   const coinsDisplay = document.querySelector('#coins');
   const toast = document.querySelector('#toast');
   const saveStatus = document.querySelector('#save-status');
-  let cloudSessionExpired = false;
+  let cloudSessionExpired = Boolean(window.diangardenCloudSessionExpired);
   window.addEventListener('diangarden:cloud-session-state', (event) => {
     cloudSessionExpired = Boolean(event.detail?.expired);
     updateSaveStatus();
