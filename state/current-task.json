@@ -1,12 +1,12 @@
 {
-  "name": "任務234：連接地塊形成整體底座（重作）",
+  "name": "任務234：連接地塊形成整體底座（草地下方規則補強）",
   "status": "completed",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務234已修正為地塊正下方有其他地塊時不生成側面延伸；程式、回歸測試及任務文件已提交。待 GitHub Actions 瀏覽器測試確認；未手動觸發 GitHub Pages 部署。",
+  "nextAction": "已明確確認下方任何地塊（包含草地）都會阻止側面延伸；程式、回歸測試與任務文件已更新。待 GitHub Actions 瀏覽器測試確認，未手動觸發 GitHub Pages 部署。",
   "taskFile": "tasks/done/234-connected-landmass-bottom.md",
-  "result": "下方已有地塊的地塊只保留頂面，不再生成側面延伸及底部；下方沒有地塊時才延伸至連通群組底面。瀏覽器 CI 結果待確認。"
+  "result": "正下方存在農地或草地時，都不生成側面延伸及延伸底部；只有正下方沒有地塊時，才延伸至連通群組底面。瀏覽器 CI 結果待確認。"
 }
