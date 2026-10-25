@@ -579,7 +579,6 @@
     droneJobsPanel.classList.toggle('is-open', open);
     document.querySelector('.world-frame')?.classList.toggle('is-drone-panel-open', open);
     dronePanelToggle.setAttribute('aria-expanded', String(open));
-    dronePanelToggle.textContent = '🚁';
     dronePanelToggle.setAttribute('aria-label', open ? '收合無人機面板' : '開啟無人機面板');
     dronePanelToggle.setAttribute('title', open ? '收合無人機面板' : '開啟無人機面板');
   }
