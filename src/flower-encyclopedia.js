@@ -22,10 +22,18 @@
     fullscreenToggle.title = active ? '退出全螢幕預覽' : '進入全螢幕預覽';
     fullscreenToggle.textContent = active ? '⤡' : '⛶';
   }
+  const pickerIndicator = pickerToggle?.querySelector('.flower-picker-collapse-indicator');
+  function syncPickerIndicator(expanded) {
+    if (pickerIndicator) pickerIndicator.src = expanded ? 'assets/btn/收合.png' : 'assets/btn/展開.png';
+    pickerToggle?.setAttribute('aria-label', expanded
+      ? '選擇花種，向下拖曳或點擊收合'
+      : '選擇花種，向上拖曳或點擊展開');
+  }
   function setPickerExpanded(expanded) {
     if (!encyclopediaLayout || !window.matchMedia('(max-width: 760px)').matches) return;
     encyclopediaLayout.classList.toggle('is-picker-expanded', expanded);
     pickerToggle?.setAttribute('aria-expanded', String(expanded));
+    syncPickerIndicator(expanded);
   }
   let pickerDragStartY = null;
   let pickerDragHandled = false;
@@ -52,6 +60,8 @@
     if (!encyclopediaLayout || !window.matchMedia('(max-width: 760px)').matches) return;
     setPickerExpanded(!encyclopediaLayout.classList.contains('is-picker-expanded'));
   });
+  if (window.matchMedia('(max-width: 760px)').matches) setPickerExpanded(false);
+  else syncPickerIndicator(true);
   fullscreenToggle?.addEventListener('click', async () => {
     if (!previewWorld) return;
     const active = document.fullscreenElement === previewWorld || previewWorld.classList.contains('is-preview-expanded');
