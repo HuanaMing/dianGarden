@@ -18,7 +18,7 @@ if (indexHtml.includes('登入 Google 後，可在其他裝置找回同一座花
 }
 if (!cloudSaveSource.includes("const needsChoice = authenticated && statusNode.dataset.state === 'choice';")
   || !cloudSaveSource.includes("error.message === 'invalid_google_id_token' || error.message === 'authentication_required'")
-  || !cloudSaveSource.includes("if (expired) {\n      syncEnabled = false;\n      clearTimeout(pendingSyncTimer);")
+  || !cloudSaveSource.includes("if (expired) {\n      clearStoredAuthSession();\n      sessionOpenedAt = 0;\n      syncEnabled = false;\n      clearTimeout(pendingSyncTimer);")
   || !cloudSaveSource.includes("signinNode.hidden = true;\n      if (startupSigninNode) startupSigninNode.hidden = true;")
   || !cloudSaveSource.includes("if (!idToken || sessionExpired) return;")
   || !cloudSaveSource.includes("function refreshCurrentPage() {\n    window.location.href = window.location.href;\n  }")
