@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "已提交最新調整：雲朵增至 16 組，相機相對 Y 偏移範圍 -12 至 6，尺寸係數 3.0–4.0，保留各雲緩慢水平飄動。程式提交 78e2ef81004fa403639a90e1aeed8fb3260d5b08。待確認自動化工作流程與使用者實機視覺驗收；tests/browser-smoke.mjs 的舊斷言尚未同步。",
+  "nextAction": "已提交最新調整：雲朵 16 組，相對相機 Y 偏移範圍 -24 至 6，尺寸係數 3.0–4.0，保留各雲緩慢水平飄動。程式提交 dd89e57aa14e7d47e6fa7da07a4c78315fc20cb4。待自動化工作流程與使用者實機視覺驗收；測試中的舊斷言需留意。",
   "taskFile": "tasks/active/239-world-space-sky.md",
-  "result": "src/sky-world.js commit 78e2ef81004fa403639a90e1aeed8fb3260d5b08：雲朵由 8 組增加為 16 組，Y 偏移範圍 -12 至 6，尺寸係數維持 3.0–4.0，保留 time * 0.001 漂移公式及相機相對位置。自動化測試與實機視覺驗收仍待確認。"
+  "result": "src/sky-world.js commit dd89e57aa14e7d47e6fa7da07a4c78315fc20cb4：16 組雲的 Y 偏移範圍調整為 -24 至 6；尺寸係數 3.0–4.0、漂移公式與相機相對位置保持不變。自動化測試與實機視覺驗收仍待確認。"
 }
