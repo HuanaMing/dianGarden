@@ -752,3 +752,10 @@
 - 取捨：接受 XSS 可能讀取更新憑證的剩餘風險；保留基本的憑證期限、輪替與撤銷，不增加外部認證服務或複雜復原系統。
 - 部署界線：D1 migration `cloudflare/migrations/002-player-sessions.sql` 必須在 Worker 更新前套用；本次程式修改及測試不等於已更新生產 D1／Worker，也不代表已手動部署 GitHub Pages。
 
+
+
+## 2026-10-25：以頂點法線與日夜 uniform 實作動態場景光照（任務237）
+
+- 決定：在 `src/sky-world.js` 的幾何上傳階段按三角形計算法線，使用原生 WebGL vertex shader 結合相機方向、世界方向光及環境光計算受光顏色；日夜、黎明／黃昏與降雨以 uniform 控制。
+- 原因：現有面色係數固定在模型上，不能隨時間或光源方向改變；CSS brightness 亦無法讓夜間花園合理變暗。
+- 影響：不需改動各花卉模型檔案或引入套件；世界、無人機及特效使用對應法線緩衝區。canvas CSS brightness 改為中性值，夜間暗度由 shader 真正控制。由於模型 winding 不一致，shader 依相機方向翻轉背向相機的面法線以保留可見面。
