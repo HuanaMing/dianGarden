@@ -25,6 +25,7 @@
     uniform vec3 uSunColor;
     uniform vec3 uDroneLightPos[8];
     uniform float uDroneLightStrength[8];
+    uniform float uDroneSelfIllumination;
     varying vec3 vColor;
     varying float vOpacity;
     void main() {
@@ -43,6 +44,8 @@
           lighting += vec3(1.0, 0.82, 0.52) * diffuse * attenuation * uDroneLightStrength[i];
         }
       }
+      // Keep drone bodies softly visible at night; this uniform is enabled only for the drone draw pass.
+      lighting += vec3(1.0, 0.76, 0.46) * uDroneSelfIllumination;
       vColor = aColor * lighting;
       vOpacity = aOpacity;
     }
@@ -93,6 +96,7 @@
     sunColor: gl.getUniformLocation(program, 'uSunColor'),
     droneLightPos: gl.getUniformLocation(program, 'uDroneLightPos[0]'),
     droneLightStrength: gl.getUniformLocation(program, 'uDroneLightStrength[0]'),
+    droneSelfIllumination: gl.getUniformLocation(program, 'uDroneSelfIllumination'),
   };
   const positionBuffer = gl.createBuffer();
   const colorBuffer = gl.createBuffer();
@@ -1512,6 +1516,7 @@
     }
     gl.uniform3fv(locations.droneLightPos, new Float32Array(droneLightPositions));
     gl.uniform1fv(locations.droneLightStrength, new Float32Array(droneLightStrengths));
+    gl.uniform1f(locations.droneSelfIllumination, 0);
     gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
     gl.bindBuffer(gl.ARRAY_BUFFER, effectPositionBuffer);
     gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, 0, 0);
@@ -1533,6 +1538,7 @@
     gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, droneNormalBuffer);
     gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
+    gl.uniform1f(locations.droneSelfIllumination, nightFactor * 0.48);
     gl.drawArrays(gl.TRIANGLES, 0, droneVertexCount);
     requestAnimationFrame(draw);
   }
