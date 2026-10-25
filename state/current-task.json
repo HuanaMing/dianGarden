@@ -1,12 +1,12 @@
 {
-  "name": "任務234：連接地塊整體底座與原始側面厚度",
-  "status": "completed",
+  "name": "任務235：手機版引路者介面緊湊化",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "上層地塊下方任意距離存在草地或農地時，側面保留原本0.5單位厚度，不再延伸至群組底部；最底層地塊仍延伸至群組底部。瀏覽器 CI 待確認，未手動觸發 GitHub Pages 部署。",
-  "taskFile": "tasks/done/234-connected-landmass-bottom.md",
-  "result": "addGrassRamp 現在所有地塊都繪製側面；只有最底層地塊把側面底端延伸至連通群組底部並繪製底板。上層地塊的 bottomY 使用 localBottomY，保留0.5單位厚度。"
+  "nextAction": "手機版引路者介面已新增窄螢幕緊湊樣式並提交；待使用者在手機上驗收垂直間距、Google登入區高度與文字完整性。未手動觸發GitHub Pages部署。",
+  "taskFile": "tasks/active/235-mobile-guide-interface.md",
+  "result": "src/styles.css 在 max-width:520px 下縮小引路者對話框間距、內距、區塊內距、文字行高及登入／訪客按鈕留白；桌面版樣式與登入邏輯不變。"
 }
