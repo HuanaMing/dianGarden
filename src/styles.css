@@ -479,6 +479,7 @@ input, [contenteditable="true"]{
 .version-check-status.has-version-error{color:#a66450}
 .force-update-button{width:100%;min-height:36px;border:0;border-radius:9px;background:#477451;color:#fff;font-size:11px;font-weight:800;cursor:pointer}
 .force-update-button:disabled{opacity:.65;cursor:wait}
+.version-update-actions{display:flex;align-items:center;gap:8px;min-width:0}.version-update-actions .force-update-button{flex:1 1 auto;width:auto;min-width:0}.auto-update-toggle{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:36px;padding:0 8px;border:1px solid #dce8d8;border-radius:9px;background:#fffef9;color:#527763;font-size:11px;font-weight:800;white-space:nowrap;cursor:pointer}.auto-update-toggle input{width:16px;height:16px;margin:0;accent-color:#477451;cursor:pointer}.auto-update-toggle:focus-within{outline:2px solid #6b9f76;outline-offset:2px}
 
 
 /* 任務184：壓縮設定面板內的卡片、按鈕與頭像選擇器。 */
