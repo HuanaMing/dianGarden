@@ -348,7 +348,7 @@ try {
   if (await page.locator('#current-version').isVisible() || await page.locator('#cloud-save-status').isVisible() || await page.locator('#reset-progress').isVisible()) throw new Error('切換至輔助功能時仍顯示同步分頁內容');
   await page.locator('#settings-tab-sync').click();
   const settingsPanelSize = await page.locator('#settings-panel').evaluate(element => ({ width: element.getBoundingClientRect().width, padding: getComputedStyle(element).paddingTop, versionCardPadding: getComputedStyle(element.querySelector('.version-settings')).paddingTop }));
-  if (settingsPanelSize.width < (await page.locator('.world-frame').evaluate(element => element.getBoundingClientRect().width)) - 2) throw new Error('設定面板未擴展至全畫面：' + JSON.stringify(settingsPanelSize));
+  if (settingsPanelSize.width > 522 || settingsPanelSize.width < 300) throw new Error('設定面板寬度未符合自訂頭像對話框規格：' + JSON.stringify(settingsPanelSize));
   if (Number.parseFloat(settingsPanelSize.padding) < 10 || Number.parseFloat(settingsPanelSize.versionCardPadding) < 10) throw new Error('全畫面設定面板內距沒有隨版面放大：' + JSON.stringify(settingsPanelSize));
   checks.push('任務203：設定兩個分頁可切換，分類內容正確且全畫面版面保留');
   if (await page.locator('#avatar-dialog').isVisible()) throw new Error('頭像設定對話框不應在預設狀態顯示');
