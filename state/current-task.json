@@ -1,11 +1,11 @@
 {
-  "name": "任務225：修正多台無人機異常瞬移",
-  "status": "in_progress",
+  "name": "任務223–225：剩餘任務完成",
+  "status": "completed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的 GitHub Pages 部署：需使用者明確批准後手動觸發。"
   ],
-  "nextAction": "已定位高機率根因：game.js 每秒更新電量後呼叫 setDroneDocks()；該函式原本在任何停靠資料變動（包括電量變化）時重算所有返航中的路徑，造成返航插值路徑長度／航點變更而跳位。已修改為僅在停靠座標實際改變時更新路徑；需新增回歸斷言並取得包含此測試的完整 CI 結果。",
-  "taskFile": "tasks/active/225-drone-teleportation.md",
-  "result": "任務223與224已歸檔。任務225目前已修改 src/sky-world.js，將返航路徑重算限制在停靠位置改變時；初步根因分析完成，回歸測試與驗收仍待完成。"
+  "nextAction": "任務223、224、225均已完成並歸檔；任務224與225的完整 Playwright 桌面／手機驗收通過。tasks/active 與 tasks/inbox 已無待執行任務（保留 .gitkeep）；既有待批准事項仍維持待處理，未執行手動部署或付費雲端 Mac 操作。",
+  "taskFile": "tasks/done/225-drone-teleportation.md",
+  "result": "223：使用者驗收完成，修正草地／手動農地選取被自動地塊1覆蓋。224：登入／花園選擇、版本更新及雲端還原期間暫停繪圖，Playwright run 40168665969 通過。225：修正電量更新導致返航路徑重算的瞬移問題，八台無人機連續性測試及完整 Playwright run 40169170602 通過。"
 }
