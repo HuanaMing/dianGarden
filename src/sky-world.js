@@ -1243,8 +1243,22 @@
 
   let previousTime = 0;
   let powerSaveMode = false;
+  const renderingPauseReasons = new Set(['startup']);
+  function isRenderingPaused() { return powerSaveMode || renderingPauseReasons.size > 0; }
+  function setRenderingPaused(reason, paused) {
+    if (typeof reason !== 'string' || !reason.trim()) return;
+    if (paused) renderingPauseReasons.add(reason);
+    else renderingPauseReasons.delete(reason);
+    if (isRenderingPaused()) {
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    } else {
+      previousTime = 0;
+      uploadWorld();
+    }
+  }
   function draw(time) {
-    if (powerSaveMode) {
+    if (isRenderingPaused()) {
       previousTime = time;
       setTimeout(() => requestAnimationFrame(draw), 250);
       return;
@@ -1717,13 +1731,15 @@
       const next = Boolean(enabled);
       if (powerSaveMode === next) return;
       powerSaveMode = next;
-      if (powerSaveMode) {
+      if (isRenderingPaused()) {
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       } else {
+        previousTime = 0;
         uploadWorld();
       }
     },
+    setRenderingPaused,
     setLandCount(count) {
       if (Number.isFinite(count) && count > 0 && count !== landCount) {
         landCount = count;
