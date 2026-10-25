@@ -317,6 +317,7 @@
       JSON.parse(cloudSave.saveData);
       JSON.parse(cloudSave.variantsData);
       JSON.parse(cloudSave.autoCropsData);
+      window.skyWorld?.setRenderingPaused?.('cloud-restore', true);
       localStorage.setItem(STORAGE_KEY, cloudSave.saveData);
       localStorage.setItem(VARIANTS_KEY, cloudSave.variantsData);
       localStorage.setItem(AUTO_CROPS_KEY, cloudSave.autoCropsData);
@@ -335,6 +336,7 @@
       window.dispatchEvent(new Event('diangarden:restore-cloud-save'));
       window.location.reload();
     } catch (_) {
+      window.skyWorld?.setRenderingPaused?.('cloud-restore', false);
       setStatus('雲端存檔格式無法讀取；本機資料未變更。', 'warning');
     }
   }
