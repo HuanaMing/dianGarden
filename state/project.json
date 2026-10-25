@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 209,
-  "nextAction": "任務205～208已完成並歸檔。當前執行任務209：將自動儲存狀態集中於跨裝置存檔區並驗證存檔失敗警告；等待最新 Playwright 與 Pages 工作流程結果。",
+  "activeTask": null,
+  "nextAction": "任務205～209已依序完成並歸檔，相關Playwright瀏覽器驗收與Pages部署均通過。等待使用者提出下一項任務。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
