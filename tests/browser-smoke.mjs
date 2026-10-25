@@ -503,9 +503,9 @@ try {
   checks.push('任務211：模擬 stale_session 後隱藏登入、暫停雲端同步且本機存檔仍可寫入');
 
   const assertRefreshButtonReloads = async selector => {
-    const navigated = staleSessionPage.waitForEvent('framenavigated');
+    const reloaded = staleSessionPage.waitForEvent('load');
     await staleSessionPage.locator(selector).click();
-    await navigated;
+    await reloaded;
     await staleSessionPage.waitForFunction(() => typeof window.__task211CredentialCallback === 'function');
     const localSave = await staleSessionPage.evaluate(() => localStorage.getItem('sky-garden-save-v1'));
     if (!localSave) throw new Error(`${selector} 重新整理後本機存檔遺失`);
