@@ -1886,11 +1886,8 @@
       wheel.style.left = `${Math.max(margin, Math.min(rect.width - margin, clientX - rect.left))}px`;
       wheel.style.top = `${Math.max(margin, Math.min(rect.height - margin, clientY - rect.top))}px`;
       const collapseItem = wheel.querySelector('[data-wheel-action="collapse"]');
-      const isCollapsed = document.querySelector('#hud-toggle')?.textContent?.trim() === '🔽';
+      const isCollapsed = document.querySelector('#hud-toggle')?.getAttribute('aria-expanded') === 'false';
       if (collapseItem) {
-        const icon = collapseItem.querySelector('span'), label = collapseItem.querySelector('small');
-        if (icon) icon.textContent = isCollapsed ? '🔽' : '🔼';
-        if (label) label.textContent = isCollapsed ? '展開介面' : '收合介面';
         collapseItem.setAttribute('aria-label', isCollapsed ? '展開介面' : '收合介面');
       }
       wheel.hidden = false; wheel.classList.add('is-active');
