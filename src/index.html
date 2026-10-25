@@ -92,8 +92,9 @@
               <label for="avatar-mode">頭像來源</label>
               <select id="avatar-mode"><option value="auto">自動（種植最多的花）</option><option value="manual">手動選擇</option></select>
               <div class="avatar-flower-picker" id="avatar-flower-picker">
-                <span class="avatar-flower-label">指定花種</span>
-                <div class="avatar-flower-options" id="avatar-flower-options" role="group" aria-label="指定花卉頭像"></div>
+                <span class="avatar-flower-label" id="avatar-flower-label">花種清單</span>
+                <p class="avatar-current-flower" id="avatar-current-flower" role="status" aria-live="polite"></p>
+                <div class="avatar-flower-options" id="avatar-flower-options" role="group" aria-label="花卉頭像選擇"></div>
               </div>
             </section>
             <p class="avatar-dialog-note">自動模式會依目前種植數量最多的花卉更新；手動模式則固定使用指定花卉。</p>
