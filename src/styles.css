@@ -690,3 +690,49 @@ input, [contenteditable="true"]{
 
 /* 全畫面面板不套用舊浮窗的縮放入場動畫，避免短暫露出遊戲邊緣。 */
 .farm-management-panel,.settings-panel,.drone-jobs{animation:none!important;transform:none!important;transform-origin:top left}
+
+
+/* 任務202：點擊花園頭像開啟獨立設定對話框。 */
+.world-brand>#garden-avatar.garden-avatar-toggle{
+  padding:0;border:0;border-radius:50%;background:transparent;color:inherit;cursor:pointer;
+}
+.world-brand>#garden-avatar.garden-avatar-toggle:focus-visible{
+  outline:2px solid #78a982;outline-offset:3px;
+}
+.avatar-dialog{
+  width:min(520px,calc(100% - 28px));max-height:min(82dvh,680px);
+  overflow:auto;overscroll-behavior:contain;
+}
+.avatar-dialog[open]{display:grid;gap:12px}
+.avatar-dialog .avatar-settings{margin:0;padding:14px}
+.avatar-dialog .avatar-settings h3{font-size:14px}
+.avatar-dialog .avatar-settings label,.avatar-dialog .avatar-flower-label{font-size:12px}
+.avatar-dialog .avatar-settings select{min-height:38px;font-size:13px}
+.avatar-dialog .avatar-flower-options{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.avatar-dialog .avatar-flower-option{min-height:68px;padding:7px 3px}
+.avatar-dialog .avatar-flower-image,.avatar-dialog .avatar-flower-emoji{width:36px;height:36px;flex-basis:36px}
+.avatar-dialog .avatar-flower-emoji{font-size:27px;line-height:36px}
+.avatar-dialog .avatar-flower-name{font-size:10px}
+.avatar-dialog-note{margin:0;color:#71887b;font-size:12px;line-height:1.5}
+
+/* 任務203：設定分為同步與輔助功能兩個小分頁。 */
+.settings-panel>.settings-tabs,.settings-panel>.settings-tab-panel{grid-column:1/-1;min-width:0}
+.settings-tabs{display:flex;gap:8px;padding:4px;border:1px solid #dce8d7;border-radius:12px;background:#f3f7ec}
+.settings-tab{flex:1;min-height:40px;padding:9px 12px;border:1px solid transparent;border-radius:9px;background:transparent;color:#688574;font:inherit;font-size:13px;font-weight:900;cursor:pointer}
+.settings-tab[aria-selected="true"]{border-color:#c4dcc0;background:#fffef8;color:#315d3b;box-shadow:0 2px 8px #426e6612}
+.settings-tab:focus-visible{outline:2px solid #78a982;outline-offset:2px}
+.settings-tab-panel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;align-items:start;gap:12px;min-width:0}
+.settings-tab-panel[hidden]{display:none!important}
+.settings-tab-panel>.version-settings,.settings-tab-panel>.cloud-save-settings{min-width:0}
+.settings-tab-panel>.reset-progress-button{position:static;width:100%;min-height:40px;margin:0;padding:9px 12px;border-radius:10px;font-size:12px}
+.settings-tab-panel>.save-status{grid-column:1/-1}
+.settings-tab-panel>.operation-help{grid-column:1/-1}
+.avatar-dialog[hidden],.settings-tab-panel[hidden]{display:none!important}
+@media(max-width:700px){
+  .avatar-dialog{padding:14px}
+  .avatar-dialog .avatar-flower-options{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .settings-tabs{gap:5px}
+  .settings-tab{min-height:38px;padding:8px 6px;font-size:12px}
+  .settings-tab-panel{grid-template-columns:minmax(0,1fr);gap:8px}
+  .settings-tab-panel>.save-status,.settings-tab-panel>.operation-help{grid-column:1}
+}
