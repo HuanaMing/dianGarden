@@ -1801,3 +1801,13 @@
 - 移除臨時診斷面板程式碼（`src/cloud-save.js`），避免正式遊戲保留除錯 UI。
 - 完成紀錄已建立於 `tasks/done/235-mobile-guide-interface.md`，確認內容完整後移除 `tasks/active/235-mobile-guide-interface.md`；同步更新目前任務與專案狀態。
 - 未手動觸發 GitHub Pages 正式部署。
+
+## 2026-10-25 — 任務237：WebGL 動態光照與夜間照明
+
+- 使用者確認實機驗收完成。完成版歸檔已建立於 `tasks/done/237-dynamic-world-lighting.md`；刪除 `tasks/active/237-dynamic-world-lighting.md` 的 GitHub 寫入遭安全檢查阻擋，因此 active 原檔仍待處理，未宣稱已刪除。
+
+## 2026-10-25 — 任務238：夜晚無人機作為微弱的光源照亮周圍
+
+- 結果：在 `src/sky-world.js` 加入最多 8 台無人機的夜間局部暖色光照，依位置、距離、部署狀態、電量及日照進度控制；未新增依賴或存檔欄位。
+- 驗證：GitHub Actions Playwright 瀏覽器驗收成功（run 40202984299）；Cloudflare Worker 相關 smoke tests 成功。尚待使用者實機驗收光照強度與自然度。
+- 檔案：`src/sky-world.js`、`tasks/active/238-drone-night-light.md`、`docs/architecture.md`、`state/current-task.json`、`state/project.json`。
