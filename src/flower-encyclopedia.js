@@ -22,11 +22,35 @@
     fullscreenToggle.title = active ? '退出全螢幕預覽' : '進入全螢幕預覽';
     fullscreenToggle.textContent = active ? '⤡' : '⛶';
   }
-  function setPreviewCollapsed(collapsed) {
+  function setPickerExpanded(expanded) {
     if (!encyclopediaLayout || !window.matchMedia('(max-width: 760px)').matches) return;
-    encyclopediaLayout.classList.toggle('is-preview-collapsed', collapsed);
-    pickerToggle?.setAttribute('aria-expanded', String(!collapsed));
+    encyclopediaLayout.classList.toggle('is-picker-expanded', expanded);
+    pickerToggle?.setAttribute('aria-expanded', String(expanded));
   }
+  let pickerDragStartY = null;
+  let pickerDragHandled = false;
+  pickerToggle?.addEventListener('pointerdown', (event) => {
+    if (!window.matchMedia('(max-width: 760px)').matches || event.isPrimary === false) return;
+    pickerDragStartY = event.clientY;
+    pickerDragHandled = false;
+  });
+  pickerToggle?.addEventListener('pointerup', (event) => {
+    if (pickerDragStartY === null) return;
+    const deltaY = event.clientY - pickerDragStartY;
+    pickerDragStartY = null;
+    if (Math.abs(deltaY) < 36) return;
+    pickerDragHandled = true;
+    setPickerExpanded(deltaY < 0);
+  });
+  pickerToggle?.addEventListener('pointercancel', () => { pickerDragStartY = null; });
+  pickerToggle?.addEventListener('click', () => {
+    if (pickerDragHandled) {
+      pickerDragHandled = false;
+      return;
+    }
+    if (!encyclopediaLayout || !window.matchMedia('(max-width: 760px)').matches) return;
+    setPickerExpanded(!encyclopediaLayout.classList.contains('is-picker-expanded'));
+  });
   fullscreenToggle?.addEventListener('click', async () => {
     if (!previewWorld) return;
     const active = document.fullscreenElement === previewWorld || previewWorld.classList.contains('is-preview-expanded');
@@ -46,13 +70,9 @@
     syncPreviewFullscreenButton();
   });
   document.addEventListener('fullscreenchange', syncPreviewFullscreenButton);
-  pickerToggle?.addEventListener('click', () => {
-    if (!encyclopediaLayout || !window.matchMedia('(max-width: 760px)').matches) return;
-    setPreviewCollapsed(!encyclopediaLayout.classList.contains('is-preview-collapsed'));
-  });
   window.addEventListener('resize', () => {
     if (window.matchMedia('(min-width: 761px)').matches) {
-      encyclopediaLayout?.classList.remove('is-preview-collapsed');
+      encyclopediaLayout?.classList.remove('is-picker-expanded');
       pickerToggle?.setAttribute('aria-expanded', 'true');
     }
   });
@@ -224,7 +244,7 @@
     const index = Number(card.dataset.flowerIndex);
     const flower = window.flowerCatalog[index];
     if (!flower) return;
-    setPreviewCollapsed(false);
+    setPickerExpanded(false);
     setSelectedCard(index);
     colorInput.value = flower.color;
     nameInput.value = '';
