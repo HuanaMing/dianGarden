@@ -1821,3 +1821,10 @@
 - 已將 `state/current-task.json` 標記為完成，並更新 `state/project.json`。
 - GitHub Actions 初版 Playwright 驗收 run 40202984299 成功；後續微調版本的自動測試／部署工作流程結果未確認，不將其記為通過。
 - 嘗試移除 `tasks/active/238-drone-night-light.md` 時遭 GitHub 安全檢查阻擋；重新讀取確認原檔仍存在後，依規範停止重試。完成版已歸檔，但 active 原檔暫時仍留存，需後續處理。
+
+## 2026-10-26 — 任務239重做：移除日月幾何、調整遠景雲層
+
+- 依使用者要求移除太陽與月亮的低面數幾何模型，等待使用者提供 PNG 素材後再接入貼圖。
+- 雲層調整為 8 組世界座標遠景雲，位置在常規相機最大縮放距離 24 之外，雲朵尺寸係數提升至 2.5–3.1，透明度提升至晴天 0.42、雨天 0.36，保留緩慢飄動與雨天配色。
+- 更新 `src/sky-world.js`、`tests/browser-smoke.mjs`、`tasks/active/239-world-space-sky.md`、`docs/architecture.md` 與狀態紀錄。
+- 狀態：程式與測試已提交，等待 GitHub Actions 自動驗收及 Pages 部署結果；尚未完成使用者實機視覺驗收。
