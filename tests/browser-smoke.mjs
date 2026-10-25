@@ -428,7 +428,12 @@ try {
     || connectedLandBottom.isolatedBottom !== 1.5) {
     throw new Error('連接地塊整體底面／下方地塊判定失敗：' + JSON.stringify(connectedLandBottom));
   }
-  checks.push('連接地塊共用最低底面；上方地塊辨識下方地塊並保留獨立地塊底面');
+  const stackedTileSideRule = await fs.readFile('src/sky-world.js', 'utf8');
+  if (!stackedTileSideRule.includes('if (!hasPlotBelow) {')
+    || !stackedTileSideRule.includes('// A tile with another tile directly below must not grow side walls downward.')) {
+    throw new Error('下方已有地塊時仍可能產生側面延伸');
+  }
+  checks.push('連接地塊共用最低底面；下方已有地塊時不生成側面延伸');
   const farmRampGeometry = await page.evaluate(() => {
     const source = document.querySelector('script[src*="sky-world.js"]')?.src;
     return Boolean(source && window.dianGardenGrassRampLogic?.getSharedCornerHeight);
