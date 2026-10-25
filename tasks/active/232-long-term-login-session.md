@@ -49,4 +49,11 @@
 實作採用遊戲專用的不透明存取／更新憑證：15 分鐘存取期限、30 天閒置期限；更新憑證存在 localStorage，伺服器只保存 SHA-256 雜湊。更新時輪替更新憑證；舊憑證重播時撤銷工作階段。Google ID Token 僅用於首次登入建立工作階段。正式 Cloudflare D1 migration 與 Worker 部署不在本次自動執行範圍，須先驗證程式與 migration，再由使用者操作／確認生產環境變更。
 
 ## 狀態
-已獲使用者確認 B 方案，開始實作；尚未完成程式修改、測試或部署。
+已獲使用者確認 B 方案，核心程式與測試已提交 GitHub：
+- `cloudflare/worker.js` 新增建立／更新／登出工作階段 API，存取憑證 15 分鐘，更新憑證輪替，偵測重播並撤銷工作階段。
+- `cloudflare/schema.sql` 與 `cloudflare/migrations/002-player-sessions.sql` 新增工作階段表格。
+- `src/cloud-save.js` 首次 Google 驗證後改用遊戲專用憑證；更新憑證存於 localStorage，頁面啟動時自動更新並恢復登入。
+- `tests/cloudflare-worker-smoke.mjs` 新增工作階段建立、輪替、重播、撤銷、效期及存檔隔離測試。
+- `tests/browser-smoke.mjs` 改為驗證跨頁恢復、憑證輪替及登出。
+
+目前 GitHub Actions 瀏覽器驗收仍在修正中；尚未執行生產 D1 migration、Cloudflare Worker 部署或 GitHub Pages 手動部署。
