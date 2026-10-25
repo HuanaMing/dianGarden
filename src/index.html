@@ -29,7 +29,7 @@
             <button type="button" role="menuitem" data-wheel-action="rotate" aria-label="旋轉" aria-pressed="false"><span>🔄</span></button>
           </div>
           <header class="world-topbar" id="world-topbar">
-            <div class="world-brand"><span id="garden-avatar" aria-label="花園頭像" aria-hidden="false">🌼</span><h1><button class="garden-name-display" id="garden-name-display" type="button" aria-label="編輯花園名稱">花明摸魚花園</button></h1><form class="garden-name-editor" id="garden-name-editor" hidden><input id="garden-name-input" type="text" maxlength="24" aria-label="花園名稱" autocomplete="off" required></form></div>
+            <div class="world-brand"><button class="garden-avatar-toggle" id="garden-avatar" type="button" aria-label="開啟頭像設定" aria-haspopup="dialog" aria-controls="avatar-dialog">🌼</button><h1><button class="garden-name-display" id="garden-name-display" type="button" aria-label="編輯花園名稱">花明摸魚花園</button></h1><form class="garden-name-editor" id="garden-name-editor" hidden><input id="garden-name-input" type="text" maxlength="24" aria-label="花園名稱" autocomplete="off" required></form></div>
             <div class="world-status">
               <span class="world-wallet" aria-live="polite">🪙 <strong id="coins">120</strong><span>金幣</span></span>
               
@@ -45,32 +45,50 @@
           </header>
           <section class="settings-panel" id="settings-panel" aria-label="設定" hidden>
             <h2>設定</h2>
-            <section class="version-settings" aria-label="遊戲版本資訊">
-              <h3>遊戲版本</h3>
-              <dl class="version-details">
-                <div><dt>目前版本號</dt><dd id="current-version">讀取中…</dd></div>
-                <div><dt>最新版本號</dt><dd id="latest-version">檢查中…</dd></div>
-              </dl>
-              <p id="version-check-status" class="version-check-status" role="status" aria-live="polite">正在檢查版本…</p>
-              <button id="force-update-button" class="force-update-button" type="button">立即更新</button>
+            <nav class="settings-tabs" role="tablist" aria-label="設定分類">
+              <button class="settings-tab" id="settings-tab-sync" type="button" role="tab" data-settings-tab="sync" aria-controls="settings-sync" aria-selected="true">同步</button>
+              <button class="settings-tab" id="settings-tab-accessibility" type="button" role="tab" data-settings-tab="accessibility" aria-controls="settings-accessibility" aria-selected="false">輔助功能</button>
+            </nav>
+            <section class="settings-tab-panel" id="settings-sync" data-settings-panel="sync" role="tabpanel" aria-labelledby="settings-tab-sync">
+              <section class="version-settings" aria-label="遊戲版本資訊">
+                <h3>遊戲版本</h3>
+                <dl class="version-details">
+                  <div><dt>目前版本號</dt><dd id="current-version">讀取中…</dd></div>
+                  <div><dt>最新版本號</dt><dd id="latest-version">檢查中…</dd></div>
+                </dl>
+                <p id="version-check-status" class="version-check-status" role="status" aria-live="polite">正在檢查版本…</p>
+                <button id="force-update-button" class="force-update-button" type="button">立即更新</button>
+              </section>
+              <section class="cloud-save-settings" aria-label="跨裝置雲端存檔">
+                <h3>跨裝置存檔</h3>
+                <p id="guest-garden-notice" class="cloud-save-description" hidden>目前正在遊玩訪客花園，進度獨立保存在這台裝置，不會覆蓋自己的花園或同步到雲端。</p>
+                <button id="return-to-own-garden" class="guest-return-button" type="button" hidden>回到自己的花園</button>
+                <p class="cloud-save-description">登入 Google 後，可在其他裝置找回同一座花園。本機存檔仍會保留。</p>
+                <div id="cloud-save-signin" class="cloud-save-signin" aria-label="Google 登入"></div>
+                <p id="cloud-save-status" class="cloud-save-status" role="status" aria-live="polite">雲端存檔尚未設定；目前仍使用本機自動存檔。</p>
+                <div id="cloud-save-actions" class="cloud-save-actions" hidden>
+                  <button id="cloud-save-upload" type="button">使用這台裝置的花園</button>
+                  <button id="cloud-save-download" type="button">載入雲端花園</button>
+                  <button id="cloud-save-refresh" type="button">重新檢查雲端</button>
+                  <button id="cloud-save-signout" type="button">登出雲端存檔</button>
+                </div>
+                <p class="cloud-save-note">雲端同步需要網路。同步失敗不會阻止遊玩；重置本機進度不會刪除雲端備份。</p>
+              </section>
+              <button class="reset-progress-button" id="reset-progress" type="button">重置進度</button>
+              <p class="save-status" id="save-status" role="status" aria-live="polite"></p>
             </section>
-            <section class="cloud-save-settings" aria-label="跨裝置雲端存檔">
-              <h3>跨裝置存檔</h3>
-              <p id="guest-garden-notice" class="cloud-save-description" hidden>目前正在遊玩訪客花園，進度獨立保存在這台裝置，不會覆蓋自己的花園或同步到雲端。</p>
-              <button id="return-to-own-garden" class="guest-return-button" type="button" hidden>回到自己的花園</button>
-              <p class="cloud-save-description">登入 Google 後，可在其他裝置找回同一座花園。本機存檔仍會保留。</p>
-              <div id="cloud-save-signin" class="cloud-save-signin" aria-label="Google 登入"></div>
-              <p id="cloud-save-status" class="cloud-save-status" role="status" aria-live="polite">雲端存檔尚未設定；目前仍使用本機自動存檔。</p>
-              <div id="cloud-save-actions" class="cloud-save-actions" hidden>
-                <button id="cloud-save-upload" type="button">使用這台裝置的花園</button>
-                <button id="cloud-save-download" type="button">載入雲端花園</button>
-                <button id="cloud-save-refresh" type="button">重新檢查雲端</button>
-                <button id="cloud-save-signout" type="button">登出雲端存檔</button>
-              </div>
-              <p class="cloud-save-note">雲端同步需要網路。同步失敗不會阻止遊玩；重置本機進度不會刪除雲端備份。</p>
+            <section class="settings-tab-panel" id="settings-accessibility" data-settings-panel="accessibility" role="tabpanel" aria-labelledby="settings-tab-accessibility" hidden>
+              <button class="camera-mode" id="camera-mode" type="button" aria-pressed="false">2D模式</button>
+              <button class="power-save-toggle" id="power-save-toggle" type="button" aria-pressed="false">省電模式：關</button>
+              <section class="operation-help" aria-label="操作說明">
+                <h3>操作說明</h3>
+                <p>手機：拖曳平移；長按空地開啟快捷輪盤，滑到「旋轉」即收起輪盤並開始旋轉，放開即退出；雙指縮放。長按地塊可移動。電腦：長按空地開啟輪盤，滑到「旋轉」後拖曳旋轉，放開退出；WASD 移動，滾輪縮放。</p>
+              </section>
             </section>
+          </section>
+          <dialog class="seed-dialog avatar-dialog" id="avatar-dialog" aria-labelledby="avatar-dialog-title">
+            <div class="seed-dialog-heading"><div><p class="eyebrow">YOUR SKY GARDEN</p><h2 id="avatar-dialog-title">自訂頭像</h2></div><button class="dialog-close" type="button" aria-label="關閉頭像設定" data-close-avatar-dialog>×</button></div>
             <section class="avatar-settings" aria-label="自訂頭像">
-              <h3>自訂頭像</h3>
               <label for="avatar-mode">頭像來源</label>
               <select id="avatar-mode"><option value="auto">自動（種植最多的花）</option><option value="manual">手動選擇</option></select>
               <div class="avatar-flower-picker" id="avatar-flower-picker">
@@ -78,15 +96,8 @@
                 <div class="avatar-flower-options" id="avatar-flower-options" role="group" aria-label="指定花卉頭像"></div>
               </div>
             </section>
-            <button class="camera-mode" id="camera-mode" type="button" aria-pressed="false">2D模式</button>
-            <button class="reset-progress-button" id="reset-progress" type="button">重置進度</button>
-            <button class="power-save-toggle" id="power-save-toggle" type="button" aria-pressed="false">省電模式：關</button>
-            <section class="operation-help" aria-label="操作說明">
-              <h3>操作說明</h3>
-              <p>手機：拖曳平移；長按空地開啟快捷輪盤，滑到「旋轉」即收起輪盤並開始旋轉，放開即退出；雙指縮放。長按地塊可移動。電腦：長按空地開啟輪盤，滑到「旋轉」後拖曳旋轉，放開退出；WASD 移動，滾輪縮放。</p>
-            </section>
-            <p class="save-status" id="save-status" role="status" aria-live="polite"></p>
-          </section>
+            <p class="avatar-dialog-note">自動模式會依目前種植數量最多的花卉更新；手動模式則固定使用指定花卉。</p>
+          </dialog>
           <aside class="drone-jobs" id="drone-jobs" aria-label="無人機工作佇列"><strong id="job-status" role="status" aria-live="polite">無人機待命</strong><button class="auto-mode" id="auto-mode" type="button" aria-pressed="false">自動模式：關</button><button class="buy-drone" id="buy-drone" type="button">購買無人機 · 150 🪙 (1/8)</button><div class="drone-fleet" id="drone-fleet" aria-label="無人機部署管理"></div><ol id="job-queue"></ol></aside>
           <div class="cloud-session-banner" id="cloud-session-banner" role="status" aria-live="assertive" hidden>帳號已在他處登入，花園進入離線模式。</div>
           <div class="hud-collapsed-summary" id="hud-collapsed-summary" role="status" aria-live="polite"></div>
