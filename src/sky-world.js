@@ -1063,7 +1063,7 @@
     for (const island of islands) {
       const { x, z, y, rx, rz, rock, grass } = island;
       const start = positions.length / 3;
-      addOctahedron(positions, colors, x, y - 0.55, z, rx * 0.86, 1.2 + rx * 0.08, rz * 0.86, rock);
+      addOctahedron(positions, colors, x, y - 1.05, z, rx * 0.86, 0.92 + rx * 0.04, rz * 0.86, rock);
       addOctahedron(positions, colors, x, y + 0.06, z, rx, 0.34, rz, grass);
       // 小塊岩石色面讓島體有低面數層次，不加入任何互動或碰撞。
       addOctahedron(positions, colors, x + rx * 0.34, y - 0.52, z + rz * 0.18, rx * 0.22, 0.46, rz * 0.2, rock.map((channel) => Math.min(1, channel * 1.12)));
