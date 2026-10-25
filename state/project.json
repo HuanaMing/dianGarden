@@ -1,12 +1,12 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": null,
-  "nextAction": "任務238已完成並由使用者實機驗收；等待使用者指定下一項工作。任務232生產 D1 migration 與 Worker 部署仍待使用者明確批准。",
+  "activeTask": "任務239：天空元素世界座標與日月東升西落",
+  "nextAction": "任務239程式已提交，等待最新 Playwright 瀏覽器驗收與使用者實機視覺驗收；通過後執行任務240遠處背景小島。任務232生產 D1 migration 與 Worker 部署仍待使用者明確批准。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
-    "任務212最新程式版本的 GitHub Pages 部署：需使用者明確批准後手動觸發。",
-    "任務232生產 D1 migration 與 Cloudflare Worker 部署需使用者明確批准。"
+    "任務212最新程式版本的GitHub Pages部署：需使用者明確批准後手動觸發。",
+    "任務232生產D1 migration與Cloudflare Worker部署需使用者明確批准。"
   ],
   "updatedAt": "2026-10-26"
 }
