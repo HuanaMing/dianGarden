@@ -90,6 +90,27 @@ if (await galleryCanvas.getAttribute('data-rotate-hold-active') !== null) {
   throw new Error('圖鑑預覽放開後未退出長按旋轉模式');
 }
 checks.push('任務227：桌面圖鑑預覽長按後拖曳旋轉，放開後正確結束');
+const galleryTouchPage = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
+await galleryTouchPage.goto(`${baseURL}/encyclopedia.html`, { waitUntil: 'networkidle', timeout: 30000 });
+const galleryTouchCanvas = galleryTouchPage.locator('#sky-canvas');
+await galleryTouchCanvas.waitFor({ state: 'visible' });
+const galleryTouchBounds = await galleryTouchCanvas.boundingBox();
+if (!galleryTouchBounds) throw new Error('無法取得手機圖鑑預覽畫布位置');
+const touchX = Math.round(galleryTouchBounds.x + galleryTouchBounds.width * 0.5);
+const touchY = Math.round(galleryTouchBounds.y + galleryTouchBounds.height * 0.5);
+const galleryTouchCDP = await galleryTouchPage.context().newCDPSession(galleryTouchPage);
+await galleryTouchCDP.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: touchX, y: touchY, id: 1 }] });
+await galleryTouchPage.waitForTimeout(550);
+if (await galleryTouchCanvas.getAttribute('data-rotate-hold-active') !== 'true') {
+  throw new Error('手機圖鑑預覽長按後未進入旋轉模式');
+}
+await galleryTouchCDP.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: touchX + 55, y: touchY + 18, id: 1 }] });
+await galleryTouchCDP.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+if (await galleryTouchCanvas.getAttribute('data-rotate-hold-active') !== null) {
+  throw new Error('手機圖鑑預覽觸控放開後未退出旋轉模式');
+}
+checks.push('任務227：手機觸控圖鑑預覽長按後拖曳旋轉通過');
+await galleryTouchPage.close();
 await encyclopediaPage.locator('#preview-fullscreen-toggle').click();
 await encyclopediaPage.waitForFunction(() => document.fullscreenElement === document.querySelector('.encyclopedia-world')
   || document.querySelector('.encyclopedia-world')?.classList.contains('is-preview-expanded'), null, { timeout: 5000 });
