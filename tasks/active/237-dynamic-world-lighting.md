@@ -21,4 +21,6 @@
 - 已修改 `src/sky-world.js`：新增三角形面法線計算及世界、無人機、特效各自的法線緩衝區；vertex shader 使用相機方向、方向光與環境光 uniform 計算受光顏色。
 - 日照進度控制環境光與方向光強度；黎明／黃昏採暖色，雨天降低直射光，夜間大幅降低光照。移除 CSS brightness 的日夜模擬，改為中性亮度。
 - 第一輪 Playwright 因新增緩衝區改變既有 buffer 索引而使任務225無人機位置測試讀錯緩衝區。已調整新增緩衝區建立順序，保留原本既有 buffer 索引。
-- 第二輪 GitHub Actions 瀏覽器驗收正在執行，尚待結果；Pages push 自動工作流程亦正在執行。
+- GitHub Actions Playwright 瀏覽器回歸通過（run 40200937808）；Cloudflare Worker smoke tests 與瀏覽器測試流程均成功。
+- GitHub Pages push 自動工作流程成功（run 40200937734），屬於既有 push 觸發流程，未手動觸發部署。
+- 尚待使用者實機確認日夜光照的實際視覺效果；自動回歸通過不等於已完成主觀視覺驗收。
