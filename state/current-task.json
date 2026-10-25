@@ -1,10 +1,10 @@
 {
-  "name": "任務205：修復無人機管理工作佇列消失",
+  "name": "任務209：將自動儲存狀態移至跨裝置存檔區",
   "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務205已修改 src/game.js，移除無人機面板閒置5秒自動關閉並加入空佇列提示；Playwright回歸測試已新增，等待GitHub Actions驗收。完成後依序執行任務206、207、208、209。",
-  "taskFile": "tasks/active/205-drone-job-queue-visibility.md",
-  "result": "2026-10-25：將原需求拆為任務205～209。任務205已開始修改，測試工作流程仍在執行，尚未驗收完成。"
+  "nextAction": "自動儲存提示已位於設定→同步→跨裝置存檔；已補上卡片內狀態樣式與存檔讀取失敗警告驗收。等待最新 Playwright 與 Pages 工作流程完成，通過後歸檔任務209。",
+  "taskFile": "tasks/active/209-autosave-status-placement.md",
+  "result": "任務209實作與測試更新已提交；一般提示只顯示於跨裝置存檔區，並新增本機存檔讀取失敗時警告樣式與回歸測試。最新驗收仍在執行。"
 }
