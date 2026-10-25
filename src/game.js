@@ -971,12 +971,16 @@
       grass: '草地不會種植新植物；成熟植物可保留在草地上。',
     };
     const active = hasActivePlotJob(index);
+    const plotPlants = getPlotPlants(plot);
     const crop = plot.crop === null ? null : crops[plot.crop] || crops[0];
-    const mature = Boolean(crop && growthElapsed(plot) >= crop.growTime);
-    const canSwitch = !crop || mature;
+    const mature = plotPlants.length === 0 || plotPlants.every((plant, plantIndex) => {
+      const plantCrop = crops[plant.crop] || crops[0];
+      return growthElapsed(plot, Date.now(), plantIndex) >= plantCrop.growTime;
+    });
+    const canSwitch = plotPlants.length === 0 || mature;
     const next = mode === 'manual' ? '草地' : '手動';
-    const modeHelp = crop && !mature
-      ? '植物成熟前不能轉成草地，以免生長中的植物被保留在草地上。'
+    const modeHelp = plotPlants.length > 0 && !mature
+      ? '所有花株成熟前不能轉換地塊性質，以免未成熟花株被保留在草地上。'
       : `${descriptions[mode]} 點擊切換至${next}。`;
     return `<div class="manual-plot-setting plot-mode-setting"><div><strong>地塊性質：${labels[mode]}</strong><small>${modeHelp}</small></div><button class="plot-mode-switch" type="button" data-plot-mode-switch data-mode="${mode}" aria-label="農地 ${index + 1} 地塊性質：${labels[mode]}，點擊切換至${next}" ${active || !canSwitch ? 'disabled' : ''}><span class="${mode === 'manual' ? 'is-current' : ''}">${mode === 'manual' ? '手動' : '草地'}</span><span aria-hidden="true">⇄</span><span class="${mode === 'grass' ? 'is-current' : ''}">${mode === 'grass' ? '草地' : '手動'}</span></button></div>${active ? '<p class="manual-plot-busy">無人機正在此地工作，工作結束後才能切換。</p>' : ''}`;
   }
