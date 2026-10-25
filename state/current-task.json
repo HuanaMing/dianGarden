@@ -1,10 +1,9 @@
 {
-  "name": "任務210～212：管理介面字級與異地登入提示改善",
-  "status": "completed",
+  "name": "任務213：修復設定介面造成無人機圖示異常",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務210～212的程式修改與 Playwright 驗收已完成並歸檔。任務212最新程式提交尚未找到對應的 Pages 部署紀錄；正式部署需先取得使用者批准。",
-  "taskFile": "tasks/done/212-dandelion-session-banner-and-refresh-button.md",
-  "result": "任務210：桌面與手機字級穩定性通過；任務211：模擬 stale_session 後隱藏登入、停止雲端讀寫、本機存檔保留且狀態提示正確；任務212：主畫面與設定頁雙行蒲公英提示及兩處風鈴重新整理通過。Playwright run 40154108002 成功。Pages 最近成功 run 40153603304 對應舊 SHA 55137d0，不能視為已部署任務212。"
+  "nextAction": "任務213已移至 active。已修正 setDronePanelOpen() 不再覆寫無人機按鈕的圖片內容，並更新 Playwright 圖示素材驗收；等待最新瀏覽器自動驗收完成，再決定是否歸檔並開始任務214。",
+  "taskFile": "tasks/active/213-fix-drone-icon-changing-in-settings.md"
 }
