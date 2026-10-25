@@ -1571,8 +1571,14 @@ try {
     await manualUpgradePage.locator('#farm-dialog [data-manual-seed-options] .seed-option').first().click();
   }
   const fullCapacity = await manualUpgradePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots[3]);
-  if (fullCapacity.plants.length !== 4 || await manualUpgradePage.locator('#farm-dialog [data-manual-seed-options] .seed-option').count() !== 0) {
-    throw new Error('任務229：容量滿載後仍可新增花株，或容量限制不正確');
+  const seedOptionsAtCapacity = await manualUpgradePage.locator('#farm-dialog [data-manual-seed-options] .seed-option').count();
+  if (fullCapacity.plants.length !== 4 || seedOptionsAtCapacity !== 0) {
+    throw new Error('任務229：容量滿載後仍可新增花株，或容量限制不正確：' + JSON.stringify({
+      plantCount: fullCapacity.plants?.length,
+      capacityLevel: fullCapacity.capacityLevel,
+      seedOptionsAtCapacity,
+      coins: (await manualUpgradePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')))).coins,
+    }));
   }
   await manualUpgradePage.reload({ waitUntil: 'networkidle', timeout: 30000 });
   const persistedUpgrade = await manualUpgradePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots[3]);
