@@ -156,7 +156,7 @@
       const record = JSON.parse(sessionStorage.getItem(AUTH_SESSION_KEY) || 'null');
       const claims = record && typeof record.idToken === 'string' ? parseJwtPayload(record.idToken) : null;
       if (!record || record.version !== 1 || !claims || claims.sub !== record.currentSub
-        || claims.aud !== config.googleClientId || !Number.isFinite(claims.exp)
+        || claims.aud !== config.googleClientId || !['accounts.google.com', 'https://accounts.google.com'].includes(claims.iss) || !Number.isFinite(claims.exp)
         || claims.exp * 1000 <= Date.now() + TOKEN_EXPIRY_SKEW_MS
         || !Number.isSafeInteger(record.sessionOpenedAt) || record.sessionOpenedAt <= 0) return false;
       legacyIdToken = record.idToken;
