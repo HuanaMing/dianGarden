@@ -134,6 +134,7 @@ await droneTeleportPage.evaluate(async () => {
   window.skyWorld.setPlotPositions(plots);
   window.skyWorld.setDroneCount(8);
   window.skyWorld.setDroneDocks(docks);
+  window.__dgDroneFrames.length = 0;
   for (let index = 0; index < 8; index += 1) {
     window.skyWorld.animatePlant(index, () => {}, () => {}, () => true, index);
   }
