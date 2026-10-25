@@ -1456,6 +1456,76 @@ try {
   checks.push('任務218：桌面手動／自動分頁分類、五欄網格與存檔不變通過');
   await plotTabsPage.close();
 
+  // 任務228：多株手動地塊載入、獨立狀態、穩定株位與舊存檔遷移。
+  const multiPlantSave = plotTabSave();
+  const multiPlantNow = Date.now();
+  multiPlantSave.plots[4] = {
+    crop: 0, plantedAt: multiPlantNow - 200000, manual: true, grassOnly: false, x: 2, z: 0, y: 0,
+    plantHeight: 1, watered: false, capacityLevel: 3, nextPlantPosition: 4,
+    plants: [
+      { crop: 0, plantedAt: multiPlantNow - 200000, plantHeight: 1, positionIndex: 1, watered: false, growthBonusMs: 0 },
+      { crop: 1, plantedAt: multiPlantNow - 200000, plantHeight: 1, positionIndex: 2, watered: false, growthBonusMs: 0 },
+      { crop: 2, plantedAt: multiPlantNow - 200000, plantHeight: 1, positionIndex: 3, watered: false, growthBonusMs: 0 },
+    ],
+  };
+  const multiPlantPage = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+  await multiPlantPage.addInitScript(save => {
+    localStorage.setItem('sky-garden-guest-mode-v1', 'true');
+    localStorage.setItem('sky-garden-guest-save-v1', JSON.stringify(save));
+  }, multiPlantSave);
+  await multiPlantPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  const placementResult = await multiPlantPage.evaluate(() => {
+    const api = window.dianGardenManualPlantPlacement;
+    if (!api) return null;
+    const first = api.getPosition(1);
+    const samples = Array.from({ length: 24 }, (_, index) => api.getPosition(index + 1));
+    return {
+      first, samples,
+      repeatable: JSON.stringify(samples) === JSON.stringify(Array.from({ length: 24 }, (_, index) => api.getPosition(index + 1))),
+    };
+  });
+  if (!placementResult || placementResult.first.x !== 0.5 || placementResult.first.z !== 0.5
+    || !placementResult.repeatable
+    || placementResult.samples.some(point => point.x < -0.25 || point.x > 1.25 || point.z < -0.25 || point.z > 1.25)
+    || new Set(placementResult.samples.map(point => `${point.x.toFixed(4)},${point.z.toFixed(4)}`)).size !== placementResult.samples.length
+    || !placementResult.samples.some(point => point.x < 0 || point.x > 1 || point.z < 0 || point.z > 1)) {
+    throw new Error('任務228：手動地塊位置函數未符合置中、可重現、不重複及有限越界要求：' + JSON.stringify(placementResult));
+  }
+  await multiPlantPage.evaluate(() => window.onSkyPlotActivate?.(4));
+  await multiPlantPage.locator('#farm-dialog[open] .manual-plant-card').first().waitFor({ state: 'visible', timeout: 8000 });
+  const multiPlantCardCount = await multiPlantPage.locator('#farm-dialog .manual-plant-card').count();
+  if (multiPlantCardCount !== 3) throw new Error(`任務228：預期顯示3株獨立花卉，實際為 ${multiPlantCardCount} 株`);
+  const multiPlantSaveAfterLoad = await multiPlantPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')));
+  if (multiPlantSaveAfterLoad.plots[4].plants?.length !== 3 || multiPlantSaveAfterLoad.plots[4].capacityLevel !== 3) {
+    throw new Error('任務228：多株資料或容量未在載入後保留');
+  }
+  const stablePositionsBeforeReload = multiPlantSaveAfterLoad.plots[4].plants.map(plant => plant.positionIndex);
+  await multiPlantPage.reload({ waitUntil: 'networkidle', timeout: 30000 });
+  const stablePositionsAfterReload = await multiPlantPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots[4].plants.map(plant => plant.positionIndex));
+  if (JSON.stringify(stablePositionsBeforeReload) !== JSON.stringify(stablePositionsAfterReload)) {
+    throw new Error('任務228：重新載入後株位索引發生變化');
+  }
+  checks.push('任務228：手動地塊多株獨立狀態、穩定不規則座標、有限越界及重載持久性通過');
+  await multiPlantPage.close();
+
+  const legacyPlantPage = await browser.newPage({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 1 });
+  await legacyPlantPage.addInitScript(save => {
+    localStorage.setItem('sky-garden-guest-mode-v1', 'true');
+    localStorage.setItem('sky-garden-guest-save-v1', JSON.stringify(save));
+  }, plotTabSave());
+  await legacyPlantPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await legacyPlantPage.waitForFunction(() => {
+    const saved = JSON.parse(localStorage.getItem('sky-garden-guest-save-v1'));
+    return Array.isArray(saved?.plots?.[4]?.plants);
+  }, null, { timeout: 8000 });
+  const migratedLegacyPlant = await legacyPlantPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots[4]);
+  if (migratedLegacyPlant.plants.length !== 1 || migratedLegacyPlant.plants[0].crop !== 0
+    || migratedLegacyPlant.plants[0].plantedAt !== migratedLegacyPlant.plantedAt) {
+    throw new Error('任務228：舊版單株手動地塊存檔遷移遺失資料');
+  }
+  checks.push('任務228：舊版單株手動地塊存檔自動遷移通過');
+  await legacyPlantPage.close();
+
   const mobilePlotTabsPage = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
   await mobilePlotTabsPage.addInitScript(save => {
     localStorage.setItem('sky-garden-guest-mode-v1', 'true');
