@@ -13,5 +13,10 @@
 - 圖片載入成功，不遮擋輪盤選取效果或觸控回饋。
 - 桌面與手機 Playwright 驗收確認圖片來源、載入狀態及原有旋轉互動不變。
 
+## 執行紀錄
+- `src/index.html`：將旋轉入口的 emoji 移除，新增獨立 `wheel-icon-overlay`，使用 `assets/btn/旋轉.png`；按鈕仍保留 `aria-label="旋轉"` 與 `aria-pressed`。
+- `tests/browser-smoke.mjs`：增加旋轉素材來源與載入檢查，更新桌面六個圖示與手機六個圖示的數量／尺寸／位置斷言；同步修正任務220、221的狀態式頂部圖示斷言。
+- 既有旋轉操作流程與 `aria-pressed` 切換程式未更動。
+
 ## 狀態
-執行中；先替換旋轉視覺素材，再更新回歸測試並執行驗收。
+執行中；程式與測試已提交，等待 GitHub Actions 的桌面／手機 Playwright 驗收結果。
