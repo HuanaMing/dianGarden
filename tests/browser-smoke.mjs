@@ -1120,10 +1120,6 @@ try {
   });
   await staleSessionPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   await staleSessionPage.waitForFunction(() => typeof window.__task211CredentialCallback === 'function');
-  await staleSessionPage.evaluate(() => {
-    const payload = btoa(JSON.stringify({ iss: 'https://accounts.google.com', aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com', exp: Math.floor(Date.now() / 1000) + 3600, sub: 'task211-test-account' })).replace(/=/g, '');
-    window.__task211CredentialCallback({ credential: `header.${payload}.signature` });
-  });
   await staleSessionPage.waitForFunction(() => !document.querySelector('#cloud-session-banner')?.hidden && !document.querySelector('#cloud-session-banner-settings')?.hidden);
   const inspectWindChimeBanner = () => staleSessionPage.evaluate(() => {
     const frame = document.querySelector('.world-frame');
@@ -1192,6 +1188,8 @@ try {
     settingsButtonText: document.querySelector('#cloud-session-refresh')?.textContent.trim(),
     settingsIcon: (() => { const image = document.querySelector('#cloud-session-banner-settings .cloud-session-wind-chime-icon'); return { src: image?.getAttribute('src'), loaded: Boolean(image?.complete && image.naturalWidth > 0 && image.naturalHeight > 0), width: Number.parseFloat(getComputedStyle(image).width), height: Number.parseFloat(getComputedStyle(image).height) }; })(),
     cloudStatus: document.querySelector('#cloud-save-status')?.textContent.trim(),
+    authSession: JSON.parse(localStorage.getItem('sky-garden-auth-session-v1') || 'null'),
+    openedAt: sessionStorage.getItem('sky-garden-auth-opened-at-v1'),
     saveStatus: document.querySelector('#save-status')?.textContent.trim(),
     saveWarning: document.querySelector('#save-status')?.classList.contains('save-warning'),
   }));
@@ -1203,6 +1201,8 @@ try {
     || staleSessionState.mainButtonText !== '輕搖風鈴' || staleSessionState.settingsButtonText !== '輕搖風鈴'
     || staleSessionState.settingsIcon.src !== 'assets/btn/風鈴.png' || !staleSessionState.settingsIcon.loaded || staleSessionState.settingsIcon.width !== 32 || staleSessionState.settingsIcon.height !== 32
     || staleSessionState.cloudStatus !== '雲端同步已暫停；本機進度仍會保留。'
+    || staleSessionState.authSession?.refreshToken !== 'task211-session.refresh'
+    || staleSessionState.openedAt !== null
     || staleSessionState.saveStatus !== '暫停同步雲端進度' || !staleSessionState.saveWarning) {
     throw new Error('異地登入後的雙處提示、風鈴按鈕或離線存檔狀態錯誤：' + JSON.stringify(staleSessionState));
   }
@@ -1249,9 +1249,17 @@ try {
     const reloaded = staleSessionPage.waitForEvent('load');
     await staleSessionPage.locator(selector).click();
     await reloaded;
-    await staleSessionPage.waitForFunction(() => typeof window.__task211CredentialCallback === 'function');
-    const localSave = await staleSessionPage.evaluate(() => localStorage.getItem('sky-garden-save-v1'));
-    if (!localSave) throw new Error(`${selector} 重新整理後本機存檔遺失`);
+    await staleSessionPage.waitForFunction(() => !document.querySelector('#cloud-session-banner')?.hidden);
+    const restoredState = await staleSessionPage.evaluate(() => ({
+      localSave: localStorage.getItem('sky-garden-save-v1'),
+      authSession: JSON.parse(localStorage.getItem('sky-garden-auth-session-v1') || 'null'),
+      signInVisible: !document.querySelector('#cloud-save-signin')?.hidden,
+      openedAt: sessionStorage.getItem('sky-garden-auth-opened-at-v1'),
+    }));
+    if (!restoredState.localSave || restoredState.authSession?.refreshToken !== 'task211-session.refresh-next'
+      || restoredState.signInVisible || restoredState.openedAt === null) {
+      throw new Error(`${selector} 重新整理後未保留登入狀態或本機存檔：` + JSON.stringify(restoredState));
+    }
   };
   await assertRefreshButtonReloads('#cloud-session-refresh-main');
   await staleSessionPage.evaluate(() => {
@@ -1262,7 +1270,7 @@ try {
   await staleSessionPage.locator('#settings-toggle').click();
   await staleSessionPage.locator('#cloud-session-refresh').waitFor({ state: 'visible' });
   await assertRefreshButtonReloads('#cloud-session-refresh');
-  if (cloudRequests.filter(method => method === 'GET').length !== 2 || cloudRequests.includes('PUT')) {
+  if (cloudRequests.filter(method => method === 'GET').length !== 3 || cloudRequests.includes('PUT')) {
     throw new Error('重新整理後的離線狀態仍產生非預期雲端請求：' + JSON.stringify(cloudRequests));
   }
   checks.push('任務212：手機版主畫面與設定頁「輕搖風鈴」均重新載入頁面並保留本機存檔');
