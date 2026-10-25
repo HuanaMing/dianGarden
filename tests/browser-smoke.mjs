@@ -1118,8 +1118,12 @@ try {
       body: JSON.stringify({ error: 'stale_session' }),
     });
   });
-  await staleSessionPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await staleSessionPage.goto(baseURL + '/index.html', { waitUntil: 'networkidle', timeout: 30000 });
   await staleSessionPage.waitForFunction(() => typeof window.__task211CredentialCallback === 'function');
+  await staleSessionPage.evaluate(() => {
+    const payload = btoa(JSON.stringify({ iss: 'https://accounts.google.com', aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com', exp: Math.floor(Date.now() / 1000) + 3600, sub: 'task211-test-account' })).replace(/=/g, '');
+    window.__task211CredentialCallback({ credential: 'header.' + payload + '.signature' });
+  });
   await staleSessionPage.waitForFunction(() => !document.querySelector('#cloud-session-banner')?.hidden && !document.querySelector('#cloud-session-banner-settings')?.hidden);
   const inspectWindChimeBanner = () => staleSessionPage.evaluate(() => {
     const frame = document.querySelector('.world-frame');
@@ -1261,10 +1265,6 @@ try {
     }
   };
   await assertRefreshButtonReloads('#cloud-session-refresh-main');
-  await staleSessionPage.evaluate(() => {
-    const payload = btoa(JSON.stringify({ iss: 'https://accounts.google.com', aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com', exp: Math.floor(Date.now() / 1000) + 3600, sub: 'task211-test-account' })).replace(/=/g, '');
-    window.__task211CredentialCallback({ credential: `header.${payload}.signature` });
-  });
   await staleSessionPage.waitForFunction(() => !document.querySelector('#cloud-session-banner')?.hidden && !document.querySelector('#cloud-session-banner-settings')?.hidden);
   await staleSessionPage.locator('#settings-toggle').click();
   await staleSessionPage.locator('#cloud-session-refresh').waitFor({ state: 'visible' });
