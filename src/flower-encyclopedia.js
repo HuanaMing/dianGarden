@@ -24,7 +24,7 @@
   }
   const pickerIndicator = pickerToggle?.querySelector('.flower-picker-collapse-indicator');
   function syncPickerIndicator(expanded) {
-    if (pickerIndicator) pickerIndicator.src = expanded ? 'assets/btn/收合.png' : 'assets/btn/展開.png';
+    if (pickerIndicator) pickerIndicator.src = expanded ? 'assets/btn/展開.png' : 'assets/btn/收合.png';
     pickerToggle?.setAttribute('aria-label', expanded
       ? '選擇花種，向下拖曳或點擊收合'
       : '選擇花種，向上拖曳或點擊展開');
