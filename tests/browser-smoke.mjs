@@ -1505,7 +1505,18 @@ try {
   if (JSON.stringify(stablePositionsBeforeReload) !== JSON.stringify(stablePositionsAfterReload)) {
     throw new Error('任務228：重新載入後株位索引發生變化');
   }
-  checks.push('任務228：手動地塊多株獨立狀態、穩定不規則座標、有限越界及重載持久性通過');
+  await multiPlantPage.evaluate(() => window.onSkyPlotActivate?.(4));
+  const maturePlantActions = await multiPlantPage.locator('#farm-dialog .manual-plant-actions .harvest').count();
+  const growingPlantActions = await multiPlantPage.locator('#farm-dialog .manual-plant-actions .water').count();
+  if (maturePlantActions !== 2 || growingPlantActions !== 1) {
+    throw new Error(`任務228：各株成熟／生長狀態未獨立計算：${JSON.stringify({ maturePlantActions, growingPlantActions })}`);
+  }
+  await multiPlantPage.locator('#farm-dialog .manual-plant-actions .harvest').first().click();
+  const remainingPlantsAfterHarvest = await multiPlantPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots[4].plants);
+  if (remainingPlantsAfterHarvest.length !== 2 || JSON.stringify(remainingPlantsAfterHarvest.map(plant => plant.positionIndex)) !== JSON.stringify([2, 3])) {
+    throw new Error('任務228：收成單株時影響其他花株或重排其株位');
+  }
+  checks.push('任務228：手動地塊多株獨立生長與收成、穩定不規則座標、有限越界及重載持久性通過');
   await multiPlantPage.close();
 
   const legacyPlantPage = await browser.newPage({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 1 });
