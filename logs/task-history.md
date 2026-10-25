@@ -1811,3 +1811,13 @@
 - 結果：在 `src/sky-world.js` 加入最多 8 台無人機的夜間局部暖色光照，依位置、距離、部署狀態、電量及日照進度控制；未新增依賴或存檔欄位。
 - 驗證：GitHub Actions Playwright 瀏覽器驗收成功（run 40202984299）；Cloudflare Worker 相關 smoke tests 成功。尚待使用者實機驗收光照強度與自然度。
 - 檔案：`src/sky-world.js`、`tasks/active/238-drone-night-light.md`、`docs/architecture.md`、`state/current-task.json`、`state/project.json`。
+
+
+## 2026-10-26 — 任務238實機驗收完成
+
+- 使用者明確確認「238驗收完成」。
+- 夜間無人機局部暖色照明完成驗收；光源已移至螺旋槳高度，無人機本體夜間自發光係數提高 30%。
+- 完成版任務紀錄已建立並驗證：`tasks/done/238-drone-night-light.md`。
+- 已將 `state/current-task.json` 標記為完成，並更新 `state/project.json`。
+- GitHub Actions 初版 Playwright 驗收 run 40202984299 成功；後續微調版本的自動測試／部署工作流程結果未確認，不將其記為通過。
+- 嘗試移除 `tasks/active/238-drone-night-light.md` 時遭 GitHub 安全檢查阻擋；重新讀取確認原檔仍存在後，依規範停止重試。完成版已歸檔，但 active 原檔暫時仍留存，需後續處理。
