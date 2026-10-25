@@ -172,6 +172,7 @@
           && ((plant.waterStartedAt === undefined && plant.waterUntil === undefined)
             || (Number.isFinite(plant.waterStartedAt) && Number.isFinite(plant.waterUntil) && plant.waterUntil > plant.waterStartedAt && plant.watered === true))))));
   }
+  let migratedLegacyManualPlants = false;
   function loadGame() {
     let flowerVariants = [];
     try { flowerVariants = readFlowerVariants(); }
@@ -191,6 +192,7 @@
         watered: plot.watered, waterSource: plot.waterSource, waterWetnessStart: plot.waterWetnessStart,
         waterStartedAt: plot.waterStartedAt, waterUntil: plot.waterUntil, growthBonusMs: plot.growthBonusMs,
       }];
+      if (manual && !Array.isArray(plot.plants) && plot.crop !== null) migratedLegacyManualPlants = true;
       const plants = manual ? (Array.isArray(plot.plants) ? plot.plants : legacyPlants).map((plant, plantIndex) => ({
         ...plant,
         positionIndex: Number.isSafeInteger(plant.positionIndex) && plant.positionIndex >= 1 ? plant.positionIndex : plantIndex + 1,
@@ -388,6 +390,7 @@
   }
   function notify(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(toastTimeout); toastTimeout = setTimeout(() => toast.classList.remove('show'), 2100); }
   function updateSaveStatus() { if (!saveStatus) return; saveStatus.textContent = persistenceWarning || (cloudSessionExpired ? '暫停同步雲端進度' : '進度會自動儲存'); saveStatus.classList.toggle('save-warning', !persistenceAvailable || cloudSessionExpired); }
+  if (migratedLegacyManualPlants) save();
   if (offlineReport) save();
   window.addEventListener('pagehide', () => { if (!isResetting && !skipSaveOnExit) save(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && !isResetting && !skipSaveOnExit) save(); });
