@@ -1,12 +1,12 @@
 {
-  "name": "任務239重做：降低雲層並固定相機相對位置",
-  "status": "in_progress",
+  "name": "任務239：天空元素世界座標與雲層調整",
+  "status": "completed",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "已提交最新調整：雲朵 16 組，相對相機 Y 偏移範圍 -24 至 6，尺寸係數 3.0–4.0，保留各雲緩慢水平飄動。程式提交 dd89e57aa14e7d47e6fa7da07a4c78315fc20cb4。待自動化工作流程與使用者實機視覺驗收；測試中的舊斷言需留意。",
-  "taskFile": "tasks/active/239-world-space-sky.md",
-  "result": "src/sky-world.js commit dd89e57aa14e7d47e6fa7da07a4c78315fc20cb4：16 組雲的 Y 偏移範圍調整為 -24 至 6；尺寸係數 3.0–4.0、漂移公式與相機相對位置保持不變。自動化測試與實機視覺驗收仍待確認。"
+  "nextAction": "任務239已由使用者完成實機視覺驗收，完成版已歸檔至 tasks/done/239-world-space-sky.md。下一項任務為 tasks/inbox/240-distant-islands.md，尚未開始。",
+  "taskFile": "tasks/done/239-world-space-sky.md",
+  "result": "src/sky-world.js 最終提交 da2ae3ef5e4959435fa4a8fadd1b256e535a900a；五組雲層高度調整完成，使用者確認任務239驗收通過。完成版已歸檔，active 原檔已移除。本輪未另外執行自動化測試。"
 }
