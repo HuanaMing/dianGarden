@@ -1029,6 +1029,7 @@ try {
   const legacyRequests = [];
   await legacyFallbackPage.route(authApiPattern, async route => {
     const request = route.request();
+    const method = request.method();
     const path = new URL(request.url()).pathname;
     if (request.method() === 'OPTIONS') {
       const oldWorkerHeaders = {
