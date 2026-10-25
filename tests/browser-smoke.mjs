@@ -22,7 +22,7 @@ if (!cloudSaveSource.includes("const needsChoice = authenticated && statusNode.d
   || !cloudSaveSource.includes("error.message === 'invalid_google_id_token' || error.message === 'authentication_required'")
   || !cloudSaveSource.includes("if (expired) {\n      clearStoredAuthSession();\n      sessionOpenedAt = 0;\n      syncEnabled = false;\n      clearTimeout(pendingSyncTimer);")
   || !cloudSaveSource.includes("signinNode.hidden = true;\n      if (startupSigninNode) startupSigninNode.hidden = true;")
-  || !cloudSaveSource.includes("if (!accessToken || sessionExpired) return;")
+  || !cloudSaveSource.includes("if (!(accessToken || legacyIdToken) || sessionExpired) return;")
   || !cloudSaveSource.includes("function refreshCurrentPage() {\n    window.location.href = window.location.href;\n  }")
   || !gameSource.includes("cloudSessionExpired ? '暫停同步雲端進度' : '進度會自動儲存'")) {
   throw new Error('同步狀態、異地登入後隱藏登入入口、停止雲端請求或暫停同步提示邏輯缺失');
