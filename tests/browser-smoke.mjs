@@ -304,45 +304,29 @@ try {
   }, { x: frameBox.x + frameBox.width / 2, y: frameBox.y + frameBox.height / 2 });
   if (await page.locator('#garden-menu-wheel [data-wheel-action="rotate"]').getAttribute('aria-pressed') !== 'false') throw new Error('放開指標後未退出旋轉模式');
   await page.locator('#settings-toggle').click();
-  if (!(await page.locator('.operation-help').isVisible())) throw new Error('操作說明未移至設定面板');
-  if (!(await page.locator('#avatar-mode').isVisible())) throw new Error('設定中未顯示自訂頭像控制');
-  for (const selector of ['#current-version', '#latest-version', '#force-update-button']) {
-    if (!(await page.locator(selector).isVisible())) throw new Error('設定面板缺少版本資訊或立即更新按鈕：' + selector);
+  if (!(await page.locator('#settings-panel').isVisible())) throw new Error('設定面板未開啟');
+  if (await page.locator('#settings-tab-sync').getAttribute('aria-selected') !== 'true' || !(await page.locator('#settings-sync').isVisible())) throw new Error('設定面板預設分頁不是同步');
+  for (const selector of ['#current-version', '#latest-version', '#force-update-button', '#cloud-save-status', '#reset-progress']) {
+    if (!(await page.locator(selector).isVisible())) throw new Error('同步分頁缺少版本、存檔或重置控制：' + selector);
   }
-  if ((await page.locator('#current-version').innerText()).trim() === '' || (await page.locator('#latest-version').innerText()).trim() === '') {
-    throw new Error('設定面板版本號沒有顯示內容');
-  }
+  if ((await page.locator('#current-version').innerText()).trim() === '' || (await page.locator('#latest-version').innerText()).trim() === '') throw new Error('設定面板版本號沒有顯示內容');
   const displayedVersions = await page.evaluate(() => ({ current: document.querySelector('#current-version')?.textContent?.trim(), latest: document.querySelector('#latest-version')?.textContent?.trim() }));
-  if (!/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.current || '') || !/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.latest || '')) {
-    throw new Error('設定面板版本號未使用每日更新序號格式：' + JSON.stringify(displayedVersions));
-  }
-  checks.push('設定面板顯示目前版本、最新版本與立即更新按鈕，版本號符合每日更新序號格式');
-
-  const settingsPanelSize = await page.locator('#settings-panel').evaluate(element => {
-    const rect = element.getBoundingClientRect();
-    const versionCard = element.querySelector('.version-settings').getBoundingClientRect();
-    const avatarOptions = [...element.querySelectorAll('.avatar-flower-option')];
-    return {
-      width: rect.width,
-      padding: getComputedStyle(element).paddingTop,
-      versionCardPadding: getComputedStyle(element.querySelector('.version-settings')).paddingTop,
-      avatarOptionCount: avatarOptions.length,
-      avatarOptionHeight: avatarOptions[0]?.getBoundingClientRect().height ?? 0,
-      avatarTextLabelCount: element.querySelectorAll('.avatar-flower-name').length,
-      avatarPickerLabelVisible: getComputedStyle(element.querySelector('.avatar-flower-label')).display !== 'none',
-      avatarOptionContents: avatarOptions.map(option => ({ imageCount: option.querySelectorAll('.avatar-flower-image').length, text: option.textContent.trim() })),
-      versionCardHeight: versionCard.height,
-    };
-  });
+  if (!/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.current || '') || !/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.latest || '')) throw new Error('設定面板版本號未使用每日更新序號格式：' + JSON.stringify(displayedVersions));
+  checks.push('設定同步分頁顯示版本資訊、存檔與重置進度');
+  await page.locator('#settings-tab-accessibility').click();
+  if (await page.locator('#settings-tab-accessibility').getAttribute('aria-selected') !== 'true' || !(await page.locator('#settings-accessibility').isVisible())) throw new Error('輔助功能分頁未能開啟');
+  for (const selector of ['#camera-mode', '#power-save-toggle', '.operation-help']) if (!(await page.locator(selector).isVisible())) throw new Error('輔助功能分頁缺少控制項：' + selector);
+  if (await page.locator('#current-version').isVisible() || await page.locator('#cloud-save-status').isVisible() || await page.locator('#reset-progress').isVisible()) throw new Error('切換至輔助功能時仍顯示同步分頁內容');
+  await page.locator('#settings-tab-sync').click();
+  const settingsPanelSize = await page.locator('#settings-panel').evaluate(element => ({ width: element.getBoundingClientRect().width, padding: getComputedStyle(element).paddingTop, versionCardPadding: getComputedStyle(element.querySelector('.version-settings')).paddingTop }));
   if (settingsPanelSize.width < (await page.locator('.world-frame').evaluate(element => element.getBoundingClientRect().width)) - 2) throw new Error('設定面板未擴展至全畫面：' + JSON.stringify(settingsPanelSize));
-  if (settingsPanelSize.avatarOptionCount !== 11) throw new Error('全畫面頭像選擇器花種數量異常：' + JSON.stringify(settingsPanelSize));
-  if (settingsPanelSize.avatarTextLabelCount !== 0 || !settingsPanelSize.avatarPickerLabelVisible || settingsPanelSize.avatarOptionContents.some(option => option.imageCount !== 1 || option.text !== '')) throw new Error('全畫面頭像選擇器的標籤或純像素圖配置異常：' + JSON.stringify(settingsPanelSize));
   if (Number.parseFloat(settingsPanelSize.padding) < 10 || Number.parseFloat(settingsPanelSize.versionCardPadding) < 10) throw new Error('全畫面設定面板內距沒有隨版面放大：' + JSON.stringify(settingsPanelSize));
-  checks.push('任務201：三個管理面板覆蓋遊戲畫面，設定內容擴展並保留11種純像素圖頭像');
-
+  checks.push('任務203：設定兩個分頁可切換，分類內容正確且全畫面版面保留');
+  if (await page.locator('#avatar-dialog').isVisible()) throw new Error('頭像設定對話框不應在預設狀態顯示');
+  await page.locator('#garden-avatar').click();
+  if (!(await page.locator('#avatar-dialog[open]').isVisible())) throw new Error('點擊花園頭像未開啟獨立頭像設定');
+  if (await page.locator('.avatar-flower-option').count() !== 11) throw new Error('頭像選擇清單未顯示 11 種花卉');
   if (await page.locator('#avatar-flower-picker').isVisible()) throw new Error('自動頭像模式未隱藏花卉選擇介面');
-  const avatarOptions = page.locator('.avatar-flower-option');
-  if (await avatarOptions.count() !== 11) throw new Error('頭像選擇清單未顯示 11 種花卉');
   const avatarImages = await page.locator('.avatar-flower-image').evaluateAll(images => images.map(image => ({ loaded: image.complete && image.naturalWidth > 0, pixelated: getComputedStyle(image).imageRendering === 'pixelated' })));
   if (avatarImages.length !== 11 || avatarImages.some(image => !image.loaded || !image.pixelated)) throw new Error('頭像選擇中的花卉點陣圖未全部載入或未使用 pixelated');
   await page.locator('#avatar-mode').selectOption('manual');
@@ -350,12 +334,15 @@ try {
   await page.locator('[data-avatar-crop="3"]').click();
   const avatarImage = page.locator('#garden-avatar img');
   if (!(await avatarImage.isVisible()) || !(await avatarImage.getAttribute('src')).endsWith('玫瑰.png') || await avatarImage.evaluate(image => getComputedStyle(image).imageRendering) !== 'pixelated' || await page.locator('[data-avatar-crop="3"]').getAttribute('aria-pressed') !== 'true') throw new Error('花園名稱左側頭像未顯示所選點陣圖素材');
+  await page.locator('[data-close-avatar-dialog]').click();
   await page.reload({ waitUntil: 'networkidle', timeout: 30000 });
-  await page.locator('#settings-toggle').click();
+  await page.locator('#garden-avatar').click();
   if (await page.locator('#avatar-mode').inputValue() !== 'manual' || await page.locator('#avatar-flower-picker').isHidden() || await page.locator('[data-avatar-crop="3"]').getAttribute('aria-pressed') !== 'true' || !(await page.locator('#garden-avatar img').getAttribute('src')).endsWith('玫瑰.png')) throw new Error('自訂花卉頭像未在重新載入後保存');
   await page.locator('#avatar-mode').selectOption('auto');
   if (await page.locator('#avatar-flower-picker').isVisible() || !(await page.locator('.avatar-flower-option').first().isDisabled())) throw new Error('自動頭像模式未隱藏或仍允許指定花種');
-  checks.push('自訂頭像點陣圖、來源切換、選花介面顯示規則與存檔通過');
+  await page.locator('[data-close-avatar-dialog]').click();
+  checks.push('任務202：頭像獨立彈出、11種點陣圖、模式切換及存檔通過');
+  await page.locator('#settings-tab-accessibility').click();
   await page.locator('#power-save-toggle').click();
   if (await page.locator('#power-save-toggle').getAttribute('aria-pressed') !== 'true') throw new Error('省電模式未能開啟');
   if (!(await page.locator('.world-frame').evaluate(element => element.classList.contains('is-power-save')))) throw new Error('省電模式未切換畫布清空樣式');
