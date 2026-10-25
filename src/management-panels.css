@@ -1,0 +1,43 @@
+/* 任務207：管理面板沿用自訂頭像對話框的尺寸與視窗適配。 */
+.farm-management-panel,
+.settings-panel,
+.drone-jobs{
+  position:fixed!important;
+  inset:auto!important;
+  top:50%!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  width:min(520px,calc(100% - 28px))!important;
+  max-width:520px!important;
+  height:auto!important;
+  max-height:min(82dvh,680px)!important;
+  margin:0!important;
+  padding:20px clamp(14px,3vw,24px) 22px!important;
+  border:1px solid #e1ece1!important;
+  border-radius:23px!important;
+  background:#fffdf6f7!important;
+  box-shadow:0 24px 70px #31594f33!important;
+  overflow:auto!important;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  transform:translate(-50%,-50%)!important;
+  transform-origin:center!important;
+  z-index:10!important;
+}
+@media(max-width:700px){
+  .farm-management-panel,
+  .settings-panel,
+  .drone-jobs{
+    padding:14px!important;
+    gap:8px;
+  }
+}
+@media(max-height:480px){
+  .farm-management-panel,
+  .settings-panel,
+  .drone-jobs{
+    max-height:86dvh!important;
+    padding:12px!important;
+  }
+}
