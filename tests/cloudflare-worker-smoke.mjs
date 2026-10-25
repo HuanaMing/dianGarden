@@ -57,10 +57,17 @@ const env = {
           const userId = values[0];
           const row = rows.get(userId);
           if (sql.startsWith("SELECT save_data")) return row ? { ...row } : null;
-          if (sql.startsWith("SELECT revision")) return row ? { revision: row.revision } : null;
+          if (sql.startsWith("SELECT revision")) return row ? { revision: row.revision, opened_at: row.opened_at } : null;
           throw new Error("Unexpected SELECT: " + sql);
         },
         async run() {
+          if (sql.startsWith("UPDATE player_saves SET opened_at")) {
+            const [openedAt, userId, minimumOpenedAt] = values;
+            const row = rows.get(userId);
+            if (!row || (row.opened_at != null && row.opened_at > minimumOpenedAt)) return { meta: { changes: 0 } };
+            rows.set(userId, { ...row, opened_at: openedAt });
+            return { meta: { changes: 1 } };
+          }
           if (sql.startsWith("INSERT OR IGNORE")) {
             const [userId, saveData, variantsData, autoCropsData, schemaVersion, updatedAt, openedAt, savedAt] = values;
             if (rows.has(userId)) return { meta: { changes: 0 } };
