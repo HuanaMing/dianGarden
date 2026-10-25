@@ -1007,6 +1007,63 @@ try {
   checks.push('任務232：過期長期登入會清除並回到 Google 登入流程');
   await expiredAuthPage.close();
 
+  const legacyFallbackPage = await browser.newPage({ viewport: { width: 900, height: 900 } });
+  const legacyTokenExp = Math.floor(Date.now() / 1000) + 3600;
+  const legacyGoogleToken = await legacyFallbackPage.evaluate(({ exp }) => {
+    const encode = value => btoa(JSON.stringify(value)).replace(/=/g, '').replaceAll('+', '-').replaceAll('/', '_');
+    return 'header.' + encode({
+      iss: 'https://accounts.google.com',
+      aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com',
+      sub: 'task232-legacy-account', exp,
+    }) + '.signature';
+  }, { exp: legacyTokenExp });
+  await legacyFallbackPage.addInitScript(() => {
+    localStorage.removeItem('sky-garden-guest-mode-v1');
+    window.google = { accounts: { id: {
+      initialize(options) { window.__task232LegacyCallback = options.callback; },
+      renderButton() {},
+      prompt() {},
+      disableAutoSelect() {},
+    } } };
+  });
+  const legacyRequests = [];
+  await legacyFallbackPage.route(authApiPattern, async route => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    if (request.method() === 'OPTIONS') {
+      const oldWorkerHeaders = {
+        'access-control-allow-origin': '*',
+        'access-control-allow-methods': 'GET, PUT, OPTIONS',
+        'access-control-allow-headers': 'authorization,content-type,x-diangarden-opened-at',
+        'content-type': 'application/json',
+      };
+      await route.fulfill({ status: 204, headers: oldWorkerHeaders });
+      return;
+    }
+    legacyRequests.push({ path, method: request.method(), authorization: request.headers()['authorization'] });
+    await route.fulfill({
+      status: 200,
+      headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' },
+      body: JSON.stringify({ status: 'not_found', revision: 0 }),
+    });
+  });
+  await legacyFallbackPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await legacyFallbackPage.waitForFunction(() => typeof window.__task232LegacyCallback === 'function');
+  await legacyFallbackPage.evaluate(token => window.__task232LegacyCallback({ credential: token }), legacyGoogleToken);
+  await legacyFallbackPage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('雲端還沒有存檔'));
+  const legacyState = await legacyFallbackPage.evaluate(() => ({
+    session: JSON.parse(sessionStorage.getItem('sky-garden-auth-session-v1') || 'null'),
+    persistentSession: localStorage.getItem('sky-garden-auth-session-v1'),
+  }));
+  if (legacyRequests.length !== 1 || legacyRequests[0].path !== '/api/save'
+    || legacyRequests[0].authorization !== 'Bearer ' + legacyGoogleToken
+    || legacyState.session?.version !== 1 || legacyState.session?.idToken !== legacyGoogleToken
+    || legacyState.persistentSession !== null) {
+    throw new Error('任務232：舊版 Worker 尚未更新時，登入相容降級失敗：' + JSON.stringify({ legacyRequests, legacyState }));
+  }
+  checks.push('任務232：舊版 Worker 部署期間仍可使用短效 Google 登入');
+  await legacyFallbackPage.close();
+
   const staleSessionPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await staleSessionPage.addInitScript(() => {
     localStorage.removeItem('sky-garden-guest-mode-v1');
