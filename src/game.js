@@ -247,6 +247,8 @@
   const avatarDialog = document.querySelector('#avatar-dialog');
   const avatarModeSelect = document.querySelector('#avatar-mode');
   const avatarFlowerPicker = document.querySelector('#avatar-flower-picker');
+  const avatarFlowerLabel = document.querySelector('#avatar-flower-label');
+  const avatarCurrentFlower = document.querySelector('#avatar-current-flower');
   const avatarFlowerOptions = document.querySelector('#avatar-flower-options');
   const gardenNameEditor = document.querySelector('#garden-name-editor');
   const gardenNameInput = document.querySelector('#garden-name-input');
@@ -622,14 +624,15 @@
     hudToggle.setAttribute('title', game.hudCollapsed ? '展開介面' : '收合介面');
     hudToggle.setAttribute('aria-expanded', String(!game.hudCollapsed));
   }
+  function getAvatarCropIndex() {
+    if (game.avatarMode === 'manual') return Number.isInteger(game.avatarCrop) && game.avatarCrop >= 0 && game.avatarCrop < crops.length ? game.avatarCrop : 0;
+    const counts = Array(crops.length).fill(0);
+    game.plots.forEach((plot) => { if (Number.isInteger(plot.crop) && plot.crop >= 0 && plot.crop < counts.length) counts[plot.crop] += 1; });
+    return counts.reduce((best, count, index) => count > counts[best] ? index : best, 0);
+  }
   function updateAvatarDisplay() {
     if (!gardenAvatar) return;
-    let cropIndex = game.avatarCrop;
-    if (game.avatarMode !== 'manual') {
-      const counts = Array(crops.length).fill(0);
-      game.plots.forEach((plot) => { if (Number.isInteger(plot.crop) && plot.crop >= 0 && plot.crop < counts.length) counts[plot.crop] += 1; });
-      cropIndex = counts.reduce((best, count, index) => count > counts[best] ? index : best, 0);
-    }
+    const cropIndex = getAvatarCropIndex();
     const flower = crops[cropIndex] || crops[0];
     if (flower.image) {
       let image = gardenAvatar.querySelector('img');
@@ -649,18 +652,28 @@
       gardenAvatar.textContent = flower.emoji || '🌼';
     }
     gardenAvatar.setAttribute('aria-label', `花園頭像：${flower.name}`);
+    if (avatarFlowerLabel) avatarFlowerLabel.textContent = game.avatarMode === 'manual' ? '指定花種' : '花種清單（自動模式不可手動選擇）';
+    if (avatarCurrentFlower) avatarCurrentFlower.textContent = game.avatarMode === 'manual' ? `目前使用：${flower.name}` : `目前自動選擇：${flower.name}`;
+    avatarFlowerOptions?.querySelectorAll('[data-avatar-crop]').forEach((button) => {
+      const selected = Number(button.dataset.avatarCrop) === cropIndex;
+      button.setAttribute('aria-pressed', String(selected));
+      button.classList.toggle('is-auto-selected', selected && game.avatarMode !== 'manual');
+      button.setAttribute('aria-label', game.avatarMode !== 'manual' && selected ? `${flower.name}，目前自動選中的頭像` : flower.name);
+    });
   }
   function renderAvatarFlowerOptions() {
-    if (avatarFlowerPicker) avatarFlowerPicker.hidden = game.avatarMode !== 'manual';
+    if (avatarFlowerPicker) avatarFlowerPicker.hidden = false;
     if (!avatarFlowerOptions) return;
     avatarFlowerOptions.replaceChildren();
+    const selectedCropIndex = getAvatarCropIndex();
     crops.forEach((flower, index) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'avatar-flower-option';
       button.dataset.avatarCrop = String(index);
-      button.setAttribute('aria-label', flower.name);
-      button.setAttribute('aria-pressed', String(index === game.avatarCrop));
+      button.setAttribute('aria-label', game.avatarMode !== 'manual' && index === selectedCropIndex ? `${flower.name}，目前自動選中的頭像` : flower.name);
+      button.setAttribute('aria-pressed', String(index === selectedCropIndex));
+      button.classList.toggle('is-auto-selected', index === selectedCropIndex && game.avatarMode !== 'manual');
       button.disabled = game.avatarMode !== 'manual';
       if (flower.image) {
         const image = document.createElement('img');
@@ -678,6 +691,10 @@
         emoji.textContent = flower.emoji || '🌼';
         button.append(emoji);
       }
+      const name = document.createElement('span');
+      name.className = 'avatar-flower-name';
+      name.textContent = flower.name;
+      button.append(name);
       avatarFlowerOptions.append(button);
     });
   }
