@@ -1785,3 +1785,11 @@
 - 點擊無人機本體、平台側面或附近空白不再因接近平台中心而選取平台；收起的平台仍不可選取。
 - GitHub commit：`3b16e1b6f6256ec596adfe79316dca3031321873`；任務紀錄：`tasks/done/233-drone-dock-hit-area.md`。
 - 驗證限制：尚未執行人工瀏覽器驗收，也尚未確認自動 CI 結果；不宣稱視覺驗收通過。未手動觸發 GitHub Pages 部署。
+
+
+## 2026-10-25 — 任務234：連接地塊形成整體底座
+
+- `src/sky-world.js` 新增連接群組最低底面與正下方地塊判定；無下層地塊的地塊側面延伸至群組底部，有下層地塊時保留局部底面。
+- `tests/browser-smoke.mjs` 新增連通群組、孤立地塊及下層地塊的判定測試。
+- 程式提交 `39543bd0e3c3acc96ed2b9e8c0709dc2e0a5d07f`；測試提交 `2a309acec86c3380714613dd1380c812bcb7b7f1`；任務文件 `tasks/done/234-connected-landmass-bottom.md`。
+- 自動瀏覽器測試結果尚未確認；未手動觸發 GitHub Pages 部署。
