@@ -742,3 +742,13 @@
 - 權限保護：Cloudflare Worker 仍驗證 Google ID token 的簽章、issuer、audience 及有效期限；雲端讀寫仍受 `opened_at` 所有權與 revision 衝突檢查保護。`stale_session`、登出或伺服器拒絕憑證時清除暫存紀錄並停止同步；過期／損壞的紀錄不會自動沿用。
 - 原因：主畫面與圖鑑是不同 HTML 文件，頁面導覽會清除記憶體狀態；同分頁 `sessionStorage` 可在頁面重新載入時延續短效 token 與原雲端工作階段，同時在分頁結束後清除。
 - 影響：不改變遊戲存檔格式，不把 token 放入 URL 或永久儲存，不自動合併或覆蓋本機／訪客存檔；無法使用 `sessionStorage` 時仍可在當前頁面登入，但跨頁延續可能退回重新登入流程。
+
+
+## 2026-10-25：任務232—以簡單方案實作長期登入
+
+- 決定：維持 GitHub Pages + Cloudflare Worker + D1，不新增自訂網域或外部認證服務；使用者明確接受瀏覽器 JavaScript 可讀取長期更新憑證的風險，優先考慮簡單易維護。
+- 機制：Google ID Token 只用於首次建立遊戲工作階段；遊戲存取憑證效期 15 分鐘，更新憑證閒置期限 30 天。更新憑證存在 `localStorage`，伺服器只保存 SHA-256 雜湊，更新時輪替，登出時撤銷。
+- 原因：在不購買網域、不改動現有網站來源的前提下，提供跨日登入；避免將 Google ID Token 長期保存在瀏覽器。
+- 取捨：接受 XSS 可能讀取更新憑證的剩餘風險；保留基本的憑證期限、輪替與撤銷，不增加外部認證服務或複雜復原系統。
+- 部署界線：D1 migration `cloudflare/migrations/002-player-sessions.sql` 必須在 Worker 更新前套用；本次程式修改及測試不等於已更新生產 D1／Worker，也不代表已手動部署 GitHub Pages。
+
