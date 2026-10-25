@@ -761,6 +761,26 @@ try {
   if (await page.locator('#farm-management-toggle').getAttribute('aria-expanded') !== 'true') throw new Error('農地管理按鈕未能開啟整合面板');
   if (!(await page.locator('#world-buy-manual-plot').isVisible())) throw new Error('農地管理面板未顯示手動地塊購買入口');
   if (!(await page.locator('#world-expand').isVisible())) throw new Error('農地管理面板未顯示自動地塊購買入口');
+  const desktopFarmTabs = await page.evaluate(() => ({
+    columns: getComputedStyle(document.querySelector('#plot-selector')).gridTemplateColumns.trim().split(/\\s+/).length,
+    autoSelected: document.querySelector('#farm-tab-auto').getAttribute('aria-selected'),
+    autoLabels: [...document.querySelectorAll('#plot-selector [data-plot-button]')].map(button => button.getAttribute('aria-label')),
+  }));
+  if (desktopFarmTabs.columns !== 5 || desktopFarmTabs.autoSelected !== 'true'
+    || desktopFarmTabs.autoLabels.some(label => !label.startsWith('自動地塊 '))) {
+    throw new Error('桌面農地管理預設分頁或五欄網格不正確：' + JSON.stringify(desktopFarmTabs));
+  }
+  await page.locator('#farm-tab-manual').click();
+  if (await page.locator('#farm-tab-manual').getAttribute('aria-selected') !== 'true'
+    || await page.locator('#plot-selector').getAttribute('aria-labelledby') !== 'farm-tab-manual'
+    || (await page.locator('#plot-selector [data-plot-button]').allTextContents()).some(text => !/^\\s*\\d+/.test(text))) {
+    throw new Error('桌面手動地塊分頁切換或可存取狀態不正確');
+  }
+  if (await page.locator('#plot-selector [data-plot-button]').count() === 0 && !(await page.locator('.farm-empty-state').innerText()).includes('沒有手動地塊')) {
+    throw new Error('沒有手動地塊時未顯示空狀態提示');
+  }
+  await page.locator('#farm-tab-auto').click();
+  if (await page.locator('#farm-tab-auto').getAttribute('aria-selected') !== 'true') throw new Error('桌面無法切回自動地塊分頁');
   await page.locator('[data-plot-button="0"]').click();
   if (await page.locator('#farm-dialog .plot-mode-switch').count() !== 0) throw new Error('自動地塊仍顯示地塊性質切換開關');
   await page.locator('[data-close-farm-dialog]').click();
@@ -948,6 +968,30 @@ try {
   await maturePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   if (!(await maturePage.locator('#garden-avatar img').getAttribute('src')).endsWith('玫瑰.png')) throw new Error('舊存檔未預設為自動頭像，或未依種植數量最多的花種顯示點陣圖');
   await maturePage.locator('#farm-management-toggle').click();
+  const manualModesBeforeTabs = await maturePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots.map(plot => plot.manual === true));
+  await maturePage.locator('#farm-tab-manual').click();
+  const mobileManualTab = await maturePage.evaluate(() => ({
+    selected: document.querySelector('#farm-tab-manual').getAttribute('aria-selected'),
+    columns: getComputedStyle(document.querySelector('#plot-selector')).gridTemplateColumns.trim().split(/\\s+/).length,
+    labels: [...document.querySelectorAll('#plot-selector [data-plot-button]')].map(button => button.getAttribute('aria-label')),
+    bounds: [...document.querySelectorAll('#plot-selector [data-plot-button]')].map(button => {
+      const rect = button.getBoundingClientRect();
+      const panel = document.querySelector('#farm-management-panel').getBoundingClientRect();
+      return { left: rect.left, right: rect.right, panelLeft: panel.left, panelRight: panel.right };
+    }),
+  }));
+  if (mobileManualTab.selected !== 'true' || mobileManualTab.columns !== 3 || mobileManualTab.labels.length !== 1
+    || mobileManualTab.labels.some(label => !label.startsWith('手動地塊 '))
+    || mobileManualTab.bounds.some(rect => rect.left < rect.panelLeft || rect.right > rect.panelRight)) {
+    throw new Error('手機手動地塊分頁分類、三欄網格或邊界不正確：' + JSON.stringify(mobileManualTab));
+  }
+  await maturePage.locator('#farm-tab-auto').click();
+  const mobileAutoTab = await maturePage.locator('#plot-selector [data-plot-button]').evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-label')));
+  if (await maturePage.locator('#farm-tab-auto').getAttribute('aria-selected') !== 'true'
+    || mobileAutoTab.length !== 2 || mobileAutoTab.some(label => !label.startsWith('自動地塊 '))) throw new Error('手機自動地塊分頁沒有正確分類');
+  const manualModesAfterTabs = await maturePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots.map(plot => plot.manual === true));
+  if (JSON.stringify(manualModesBeforeTabs) !== JSON.stringify(manualModesAfterTabs)) throw new Error('切換農地分頁改動了存檔內的手動／自動地塊分類');
+  checks.push('任務218：桌面五欄、手機三欄，手動／自動地塊正確分類且不改存檔');
   await maturePage.evaluate(() => window.onSkyPlotActivate?.(2));
   const matureSwitch = maturePage.locator('#farm-dialog [data-plot-mode-switch]');
   if (!(await matureSwitch.isEnabled())) throw new Error('成熟植物所在手動地塊不能切換為草地');
