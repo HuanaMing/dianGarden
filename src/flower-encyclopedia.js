@@ -33,6 +33,7 @@
     if (!window.matchMedia('(max-width: 760px)').matches || event.isPrimary === false) return;
     pickerDragStartY = event.clientY;
     pickerDragHandled = false;
+    try { event.currentTarget.setPointerCapture(event.pointerId); } catch (_) { /* Pointer capture may be unavailable in older browsers. */ }
   });
   pickerToggle?.addEventListener('pointerup', (event) => {
     if (pickerDragStartY === null) return;
