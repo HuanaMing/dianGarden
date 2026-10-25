@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務237的 GitHub Actions Playwright 瀏覽器回歸已通過；等待使用者實機驗收日間方向光、夜間暗度及黎明／黃昏色調。",
+  "nextAction": "已依使用者回饋微調任務237光照參數，降低方向光並提高柔和環境補光；等待使用者再次實機驗收花色自然度、日夜明暗及黎明／黃昏色調。",
   "taskFile": "tasks/active/237-dynamic-world-lighting.md",
-  "result": "src/sky-world.js 已新增三角形面法線、相機方向判定、方向光與環境光 uniform。日夜與雨天改變 shader 光照，canvas CSS brightness 改為中性值。首輪測試發現新增 buffer 改變索引，已修正並在 run 40200937808 通過 Playwright；Pages push 自動工作流程 run 40200937734 成功。尚待使用者實機視覺驗收。"
+  "result": "src/sky-world.js 動態光照已完成首輪實作並通過 Playwright 瀏覽器回歸。依使用者回饋花朵略帶金屬感，已追加小幅 shader 參數微調：日間方向光 0.78→0.38、雨天 0.48→0.3，環境光改為 0.12 + daylight × 0.4，黎明／黃昏色偏柔和。最新微調尚待自動回歸與使用者實機視覺驗收。"
 }
