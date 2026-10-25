@@ -1,12 +1,12 @@
 {
-  "name": "任務239：天空元素世界座標與雲層調整",
-  "status": "completed",
+  "name": "任務240：新增遠方背景小島並移除文字雲",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務239已由使用者完成實機視覺驗收，完成版已歸檔至 tasks/done/239-world-space-sky.md。下一項任務為 tasks/inbox/240-distant-islands.md，尚未開始。",
-  "taskFile": "tasks/done/239-world-space-sky.md",
-  "result": "src/sky-world.js 最終提交 da2ae3ef5e4959435fa4a8fadd1b256e535a900a；五組雲層高度調整完成，使用者確認任務239驗收通過。完成版已歸檔，active 原檔已移除。本輪未另外執行自動化測試。"
+  "nextAction": "檢查 src/sky-world.js 的天空幾何與繪製流程，加入2–3座不可互動的世界座標遠方小島，移除原本文字雲，並更新桌面／手機瀏覽器回歸測試。",
+  "taskFile": "tasks/active/240-distant-islands.md",
+  "result": "任務240已由使用者要求開始執行；active 任務文件已建立並驗證，inbox 原檔已移除。程式實作與測試尚未完成。"
 }
