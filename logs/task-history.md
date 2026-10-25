@@ -1649,3 +1649,13 @@
 - 任務204：Google credential 驗證成功後隱藏設定與啟動對話框中的登入入口；明確登出後恢復登入入口。
 - 驗收：Playwright 瀏覽器自動驗收通過（[run 40145259395](https://github.com/HuanaMing/dianGarden/actions/runs/40145259395)）；Pages 部署工作流程成功（[run 40145153851](https://github.com/HuanaMing/dianGarden/actions/runs/40145153851)）。瀏覽器驗收包含頭像彈窗、花卉選擇與存檔、設定分頁切換、省電模式與登入入口程式規格檢查；未使用真實 Google 帳號執行端到端登入。
 - 狀態：任務202–204的程式、自動化驗收與部署工作流程已完成，等待使用者實際遊玩驗收，暫留在 `tasks/active/`。
+
+
+## 2026-10-25 — 任務202、203、204驗收通過並歸檔
+
+- 使用者明確確認「任務202～204通過」。
+- 任務202：頭像設定獨立彈窗，點擊花園頭像開啟。
+- 任務203：設定分為「同步」及「輔助功能」兩個分頁。
+- 任務204：Google 登入成功後隱藏登入入口，明確登出後恢復入口。
+- Playwright 瀏覽器回歸驗收通過：[run 40145259395](https://github.com/HuanaMing/dianGarden/actions/runs/40145259395)；GitHub Pages 部署工作流程成功：[run 40145153851](https://github.com/HuanaMing/dianGarden/actions/runs/40145153851)。
+- 三份任務文件已從 `tasks/active/` 正式移至 `tasks/done/`，完成版已驗證後才移除 active 原檔。
