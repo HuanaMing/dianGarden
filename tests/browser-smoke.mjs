@@ -72,6 +72,24 @@ await encyclopediaPage.goto(`${baseURL}/encyclopedia.html`, { waitUntil: 'networ
 await encyclopediaPage.locator('#sky-canvas').waitFor({ state: 'visible' });
 await encyclopediaPage.waitForFunction(() => window.__encyclopediaDrawCalls > 0, null, { timeout: 8000 });
 const initialEncyclopediaDrawCalls = await encyclopediaPage.evaluate(() => window.__encyclopediaDrawCalls);
+// Task 227: encyclopedia rotation starts only after a 500ms hold, then follows the drag.
+const galleryCanvas = encyclopediaPage.locator('#sky-canvas');
+const galleryBounds = await galleryCanvas.boundingBox();
+if (!galleryBounds) throw new Error('無法取得圖鑑預覽畫布位置');
+const galleryX = galleryBounds.x + galleryBounds.width * 0.52;
+const galleryY = galleryBounds.y + galleryBounds.height * 0.52;
+await encyclopediaPage.mouse.move(galleryX, galleryY);
+await encyclopediaPage.mouse.down();
+await encyclopediaPage.waitForTimeout(550);
+if (await galleryCanvas.getAttribute('data-rotate-hold-active') !== 'true') {
+  throw new Error('圖鑑預覽長按 500ms 後未進入旋轉模式');
+}
+await encyclopediaPage.mouse.move(galleryX + 70, galleryY + 22, { steps: 5 });
+await encyclopediaPage.mouse.up();
+if (await galleryCanvas.getAttribute('data-rotate-hold-active') !== null) {
+  throw new Error('圖鑑預覽放開後未退出長按旋轉模式');
+}
+checks.push('任務227：桌面圖鑑預覽長按後拖曳旋轉，放開後正確結束');
 await encyclopediaPage.locator('#preview-fullscreen-toggle').click();
 await encyclopediaPage.waitForFunction(() => document.fullscreenElement === document.querySelector('.encyclopedia-world')
   || document.querySelector('.encyclopedia-world')?.classList.contains('is-preview-expanded'), null, { timeout: 5000 });
