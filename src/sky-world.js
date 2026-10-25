@@ -1467,11 +1467,12 @@
     gl.uniform3f(locations.eyeDir, (eye[0] - targetX) / eyeLength, eye[1] / eyeLength, (eye[2] - targetZ) / eyeLength);
     const daylight = Math.max(0, Math.min(1, environmentState.daylightProgress));
     const rainDim = environmentState.rainBlend * 0.2;
-    const ambient = 0.1 + daylight * 0.34 - rainDim * 0.12;
-    const sunStrength = daylight * (environmentState.isRaining ? 0.48 : 0.78);
+    // Keep plant colors saturated and soft: favor fill light over hard directional contrast.
+    const ambient = 0.12 + daylight * 0.4 - rainDim * 0.1;
+    const sunStrength = daylight * (environmentState.isRaining ? 0.3 : 0.38);
     let sunR = sunStrength, sunG = sunStrength, sunB = sunStrength;
     if (environmentState.phase === 'dawn' || environmentState.phase === 'dusk') {
-      sunG *= 0.72; sunB *= 0.48;
+      sunG *= 0.82; sunB *= 0.62;
     } else if (environmentState.isRaining) {
       sunR *= 0.72; sunG *= 0.82;
     }
