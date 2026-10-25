@@ -1148,6 +1148,7 @@
   });
   document.addEventListener('pointerdown', (event) => {
     const target = event.target;
+    if (target instanceof Node && document.querySelector('dialog[open]')?.contains(target)) return;
     if (droneJobsPanel?.classList.contains('is-open') && !droneJobsPanel.contains(target) && !dronePanelToggle?.contains(target)) {
       setDronePanelOpen(false);
     }
