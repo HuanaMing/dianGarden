@@ -56,4 +56,9 @@
 - `tests/cloudflare-worker-smoke.mjs` 新增工作階段建立、輪替、重播、撤銷、效期及存檔隔離測試。
 - `tests/browser-smoke.mjs` 改為驗證跨頁恢復、憑證輪替及登出。
 
-目前 GitHub Actions 瀏覽器驗收仍在修正中；尚未執行生產 D1 migration、Cloudflare Worker 部署或 GitHub Pages 手動部署。
+驗證結果（2026-10-25）：
+- GitHub Actions run 40190581981 通過：Cloudflare Worker smoke tests 與 Playwright 桌面／手機瀏覽器回歸測試通過，包含長期登入恢復、更新憑證輪替、登出清除、舊版 Worker 相容降級與既有 stale_session 行為。
+- GitHub Pages 由 main push 自動工作流程部署成功；沒有手動觸發部署。
+- 尚未執行生產 D1 migration 或 Cloudflare Worker 部署。現行線上 Worker 仍須更新後，長期登入功能才會正式啟用；前端相容降級會在舊 Worker 存在時繼續使用短效 Google ID Token 流程。
+
+阻塞事項：生產 D1 migration 與 Cloudflare Worker 部署屬正式環境變更，尚未獲使用者明確批准。需要先套用 `cloudflare/migrations/002-player-sessions.sql`，再部署新版 `cloudflare/worker.js`，之後才可線上驗收長期登入。
