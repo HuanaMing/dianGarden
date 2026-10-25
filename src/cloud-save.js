@@ -67,6 +67,10 @@
     statusNode.dataset.state = state;
   }
 
+  function refreshCurrentPage() {
+    window.location.href = window.location.href;
+  }
+
   function setSessionExpired(expired) {
     sessionExpired = expired;
     window.diangardenCloudSessionExpired = expired;
@@ -445,8 +449,8 @@
   uploadButton.addEventListener('click', () => uploadLocal());
   downloadButton.addEventListener('click', downloadCloud);
   refreshButton.addEventListener('click', () => checkCloud());
-  sessionRefreshButton.addEventListener('click', () => window.location.reload());
-  mainSessionRefreshButton?.addEventListener('click', () => window.location.reload());
+  sessionRefreshButton.addEventListener('click', refreshCurrentPage);
+  mainSessionRefreshButton?.addEventListener('click', refreshCurrentPage);
   if (startGuestGardenButton) startGuestGardenButton.addEventListener('click', () => {
     try {
       localStorage.setItem(GUEST_MODE_KEY, 'true');
