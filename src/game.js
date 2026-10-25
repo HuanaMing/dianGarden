@@ -1352,6 +1352,8 @@
   initializeAvatarSettings();
   render();
   updateGardenName();
+  // The startup pause stays active until the chosen garden is loaded and the first UI/world sync is complete.
+  window.skyWorld?.setRenderingPaused?.('startup', false);
   if (offlineReport && offlineReport.rawDuration >= 60_000) {
     const minutes = Math.floor(offlineReport.simulatedDuration / 60_000);
     const offlineTime = minutes < 60 ? `${minutes} 分鐘` : `${Math.floor(minutes / 60)} 小時 ${minutes % 60} 分鐘`;
