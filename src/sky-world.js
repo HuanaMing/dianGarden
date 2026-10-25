@@ -1067,14 +1067,14 @@
     const elapsed = time * 0.001;
     // Keep clouds camera-relative, but much closer to eye height so they visibly sit lower in the sky.
     const clouds = [
-      { x: -34, y: 2.5, z: -30, speed: 0.22, phase: 0.3, scale: 3.0 },
-      { x: -10, y: 3.5, z: -43, speed: 0.16, phase: 2.4, scale: 3.4 },
-      { x: 25, y: 2.8, z: -35, speed: 0.19, phase: 4.7, scale: 3.7 },
-      { x: 43, y: 3.2, z: -5, speed: 0.14, phase: 1.4, scale: 3.2 },
-      { x: -39, y: 3.0, z: 10, speed: 0.18, phase: 3.5, scale: 3.8 },
+      { x: -34, y: -4.0, z: -30, speed: 0.22, phase: 0.3, scale: 3.0 },
+      { x: -10, y: -2.5, z: -43, speed: 0.16, phase: 2.4, scale: 3.4 },
+      { x: 25, y: -1.0, z: -35, speed: 0.19, phase: 4.7, scale: 3.7 },
+      { x: 43, y: 0.5, z: -5, speed: 0.14, phase: 1.4, scale: 3.2 },
+      { x: -39, y: 1.5, z: 10, speed: 0.18, phase: 3.5, scale: 3.8 },
       { x: -18, y: 4.0, z: 35, speed: 0.15, phase: 5.2, scale: 4.0 },
-      { x: 17, y: 2.5, z: 39, speed: 0.2, phase: 1.8, scale: 3.3 },
-      { x: 39, y: 3.6, z: 27, speed: 0.13, phase: 4.1, scale: 3.6 },
+      { x: 17, y: -3.0, z: 39, speed: 0.2, phase: 1.8, scale: 3.3 },
+      { x: 39, y: 2.5, z: 27, speed: 0.13, phase: 4.1, scale: 3.6 },
     ];
     for (const cloud of clouds) {
       const drift = Math.sin(elapsed * cloud.speed + cloud.phase) * 2.4;
