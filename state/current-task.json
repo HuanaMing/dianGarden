@@ -1,12 +1,12 @@
 {
-  "name": "任務235：手機版引路者介面緊湊化",
-  "status": "completed",
+  "name": "任務236：無人機最低安全巡航高度",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務235已由使用者完成實機驗收並歸檔；等待使用者指定下一項任務。",
-  "taskFile": "tasks/done/235-mobile-guide-interface.md",
-  "result": "使用者確認驗收完成；根因為手機寬度 524px 未觸發原 max-width:520px 媒體查詢，使用者自行將斷點調整為 700px。已移除臨時診斷面板程式碼。使用者已實機驗收通過；未手動觸發正式部署。"
+  "nextAction": "等待任務236 GitHub Actions 瀏覽器驗收結果；依結果修正並準備使用者實機驗收。",
+  "taskFile": "tasks/active/236-drone-minimum-clear-cruise-height.md",
+  "result": "src/sky-world.js 已新增巡航高度計算、障礙物高度檢查與水平巡航高度預約／釋放。GitHub Actions 瀏覽器驗收執行中；未手動觸發部署，尚未完成人工驗收。"
 }
