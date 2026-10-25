@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 220,
-  "nextAction": "任務220執行中：收合按鈕改用 assets/btn/收合.png，完成後進行桌面／手機 Playwright 驗收。既有待批准事項維持不變。",
+  "activeTask": 222,
+  "nextAction": "任務222執行中：快捷圓環旋轉入口改用 assets/btn/旋轉.png，已更新桌面／手機 Playwright 斷言，等待自動驗收。既有待批准事項維持不變。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的 GitHub Pages 部署：需使用者明確批准後手動觸發。"
