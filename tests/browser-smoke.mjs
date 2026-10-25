@@ -818,7 +818,7 @@ try {
   const restoredAuthOpenedAt = Date.now() - 5000;
   const restoredAuthExp = Math.floor(Date.now() / 1000) + 3600;
   const restoredAuthToken = await restoredAuthPage.evaluate(({ exp }) => {
-    const encode = value => btoa(JSON.stringify(value)).replace(/=/g, '').replace(/\\+/g, '-').replace(/\\//g, '_');
+    const encode = value => btoa(JSON.stringify(value)).replace(/=/g, '').replaceAll('+', '-').replaceAll('/', '_');
     return 'header.' + encode({
       iss: 'https://accounts.google.com',
       aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com',
@@ -889,7 +889,7 @@ try {
   await expiredAuthPage.addInitScript(() => {
     localStorage.removeItem('sky-garden-guest-mode-v1');
     const exp = Math.floor(Date.now() / 1000) - 120;
-    const encode = value => btoa(JSON.stringify(value)).replace(/=/g, '').replace(/\\+/g, '-').replace(/\\//g, '_');
+    const encode = value => btoa(JSON.stringify(value)).replace(/=/g, '').replaceAll('+', '-').replaceAll('/', '_');
     const token = 'header.' + encode({
       iss: 'https://accounts.google.com',
       aud: '433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com',
