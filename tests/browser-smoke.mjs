@@ -327,6 +327,14 @@ try {
   const mobilePanelPage = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
   await mobilePanelPage.addInitScript(() => localStorage.setItem('sky-garden-guest-mode-v1', 'true'));
   await mobilePanelPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  const mobileHudIcon = mobilePanelPage.locator('#hud-toggle img.btn-icon-image');
+  if (await mobileHudIcon.getAttribute('src') !== 'assets/btn/收合.png' || !(await mobileHudIcon.evaluate(image => image.complete && image.naturalWidth > 0))) throw new Error('任務220：手機頂部收合圖示未正確載入');
+  await mobilePanelPage.locator('#hud-toggle').click();
+  if (await mobilePanelPage.locator('#hud-toggle').getAttribute('aria-expanded') !== 'false') throw new Error('任務220：手機收合介面操作失效');
+  await mobilePanelPage.locator('#hud-toggle').click();
+  if (await mobilePanelPage.locator('#hud-toggle').getAttribute('aria-expanded') !== 'true'
+    || await mobileHudIcon.getAttribute('src') !== 'assets/btn/收合.png') throw new Error('任務220：手機恢復介面操作失效或收合圖示遺失');
+  checks.push('任務220：手機頂部收合圖示載入正確，收合／恢復操作正常');
   const assertMobilePanelSize = async selector => {
     await mobilePanelPage.waitForTimeout(120);
     const bounds = await mobilePanelPage.locator(selector).evaluate(element => { const rect = element.getBoundingClientRect(); return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }; });
