@@ -655,10 +655,12 @@
     if (avatarFlowerLabel) avatarFlowerLabel.textContent = game.avatarMode === 'manual' ? '指定花種' : '花種清單（自動模式不可手動選擇）';
     if (avatarCurrentFlower) avatarCurrentFlower.textContent = game.avatarMode === 'manual' ? `目前使用：${flower.name}` : `目前自動選擇：${flower.name}`;
     avatarFlowerOptions?.querySelectorAll('[data-avatar-crop]').forEach((button) => {
-      const selected = Number(button.dataset.avatarCrop) === cropIndex;
+      const optionIndex = Number(button.dataset.avatarCrop);
+      const optionFlower = crops[optionIndex] || crops[0];
+      const selected = optionIndex === cropIndex;
       button.setAttribute('aria-pressed', String(selected));
       button.classList.toggle('is-auto-selected', selected && game.avatarMode !== 'manual');
-      button.setAttribute('aria-label', game.avatarMode !== 'manual' && selected ? `${flower.name}，目前自動選中的頭像` : flower.name);
+      button.setAttribute('aria-label', game.avatarMode !== 'manual' && selected ? `${optionFlower.name}，目前自動選中的頭像` : optionFlower.name);
     });
   }
   function renderAvatarFlowerOptions() {
