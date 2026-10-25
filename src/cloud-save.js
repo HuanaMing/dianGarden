@@ -441,7 +441,7 @@
     checkCloud();
   }
 
-  function initializeGoogle() {
+  function initializeGoogle({ prompt = true } = {}) {
     if (googleInitialized || !window.google?.accounts?.id || !config.googleClientId) return;
     googleInitialized = true;
     window.google.accounts.id.initialize({
@@ -460,6 +460,7 @@
     };
     window.google.accounts.id.renderButton(signinNode, buttonOptions);
     if (startupSigninNode) window.google.accounts.id.renderButton(startupSigninNode, buttonOptions);
+    if (!prompt) return;
     if (startupLoginHint) startupLoginHint.textContent = '若未自動登入，請點擊下方 Google 登入按鈕。';
     setStatus('Google 登入已準備好；若未自動登入，請點擊登入按鈕。');
     window.google.accounts.id.prompt((notification) => {
@@ -498,6 +499,20 @@
       setSessionExpired(false);
       setStatus('已恢復本分頁的 Google 登入，正在確認雲端工作階段…');
       updateButtons(true);
+      // Prepare visible Google sign-in buttons without prompting or reclaiming session ownership.
+      if (window.google?.accounts?.id) {
+        initializeGoogle({ prompt: false });
+      } else {
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = () => initializeGoogle({ prompt: false });
+        script.onerror = () => {
+          if (!idToken) setStatus('無法載入 Google 登入服務；你仍可進入訪客花園。', 'warning');
+        };
+        document.head.appendChild(script);
+      }
       checkCloud({ quiet: true });
       return;
     }
