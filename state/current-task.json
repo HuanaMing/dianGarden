@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "最新雲層程式已部署（Pages run 40212328657 成功）；Playwright run 40212328673 因測試仍要求舊版遠景距離／尺寸斷言而失敗。更新 tests/browser-smoke.mjs 遭安全檢查阻擋並已依規範停止重試；需在可安全修改測試後更新斷言，再重新驗收。",
+  "nextAction": "最新調整已提交：雲相對相機的垂直偏移改為 2.5–4.0、尺寸係數 3.0–4.0，並修正漂移時間尺度以確保可見的緩慢飄動。尚待檢查自動化工作流程結果與使用者實機驗收；tests/browser-smoke.mjs 先前遭安全檢查阻擋，未再次嘗試修改。",
   "taskFile": "tasks/active/239-world-space-sky.md",
-  "result": "src/sky-world.js commit a85b85e70e2276c37b1673ef9200b6c3e64656f7：雲層垂直偏移降低 50%，每幀依相機 eye 位置維持固定相對偏移，尺寸係數改為 3.7–4.6，允許遮擋空島。Pages 部署成功。瀏覽器自動驗收未通過，原因是舊測試斷言尚未更新；未完成實機驗收。"
+  "result": "src/sky-world.js commit e67cae9a75151135436a6ebabc2549580cb0cf44：雲相對相機 Y 偏移 2.5–4.0、尺寸係數 3.0–4.0，漂移時間尺度由 time * 0.000012 改為 time * 0.001，以保留明顯但緩慢的飄動。自動化測試與實機視覺驗收仍未確認通過。"
 }
