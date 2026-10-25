@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "已針對手機引路者介面追加高優先權的緊湊排版修正並提交；需確認 GitHub Pages 自動部署結果，再由使用者手機驗收。",
+  "nextAction": "第三版已修正手機引路者對話框高度由內容決定、Grid 不再拉伸卡片；待檢查線上部署狀態並由使用者手機驗收。",
   "taskFile": "tasks/active/235-mobile-guide-interface.md",
-  "result": "src/styles.css 使用 #startup-garden-dialog 的手機專屬規則，明顯縮小對話框內距、區塊間距、兩個選項卡片、標題／說明及登入／訪客按鈕留白。修正版提交 cd386ac96f01798696a8f9dc1d6657fe99b677f7；尚未確認部署或實機視覺效果。"
+  "result": "src/styles.css 第三版提交 fd86f0b3b4ad6dfbb331eb2bfe65698ac9c0546f：手機版 #startup-garden-dialog 設定 height:max-content、max-height:calc(100dvh - 32px)、grid-template-rows:max-content、align-content:start，直接子元素高度自動且不拉伸。任務文件已記錄。尚未確認 Pages 部署與實機視覺效果。"
 }
