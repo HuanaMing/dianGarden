@@ -110,7 +110,7 @@ async function revokeSession(refreshToken, env) {
   return jsonResponse({ status: "signed_out" });
 }
 async function authenticateAccessToken(request, env) {
-  const match = (request.headers.get("Authorization") || "").match(/^Bearer\\s+(.+)$/i);
+  const match = (request.headers.get("Authorization") || "").match(/^Bearer\s+(.+)$/i);
   if (!match) return { response: jsonResponse({ error: "authentication_required" }, 401) };
   const token = match[1];
   const sessionId = tokenSessionId(token);
