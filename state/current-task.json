@@ -1,10 +1,11 @@
 {
   "name": "任務219：調整輕搖風鈴提示樣式",
-  "status": "in_progress",
+  "status": "completed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的 GitHub Pages 部署：需使用者明確批准後手動觸發。"
   ],
-  "nextAction": "修改主畫面風鈴提示的中下方定位、通知色系與圖示；設定面板提示維持面板內，並新增桌面與手機 Playwright 驗收。既有部署與 Xcode／付費雲端 Mac 批准仍維持待處理。",
-  "taskFile": "tasks/active/219-cloud-session-wind-chime-notice.md"
+  "nextAction": "任務219已完成並通過 GitHub Actions Playwright 桌面／手機驗收（run 40164617403）。下一步開始任務220：收合按鈕改用 assets/btn/收合.png。任務212手動 Pages 部署與任務109 Xcode／付費雲端 Mac 批准仍維持待處理。",
+  "taskFile": "tasks/done/219-cloud-session-wind-chime-notice.md",
+  "result": "主畫面及設定面板風鈴提示改為和諧通知配色，主提示位於場景中下方置中，加入 32×32 風鈴圖示；修正 management-panels.css 覆蓋造成的點擊攔截。桌面／手機 Playwright 驗收通過，run 40164617403。"
 }
