@@ -84,7 +84,14 @@
     sessionRefreshButton.hidden = !expired;
     if (mainSessionRefreshButton) mainSessionRefreshButton.hidden = !expired;
     if (expired) {
-      clearStoredAuthSession();
+      // A stale cloud-save owner is not an expired login. Keep the long-lived
+      // game session so a page reload can rotate its refresh token and recover.
+      if (refreshToken) {
+        try { sessionStorage.removeItem(AUTH_OPENED_AT_KEY); } catch (_) { /* Start a fresh save claim after reload. */ }
+      } else {
+        // Legacy Google-ID-token sessions cannot survive a reload safely.
+        clearStoredAuthSession();
+      }
       sessionOpenedAt = 0;
       syncEnabled = false;
       clearTimeout(pendingSyncTimer);
