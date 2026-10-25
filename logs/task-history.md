@@ -1768,3 +1768,12 @@
 - 任務229：加入手動地塊容量升級，價格 `round(40 × L^1.4)`，前幾次費用 40、106、186、279、381 金幣。容量每次增加一株、無固定遊戲等級上限；金幣不足時不扣款，滿載時隱藏新增花種選項，升級及多株資料可跨重載保存。
 - 任務229驗收：完整 Playwright 桌面／手機回歸通過：[run 40178121657](https://github.com/HuanaMing/dianGarden/actions/runs/40178121657)。修正測試初始化腳本只在空存檔時建立 fixture，避免重載時覆寫遊戲進度。
 - 狀態：任務227、228、229、230 均已歸檔至 `tasks/done/`。未手動觸發 GitHub Pages 正式部署；任務109付費雲端 Mac及任務212手動部署的既有批准要求仍有效。
+
+
+## 2026-10-25 — 任務231完成：圖鑑圖示與同分頁登入延續
+
+- 圖鑑「選擇花種」收合時顯示「展開.png」，展開時顯示「收合.png」；手機版初始、拖曳與點擊互動的瀏覽器驗收同步更新。
+- Google ID token、`sub`、`exp` 與 `sessionOpenedAt` 僅存於同分頁 `sessionStorage`，不進入 `localStorage`。恢復前檢查 issuer、audience、subject、到期時間與至少 60 秒剩餘有效期；恢復後沿用原工作階段時間戳，仍向 Cloudflare Worker 驗證。
+- 登出、過期／損壞 token、伺服器拒絕 token 及 `stale_session` 會清除暫存並停止同步；有效工作階段恢復時只預備重新登入按鈕，不觸發自動登入 prompt 或重認領雲端所有權。沒有變更遊戲存檔格式、訪客存檔或雲端衝突流程。
+- Worker smoke tests 驗證過期 token 拒絕及新工作階段認領後舊工作階段寫入遭拒；完整 Playwright 桌面／手機回歸驗收通過，`browserErrors: []`。GitHub Actions：[run 40185985390](https://github.com/HuanaMing/dianGarden/actions/runs/40185985390)。
+- 任務文件歸檔至 `tasks/done/231-encyclopedia-toggle-and-login-persistence.md`。未手動觸發 GitHub Pages 部署；任務109與任務212既有批准要求仍有效。
