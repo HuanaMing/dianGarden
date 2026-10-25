@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 213,
-  "nextAction": "任務213：修復無人機按鈕圖示被 setDronePanelOpen() 覆寫的問題。程式與 Playwright 驗收已更新，等待最新瀏覽器自動驗收完成；通過後再歸檔並開始任務214。",
+  "activeTask": 214,
+  "nextAction": "任務214：固定無人機管理版面、四欄圓角正方形機隊卡片，並將超出剩餘空間的工作佇列內容隱藏。先檢查現有 CSS 與渲染，再實作及執行瀏覽器驗收。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的 GitHub Pages 部署：需使用者明確批准後手動觸發。"
