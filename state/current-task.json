@@ -1,9 +1,9 @@
 {
-  "name": "任務214：固定無人機管理版面與四欄網格",
+  "name": "任務215：無人機與農地管理點擊空白處關閉",
   "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務213已修復並通過 GitHub Actions 瀏覽器驗收 run 40159070750，完成歸檔。開始任務214：檢查無人機管理面板、機隊卡片與工作佇列的現有 CSS／渲染，實作固定尺寸、四欄圓角正方形卡片與佇列溢出裁切，再跑瀏覽器驗收。",
-  "taskFile": "tasks/active/214-drone-panel-fixed-layout-and-four-column-grid.md"
+  "nextAction": "任務214已完成，固定面板尺寸、四欄方形卡片與佇列溢出隱藏通過 GitHub Actions 瀏覽器驗收 run 40159616644。開始任務215：檢查設定面板既有關閉事件與無人機／農地面板事件，實作面板外點擊關閉及 aria-expanded 同步，並執行瀏覽器驗收。",
+  "taskFile": "tasks/active/215-close-drone-and-farm-panels-on-backdrop-click.md"
 }
