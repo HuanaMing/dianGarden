@@ -1,10 +1,10 @@
 {
-  "name": "任務210～212：介面字級與異地登入提示改善",
-  "status": "planned",
+  "name": "任務210：固定管理介面與頭像介面的字體大小",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "依序執行任務210（固定無人機、設定、農地管理與頭像介面字級）、任務211（異地登入後停止雲端同步、隱藏登入並顯示暫停同步狀態）、任務212（主畫面與設定頁雙行蒲公英提示及「輕搖風鈴」重新整理按鈕）。",
-  "taskFile": "tasks/inbox/210-fixed-management-interface-typography.md",
-  "result": "已建立並驗證 tasks/inbox 中的任務210、211、212。尚未開始程式修改。"
+  "nextAction": "檢查管理面板與頭像介面目前的字級覆寫，新增明確穩定的字級規則與 Playwright 字級穩定性檢查；驗收通過後歸檔並開始任務211。",
+  "taskFile": "tasks/active/210-fixed-management-interface-typography.md",
+  "result": "任務210已從 inbox 移至 active；尚未修改程式。"
 }
