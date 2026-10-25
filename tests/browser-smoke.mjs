@@ -437,12 +437,13 @@ try {
     throw new Error('連接地塊整體底面／草地下方判定失敗：' + JSON.stringify(connectedLandBottom));
   }
   const stackedTileSideRule = await fs.readFile('src/sky-world.js', 'utf8');
-  if (!stackedTileSideRule.includes('if (!hasPlotBelow) {')
-    || !stackedTileSideRule.includes('// Any lower tile in this column prevents this tile from growing side walls downward.')
+  if (!stackedTileSideRule.includes('const bottomY = hasPlotBelow ? localBottomY : Math.min(localBottomY, groupBottomY);')
+    || !stackedTileSideRule.includes('if (!hasPlotBelow) {')
+    || !stackedTileSideRule.includes('Every tile keeps its original 0.5-unit side thickness')
     || !stackedTileSideRule.includes('hasPlotBelow(positions, index)')) {
-    throw new Error('任意距離下方已有地塊時仍可能產生側面延伸');
+    throw new Error('下方有地塊時未保留0.5單位側面厚度，或最底層延伸規則異常');
   }
-  checks.push('連接地塊共用最低底面；任意距離下方有農地或草地時均不生成側面延伸');
+  checks.push('任意距離下方有農地或草地時保留0.5單位側面厚度；最底層仍延伸至群組底部');
   const farmRampGeometry = await page.evaluate(() => {
     const source = document.querySelector('script[src*="sky-world.js"]')?.src;
     return Boolean(source && window.dianGardenGrassRampLogic?.getSharedCornerHeight);
