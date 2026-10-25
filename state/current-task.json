@@ -1,12 +1,12 @@
 {
-  "name": "任務238：夜晚無人機作為微弱的光源照亮周圍",
-  "status": "completed",
+  "name": "任務239：天空元素世界座標與日月東升西落",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務238已由使用者實機驗收並歸檔；依使用者後續指示選擇下一項任務。",
-  "taskFile": "tasks/done/238-drone-night-light.md",
-  "result": "src/sky-world.js 已加入最多 8 台無人機的夜間局部暖色光照，依位置、部署狀態、電量與日照進度更新；光源高度調整至螺旋槳高度（y + 0.155），機身夜間自發光係數由 0.48 提高至 0.624（+30%）。使用者於 2026-10-26 確認實機驗收完成。初版 GitHub Actions Playwright 驗收成功（run 40202984299）；後續微調版本自動工作流程最終結果未確認。"
+  "nextAction": "等待任務239最新瀏覽器自動驗收 run 40210631699 結果；其後由使用者實機驗收天空視差、雲層飄動與日月東升西落，再開始任務240。",
+  "taskFile": "tasks/active/239-world-space-sky.md",
+  "result": "src/sky-world.js 已新增世界座標半透明低面數雲層、緩慢飄動的雲，以及沿遊戲日夜週期東升西落的太陽與月亮模型。已在 tests/browser-smoke.mjs 加入天空幾何與循環狀態規格檢查。GitHub Pages run 40210583323 成功；包含最新測試的瀏覽器驗收 run 40210631699 當時排隊中，未宣稱通過。"
 }
