@@ -695,6 +695,54 @@
     }
   }
 
+  // 巡航高度只在水平移動期間預約；任務結束後不保留，下一趟重新計算。
+  const droneCruiseHeights = Array(8).fill(null);
+
+  function distanceToSegment(x, z, start, goal) {
+    const dx = goal[0] - start[0], dz = goal[1] - start[1];
+    const lengthSquared = dx * dx + dz * dz;
+    const ratio = lengthSquared > 1e-8
+      ? Math.max(0, Math.min(1, ((x - start[0]) * dx + (z - start[1]) * dz) / lengthSquared))
+      : 0;
+    return Math.hypot(x - (start[0] + dx * ratio), z - (start[1] + dz * ratio));
+  }
+
+  function getCruiseHeight(start, goal, droneIndex, targetPlotIndex) {
+    let obstacleTop = -Infinity;
+    for (let index = 0; index < landCount; index += 1) {
+      if (index === targetPlotIndex) continue;
+      const [x, z] = getPlotPosition(index);
+      // 土地／草地以地塊外緣判斷；植物另以株位及模型高度判斷。
+      if (distanceToSegment(x, z, start, goal) <= TILE * 0.71) {
+        obstacleTop = Math.max(obstacleTop, getPlotHeight(index) + 0.12);
+      }
+      const plot = plotStates[index];
+      const plants = plot?.manual === true && Array.isArray(plot.plants)
+        ? plot.plants
+        : plot && Number.isInteger(plot.crop) && Number.isFinite(plot.plantedAt) ? [plot] : [];
+      plants.forEach((plant, plantIndex) => {
+        if (!Number.isInteger(plant.crop)) return;
+        const normalized = plot?.manual === true ? manualPlantCoordinate(plant.positionIndex || plantIndex + 1) : { x: 0.5, z: 0.5 };
+        const plantX = x + (normalized.x - 0.5) * 0.9;
+        const plantZ = z + (normalized.z - 0.5) * 0.9;
+        if (distanceToSegment(plantX, plantZ, start, goal) > 0.24) return;
+        const modelHeight = window.flowerCatalog?.[plant.crop]?.height || 0.5;
+        const plantHeight = Number.isFinite(plant.plantHeight) ? plant.plantHeight : 1;
+        obstacleTop = Math.max(obstacleTop, getPlotHeight(index) + modelHeight * plantHeight + 0.18);
+      });
+    }
+
+    const clearance = 0.18;
+    let height = Math.max(DRONE_TRANSIT_Y, Number.isFinite(obstacleTop) ? obstacleTop + clearance : DRONE_TRANSIT_Y);
+    const reserved = droneCruiseHeights
+      .filter((value, index) => index !== droneIndex && Number.isFinite(value))
+      .sort((a, b) => a - b);
+    while (reserved.some((value) => Math.abs(value - height) < DRONE_LANE_SPACING * 0.75)) {
+      height += DRONE_LANE_SPACING;
+    }
+    return height;
+  }
+
   function routeLength(route) {
     return route.slice(1).reduce((length, point, index) => length + Math.hypot(point[0] - route[index][0], point[1] - route[index][1]), 0);
   }
@@ -818,6 +866,8 @@
       const horizontalDuration = continueAtTarget ? 0 : durationForDistance(outboundDistance);
       const descentDuration = continueAtTarget ? durationForDistance(Math.abs(startY - workY)) : durationForDistance(Math.abs(laneY - workY));
       const outboundDuration = climbDuration + horizontalDuration + descentDuration;
+      animation.climbDuration = climbDuration;
+      animation.horizontalDuration = horizontalDuration;
       const returnClimbDuration = durationForDistance(Math.abs(laneY - workY));
       const returnDistance = routeLength(animation.returnRoute);
       const returnHorizontalDuration = durationForDistance(returnDistance);
@@ -875,7 +925,14 @@
       const previousX = state.location[0], previousZ = state.location[1];
       state.location = [candidate.x, candidate.z];
       state.y = candidate.y;
-      if (animation) animation.elapsed = candidate.elapsed;
+      if (animation) {
+        animation.elapsed = candidate.elapsed;
+        const outboundHorizontalEnd = animation.climbDuration + animation.horizontalDuration;
+        if (!animation.cruiseReleased && candidate.elapsed >= outboundHorizontalEnd) {
+          animation.cruiseReleased = true;
+          if (droneCruiseHeights[index] === animation.laneY) droneCruiseHeights[index] = null;
+        }
+      }
       if (Math.hypot(candidate.x - previousX, candidate.z - previousZ) > 0.0001) state.heading = Math.atan2(candidate.x - previousX, candidate.z - previousZ);
       if (droneDocks[index]?.deployed !== false) addDrone(positions, colors, candidate.x, candidate.y, candidate.z, time * (animation ? 0.04 : 0.012), state.heading, droneDocks[index]?.battery ?? 100);
       if (animation && candidate.workProgress > 0) {
@@ -1763,14 +1820,18 @@
       && state.lastCompletedPlotIndex === options.targetPlotIndex
       && Math.hypot(start[0] - target[0], start[1] - target[1]) < 0.0001;
     const returnGoal = [idlePosition.x, idlePosition.z];
+    const outboundRoute = findDroneRoute(start, target, droneIndex);
+    const laneY = continueAtTarget ? state.y : getCruiseHeight(start, target, droneIndex, options.targetPlotIndex);
+    if (!continueAtTarget) droneCruiseHeights[droneIndex] = laneY;
     state.animation = {
       kind, target, start, startY: state.y, continueAtTarget,
       idleY, workY: Number.isFinite(options.workY) ? options.workY : DRONE_WORK_Y,
       targetPlotIndex: options.targetPlotIndex,
       idlePosition, elapsed: 0, returning: undefined, departed: false,
-      laneY: DRONE_TRANSIT_Y + droneIndex * DRONE_LANE_SPACING,
-      outboundRoute: findDroneRoute(start, target, droneIndex),
+      laneY,
+      outboundRoute,
       returnRoute: findDroneRoute(target, returnGoal, droneIndex),
+      cruiseReleased: continueAtTarget,
       ...options,
     };
     return true;
