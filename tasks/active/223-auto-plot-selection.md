@@ -26,7 +26,7 @@ Bug 修正
 - 根因：`render()` 在 `activePlotIndex === -1`（玩家已主動取消選取）時，仍會回退選取目前分頁的第一塊地；有作物的存檔每秒會觸發重新繪製，因此可能反覆選中自動地塊 1。
 - 程式修正：只有在目前索引仍為有效非負值、但不符合目前分頁時，才回退至第一塊可見地；明確取消選取時保留「未選取」狀態，並同步清除清單按鈕與 3D 場景選取。
 - 回歸測試：在 `tests/browser-smoke.mjs` 新增案例，取消選取後觸發面板重繪並等待週期更新，確認沒有任何地塊按鈕重新變成選取狀態。
-- 驗證狀態：程式與測試已提交 GitHub；尚待 GitHub Actions Playwright 瀏覽器驗收結果，通過前不標記任務完成。
+- 驗證狀態：已用 JavaScript 引擎解析 `src/game.js` 與 `tests/browser-smoke.mjs`，語法解析通過（測試腳本僅解析，未實際執行）。變更已推送到 `main`，依 `.github/workflows/browser-check.yml` 的 push 規則應觸發 Playwright 驗收；目前可用 GitHub 工具無法讀取這次 push workflow run 的狀態，因此不宣稱瀏覽器測試已通過，任務仍維持執行中。
 
 ## 狀態
 執行中（active）
