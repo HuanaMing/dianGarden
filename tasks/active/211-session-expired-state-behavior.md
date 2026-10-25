@@ -22,3 +22,12 @@
 - 本機存檔機制仍可運作，雲端上傳不會在 session 過期後繼續執行。
 - 離線狀態提供重新整理操作；操作不會清除存檔，只會重新載入目前遊戲頁面。
 - Playwright 回歸測試通過。不得以真實帳號登入測試取代可重複的模擬狀態測試。
+
+## 執行結果
+- 異地登入（`stale_session`）時停止待處理的雲端同步計時器，並阻止後續雲端讀寫；本機存檔流程不受影響。
+- 隱藏設定頁與啟動入口中的 Google 登入控制項，顯示重新整理遊戲按鈕；點擊只會重新載入頁面，不會清除本機存檔。
+- 異地登入狀態透過 `diangarden:cloud-session-state` 與 `window.diangardenCloudSessionExpired` 同步至遊戲存檔提示，顯示「暫停同步雲端進度」。
+- Playwright 以假 Google credential 與模擬 `stale_session` API 回應驗收，不使用真實帳號登入；確認登入入口隱藏、重新整理入口顯示、本機存檔可寫入且不再發出雲端 GET／PUT。瀏覽器驗收通過：[run 40152399816](https://github.com/HuanaMing/dianGarden/actions/runs/40152399816)。
+- GitHub Pages 部署工作流程通過：[run 40152399814](https://github.com/HuanaMing/dianGarden/actions/runs/40152399814)。
+- 初次驗收發現狀態提示未更新；已修正初始化時讀取全域離線狀態，重新驗收通過。
+- 結果：完成。
