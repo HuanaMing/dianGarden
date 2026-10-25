@@ -35,6 +35,11 @@ if (!skyWorldSource.includes("const renderingPauseReasons = new Set(['startup'])
   || !cloudSaveSource.includes("setRenderingPaused?.('cloud-restore', false)")) {
   throw new Error('登入／雲端還原／更新期間的繪圖暫停與失敗復原機制缺失');
 }
+if (!skyWorldSource.includes("const dockPositionsChanged = docks.map((dock, index) => {")
+  || !skyWorldSource.includes("else if (dockPositionsChanged[index]) {")
+  || !skyWorldSource.includes("if (animation.returning) animation.returnRoute = findDroneRoute(animation.target, [dock.x, dock.z], index);")) {
+  throw new Error('任務225：無人機返航路徑仍可能在電量更新時反覆重算');
+}
 if (!cloudSaveSource.includes("localStorage.setItem(GUEST_MODE_KEY, 'true')")
   || !cloudSaveSource.includes("localStorage.removeItem(GUEST_MODE_KEY)")
   || !gameSource.includes("'sky-garden-guest-save-v1'")
@@ -52,6 +57,7 @@ await fs.mkdir(outputDir, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const errors = [];
 const checks = [];
+checks.push('任務225：只有停靠座標改變才重算返航路徑，電量更新不再重設飛行插值');
 const startupPage = await browser.newPage({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 1 });
 await startupPage.addInitScript(() => {
   window.__startupWebglDrawCalls = 0;
