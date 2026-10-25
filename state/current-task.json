@@ -1,10 +1,10 @@
 {
-  "name": "任務210：固定管理介面與頭像介面的字體大小",
+  "name": "任務211：修正帳號異地登入後的離線狀態行為",
   "status": "in_progress",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "檢查管理面板與頭像介面目前的字級覆寫，新增明確穩定的字級規則與 Playwright 字級穩定性檢查；驗收通過後歸檔並開始任務211。",
-  "taskFile": "tasks/active/210-fixed-management-interface-typography.md",
+  "nextAction": "追查 cloud-save.js 的 stale-session 事件、登入入口顯示控制、雲端上傳閘門與 game.js 自動儲存狀態；加入可重複的 Playwright 模擬測試，驗收後才開始任務212。",
+  "taskFile": "tasks/active/211-session-expired-state-behavior.md",
   "result": "任務210已完成並歸檔，瀏覽器驗收與 Pages 部署通過；任務211已移至 active，正在開始檢查異地登入狀態流程。"
 }
