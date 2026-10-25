@@ -498,7 +498,29 @@ try {
   if (cloudRequests.filter(method => method === 'GET').length !== 1 || cloudRequests.includes('PUT')) {
     throw new Error('異地登入後仍繼續發送雲端讀寫請求：' + JSON.stringify(cloudRequests));
   }
-  checks.push('任務211：模擬 stale_session 後隱藏登入、顯示重新整理、暫停雲端同步且本機存檔仍可寫入');
+  checks.push('任務211：模擬 stale_session 後隱藏登入、暫停雲端同步且本機存檔仍可寫入');
+
+  const assertRefreshButtonReloads = async selector => {
+    const navigated = staleSessionPage.waitForEvent('framenavigated', frame => frame === staleSessionPage.mainFrame());
+    await staleSessionPage.locator(selector).click();
+    await navigated;
+    await staleSessionPage.waitForFunction(() => typeof window.__task211CredentialCallback === 'function');
+    const localSave = await staleSessionPage.evaluate(() => localStorage.getItem('sky-garden-save-v1'));
+    if (!localSave) throw new Error(`${selector} 重新整理後本機存檔遺失`);
+  };
+  await assertRefreshButtonReloads('#cloud-session-refresh-main');
+  await staleSessionPage.evaluate(() => {
+    const payload = btoa(JSON.stringify({ sub: 'task211-test-account' })).replace(/=/g, '');
+    window.__task211CredentialCallback({ credential: `header.${payload}.signature` });
+  });
+  await staleSessionPage.waitForFunction(() => !document.querySelector('#cloud-session-banner')?.hidden && !document.querySelector('#cloud-session-banner-settings')?.hidden);
+  await staleSessionPage.locator('#settings-toggle').click();
+  await staleSessionPage.locator('#cloud-session-refresh').waitFor({ state: 'visible' });
+  await assertRefreshButtonReloads('#cloud-session-refresh');
+  if (cloudRequests.filter(method => method === 'GET').length !== 2 || cloudRequests.includes('PUT')) {
+    throw new Error('重新整理後的離線狀態仍產生非預期雲端請求：' + JSON.stringify(cloudRequests));
+  }
+  checks.push('任務212：主畫面與設定頁「輕搖風鈴」均重新載入頁面並保留本機存檔');
   await staleSessionPage.close();
   const displayedVersions = await page.evaluate(() => ({ current: document.querySelector('#current-version')?.textContent?.trim(), latest: document.querySelector('#latest-version')?.textContent?.trim() }));
   if (!/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.current || '') || !/^[0-9]{6}, [0-9]{3,}$/.test(displayedVersions.latest || '')) throw new Error('設定面板版本號未使用每日更新序號格式：' + JSON.stringify(displayedVersions));
