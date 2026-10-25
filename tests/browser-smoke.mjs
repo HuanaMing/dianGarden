@@ -985,7 +985,7 @@ try {
   }
 
   const versionPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
-  await versionPage.addInitScript(() => { localStorage.setItem('sky-garden-guest-mode-v1', 'true'); localStorage.setItem('diangarden-seen-version-v1', '000000, 001'); });
+  await versionPage.addInitScript(() => { localStorage.setItem('sky-garden-guest-mode-v1', 'true'); localStorage.setItem('diangarden-seen-version-v1', '000000, 001'); localStorage.setItem('diangarden-auto-update-v1', 'false'); });
   await versionPage.route('**/version.json*', route => route.fulfill({
     status: 200,
     contentType: 'application/json',
@@ -1002,7 +1002,7 @@ try {
   await versionPage.close();
 
   const forceUpdatePage = await browser.newPage({ viewport: { width: 390, height: 844 } });
-  await forceUpdatePage.addInitScript(() => localStorage.setItem('sky-garden-guest-mode-v1', 'true'));
+  await forceUpdatePage.addInitScript(() => { localStorage.setItem('sky-garden-guest-mode-v1', 'true'); localStorage.setItem('diangarden-auto-update-v1', 'false'); });
   const forceUpdateRequests = [];
   forceUpdatePage.on('request', request => {
     const url = new URL(request.url());
