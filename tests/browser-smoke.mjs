@@ -9,6 +9,8 @@ const cloudSaveSource = await fs.readFile('src/cloud-save.js', 'utf8');
 const gameSource = await fs.readFile('src/game.js', 'utf8');
 if (!indexHtml.includes('id="startup-garden-dialog"') || !indexHtml.includes('id="start-guest-garden"')
   || !indexHtml.includes('id="return-to-own-garden"')) throw new Error('登入入口／訪客花園控制項缺失');
+if (!cloudSaveSource.includes("signinNode.hidden = true;\n    if (startupSigninNode) startupSigninNode.hidden = true;")
+  || !cloudSaveSource.includes("signinNode.hidden = false;\n    if (startupSigninNode) startupSigninNode.hidden = false;")) throw new Error('Google 登入成功隱藏入口或登出後恢復入口的邏輯缺失');
 if (!cloudSaveSource.includes("localStorage.setItem(GUEST_MODE_KEY, 'true')")
   || !cloudSaveSource.includes("localStorage.removeItem(GUEST_MODE_KEY)")
   || !gameSource.includes("'sky-garden-guest-save-v1'")
@@ -342,6 +344,7 @@ try {
   if (await page.locator('#avatar-flower-picker').isVisible() || !(await page.locator('.avatar-flower-option').first().isDisabled())) throw new Error('自動頭像模式未隱藏或仍允許指定花種');
   await page.locator('[data-close-avatar-dialog]').click();
   checks.push('任務202：頭像獨立彈出、11種點陣圖、模式切換及存檔通過');
+  await page.locator('#settings-toggle').click();
   await page.locator('#settings-tab-accessibility').click();
   await page.locator('#power-save-toggle').click();
   if (await page.locator('#power-save-toggle').getAttribute('aria-pressed') !== 'true') throw new Error('省電模式未能開啟');
