@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "最新調整已提交：雲相對相機的垂直偏移改為 2.5–4.0、尺寸係數 3.0–4.0，並修正漂移時間尺度以確保可見的緩慢飄動。尚待檢查自動化工作流程結果與使用者實機驗收；tests/browser-smoke.mjs 先前遭安全檢查阻擋，未再次嘗試修改。",
+  "nextAction": "已提交最新雲層高度調整：相機相對 Y 偏移分布於 -4.0 至 4.0，尺寸係數 3.0–4.0，保留可見緩慢飄動及相機相對位置。程式提交 f5ba4d120c4dd2816d336ac62c2fff59e0a11520。待確認自動化工作流程結果與使用者實機視覺驗收；tests/browser-smoke.mjs 舊斷言仍未同步。",
   "taskFile": "tasks/active/239-world-space-sky.md",
-  "result": "src/sky-world.js commit e67cae9a75151135436a6ebabc2549580cb0cf44：雲相對相機 Y 偏移 2.5–4.0、尺寸係數 3.0–4.0，漂移時間尺度由 time * 0.000012 改為 time * 0.001，以保留明顯但緩慢的飄動。自動化測試與實機視覺驗收仍未確認通過。"
+  "result": "src/sky-world.js commit f5ba4d120c4dd2816d336ac62c2fff59e0a11520：雲相對相機垂直偏移分布 -4.0 至 4.0；尺寸係數維持 3.0–4.0；time * 0.001 漂移公式與相機相對位置保留。自動化測試與實機視覺驗收仍待確認。"
 }
