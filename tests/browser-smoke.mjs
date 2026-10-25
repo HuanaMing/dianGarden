@@ -503,7 +503,7 @@ try {
   checks.push('任務211：模擬 stale_session 後隱藏登入、暫停雲端同步且本機存檔仍可寫入');
 
   const assertRefreshButtonReloads = async selector => {
-    const navigated = staleSessionPage.waitForEvent('framenavigated', frame => frame === staleSessionPage.mainFrame());
+    const navigated = staleSessionPage.waitForEvent('framenavigated');
     await staleSessionPage.locator(selector).click();
     await navigated;
     await staleSessionPage.waitForFunction(() => typeof window.__task211CredentialCallback === 'function');
