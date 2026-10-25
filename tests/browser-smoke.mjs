@@ -1600,6 +1600,8 @@ try {
   if (await touchPage.locator('.touch-feedback-dot').count() !== 2) throw new Error('多指觸控放開後沒有各自顯示藍色回饋點');
   await touchPage.close();
   const worldSource = await fs.readFile('src/sky-world.js', 'utf8');
+  if (!worldSource.includes('function uploadSky(time)') || !worldSource.includes('const skyOpacityBuffer = gl.createBuffer()') || !worldSource.includes('Math.sin(elapsed * cloud.speed + cloud.phase)') || !worldSource.includes('addIcosahedron(positions, colors, sunX, sunY, sunZ') || !worldSource.includes('addIcosahedron(positions, colors, moonX, moonY, moonZ') || !worldSource.includes('worldTimeMs: Number.isFinite(state.worldTimeMs)')) throw new Error('世界座標天空的半透明雲、日月模型或日夜循環位置缺少必要實作');
+  checks.push('天空世界座標雲層緩慢飄動、半透明低面數模型及日月循環軌跡程式規格通過');
   if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("wreath.src = 'assets/wreath.webp';") || worldSource.includes('touch-hold-progress')) throw new Error('移動模式即時拖曳或花草環素材實作不符');
   if (!worldSource.includes('plotWasInMoveModeAtPointerDown') || !worldSource.includes('!plotWasInMoveModeAtPointerDown')) throw new Error('地塊移動模式短按切換高度模式的修正未包含');
   if (!worldSource.includes('rotateHoldGesture') || worldSource.includes('rotateTouchGesture') || !worldSource.includes('if (pointerPlotIndex === null && dockHitAtPointer === null)')) throw new Error('PC 與手機的相機手勢尚未統一');
