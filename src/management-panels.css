@@ -97,3 +97,28 @@
 .cloud-session-refresh:hover{background:#4c805f}
 .cloud-session-refresh:focus-visible{outline:3px solid #547f65;outline-offset:2px}
 .cloud-session-refresh[hidden]{display:none!important}
+/* 任務212：主畫面與設定頁共用蒲公英雙行提示及風鈴操作。 */
+.cloud-session-banner{
+  display:grid;justify-items:center;gap:7px;
+  width:min(520px,calc(100% - 24px));max-width:520px;
+  padding:12px 14px;font-size:14px;line-height:1.5;
+  pointer-events:auto;
+}
+.cloud-session-banner-line{display:block;max-width:100%;overflow-wrap:anywhere}
+.cloud-session-banner-line:first-child{font-size:14px;line-height:1.45}
+.cloud-session-banner-line:nth-child(2){font-size:12px;font-weight:700;line-height:1.5}
+.cloud-session-refresh-banner{width:min(220px,100%);min-height:40px;margin:0;padding:9px 16px;font-size:13px}
+.cloud-session-settings-banner{
+  display:grid;gap:6px;min-width:0;margin:8px 0;padding:10px;
+  border:1px solid #e8b4a5;border-radius:12px;
+  background:#fff1eb;color:#9b4638;text-align:center;
+}
+.cloud-session-settings-banner[hidden]{display:none!important}
+.cloud-session-settings-banner .cloud-session-banner-line:first-child{font-size:13px;font-weight:900;line-height:1.45}
+.cloud-session-settings-banner .cloud-session-banner-line:nth-child(2){font-size:12px;font-weight:700;line-height:1.5}
+.cloud-session-settings-banner .cloud-session-refresh{margin:2px 0 0;min-height:40px;font-size:13px}
+@media(max-width:700px){
+  .cloud-session-banner{width:calc(100% - 20px);padding:10px 12px;gap:6px}
+  .cloud-session-banner-line:first-child{font-size:13px}
+  .cloud-session-banner-line:nth-child(2){font-size:12px}
+}
