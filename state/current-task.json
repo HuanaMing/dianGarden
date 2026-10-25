@@ -1,10 +1,10 @@
 {
-  "name": "任務212：設計蒲公英異地登入提示與風鈴重新整理按鈕",
-  "status": "in_progress",
+  "name": "任務210～212：管理介面字級與異地登入提示改善",
+  "status": "completed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "將主畫面異地登入提示改成指定雙行文案並加入「輕搖風鈴」按鈕；在設定頁面提供相同提示與重新整理操作，補上桌面／手機 Playwright 驗收。",
-  "taskFile": "tasks/active/212-dandelion-session-banner-and-refresh-button.md",
-  "result": "任務210、211已完成並歸檔；任務212已由 inbox 移至 active，開始實作雙行蒲公英提示與重新整理按鈕。"
+  "nextAction": "任務210～212已完成、驗收並歸檔；目前沒有正在執行的任務，等待使用者下一項指示。",
+  "taskFile": "tasks/done/212-dandelion-session-banner-and-refresh-button.md",
+  "result": "任務210：桌面與手機字級穩定性通過；任務211：模擬 stale_session 後隱藏登入、停止雲端讀寫、本機存檔保留且狀態提示正確；任務212：主畫面與設定頁雙行蒲公英提示及兩處風鈴重新整理通過。Playwright run 40154108002 成功，Pages deploy run 40153603304 成功。"
 }
