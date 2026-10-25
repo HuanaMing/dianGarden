@@ -1146,6 +1146,17 @@
       settingsToggle?.setAttribute('aria-expanded', 'false');
     }
   });
+  document.addEventListener('pointerdown', (event) => {
+    const target = event.target;
+    if (droneJobsPanel?.classList.contains('is-open') && !droneJobsPanel.contains(target) && !dronePanelToggle?.contains(target)) {
+      setDronePanelOpen(false);
+    }
+    const farmPanel = document.querySelector('#farm-management-panel');
+    const farmToggle = document.querySelector('#farm-management-toggle');
+    if (farmPanel?.hidden === false && !farmPanel.contains(target) && !farmToggle?.contains(target)) {
+      setFarmPanelOpen(false);
+    }
+  });
   gardenNameDisplay?.addEventListener('click', () => { gardenNameInput.value = game.gardenName; gardenNameDisplay.hidden = true; gardenNameEditor.hidden = false; gardenNameInput.focus(); gardenNameInput.select(); });
   gardenNameInput?.addEventListener('input', () => {
     const name = gardenNameInput.value.trim();
