@@ -215,6 +215,9 @@ try {
   await page.locator('#drone-panel-toggle').click();
   if (!(await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) ) || await page.locator('#settings-panel').isVisible() || await page.locator('#farm-management-panel').isVisible()) throw new Error('無人機面板沒有關閉其他兩個面板');
   await assertFullscreenPanel('#drone-jobs');
+  await page.waitForTimeout(5200);
+  if (!(await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open'))) || !(await page.locator('#job-queue').isVisible()) || await page.locator('#job-queue > li').count() === 0) throw new Error('無人機管理面板在閒置 5 秒後消失，或工作佇列沒有空佇列提示');
+  checks.push('任務205：無人機管理面板閒置超過5秒仍可見，空佇列提示正常');
   await page.locator('#settings-toggle').click();
   if (!(await page.locator('#settings-panel').isVisible()) || await page.locator('#drone-jobs').evaluate(el => el.classList.contains('is-open')) || await page.locator('#farm-management-panel').isVisible()) throw new Error('設定面板沒有關閉其他兩個面板');
   await page.locator('#settings-toggle').click();
