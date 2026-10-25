@@ -977,6 +977,11 @@ try {
       }), true);
     });
   });
+  // Isolate hold-ring animation from the separate 500ms empty-scene menu gesture.
+  // The radial menu has its own coverage; opening it would intentionally remove this ring.
+  await touchPage.evaluate(() => {
+    if (window.gardenMenuWheel) window.gardenMenuWheel.openAt = () => false;
+  });
   const cdp = await touchPage.context().newCDPSession(touchPage);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: touchX, y: touchY, id: 1 }] });
   await touchPage.waitForTimeout(100);
