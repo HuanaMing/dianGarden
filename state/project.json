@@ -2,7 +2,7 @@
   "name": "花明摸魚花園",
   "status": "active",
   "activeTask": "任務237：WebGL 動態光照與夜間照明",
-  "nextAction": "任務237已完成程式修改並通過 GitHub Actions Playwright 瀏覽器回歸；等待使用者實機驗收日夜光照、夜間暗度與黎明／黃昏色調。任務232生產 D1 migration 與 Worker 部署仍待使用者明確批准。",
+  "nextAction": "任務237依實機回饋完成一輪柔和光照微調，等待使用者再次驗收花朵材質、日夜明暗與黎明／黃昏色調。任務232生產 D1 migration 與 Worker 部署仍待使用者明確批准。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的 GitHub Pages 部署：需使用者明確批准後手動觸發。"
