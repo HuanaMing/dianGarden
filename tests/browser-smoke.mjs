@@ -1350,7 +1350,7 @@ try {
   const matureSwitch = maturePage.locator('#farm-dialog [data-plot-mode-switch]');
   if (!(await matureSwitch.isEnabled())) throw new Error('成熟植物所在手動地塊不能切換為草地');
   await matureSwitch.click();
-  if (!(await maturePage.locator('#farm-dialog .dialog-crop').innerText()).includes('已成熟')) throw new Error('成熟植物轉成草地後沒有保留');
+  if (!(await maturePage.locator('#farm-dialog .manual-plant-card-heading strong').innerText()).includes('已成熟')) throw new Error('成熟植物轉成草地後沒有保留');
   if (await maturePage.locator('#farm-dialog [data-plot-mode-switch]').getAttribute('data-mode') !== 'grass') throw new Error('成熟植物所在地塊未切換為草地');
   checks.push('成熟植物可隨手動地塊切換成草地並保留');
   await maturePage.close();
