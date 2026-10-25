@@ -1,9 +1,10 @@
 {
   "name": "任務218：農地管理分頁與五欄地塊網格",
-  "status": "in_progress",
+  "status": "completed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。"
   ],
-  "nextAction": "任務217已完成並通過 GitHub Actions 瀏覽器驗收 run 40161199720。開始任務218：依現有 plot.manual 資料分類手動／自動地塊，新增兩個分頁並將地塊網格固定為桌面五欄，驗證不改動存檔資料及手機可用性。",
-  "taskFile": "tasks/active/218-farm-panel-tabs-and-five-column-grid.md"
+  "nextAction": "任務213～218已依序完成並通過 GitHub Actions 瀏覽器自動驗收。下一步先檢查 tasks/inbox 中其餘待辦，再依優先序開始；任務212部署批准與任務109 Xcode／付費雲端 Mac 批准仍維持待處理。",
+  "taskFile": "tasks/done/218-farm-panel-tabs-and-five-column-grid.md",
+  "result": "新增手動／自動地塊分頁，依既有 plot.manual 分類；桌面五欄、手機三欄，測試確認切換分頁不改動存檔地塊資料。GitHub Actions run 40161849860 通過。"
 }
