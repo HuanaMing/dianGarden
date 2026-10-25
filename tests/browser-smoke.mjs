@@ -1510,15 +1510,15 @@ try {
   await mobileGalleryPage.locator('#preview-fullscreen-toggle').click();
   if (await mobileGalleryPage.locator('.encyclopedia-world').evaluate(el => el.classList.contains('is-preview-expanded'))) throw new Error('手機替代全螢幕模式無法退出');
   await mobileGalleryPage.locator('#flower-picker-toggle').click();
-  if (!(await mobileGalleryPage.locator('.encyclopedia-layout').evaluate(el => el.classList.contains('is-preview-collapsed')))
-    || await mobileGalleryPage.locator('#flower-picker-toggle').getAttribute('aria-expanded') !== 'false'
-    || await mobileGalleryPage.locator('.encyclopedia-preview-column').isVisible()) throw new Error('手機點擊「選擇花種」標題後未收合預覽');
+  if (!(await mobileGalleryPage.locator('.encyclopedia-layout').evaluate(el => el.classList.contains('is-picker-expanded')))
+    || await mobileGalleryPage.locator('#flower-picker-toggle').getAttribute('aria-expanded') !== 'true'
+    || !(await mobileGalleryPage.locator('.encyclopedia-preview-column').isVisible())) throw new Error('手機點擊「選擇花種」標題後未展開選花面板');
   await mobileGalleryPage.locator('.encyclopedia-card[data-flower-index="1"] .encyclopedia-card-select').click();
-  await mobileGalleryPage.waitForFunction(() => !document.querySelector('.encyclopedia-layout')?.classList.contains('is-preview-collapsed')
+  await mobileGalleryPage.waitForFunction(() => !document.querySelector('.encyclopedia-layout')?.classList.contains('is-picker-expanded')
     && document.querySelector('#selected-flower-status')?.textContent?.includes(window.flowerCatalog[1].name));
-  if (await mobileGalleryPage.locator('#flower-picker-toggle').getAttribute('aria-expanded') !== 'true'
+  if (await mobileGalleryPage.locator('#flower-picker-toggle').getAttribute('aria-expanded') !== 'false'
     || !(await mobileGalleryPage.locator('.encyclopedia-preview-column').isVisible())) throw new Error('手機選擇花種後未恢復預覽原排版');
-  checks.push('任務217：手機可收合預覽、API 失敗時可替代全螢幕，選花後恢復排版');
+  checks.push('任務226：手機可展開選花面板、API 失敗時可替代全螢幕，選花後恢復原排版');
   await mobileGalleryPage.close();
 
   const versionPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
