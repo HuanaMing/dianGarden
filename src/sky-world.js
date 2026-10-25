@@ -98,6 +98,26 @@
     plotVisualStages[index] = { identity, stage };
     return stage;
   }
+  function manualPlantCoordinate(positionIndex) {
+    const index = Number.isSafeInteger(positionIndex) && positionIndex >= 1 ? positionIndex : 1;
+    if (index === 1) return { x: 0.5, z: 0.5 };
+    const noiseFor = (value) => {
+      const raw = Math.sin(value * 127.1 + 311.7) * 43758.5453;
+      return raw - Math.floor(raw);
+    };
+    const noise = noiseFor(index);
+    const angle = (index - 1) * 2.399963229728653 + (noise - 0.5) * 0.92;
+    const radius = Math.min(0.74, 0.19 * Math.sqrt(index - 1));
+    const x = 0.5 + Math.cos(angle) * radius + (noiseFor(index + 37) - 0.5) * 0.065;
+    const z = 0.5 + Math.sin(angle) * radius + (noiseFor(index + 91) - 0.5) * 0.065;
+    return {
+      x: Math.max(-0.25, Math.min(1.25, x)),
+      z: Math.max(-0.25, Math.min(1.25, z)),
+    };
+  }
+  window.dianGardenManualPlantPlacement = Object.freeze({
+    getPosition(positionIndex) { return manualPlantCoordinate(positionIndex); },
+  });
   let environmentState = { phase: 'day', isDay: true, isRaining: false, rainBlend: 0, daylightProgress: 1, phaseProgress: 0, lightLevel: 1, sunflowerYaw: 0 };
   let environmentBackground = '';
   const SKY_PALETTES = {
@@ -1016,12 +1036,20 @@
         addBox(positions, colors, x - frameHalf, y, z - frameHalf + edge, x - frameHalf + edge, y + 0.018, z + frameHalf - edge, gold);
         addBox(positions, colors, x + frameHalf - edge, y, z - frameHalf + edge, x + frameHalf, y + 0.018, z + frameHalf - edge, gold);
       }
-      if (plot && Number.isInteger(plot.crop) && Number.isFinite(plot.plantedAt)) {
-        const stage = getPlotVisualStage(plot, i);
+      const plants = plot?.manual === true && Array.isArray(plot.plants)
+        ? plot.plants
+        : plot && Number.isInteger(plot.crop) && Number.isFinite(plot.plantedAt) ? [plot] : [];
+      plants.forEach((plant, plantIndex) => {
+        if (!Number.isInteger(plant.crop) || !Number.isFinite(plant.plantedAt)) return;
+        const normalized = plot?.manual === true ? manualPlantCoordinate(plant.positionIndex || plantIndex + 1) : { x: 0.5, z: 0.5 };
+        const plantX = x + (normalized.x - 0.5) * 0.9;
+        const plantZ = z + (normalized.z - 0.5) * 0.9;
+        const stage = getPlotVisualStage(plant, i * 100 + plantIndex);
         const flowerVertexStart = positions.length;
-        addFlowerModel(positions, colors, x, z, plot.crop, stage, Number.isFinite(plot.plantHeight) ? plot.plantHeight : 1, plot.customColor);
+        addFlowerModel(positions, colors, plantX, plantZ, plant.crop, stage,
+          Number.isFinite(plant.plantHeight) ? plant.plantHeight : 1, plant.customColor);
         for (let vertex = flowerVertexStart + 1; vertex < positions.length; vertex += 3) positions[vertex] += plantBaseY;
-      }
+      });
     }
     if (heightEdit) {
       let arrowX, arrowZ, arrowBaseY;
@@ -1762,7 +1790,13 @@
     },
     setPlots(plots) {
       if (!Array.isArray(plots)) return;
-      plotStates = plots.map((plot) => ({ crop: plot.crop, plantedAt: plot.plantedAt, plantHeight: plot.plantHeight, customColor: plot.customColor, elapsed: plot.elapsed, growTime: plot.growTime, waterStartedAt: plot.waterStartedAt, waterUntil: plot.waterUntil, waterWetnessStart: plot.waterWetnessStart, waterVisualStartedAt: plot.waterVisualStartedAt, manual: plot.manual === true, grassOnly: plot.grassOnly === true }));
+      plotStates = plots.map((plot) => ({
+        crop: plot.crop, plantedAt: plot.plantedAt, plantHeight: plot.plantHeight, customColor: plot.customColor,
+        elapsed: plot.elapsed, growTime: plot.growTime, waterStartedAt: plot.waterStartedAt, waterUntil: plot.waterUntil,
+        waterWetnessStart: plot.waterWetnessStart, waterVisualStartedAt: plot.waterVisualStartedAt,
+        manual: plot.manual === true, grassOnly: plot.grassOnly === true,
+        plants: Array.isArray(plot.plants) ? plot.plants.map((plant) => ({ ...plant })) : undefined,
+      }));
       uploadWorld();
     },
     setEnvironment(state) {
