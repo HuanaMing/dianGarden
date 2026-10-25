@@ -642,7 +642,8 @@
     }
     if (hudCollapsedSummary) { const environment = window.skyEnvironment.getState(game); hudCollapsedSummary.textContent = `${game.gardenName} · 🪙 ${game.coins} · 🌱 ${getAutomaticPlotCount()} · ${environment.isRaining ? '陰雨' : '晴朗'} · ${({ dawn: '清晨', day: '白天', dusk: '黃昏', night: '夜晚' })[environment.phase]} · ${jobStatus?.textContent || '無人機待命'}${persistenceWarning ? ' · 存檔需留意' : ''}`; }
     if (!hudToggle) return;
-    hudToggle.textContent = game.hudCollapsed ? '🔽' : '🔼';
+    const hudToggleIcon = hudToggle.querySelector('img');
+    if (hudToggleIcon) hudToggleIcon.src = 'assets/btn/收合.png';
     hudToggle.setAttribute('aria-label', game.hudCollapsed ? '展開介面' : '收合介面');
     hudToggle.setAttribute('title', game.hudCollapsed ? '展開介面' : '收合介面');
     hudToggle.setAttribute('aria-expanded', String(!game.hudCollapsed));
