@@ -1534,6 +1534,77 @@ try {
   checks.push('任務228：舊版單株手動地塊存檔自動遷移通過');
   await legacyPlantPage.close();
 
+  // 任務229：容量升級價格、付款、容量限制、存檔與自動地塊隔離。
+  const upgradeSave = plotTabSave();
+  upgradeSave.coins = 5000;
+  upgradeSave.plots[3] = {
+    crop: null, plantedAt: null, manual: true, grassOnly: false, x: 1, z: 0, y: 0,
+    capacityLevel: 1, nextPlantPosition: 1, plants: [],
+  };
+  const manualUpgradePage = await browser.newPage({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 1 });
+  await manualUpgradePage.addInitScript(save => {
+    localStorage.setItem('sky-garden-guest-mode-v1', 'true');
+    localStorage.setItem('sky-garden-guest-save-v1', JSON.stringify(save));
+  }, upgradeSave);
+  await manualUpgradePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await manualUpgradePage.evaluate(() => window.onSkyPlotActivate?.(0));
+  if (await manualUpgradePage.locator('#farm-dialog [data-upgrade-manual-plot]').count() !== 0) {
+    throw new Error('任務229：自動地塊不應出現手動容量升級按鈕');
+  }
+  await manualUpgradePage.evaluate(() => window.onSkyPlotActivate?.(3));
+  const upgradeButton = manualUpgradePage.locator('#farm-dialog [data-upgrade-manual-plot]');
+  await upgradeButton.waitFor({ state: 'visible', timeout: 8000 });
+  const upgradeCosts = [];
+  for (const expectedCost of [40, 106, 186]) {
+    const buttonText = await manualUpgradePage.locator('#farm-dialog [data-upgrade-manual-plot]').innerText();
+    if (!buttonText.includes(String(expectedCost))) throw new Error(`任務229：容量等級升級費用不符，預期 ${expectedCost}，實際 ${buttonText}`);
+    upgradeCosts.push(expectedCost);
+    await manualUpgradePage.locator('#farm-dialog [data-upgrade-manual-plot]').click();
+  }
+  const afterThreeUpgrades = await manualUpgradePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')));
+  if (afterThreeUpgrades.plots[3].capacityLevel !== 4 || afterThreeUpgrades.coins !== 4668) {
+    throw new Error('任務229：連續升級三次後容量或扣款錯誤：' + JSON.stringify({ level: afterThreeUpgrades.plots[3].capacityLevel, coins: afterThreeUpgrades.coins }));
+  }
+  await manualUpgradePage.locator('#farm-dialog .seed-option').first().click();
+  await manualUpgradePage.evaluate(() => window.onSkyPlotActivate?.(3));
+  for (let index = 0; index < 3; index += 1) {
+    await manualUpgradePage.locator('#farm-dialog [data-manual-seed-options] .seed-option').first().click();
+  }
+  const fullCapacity = await manualUpgradePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots[3]);
+  if (fullCapacity.plants.length !== 4 || await manualUpgradePage.locator('#farm-dialog [data-manual-seed-options] .seed-option').count() !== 0) {
+    throw new Error('任務229：容量滿載後仍可新增花株，或容量限制不正確');
+  }
+  await manualUpgradePage.reload({ waitUntil: 'networkidle', timeout: 30000 });
+  const persistedUpgrade = await manualUpgradePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots[3]);
+  if (persistedUpgrade.capacityLevel !== 4 || persistedUpgrade.plants.length !== 4) {
+    throw new Error('任務229：升級等級／容量在重新載入後未保留');
+  }
+  checks.push('任務229：升級價格40／106／186、連續付款、容量滿載限制、自動地塊隔離與重載持久性通過');
+  await manualUpgradePage.close();
+
+  const insufficientUpgradeSave = plotTabSave();
+  insufficientUpgradeSave.coins = 39;
+  insufficientUpgradeSave.plots[3] = {
+    crop: null, plantedAt: null, manual: true, grassOnly: false, x: 1, z: 0, y: 0,
+    capacityLevel: 1, nextPlantPosition: 1, plants: [],
+  };
+  const insufficientUpgradePage = await browser.newPage({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 1 });
+  await insufficientUpgradePage.addInitScript(save => {
+    localStorage.setItem('sky-garden-guest-mode-v1', 'true');
+    localStorage.setItem('sky-garden-guest-save-v1', JSON.stringify(save));
+  }, insufficientUpgradeSave);
+  await insufficientUpgradePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await insufficientUpgradePage.evaluate(() => window.onSkyPlotActivate?.(3));
+  const unaffordableUpgrade = insufficientUpgradePage.locator('#farm-dialog [data-upgrade-manual-plot]');
+  await unaffordableUpgrade.waitFor({ state: 'visible', timeout: 8000 });
+  if (!(await unaffordableUpgrade.isDisabled())) throw new Error('任務229：金幣不足時升級按鈕仍可操作');
+  const insufficientState = await insufficientUpgradePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')));
+  if (insufficientState.coins !== 39 || insufficientState.plots[3].capacityLevel !== 1) {
+    throw new Error('任務229：金幣不足時仍扣款或升級');
+  }
+  checks.push('任務229：金幣不足時不扣款、不升級且按鈕停用');
+  await insufficientUpgradePage.close();
+
   const mobilePlotTabsPage = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
   await mobilePlotTabsPage.addInitScript(save => {
     localStorage.setItem('sky-garden-guest-mode-v1', 'true');
