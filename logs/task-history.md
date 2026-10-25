@@ -1777,3 +1777,11 @@
 - 登出、過期／損壞 token、伺服器拒絕 token 及 `stale_session` 會清除暫存並停止同步；有效工作階段恢復時只預備重新登入按鈕，不觸發自動登入 prompt 或重認領雲端所有權。沒有變更遊戲存檔格式、訪客存檔或雲端衝突流程。
 - Worker smoke tests 驗證過期 token 拒絕及新工作階段認領後舊工作階段寫入遭拒；完整 Playwright 桌面／手機回歸驗收通過，`browserErrors: []`。GitHub Actions：[run 40185985390](https://github.com/HuanaMing/dianGarden/actions/runs/40185985390)。
 - 任務文件歸檔至 `tasks/done/231-encyclopedia-toggle-and-login-persistence.md`。未手動觸發 GitHub Pages 部署；任務109與任務212既有批准要求仍有效。
+
+
+## 2026-10-25 — 任務233：限制無人機平台點選範圍
+
+- `src/sky-world.js` 的 `findDockAt()` 移除平台中心附近的寬鬆像素命中半徑，改為只接受平台頂面投影四邊形內的點擊。
+- 點擊無人機本體、平台側面或附近空白不再因接近平台中心而選取平台；收起的平台仍不可選取。
+- GitHub commit：`3b16e1b6f6256ec596adfe79316dca3031321873`；任務紀錄：`tasks/done/233-drone-dock-hit-area.md`。
+- 驗證限制：尚未執行人工瀏覽器驗收，也尚未確認自動 CI 結果；不宣稱視覺驗收通過。未手動觸發 GitHub Pages 部署。
