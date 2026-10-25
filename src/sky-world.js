@@ -1406,7 +1406,7 @@
         uploadWorld();
       }, 500);
     }
-    pointerPlotIndex = dockHitAtPointer !== null ? null : findPlotAt(event.clientX, event.clientY);
+    pointerPlotIndex = galleryMode || dockHitAtPointer !== null ? null : findPlotAt(event.clientX, event.clientY);
     plotPressIndex = pointerPlotIndex;
     plotPressReady = false;
     dragPlotIndex = null;
