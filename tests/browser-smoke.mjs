@@ -427,7 +427,7 @@ try {
       bottom: logic.getConnectedGroupBottomY(positions, 0, 1, 0.5),
       upperHasBelow: logic.hasPlotBelow(positions, 3),
       lowerHasBelow: logic.hasPlotBelow(positions, 0),
-      grassBelowUpper: states[0].grassOnly && logic.hasPlotDirectlyBelow(positions, 3, 1),
+      grassBelowUpper: states[0].grassOnly && logic.hasPlotBelow(positions, 3),
       isolatedBottom: logic.getConnectedGroupBottomY(positions, 4, 1, 0.5),
     };
   });
