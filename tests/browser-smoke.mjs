@@ -204,10 +204,14 @@ try {
   for (const selector of ['#settings-toggle', '.encyclopedia-link', '#hud-toggle', '#drone-panel-toggle', '#farm-management-toggle']) {
     if (!(await page.locator(selector).isVisible())) throw new Error(`頂部控制按鈕未顯示：${selector}`);
   }
+  const hudCollapseIcon = page.locator('#hud-toggle img.btn-icon-image');
+  if (await hudCollapseIcon.getAttribute('src') !== 'assets/btn/收合.png' || !(await hudCollapseIcon.evaluate(image => image.complete && image.naturalWidth > 0))) throw new Error('頂部收合按鈕未載入指定圖示');
   await page.locator('#hud-toggle').click();
-  if (!(await page.locator('#hud-toggle').isVisible()) || await page.locator('#hud-toggle').textContent() !== '🔽') throw new Error('收合介面後沒有保留可復原的按鈕');
+  if (!(await page.locator('#hud-toggle').isVisible()) || await page.locator('#hud-toggle').getAttribute('aria-expanded') !== 'false'
+    || await hudCollapseIcon.getAttribute('src') !== 'assets/btn/收合.png') throw new Error('收合介面後沒有保留正確圖示的可復原按鈕');
   await page.locator('#hud-toggle').click();
-  if (await page.locator('#hud-toggle').textContent() !== '🔼') throw new Error('再次點擊收合按鈕未恢復介面');
+  if (await page.locator('#hud-toggle').getAttribute('aria-expanded') !== 'true' || await hudCollapseIcon.getAttribute('src') !== 'assets/btn/收合.png') throw new Error('再次點擊收合按鈕未恢復介面或圖示遺失');
+  checks.push('任務220：桌面頂部收合按鈕圖示載入正確，收合／恢復行為及 aria-expanded 正常');
   await page.locator('#drone-panel-toggle').click();
   if (await page.locator('#drone-panel-toggle img.btn-icon-image').getAttribute('src') !== 'assets/btn/無人機管理.png') throw new Error('開啟無人機面板後，原始圖片圖示被替換或遺失');
   await page.locator('#drone-panel-toggle').click();
@@ -408,8 +412,9 @@ try {
     'assets/btn/農地管理.png': 2,
     'assets/btn/設定.png': 2,
     'assets/btn/圖鑑.png': 2,
+    'assets/btn/收合.png': 2,
   };
-  if (buttonAssetChecks.length !== 8 || buttonAssetChecks.some(image => !image.loaded)
+  if (buttonAssetChecks.length !== 10 || buttonAssetChecks.some(image => !image.loaded)
     || Object.entries(expectedButtonAssetCounts).some(([src, count]) => buttonAssetChecks.filter(image => image.src === src).length !== count)) {
     throw new Error('輪盤及頂部介面的按鈕素材數量須符合目前實際配置且全部成功載入：' + JSON.stringify(buttonAssetChecks));
   }
@@ -428,16 +433,19 @@ try {
     clipPath: getComputedStyle(node).clipPath,
     pointerEvents: getComputedStyle(node).pointerEvents,
     zIndex: Number.parseInt(getComputedStyle(node).zIndex, 10),
+    src: node.querySelector('img').getAttribute('src'),
     imageWidth: Number.parseFloat(getComputedStyle(node.querySelector('img')).width),
     imageHeight: Number.parseFloat(getComputedStyle(node.querySelector('img')).height),
     filter: getComputedStyle(node.querySelector('img')).filter,
     loaded: node.querySelector('img').complete && node.querySelector('img').naturalWidth > 0,
   })));
-  if (wheelOverlayStyle.length !== 4 || wheelOverlayStyle.some(icon => icon.clipPath !== 'none' || icon.pointerEvents !== 'none' || icon.zIndex < 1
-    || icon.imageWidth !== 35 || icon.imageHeight !== 35 || !icon.filter.includes('drop-shadow') || !icon.filter.includes('rgb(255, 255, 255)') || !icon.loaded)) {
-    throw new Error('桌面版四個圖示需位於不受扇形裁切的獨立覆蓋層、尺寸35px並具白色外框：' + JSON.stringify(wheelOverlayStyle));
+  if (wheelOverlayStyle.length !== 5 || wheelOverlayStyle.some(icon => icon.clipPath !== 'none' || icon.pointerEvents !== 'none' || icon.zIndex < 1
+    || icon.imageWidth !== 35 || icon.imageHeight !== 35 || !icon.filter.includes('drop-shadow') || !icon.filter.includes('rgb(255, 255, 255)') || !icon.loaded)
+    || wheelOverlayStyle.filter(icon => icon.action === 'collapse').length !== 1
+    || wheelOverlayStyle.find(icon => icon.action === 'collapse')?.src !== 'assets/btn/收合.png') {
+    throw new Error('桌面版五個圖示需位於不受扇形裁切的獨立覆蓋層、尺寸35px並具白色外框，收合入口使用指定素材：' + JSON.stringify(wheelOverlayStyle));
   }
-  checks.push('六個輪盤選項保留 aria-label 且無文字標籤；桌面四個圖示為35px、位於裁切層外並具白框');
+  checks.push('任務220：快捷圓環收合入口使用已載入的35px收合圖示，五個圖示皆位於裁切層外並具白框');
   if (await page.locator('#garden-menu-wheel .garden-menu-wreath').getAttribute('src') !== 'assets/wreath.webp') throw new Error('快捷輪盤未沿用花草環素材');
   const wheelGeometry = await page.evaluate(async () => {
     const wheel = document.querySelector('#garden-menu-wheel');
