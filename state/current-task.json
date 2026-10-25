@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "確認 GitHub Actions Playwright 桌面／手機驗收結果；若測試通過，再請使用者實機確認小島可見度、遠近層次與舊雲移除效果。",
+  "nextAction": "請使用者實機確認三座小島的可見度、遠近層次、相機旋轉視差，以及舊雲移除後的天空效果；驗收完成後再歸檔任務240。",
   "taskFile": "tasks/active/240-distant-islands.md",
-  "result": "已完成 src/sky-world.js 背景小島實作並移除舊漂浮雲層，更新 tests/browser-smoke.mjs 與 docs/architecture.md。最新程式提交 57cc0c6d5ee0cce47098306ab78124eece86af13；最新測試提交 0276855b057038eaf15d85306f939c9843265d5e。已重新讀取確認程式含三座固定世界座標小島、舊雲程式已移除，測試斷言已更新；GitHub Actions 狀態尚未回報，桌面／手機瀏覽器測試與實機視覺驗收仍待確認。未手動觸發 GitHub Pages 部署。"
+  "result": "已完成 src/sky-world.js 背景小島實作並移除舊漂浮雲層，更新 tests/browser-smoke.mjs 與 docs/architecture.md。最新程式提交 57cc0c6d5ee0cce47098306ab78124eece86af13；最新測試提交 0276855b057038eaf15d85306f939c9843265d5e。GitHub Actions Playwright 桌面／手機瀏覽器驗收成功，run 40219167948；Cloudflare Worker 存檔 API smoke tests 及截圖保存步驟成功。尚待使用者實機視覺驗收。未手動觸發 GitHub Pages 部署。"
 }
