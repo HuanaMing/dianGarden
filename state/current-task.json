@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "等待任務239最新瀏覽器自動驗收 run 40210631699 結果；其後由使用者實機驗收天空視差、雲層飄動與日月東升西落，再開始任務240。",
+  "nextAction": "任務239 Playwright 瀏覽器自動驗收 run 40210631699 已成功，Pages 部署 run 40210583323 已成功；等待使用者實機驗收天空視差、雲層飄動與日月東升西落，再開始任務240。",
   "taskFile": "tasks/active/239-world-space-sky.md",
-  "result": "src/sky-world.js 已新增世界座標半透明低面數雲層、緩慢飄動的雲，以及沿遊戲日夜週期東升西落的太陽與月亮模型。已在 tests/browser-smoke.mjs 加入天空幾何與循環狀態規格檢查。GitHub Pages run 40210583323 成功；包含最新測試的瀏覽器驗收 run 40210631699 當時排隊中，未宣稱通過。"
+  "result": "src/sky-world.js 已新增世界座標半透明低面數雲層與緩慢飄動、太陽與月亮低面數模型，以及與既有日夜週期一致的東升西落軌跡。tests/browser-smoke.mjs 加入對天空幾何、透明緩衝區、雲層動畫與世界時間狀態的規格檢查。Playwright run 40210631699 成功，Pages run 40210583323 成功。尚待使用者實機視覺驗收。"
 }
