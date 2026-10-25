@@ -257,7 +257,6 @@
   const dialogTitle = document.querySelector('#farm-dialog-title');
   const dialogContent = document.querySelector('#farm-dialog-content');
   let toastTimeout;
-  let dronePanelTimeout = null;
   let dialogContext = null;
   let activePlotIndex = -1;
   let dockIsSelected = false;
@@ -501,6 +500,12 @@
     renderDroneFleet();
     updateHudCollapse();
     jobQueueDisplay.replaceChildren();
+    if (!jobQueue.length) {
+      const emptyItem = document.createElement('li');
+      emptyItem.className = 'job-queue-empty';
+      emptyItem.textContent = activeJobs.size ? '目前工作已由無人機執行，沒有等待中的工作。' : '目前沒有等待中的工作。';
+      jobQueueDisplay.append(emptyItem);
+    }
     jobQueue.forEach((job, index) => {
       const item = document.createElement('li');
       item.innerHTML = `<span>${index + 1}. ${jobLabel(job)}</span><button type="button" data-cancel-job="${job.id}" aria-label="取消${jobLabel(job)}">取消</button>`;
@@ -564,15 +569,12 @@
       if (settingsPanel) settingsPanel.hidden = true;
       settingsToggle?.setAttribute('aria-expanded', 'false');
     }
-    window.clearTimeout(dronePanelTimeout);
-    dronePanelTimeout = null;
     droneJobsPanel.classList.toggle('is-open', open);
     document.querySelector('.world-frame')?.classList.toggle('is-drone-panel-open', open);
     dronePanelToggle.setAttribute('aria-expanded', String(open));
     dronePanelToggle.textContent = '🚁';
     dronePanelToggle.setAttribute('aria-label', open ? '收合無人機面板' : '開啟無人機面板');
     dronePanelToggle.setAttribute('title', open ? '收合無人機面板' : '開啟無人機面板');
-    if (open) dronePanelTimeout = window.setTimeout(() => setDronePanelOpen(false), 5000);
   }
   function refreshDronePanelTimeout() {
     if (droneJobsPanel?.classList.contains('is-open')) setDronePanelOpen(true);
