@@ -519,7 +519,6 @@ try {
     throw new Error('本機存檔警告未在跨裝置存檔區清楚顯示：' + JSON.stringify(saveWarningState));
   }
   checks.push('任務209：本機存檔讀取失敗時，跨裝置存檔區顯示醒目警告');
-  checks.push('任務219：桌面／手機風鈴提示置中於畫面中下方、通知色系和諧、圖示 32×32 且按鈕可命中；設定面板圖示載入通過');
   await saveWarningPage.close();
 
   const staleSessionPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -640,6 +639,7 @@ try {
     || staleSessionState.saveStatus !== '暫停同步雲端進度' || !staleSessionState.saveWarning) {
     throw new Error('異地登入後的雙處提示、風鈴按鈕或離線存檔狀態錯誤：' + JSON.stringify(staleSessionState));
   }
+  checks.push('任務219：桌面／手機風鈴提示置中於畫面中下方、通知色系和諧、圖示 32×32 且按鈕可命中；設定面板圖示載入通過');
   await staleSessionPage.locator('#garden-avatar').click();
   await staleSessionPage.locator('#avatar-mode').selectOption('manual');
   const localSaveAfterOfflineEdit = await staleSessionPage.evaluate(() => localStorage.getItem('sky-garden-save-v1'));
