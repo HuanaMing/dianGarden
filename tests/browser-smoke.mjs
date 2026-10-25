@@ -503,6 +503,12 @@ try {
   checks.push('任務211：模擬 stale_session 後隱藏登入、暫停雲端同步且本機存檔仍可寫入');
 
   const assertRefreshButtonReloads = async selector => {
+    if (selector === '#cloud-session-refresh-main') {
+      await staleSessionPage.evaluate(() => {
+        document.querySelector('#settings-panel').hidden = true;
+        document.querySelector('#settings-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+    }
     const hitTest = await staleSessionPage.evaluate(selector => {
       const button = document.querySelector(selector);
       const rect = button.getBoundingClientRect();
