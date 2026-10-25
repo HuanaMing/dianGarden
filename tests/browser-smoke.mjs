@@ -1464,7 +1464,7 @@ try {
     plantHeight: 1, watered: false, capacityLevel: 3, nextPlantPosition: 4,
     plants: [
       { crop: 0, plantedAt: multiPlantNow - 200000, plantHeight: 1, positionIndex: 1, watered: false, growthBonusMs: 0 },
-      { crop: 1, plantedAt: multiPlantNow - 200000, plantHeight: 1, positionIndex: 2, watered: false, growthBonusMs: 0 },
+      { crop: 1, plantedAt: multiPlantNow - 1000, plantHeight: 1, positionIndex: 2, watered: false, growthBonusMs: 0 },
       { crop: 2, plantedAt: multiPlantNow - 200000, plantHeight: 1, positionIndex: 3, watered: false, growthBonusMs: 0 },
     ],
   };
