@@ -872,7 +872,7 @@ try {
   }));
   if (restoredAuthRequests.length !== 2 || restoredAuthRequests[0].path !== '/api/session/refresh'
     || restoredAuthRequests[1].path !== '/api/save' || restoredAuthRequests[1].authorization !== 'Bearer test-session-id.access-secret'
-    || restoredAuthRequests[1].body !== undefined || restoredAuthState.session?.refreshToken !== 'test-session-id.rotated-refresh-secret'
+    || restoredAuthRequests[1].body != null || restoredAuthState.session?.refreshToken !== 'test-session-id.rotated-refresh-secret'
     || restoredAuthState.openedAt !== restoredAuthOpenedAt || restoredAuthState.googleInitializeCalls !== 1
     || restoredAuthState.googlePromptCalls !== 0 || restoredAuthState.startupDialogOpen) {
     throw new Error('任務232：重新開啟遊戲未恢復長期登入並輪替更新憑證：' + JSON.stringify({ restoredAuthRequests, restoredAuthState }));
