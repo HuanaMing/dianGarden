@@ -1,11 +1,11 @@
 {
   "name": "任務222：快捷圓環旋轉圖示",
-  "status": "in_progress",
+  "status": "completed",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的 GitHub Pages 部署：需使用者明確批准後手動觸發。"
   ],
-  "nextAction": "確認 GitHub Actions 的 Playwright 驗收結果；如失敗，依日誌修正後重跑。",
-  "taskFile": "tasks/active/222-rotate-button-icon.md",
-  "result": "已將快捷圓環旋轉入口改用 assets/btn/旋轉.png，保留 aria-label 與 aria-pressed；更新桌面／手機圖示素材與幾何驗收。等待自動化驗收結果。"
+  "nextAction": "任務219～222已完成並驗收；等待使用者指定下一項工作。",
+  "taskFile": "tasks/done/222-rotate-button-icon.md",
+  "result": "快捷圓環旋轉入口改用 assets/btn/旋轉.png，移除 emoji 並保留旋轉無障礙名稱與狀態；GitHub Actions Playwright 桌面／手機完整驗收通過（run 40166239723）。任務220～222完成紀錄均已歸檔。"
 }
