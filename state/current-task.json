@@ -1,12 +1,11 @@
 {
   "name": "任務231：修正圖鑑收合圖示方向與返回花園重複登入",
-  "status": "in_progress",
+  "status": "completed",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
-    "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
-    "任務231登入狀態延續：需確認是否接受短效Google ID token暫存於同分頁sessionStorage。"
+    "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。"
   ],
-  "nextAction": "圖鑑圖示映射與 browser-smoke 驗收預期已修改並提交。等待使用者確認登入憑證暫存方案後，完成 cloud-save.js 的安全恢復邏輯及回歸驗收。",
-  "taskFile": "tasks/active/231-encyclopedia-toggle-and-login-persistence.md",
-  "result": "已修正圖鑑按鈕初始圖示與展開／收合映射；更新手機版瀏覽器驗收預期。登入持續性尚未修改，待安全取捨確認。"
+  "nextAction": "任務231已完成並歸檔；等待使用者下一項指示。未手動觸發 GitHub Pages 部署。",
+  "taskFile": "tasks/done/231-encyclopedia-toggle-and-login-persistence.md",
+  "result": "已修正圖鑑展開／收合圖示映射；同分頁 sessionStorage 安全延續短效 Google ID token 與 sessionOpenedAt，驗證到期、登出、伺服器拒絕與 stale_session 清除及權限保護。Worker smoke tests 與完整 Playwright 桌面／手機回歸驗收通過（run 40185985390）。"
 }
