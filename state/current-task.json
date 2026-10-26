@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務249已將雨滴分布改為跟隨相機位置與朝向，並增加至72顆；已更新靜態回歸斷言。接著確認程式與測試檔內容、執行可用的語法／瀏覽器測試，等待使用者視覺驗收。未手動觸發GitHub Pages部署。",
+  "nextAction": "目前仍以任務249「雨滴動畫跟隨鏡頭」為執行中任務，等待視覺驗收。已建立任務250～254並放入tasks/inbox：手動地塊花株多選收成、農地管理固定五欄、存檔恢復鏡頭、星星仰角限制、花株依播種無人機朝向旋轉。後續依序執行，未開始這五項實作。",
   "taskFiles": [
     "tasks/active/247-rainy-moon-visibility.md",
     "tasks/active/249-camera-following-rain.md"
