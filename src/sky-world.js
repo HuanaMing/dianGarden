@@ -869,14 +869,42 @@
     const minZ = Math.floor((Math.min(startGrid[1], goalGrid[1]) * step - 3) / step);
     const maxZ = Math.ceil((Math.max(startGrid[1], goalGrid[1]) * step + 3) / step);
     const heuristic = (point) => Math.hypot(goalGrid[0] - point[0], goalGrid[1] - point[1]);
-    const open = [{ point: startGrid, cost: 0, score: heuristic(startGrid) }];
+    const open = [];
+    const pushOpen = (node) => {
+      open.push(node);
+      let index = open.length - 1;
+      while (index > 0) {
+        const parent = Math.floor((index - 1) / 2);
+        if (open[parent].score <= open[index].score) break;
+        [open[parent], open[index]] = [open[index], open[parent]];
+        index = parent;
+      }
+    };
+    const popOpen = () => {
+      const first = open[0];
+      const last = open.pop();
+      if (open.length) {
+        open[0] = last;
+        let index = 0;
+        while (true) {
+          const left = index * 2 + 1, right = left + 1;
+          let smallest = index;
+          if (left < open.length && open[left].score < open[smallest].score) smallest = left;
+          if (right < open.length && open[right].score < open[smallest].score) smallest = right;
+          if (smallest === index) break;
+          [open[index], open[smallest]] = [open[smallest], open[index]];
+          index = smallest;
+        }
+      }
+      return first;
+    };
+    pushOpen({ point: startGrid, cost: 0, score: heuristic(startGrid) });
     const cameFrom = new Map();
     const costs = new Map([[key(startGrid), 0]]);
     const directions = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
     let visited = 0;
     while (open.length && visited < 6000) {
-      open.sort((a, b) => a.score - b.score);
-      const current = open.shift().point;
+      const current = popOpen().point;
       if (key(current) === key(goalGrid)) {
         const path = [current];
         let cursor = key(current);
@@ -894,7 +922,7 @@
         if (nextCost >= (costs.get(nextKey) ?? Infinity)) continue;
         costs.set(nextKey, nextCost);
         cameFrom.set(nextKey, key(current));
-        open.push({ point: next, cost: nextCost, score: nextCost + heuristic(next) });
+        pushOpen({ point: next, cost: nextCost, score: nextCost + heuristic(next) });
       }
     }
     droneDebugLog('route-failed', { droneIndex, start: start.slice(), goal: goal.slice(), visited, droneObstacles: obstacles.length, landObstacles: landObstacles.length, fallback: 'none' });
