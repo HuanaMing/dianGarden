@@ -69,7 +69,7 @@ if (!skyWorldSource.includes("const dronePhaseTransitions = {")
   || !skyWorldSource.includes("setDronePhase(index, 'waiting_path', 'return-route-blocked')")) {
   throw new Error('任務259：無人機狀態機或可觀察的主要階段缺失');
 }
-if (!skyWorldSource.includes("const dockPositionsChanged = docks.map((dock, index) => {
+if (!skyWorldSource.includes("const dockPositionsChanged = docks.map((dock, index) => {")
   || !skyWorldSource.includes("else if (dockPositionsChanged[index]) {")
   || !skyWorldSource.includes("if (animation.returning === true) {")
   || !skyWorldSource.includes("const newRoute = findDroneRoute(droneStates[index].location, [dock.x, dock.z], index);")
