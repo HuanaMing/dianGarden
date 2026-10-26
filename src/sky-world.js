@@ -2485,6 +2485,41 @@
     getDronePhase(droneIndex = 0) {
       return Number.isInteger(droneIndex) ? droneStates[droneIndex]?.phase ?? 'docked' : 'docked';
     },
+    cancelDroneAnimation(droneIndex, onReturnComplete) {
+      if (!Number.isInteger(droneIndex) || droneIndex < 0 || droneIndex >= droneCount) return false;
+      const state = droneStates[droneIndex];
+      const animation = state?.animation;
+      if (!state || !animation) return false;
+      const start = state.location.slice();
+      const dock = droneDocks[droneIndex] || dockPosition;
+      const pendingDock = { x: dock.x, z: dock.z, y: dock.y || 0 };
+      const route = findDroneRoute(start, [dock.x, dock.z], droneIndex);
+      animation.target = start.slice();
+      animation.start = start.slice();
+      animation.startY = state.y;
+      animation.targetPlotIndex = undefined;
+      animation.hoverDuration = 0;
+      animation.elapsed = 0;
+      animation.returning = true;
+      animation.workCompleted = true;
+      animation.workProgress = 0;
+      animation.outboundRoute = [start.slice()];
+      animation.returnRoute = route || [];
+      animation.returnReplan = { elapsed: 0, start: start.slice(), startY: state.y };
+      animation.routeBlocked = !route;
+      animation.pendingDock = route ? null : pendingDock;
+      animation.lastRouteRetryElapsed = route ? undefined : 0;
+      animation.idlePosition = { x: dock.x, z: dock.z };
+      animation.idleY = DRONE_IDLE_Y + (dock.y || 0);
+      animation.onDeparture = null;
+      animation.onWorkStart = null;
+      animation.onComplete = null;
+      animation.onReturnComplete = onReturnComplete || null;
+      animation.shouldReturn = () => true;
+      setDronePhase(droneIndex, route ? 'returning' : 'waiting_path', 'work-cancelled-return');
+      droneDebugLog('animation-cancelled-return', { droneIndex, kind: animation.kind, location: start, dock: pendingDock, routeFound: Boolean(route) });
+      return true;
+    },
     animatePlant(index, onDeparture, onComplete, shouldReturn, droneIndex = 0, onReturnComplete) {
       if (!Number.isInteger(index) || index < 0 || index >= landCount) return false;
       const [targetX, targetZ] = getPlotPosition(index);
