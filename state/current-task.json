@@ -1,16 +1,14 @@
 {
-  "name": "任務243–245：雲朵光照、晴天天空與太陽模型",
+  "name": "任務246：修正夜間雲朵過亮與太陽不可見",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "分別完成任務243雲朵柔光、244晴天藍色漸層、245方向基底太陽模型；三項完成後一起執行驗證並合併推送。",
+  "nextAction": "檢查任務246的瀏覽器回歸驗收與Pages自動部署；若測試發現問題，修正後再次驗證，等待使用者視覺驗收。",
   "taskFiles": [
-    "tasks/active/243-soft-cloud-lighting.md",
-    "tasks/active/244-blue-day-sky.md",
-    "tasks/active/245-sun-billboard-model.md"
+    "tasks/active/246-night-cloud-sun-visibility.md"
   ],
-  "result": "已完成三項獨立規劃，尚未推送。"
+  "result": "已寫入夜間雲朵亮度／透明度與太陽路徑修正，並更新對應回歸測試；等待自動化驗收。"
 }
