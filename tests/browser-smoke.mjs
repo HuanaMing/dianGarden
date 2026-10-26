@@ -39,6 +39,7 @@ if (!gameSource.includes("job.droneIndex = droneIndex;")
   || !gameSource.includes("rotation: Number.isFinite(plot.rotation) ? plot.rotation : 0")
   || !gameSource.includes("plant.rotation === undefined || (Number.isFinite(plant.rotation)")
   || !skyWorldSource.includes("getDroneHeading(droneIndex = 0)")
+  || !skyWorldSource.includes("crop: plot.crop, plantedAt: plot.plantedAt, plantHeight: plot.plantHeight, rotation: plot.rotation, customColor: plot.customColor,")
   || !skyWorldSource.includes("x + offsetX * cosine + offsetZ * sine")
   || !skyWorldSource.includes("z - offsetX * sine + offsetZ * cosine")
   || !skyWorldSource.includes("Number.isFinite(plant.rotation) ? plant.rotation : 0")) {
