@@ -1192,9 +1192,8 @@
     // This produces a true great circle: elevation varies smoothly from -15 to +15 degrees.
     const orbitTilt = Math.PI / 12;
     const sunDirection = [Math.sin(azimuth) * Math.cos(orbitTilt), Math.sin(azimuth) * Math.sin(orbitTilt), Math.cos(azimuth)];
-    const warmth = environmentState.phase === 'day'
-      ? 1
-      : 0.12 + 0.35 * Math.min(1, Math.abs(environmentState.phaseProgress - 0.5) * 2);
+    // Keep the sun's daytime orange RGB color at every phase; time and rain only affect opacity.
+    const warmth = 1;
     const sunStart = positions.length / 3;
     addSun(positions, colors, sunDirection, warmth);
     for (let i = sunStart; i < positions.length / 3; i += 1) opacities.push(sunVisibility);
