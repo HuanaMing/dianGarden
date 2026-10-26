@@ -366,6 +366,8 @@
   const dialogContent = document.querySelector('#farm-dialog-content');
   let toastTimeout;
   let dialogContext = null;
+  let selectedManualPlotIndex = null;
+  const selectedManualPlantPositions = new Set();
   let activePlotIndex = -1;
   let dockIsSelected = false;
   let isResetting = false;
@@ -528,60 +530,47 @@
   function renderManualPlotDialog(index, plot) {
     const plants = getPlotPlants(plot);
     const capacity = getPlotCapacity(plot);
+    if (selectedManualPlotIndex !== index) {
+      selectedManualPlotIndex = index;
+      selectedManualPlantPositions.clear();
+    }
+    const validPositions = new Set(plants.map((plant, plantIndex) => plant.positionIndex || plantIndex + 1));
+    for (const position of selectedManualPlantPositions) {
+      if (!validPositions.has(position)) selectedManualPlantPositions.delete(position);
+    }
     dialogTitle.textContent = getPlotLabel(index);
     dialog.classList.add('has-seed-picker');
     const deleteAction = game.plots.length > 1
       ? `<button class="dialog-delete-plot" type="button" data-delete-plot ${hasDroneJobs() ? 'disabled' : ''}>${hasDroneJobs() ? '無人機工作時無法刪除' : '刪除這塊地'}</button>`
       : '';
     dialogContent.innerHTML = `${plotModeSettingMarkup(plot, index)}${manualUpgradePanelMarkup(plot)}
-      <p class="seed-dialog-description">手動地塊可同時種植 ${plants.length}/${capacity} 株；每株花卉的成長、澆水及收成都獨立計算。</p>
-      <div class="manual-plant-list" data-manual-plant-list></div>
+      <div class="manual-plant-list" role="group" aria-label="選擇要收成的花株" data-manual-plant-list></div>
+      <button class="action-button harvest manual-harvest-selected" type="button" data-harvest-selected>收成</button>
       <p class="manual-seed-heading">${plants.length < capacity ? '選擇要再種下的花種' : '目前種植名額已滿'}</p>
       <div class="seed-options" data-manual-seed-options></div>${deleteAction}`;
     const list = dialogContent.querySelector('[data-manual-plant-list]');
+    if (plants.length === 0) list.textContent = '尚未種植花株。';
     plants.forEach((plant, plantIndex) => {
       const crop = getPlantedCrop(plot, plantIndex);
-      const elapsed = growthElapsed(plot, Date.now(), plantIndex);
-      const progress = Math.min(100, Math.floor(elapsed / crop.growTime * 100));
-      const ready = elapsed >= crop.growTime;
-      const remaining = Math.max(0, Math.ceil((crop.growTime - elapsed) / 1000));
-      const card = document.createElement('section');
-      card.className = 'manual-plant-card';
-      const heading = document.createElement('div');
-      heading.className = 'manual-plant-card-heading';
-      const title = document.createElement('strong');
-      title.textContent = `第 ${plant.positionIndex || plantIndex + 1} 株 · ${crop.name}${ready ? '（已成熟）' : ''}`;
-      const status = document.createElement('small');
-      status.textContent = ready ? `可收成，預計獲得 ${getHarvestReward(crop)} 金幣` : `還需 ${remaining} 秒成熟`;
-      heading.append(title, status);
-      const track = document.createElement('div');
-      track.className = 'progress-track';
-      const fill = document.createElement('div');
-      fill.className = 'progress-fill';
-      fill.style.width = `${progress}%`;
-      track.append(fill);
-      const actions = document.createElement('div');
-      actions.className = 'manual-plant-actions';
-      if (ready) {
-        const harvestButton = document.createElement('button');
-        harvestButton.className = 'action-button harvest';
-        harvestButton.type = 'button';
-        harvestButton.textContent = '收成';
-        harvestButton.addEventListener('click', () => harvest(index, plantIndex));
-        actions.append(harvestButton);
-      } else {
-        const waterButton = document.createElement('button');
-        waterButton.className = 'action-button water';
-        waterButton.type = 'button';
-        const raining = window.skyEnvironment.getState(game).isRaining;
-        waterButton.disabled = raining || plant.watered === true;
-        waterButton.textContent = raining ? '陰雨中自然濕潤' : plant.watered ? '已澆水' : '澆水（30 秒加速）';
-        waterButton.addEventListener('click', () => water(index, plantIndex));
-        actions.append(waterButton);
-      }
-      card.append(heading, track, actions);
-      list.append(card);
+      const ready = growthElapsed(plot, Date.now(), plantIndex) >= crop.growTime;
+      const positionIndex = plant.positionIndex || plantIndex + 1;
+      const selected = selectedManualPlantPositions.has(positionIndex);
+      const choice = document.createElement('button');
+      choice.className = `manual-plant-choice${selected ? ' is-selected' : ''}`;
+      choice.type = 'button';
+      choice.dataset.manualPlantPosition = String(positionIndex);
+      choice.setAttribute('aria-pressed', String(selected));
+      choice.setAttribute('aria-label', `第 ${positionIndex} 株 ${crop.name}，${ready ? '已成熟' : '尚未成熟'}，${selected ? '已選取' : '未選取'}`);
+      choice.title = `第 ${positionIndex} 株 · ${crop.name}${ready ? '（已成熟）' : '（尚未成熟）'}`;
+      choice.innerHTML = flowerIconMarkup(crops[plant.crop] || crops[0], 'flower-pixel-icon manual-plant-pixel-icon');
+      choice.addEventListener('click', () => {
+        if (selectedManualPlantPositions.has(positionIndex)) selectedManualPlantPositions.delete(positionIndex);
+        else selectedManualPlantPositions.add(positionIndex);
+        renderFarmDialog();
+      });
+      list.append(choice);
     });
+    dialogContent.querySelector('[data-harvest-selected]').addEventListener('click', () => harvestSelectedManualPlants(index));
     const options = dialogContent.querySelector('[data-manual-seed-options]');
     if (plants.length < capacity && !plot.grassOnly) {
       crops.forEach((crop, cropIndex) => {
@@ -1251,6 +1240,37 @@
     }
     if (plot.crop !== null) return;
     enqueueJob({ kind: 'plant', index, cropIndex, variantId });
+  }
+  function harvestSelectedManualPlants(index) {
+    const plot = game.plots[index];
+    if (!plot || plot.manual !== true) return;
+    if (selectedManualPlotIndex !== index || selectedManualPlantPositions.size === 0) {
+      notify('選取花種以收成');
+      return;
+    }
+    const plants = getPlotPlants(plot);
+    const readyPositions = new Set();
+    let reward = 0;
+    plants.forEach((plant, plantIndex) => {
+      const positionIndex = plant.positionIndex || plantIndex + 1;
+      if (!selectedManualPlantPositions.has(positionIndex)) return;
+      const crop = crops[plant.crop] || crops[0];
+      if (growthElapsed(plot, Date.now(), plantIndex) < crop.growTime) return;
+      readyPositions.add(positionIndex);
+      reward += getHarvestReward(getPlantedCrop(plot, plantIndex));
+    });
+    if (readyPositions.size === 0) {
+      notify('選取的花株尚未成熟。');
+      return;
+    }
+    plot.plants = plants.filter((plant, plantIndex) => !readyPositions.has(plant.positionIndex || plantIndex + 1));
+    for (const positionIndex of readyPositions) selectedManualPlantPositions.delete(positionIndex);
+    game.coins += reward;
+    syncManualPrimary(plot);
+    save();
+    render();
+    if (dialog.open && dialogContext?.type === 'plot' && dialogContext.index === index) renderFarmDialog();
+    notify(`收成了 ${readyPositions.size} 株花，獲得 ${reward} 金幣 ✨`);
   }
   function harvest(index, plantIndex = 0) {
     const plot = game.plots[index];
