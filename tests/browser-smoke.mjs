@@ -73,6 +73,7 @@ if (!gameSource.includes("function cancelRainWaterJobs()")
   || !gameSource.includes("cancelRainWaterJobs();")
   || !gameSource.includes("world.cancelDroneAnimation?.(droneIndex, () => {")
   || !skyWorldSource.includes("cancelDroneAnimation(droneIndex, onReturnComplete)")
+  || !skyWorldSource.includes("getDronePosition(droneIndex = 0)")
   || !skyWorldSource.includes("setDronePhase(droneIndex, route ? 'returning' : 'waiting_path', 'work-cancelled-return')")) {
   throw new Error('任務262：雨後取消澆水工作未保留動畫位置控制權並安全返航');
 }
@@ -471,65 +472,41 @@ await cancelPage.addInitScript(() => {
     drones: [{ dockPosition: { x: 0, z: 2, y: 0 }, deployed: true, deploymentOrder: 1, battery: 100, batteryUpdatedAt: now }],
     plots: [{ crop: 0, plantedAt: now - 5000, manual: false, grassOnly: false, x: 0, z: -2, y: 0, watered: false, waterSource: null, plantHeight: 1, rotation: 0, growthBonusMs: 0 }],
   }));
-  window.__dgCancelBuffers = [];
-  window.__dgCancelFrames = [];
-  window.__dgCancelBoundBuffer = null;
-  const originalCreateBuffer = WebGLRenderingContext.prototype.createBuffer;
-  WebGLRenderingContext.prototype.createBuffer = function (...args) {
-    const buffer = originalCreateBuffer.apply(this, args);
-    window.__dgCancelBuffers.push(buffer);
-    return buffer;
-  };
-  const originalBindBuffer = WebGLRenderingContext.prototype.bindBuffer;
-  WebGLRenderingContext.prototype.bindBuffer = function (target, buffer) {
-    window.__dgCancelBoundBuffer = buffer;
-    return originalBindBuffer.call(this, target, buffer);
-  };
-  const originalBufferData = WebGLRenderingContext.prototype.bufferData;
-  WebGLRenderingContext.prototype.bufferData = function (target, data, usage) {
-    const result = originalBufferData.call(this, target, data, usage);
-    if (window.__dgCancelBuffers[2] && window.__dgCancelBoundBuffer === window.__dgCancelBuffers[2]
-      && data instanceof Float32Array && window.__dgCancelFrames.length % 3 === 0) {
-      if (window.__dgCancelFrames.length >= 120) window.__dgCancelFrames.shift();
-      window.__dgCancelFrames.push(Array.from(data));
-    }
-    return result;
-  };
 });
 await cancelPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
 await cancelPage.locator('#sky-canvas').waitFor({ state: 'visible' });
-await cancelPage.waitForFunction(() => window.__dgCancelFrames.length > 3, null, { timeout: 8000 });
+await cancelPage.waitForFunction(() => Boolean(window.skyWorld?.getDronePosition?.(0)), null, { timeout: 8000 });
 const cancelledWaterMotion = await cancelPage.evaluate(async () => {
-  window.__dgCancelFrames.length = 0;
   const started = window.skyWorld.animateWater(0, () => {}, () => {}, () => true, 0);
   if (started !== true) return { started, cancelled: false, callback: false, maxStep: Infinity, frameCount: 0 };
+  const positions = [];
+  const sample = () => {
+    const state = window.skyWorld.getDronePosition(0);
+    if (state) positions.push([state.x, state.z]);
+  };
   // Wait until the drone is horizontally in flight, then cancel as rain makes the job obsolete.
-  await new Promise(resolve => setTimeout(resolve, 2600));
+  const flightStart = Date.now() + 2600;
+  while (Date.now() < flightStart) {
+    sample();
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
   let callback = false;
   const cancelled = window.skyWorld.cancelDroneAnimation(0, () => { callback = true; });
-  if (cancelled !== true) return { started, cancelled, callback, maxStep: Infinity, frameCount: window.__dgCancelFrames.length };
+  if (cancelled !== true) return { started, cancelled, callback, maxStep: Infinity, frameCount: positions.length };
   const deadline = Date.now() + 12000;
-  while (!callback && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 100));
-  const frames = window.__dgCancelFrames;
-  const positions = frames.map(values => {
-    const vertices = values.length / 3;
-    if (!Number.isInteger(vertices) || vertices < 1) return null;
-    let x = 0, z = 0;
-    for (let vertex = 0; vertex < vertices; vertex += 1) {
-      x += values[vertex * 3];
-      z += values[vertex * 3 + 2];
-    }
-    return [x / vertices, z / vertices];
-  });
+  while (!callback && Date.now() < deadline) {
+    sample();
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  sample();
   let maxStep = 0;
   for (let index = 1; index < positions.length; index += 1) {
-    if (!positions[index] || !positions[index - 1]) return { started, cancelled, callback, maxStep: Infinity, frameCount: frames.length };
     maxStep = Math.max(maxStep, Math.hypot(
       positions[index][0] - positions[index - 1][0],
       positions[index][1] - positions[index - 1][1],
     ));
   }
-  return { started, cancelled, callback, maxStep, frameCount: frames.length, phase: window.skyWorld.getDronePhase(0) };
+  return { started, cancelled, callback, maxStep, frameCount: positions.length, phase: window.skyWorld.getDronePhase(0) };
 });
 if (cancelledWaterMotion.started !== true || cancelledWaterMotion.cancelled !== true
   || cancelledWaterMotion.callback !== true || cancelledWaterMotion.frameCount < 5
