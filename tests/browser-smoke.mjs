@@ -1608,6 +1608,8 @@ try {
   if (!worldSource.includes('window.gardenMenuWheel?.openAt?.(pointerStartX, pointerStartY, pressPointerId)') || !indexHtml.includes("data-wheel-action=\"drone\"")) throw new Error('空白場景長按未連接五項快捷輪盤');
   if (!worldSource.includes("wreath.src = 'assets/wreath.webp';") || !worldSource.includes("className = 'touch-hold-wreath'")) throw new Error('長按花草環未使用 assets 內的透明圖片素材');
   const styleSource = await fs.readFile(new URL('../src/styles.css', import.meta.url), 'utf8');
+  if (styleSource.includes(".world-frame:before") || styleSource.includes(".world-frame:after") || styleSource.includes(".world-frame.is-night:not(.is-raining):before") || styleSource.includes(".world-frame.is-night:not(.is-raining):after") || styleSource.includes(".world-frame.is-raining:before") || styleSource.includes(".world-frame.is-raining:after")) throw new Error('舊版螢幕空間雲朵、星星或月亮 CSS 裝飾仍存在');
+  checks.push('移除舊版螢幕空間 ☁ 雲朵、✦ · ✧ 星星與 ☾ 月亮 CSS 裝飾');
   if (!styleSource.includes('@keyframes touch-ring-rise{') || !styleSource.includes('translateY(-50px) scale(.72)') || !styleSource.includes('.touch-hold-ring{animation:touch-ring-rise') || !styleSource.includes('width:46px;height:46px')) throw new Error('花草環圖片的上升、停留、放大復原動畫未設定');
   checks.push('白色花草圓環無進度條：上升50px、停留0.2秒並於0.1秒放大復原');
   if (!worldSource.includes("heightEdit?.kind === 'dock' && heightEdit.index === pressedDock && heightEdit.mode === 'move'") || !worldSource.includes('screenToGround(pointerStartX, pointerStartY, 1.36 + getDockHeight(pressedDock))')) throw new Error('無人機坪台移動模式未支援直接拖曳或未使用坪台高度平面');
