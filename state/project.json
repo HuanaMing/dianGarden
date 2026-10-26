@@ -1,12 +1,12 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "任務254：花株朝向依播種無人機旋轉",
-  "nextAction": "任務254重做已修正根因：skyWorld.setPlots 原先漏傳一般地塊的 rotation，導致渲染角度遺失；已補上資料傳遞並新增回歸斷言。等待新一輪 Playwright 驗收後請使用者視覺確認。任務253仍待使用者驗收。",
+  "activeTask": "任務255：追查並修正無人機偶發瞬移",
+  "nextAction": "任務255已定位停靠平台改位時返航路徑與動畫進度可能失同步，已提交初步修正及涵蓋去程／返航期間移動平台的 Playwright 回歸測試；等待新一輪瀏覽器驗收結果。任務254仍待自動測試與使用者視覺驗收，任務253仍待使用者驗收。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署：需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署需使用者明確批准。"
   ],
-  "updatedAt": "2026-10-26"
+  "updatedAt": "2026-10-27"
 }
