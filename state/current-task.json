@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務262由使用者實際回報重現：雨後全株濕潤，已領取澆水工作的無人機瞬移。已新增 skyWorld.cancelDroneAnimation，讓取消動畫從當前位置安全返航；applyRainMoisture 現在取消排隊中與未成功提交的活動澆水工作。tests/browser-smoke.mjs 已新增取消契約與動態位置連續性測試。run #790 在既有 PC 長按環時間敏感測試失敗，未跑到新增測試；run #791 正在驗證新增測試。待取得 run #791 結果並修正任何失敗，再同步完整回歸。",
+  "nextAction": "雨後澆水取消修正已提交並通過 GitHub Actions run #797。Playwright 動態取消動畫測試取樣 89 次，最大單次水平位移 0.064 且返航完成回呼成功；既有播種→澆水交接及八機平台移動測試最大位移皆 0.054，browserErrors 為空。雨水取消排隊／活動澆水工作的連接由契約檢查與呼叫鏈確認，但尚未完整模擬自然雨季時序的端到端測試。下一步請使用者在遊戲中觀察「雨後全株濕潤、活動澆水工作取消」情境；若再現，補做可控天氣的端到端測試。任務259狀態機重構與任務260動畫遷移尚未完成。",
   "taskFiles": [
     "tasks/active/256-drone-system-refactor-plan.md",
     "tasks/active/259-drone-state-motion-controller.md",
@@ -18,5 +18,5 @@
     "tasks/done/257-drone-system-audit-baseline.md",
     "tasks/done/258-drone-task-lifecycle-dispatch.md"
   ],
-  "result": "任務262程式修正已提交：雨後濕潤時取消無效澆水任務，已領取工作會從目前位置安全返航，無路徑時等待重試。run #789（只有動畫 API 修改，未包含遊戲層雨水取消與動態測試）通過；run #790 在既有 PC 長按環測試因時間條件失敗，新增動態測試未執行；run #791 正在驗證完整修改與動態取消測試。"
+  "result": "任務262程式修正已提交。雨水濕潤時會取消無效澆水工作；活動動畫從當前位置安全返航，找不到安全路徑時等待重試。GitHub Actions run #797 通過：取消返航 89 個取樣、最大位移 0.064；既有交接與八機平台測試各 120 個取樣、最大位移 0.054；browserErrors 為空。仍待使用者在實際遊戲中確認原始雨後情境是否排除。"
 }
