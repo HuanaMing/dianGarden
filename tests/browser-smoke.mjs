@@ -65,8 +65,12 @@ if (!skyWorldSource.includes("const renderingPauseReasons = new Set(galleryMode 
 }
 if (!skyWorldSource.includes("const dockPositionsChanged = docks.map((dock, index) => {")
   || !skyWorldSource.includes("else if (dockPositionsChanged[index]) {")
-  || !skyWorldSource.includes("if (animation.returning) animation.returnRoute = findDroneRoute(animation.target, [dock.x, dock.z], index);")) {
-  throw new Error('任務225：無人機返航路徑仍可能在電量更新時反覆重算');
+  || !skyWorldSource.includes("if (animation.returning === true) {")
+  || !skyWorldSource.includes("animation.returnRoute = findDroneRoute(droneStates[index].location, [dock.x, dock.z], index);")
+  || !skyWorldSource.includes("animation.returnReplan = {")
+  || !skyWorldSource.includes("} else if (animation.returning !== false) {")
+  || !skyWorldSource.includes("animation.returnRoute = findDroneRoute(animation.target, [dock.x, dock.z], index);")) {
+  throw new Error('任務255：停靠平台改位後未依飛行階段安全重規劃返航路徑');
 }
 if (!cloudSaveSource.includes("localStorage.setItem(GUEST_MODE_KEY, 'true')")
   || !cloudSaveSource.includes("localStorage.removeItem(GUEST_MODE_KEY)")
