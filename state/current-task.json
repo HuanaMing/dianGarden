@@ -6,10 +6,10 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務250已提交程式、樣式與回歸測試，需確認GitHub Actions／Playwright結果並等待使用者視覺驗收；驗收後依序啟動任務251。",
+  "nextAction": "任務250 Playwright 桌面／手機自動驗收已通過（run 40330636971），等待使用者實際查看介面並確認驗收；確認後依序啟動任務251。",
   "taskFiles": [
     "tasks/active/247-rainy-moon-visibility.md",
     "tasks/active/250-manual-plot-multi-harvest.md"
   ],
-  "result": "任務249已由使用者於2026-10-26明確驗收通過，完成版已歸檔至tasks/done並移除active原檔。任務250將手動地塊逐株文字卡片改為固定五欄PNG像素圖按鈕，多選狀態由aria-pressed呈現；新增只收成已選取且成熟花株的批次流程，保留未選取與未成熟花株，空選取提示為「選取花種以收成」。已更新tests/browser-smoke.mjs，尚未確認自動化測試結果，等待使用者視覺驗收。"
+  "result": "任務249已由使用者於2026-10-26明確驗收通過，完成版已歸檔至tasks/done並移除active原檔。任務250已將手動地塊逐株文字卡片改為固定五欄PNG像素圖按鈕，支援多選與取消選取；批次收成只收取已選取且成熟花株，未選取或未成熟花株保留，空選取提示為「選取花種以收成」。更新後的Playwright桌面／手機完整瀏覽器驗收run 40330636971成功。GitHub Pages自動工作流程run 40330205318成功，未手動觸發部署。任務250等待使用者視覺驗收。"
 }
