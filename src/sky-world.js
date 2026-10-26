@@ -366,6 +366,12 @@
   let currentProjection = null;
   let currentView = null;
   let droneCount = galleryMode ? 0 : 1;
+  function droneDebugLog(event, details = {}) {
+    let enabled = false;
+    try { enabled = localStorage.getItem('sky-garden-drone-debug-v1') === 'true'; } catch (_) {}
+    if (enabled) console.warn('[花園無人機診斷]', { event, at: performance.now(), ...details });
+  }
+
   const droneStates = Array.from({ length: 8 }, (_, index) => ({
     animation: null,
     location: index === 0 ? [dockPosition.x, dockPosition.z] : [0, 0],
@@ -891,7 +897,8 @@
         open.push({ point: next, cost: nextCost, score: nextCost + heuristic(next) });
       }
     }
-    return [start, goal];
+    droneDebugLog('route-failed', { droneIndex, start: start.slice(), goal: goal.slice(), visited, droneObstacles: obstacles.length, landObstacles: landObstacles.length });
+    return null;
   }
 
   function sampleRoute(route, progress) {
@@ -1059,6 +1066,10 @@
       const candidate = proposals[index];
       const animation = state.animation;
       const previousX = state.location[0], previousZ = state.location[1];
+      const movementDistance = Math.hypot(candidate.x - previousX, candidate.z - previousZ);
+      if (movementDistance > 0.75) {
+        droneDebugLog('position-jump', { droneIndex: index, from: [previousX, previousZ], to: [candidate.x, candidate.z], distance: movementDistance, kind: animation?.kind ?? null, elapsed: candidate.elapsed, returning: animation?.returning ?? null, target: animation?.target ?? null });
+      }
       state.location = [candidate.x, candidate.z];
       state.y = candidate.y;
       if (animation) {
@@ -1110,7 +1121,9 @@
         state.animation = null;
         const onComplete = animation.onComplete;
         animation.onComplete = null;
+        droneDebugLog('work-complete-handoff', { droneIndex: index, kind: animation.kind, location: state.location.slice(), target: animation.target.slice(), elapsed: candidate.elapsed, returning: animation.returning ?? null });
         onComplete?.();
+        droneDebugLog('work-complete-handoff-result', { droneIndex: index, activeKind: state.animation?.kind ?? null, location: state.location.slice(), restoredPreviousAnimation: state.animation === null });
         if (state.animation === null) {
           animation.elapsed = Math.max(candidate.elapsed, candidate.returnStart);
           state.animation = animation;
@@ -2365,6 +2378,11 @@
       && Math.hypot(start[0] - target[0], start[1] - target[1]) < 0.0001;
     const returnGoal = [idlePosition.x, idlePosition.z];
     const outboundRoute = findDroneRoute(start, target, droneIndex);
+    const returnRoute = findDroneRoute(target, returnGoal, droneIndex);
+    if (!outboundRoute || !returnRoute) {
+      droneDebugLog('animation-route-rejected', { droneIndex, kind, start, target, outboundRouteFound: Boolean(outboundRoute), returnRouteFound: Boolean(returnRoute), currentAnimation: state.animation?.kind ?? null });
+      return 'no-route';
+    }
     const laneY = continueAtTarget ? state.y : getCruiseHeight(start, target, droneIndex, options.targetPlotIndex);
     if (!continueAtTarget) droneCruiseHeights[droneIndex] = laneY;
     state.animation = {
@@ -2374,10 +2392,11 @@
       idlePosition, elapsed: 0, returning: undefined, departed: false,
       laneY,
       outboundRoute,
-      returnRoute: findDroneRoute(target, returnGoal, droneIndex),
+      returnRoute,
       cruiseReleased: continueAtTarget,
       ...options,
     };
+    droneDebugLog('animation-start', { droneIndex, kind, from: start, target: target.slice(), continueAtTarget, outboundWaypoints: outboundRoute.length, returnWaypoints: returnRoute.length });
     return true;
   }
   window.skyWorld = {
