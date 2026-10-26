@@ -287,12 +287,12 @@
       const previous3d = pose.savedCameraPose;
       savedCameraPose = previous3d && finite(previous3d.yaw) && finite(previous3d.pitch) && finite(previous3d.distance)
         && finite(previous3d.targetX) && finite(previous3d.targetZ)
-        ? { yaw: previous3d.yaw, pitch: Math.max(-1.35, Math.min(1.35, previous3d.pitch)), distance: Math.max(1.5, Math.min(24, previous3d.distance)), targetX: Math.max(-100, Math.min(100, previous3d.targetX)), targetZ: Math.max(-100, Math.min(100, previous3d.targetZ)) }
+        ? { yaw: previous3d.yaw, pitch: Math.max(-70 * Math.PI / 180, Math.min(70 * Math.PI / 180, previous3d.pitch)), distance: Math.max(1.5, Math.min(24, previous3d.distance)), targetX: Math.max(-10000, Math.min(10000, previous3d.targetX)), targetZ: Math.max(-10000, Math.min(10000, previous3d.targetZ)) }
         : null;
       cameraMode = '2d';
       topDownHeight = Math.max(3, Math.min(50, pose.topDownHeight));
-      targetX = Math.max(-100, Math.min(100, pose.targetX));
-      targetZ = Math.max(-100, Math.min(100, pose.targetZ));
+      targetX = Math.max(-10000, Math.min(10000, pose.targetX));
+      targetZ = Math.max(-10000, Math.min(10000, pose.targetZ));
       cameraModeButton && (cameraModeButton.textContent = '返回 3D');
       cameraModeButton?.setAttribute('aria-pressed', 'true');
       return true;
@@ -301,7 +301,7 @@
       cameraMode = '3d';
       savedCameraPose = null;
       yaw = pose.yaw;
-      pitch = Math.max(-1.35, Math.min(1.35, pose.pitch));
+      pitch = Math.max(-70 * Math.PI / 180, Math.min(70 * Math.PI / 180, pose.pitch));
       distance = Math.max(1.5, Math.min(24, pose.distance));
       targetX = Math.max(-100, Math.min(100, pose.targetX));
       targetZ = Math.max(-100, Math.min(100, pose.targetZ));
