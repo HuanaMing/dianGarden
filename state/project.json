@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "無；任務240已取消結案",
-  "nextAction": "等待使用者指定下一項任務。",
+  "activeTask": "任務239重做：調整雲朵XZ展幅",
+  "nextAction": "驗證任務239雲朵幾何修改與瀏覽器規格測試。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署：需使用者明確批准後手動觸發。",
