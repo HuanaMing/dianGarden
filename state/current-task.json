@@ -1,21 +1,21 @@
 {
-  "name": "任務256：無人機任務與動畫系統重構規劃",
+  "name": "任務259：建立無人機狀態機與連續位置控制",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "重構規格與任務257–261階段文件已建立。下一步執行任務257：盤點 game.js／sky-world.js 的實際呼叫鏈、建立座標連續性測試並跑可用語法／Playwright 基準。優先處理任務255留下的派工停滯與直線尋路備援風險；尚未修改重構核心程式，尚未執行測試。",
+  "nextAction": "任務257已完成盤點並以 Playwright 重現工作交接跳位（基準最大水平位移 2.159）。任務258已加入任務生命週期狀態及結果一次性提交保護。任務259已修改 sky-world.js：工作完成回呼期間保留原動畫作為位置所有者，避免 render→setDroneDocks 將無人機重設至停靠平台。GitHub Actions run #781 正在驗證修正；若通過，再處理尋路失敗的安全備援與等待重試，之後逐步遷移動畫。",
   "taskFiles": [
     "tasks/active/256-drone-system-refactor-plan.md",
+    "tasks/active/259-drone-state-motion-controller.md",
     "tasks/active/255-drone-teleportation-follow-up.md",
     "tasks/active/254-flower-rotation-from-drone-heading.md",
-    "tasks/inbox/257-drone-system-audit-baseline.md",
-    "tasks/inbox/258-drone-task-lifecycle-dispatch.md",
-    "tasks/inbox/259-drone-state-motion-controller.md",
     "tasks/inbox/260-drone-animation-migration.md",
-    "tasks/inbox/261-drone-refactor-regression-acceptance.md"
+    "tasks/inbox/261-drone-refactor-regression-acceptance.md",
+    "tasks/done/257-drone-system-audit-baseline.md",
+    "tasks/done/258-drone-task-lifecycle-dispatch.md"
   ],
-  "result": "已建立 docs/drone-system-refactor.md，明確定義任務管理、無人機狀態機、位置／路徑控制、動畫呈現四層，事件契約、派工失敗政策、座標連續性、五階段實作計畫及驗收條件。任務257–261已建立於 inbox，依序承接盤點、任務生命週期、狀態與位置控制、動畫遷移及整合回歸。尚未修改無人機核心程式，尚未執行語法或瀏覽器測試。"
+  "result": "已建立完整重構規格與階段文件。基準瀏覽器測試確認播種完成後同步更新停靠資料並接續澆水會出現最大 2.159 的單次水平位移。已在 src/game.js 明確化任務生命週期及結果提交保護，並在 src/sky-world.js 保留工作完成期間的動畫位置所有權；修正後的 Playwright 結果待 run #781。尚未完成尋路失敗安全化、全套動畫遷移或最終回歸驗收。"
 }
