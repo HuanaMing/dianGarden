@@ -1245,7 +1245,8 @@
     const moonDirection = sunDirection.map((value) => -value);
     const moonCenter = moonDirection.map((value) => value * SKY_SPHERE_RADIUS);
     const [moonRight, moonUp] = billboardBasis(moonDirection);
-    const moonOpacity = Math.max(0, 1 - sunVisibility);
+    // Rain also attenuates moonlight: (100% - sun visibility) × rain visibility.
+    const moonOpacity = Math.max(0, 1 - sunVisibility) * rainVisibility;
     // Keep one moon phase for each complete in-game day/night cycle.
     const moonLightStep = Math.floor(environmentState.worldTimeMs / cycle) % 8;
     const phaseAngle = moonLightStep * Math.PI / 4;
@@ -1264,6 +1265,17 @@
       };
       return moonOpacity * smoothVisibility(lightDot) * smoothVisibility(viewDot);
     };
+    function addStar(P, C, dir, size, color) {
+      const [x, y, z] = dir.map((v) => v * SKY_SPHERE_RADIUS);
+      const [r, u] = billboardBasis(dir);
+      const pts = [[0, 1], [0.22, 0.22], [1, 0], [0.22, -0.22], [0, -1], [-0.22, -0.22], [-1, 0], [-0.22, 0.22]];
+      const v = pts.map(([a, b]) => [
+        x + (r[0] * a * 0.7 + u[0] * b) * size,
+        y + (r[1] * a * 0.7 + u[1] * b) * size,
+        z + (r[2] * a * 0.7 + u[2] * b) * size,
+      ]);
+      for (let i = 0; i < 8; i += 1) addTriangle(P, C, [x, y, z], v[i], v[(i + 1) % 8], color);
+    }
     const addMoonIcosphere = (center, radius, color) => {
       const vertices = [
         [-1,1.618,0],[1,1.618,0],[-1,-1.618,0],[1,-1.618,0],[0,-1,1.618],[0,1,1.618],[0,-1,-1.618],[0,1,-1.618],
@@ -1302,6 +1314,25 @@
       }
     };
     addMoonIcosphere(moonCenter, 0.46, [0.96,0.94,0.82]);
+
+    // Fixed deterministic star field; each star twinkles with its own 3–5 second cycle.
+    const starCount = 84;
+    for (let index = 0; index < starCount; index += 1) {
+      const y = 1 - 2 * ((index + 0.5) / starCount);
+      const angle = index * 2.399963229728653;
+      const radial = Math.sqrt(Math.max(0, 1 - y * y));
+      const dir = [Math.cos(angle) * radial, y, Math.sin(angle) * radial];
+      const seed = (Math.sin(index * 127.1 + 311.7) * 43758.5453) % 1;
+      const phase = (seed < 0 ? seed + 1 : seed) * Math.PI * 2;
+      const periodMs = 3000 + ((Math.sin(index * 74.7 + 19.3) * 43758.5453 % 1 + 1) % 1) * 2000;
+      const twinkle = 0.5 - 0.5 * Math.cos((time / periodMs) * Math.PI * 2 + phase);
+      const starOpacity = moonOpacity * twinkle;
+      const firstVertex = positions.length / 3;
+      const starSize = 0.035 + ((Math.sin(index * 31.7 + 4.2) * 43758.5453 % 1 + 1) % 1) * 0.045;
+      const colorShift = ((Math.sin(index * 18.2 + 7.1) * 43758.5453 % 1 + 1) % 1) * 0.12;
+      addStar(positions, colors, dir, starSize, [0.78 + colorShift, 0.84 + colorShift, 1]);
+      for (let vertex = firstVertex; vertex < positions.length / 3; vertex += 1) opacities.push(starOpacity);
+    }
 
     skyVertexCount = positions.length / 3;
     gl.bindBuffer(gl.ARRAY_BUFFER, skyPositionBuffer);
