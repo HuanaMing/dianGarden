@@ -6,9 +6,9 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "太陽軌道已調整為週期第 5 分鐘正午最高、第 13 分鐘午夜最低；相機焦點仍為世界中心加水平平移偏移並允許穿地。等待 GitHub Actions 回歸驗收及使用者實機確認。",
+  "nextAction": "太陽可見度已改為時間係數乘雨勢係數：正午100%、午夜負值截為0%，降雨係數使用 rainBlend 由100%漸變至50%；等待自動測試及實機驗收。",
   "taskFiles": [
     "tasks/active/246-night-cloud-sun-visibility.md"
   ],
-  "result": "依使用者要求，將太陽傾斜 15 度的大圓軌跡相位對齊正午與午夜，新增測試驗證正午仰角 +15°、午夜 -15°。相機焦點仍為 [targetX,0,targetZ]，允許相機穿過地面。自動測試與實機驗收尚未完成。"
+  "result": "已修改 src/sky-world.js，讓太陽顏色與透明度套用時間可見度及雨勢係數；雨勢係數依既有 rainBlend 在降雨前5秒與結束前5秒漸變。已新增 tests/browser-smoke.mjs 係數檢查。尚未執行 CI 或實機視覺驗收。"
 }
