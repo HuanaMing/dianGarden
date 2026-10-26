@@ -1600,12 +1600,13 @@ try {
   if (await touchPage.locator('.touch-feedback-dot').count() !== 2) throw new Error('多指觸控放開後沒有各自顯示藍色回饋點');
   await touchPage.close();
   const worldSource = await fs.readFile('src/sky-world.js', 'utf8');
-  if (!worldSource.includes('function uploadSky(time)') || !worldSource.includes('const skyOpacityBuffer = gl.createBuffer()') || !worldSource.includes('const SKY_SPHERE_RADIUS = 10;') || !worldSource.includes('cloud.azimuth + Math.sin(elapsed * cloud.speed + cloud.phase) * 0.048') || !worldSource.includes('Math.cos(cloud.elevation) * SKY_SPHERE_RADIUS') || !worldSource.includes('opacities.push(environmentState.isRaining ? 0.36 : 0.42)') || worldSource.includes('eye[0] + cloud.x') || !worldSource.includes('function addSun(P, C, dir, warm)') || !worldSource.includes('function billboardBasis(dir)') || !worldSource.includes('addIcosahedron(P, C, x, y, z, 0.55, core)') || !worldSource.includes('i < 12; i += 1') || !worldSource.includes('worldTimeMs: Number.isFinite(state.worldTimeMs)')) throw new Error('任務242／245：天空球、雲朵、太陽模型或天體方向基底不符合規格');
+  if (!worldSource.includes('function uploadSky(time)') || !worldSource.includes('const skyOpacityBuffer = gl.createBuffer()') || !worldSource.includes('const SKY_SPHERE_RADIUS = 10;') || !worldSource.includes('cloud.azimuth + Math.sin(elapsed * cloud.speed + cloud.phase) * 0.048') || !worldSource.includes('Math.cos(cloud.elevation) * SKY_SPHERE_RADIUS') || !worldSource.includes('opacities.push(cloudOpacity)') || worldSource.includes('eye[0] + cloud.x') || !worldSource.includes('function addSun(P, C, dir, warm)') || !worldSource.includes('function billboardBasis(dir)') || !worldSource.includes('addIcosahedron(P, C, x, y, z, 0.55, core)') || !worldSource.includes('i < 12; i += 1') || !worldSource.includes('worldTimeMs: Number.isFinite(state.worldTimeMs)')) throw new Error('任務242／245：天空球、雲朵、太陽模型或天體方向基底不符合規格');
   if (!worldSource.includes('skyView[12] = 0;') || !worldSource.includes('skyView[13] = 0;') || !worldSource.includes('skyView[14] = 0;') || !worldSource.includes('gl.disable(gl.DEPTH_TEST);') || !worldSource.includes('gl.enable(gl.DEPTH_TEST);')) throw new Error('任務242：天體渲染未清除視圖平移或未在繪製地塊前切換深度測試');
   if (!worldSource.includes('gl.uniform3f(locations.ambient, 0.88, 0.88, 0.88);') || !worldSource.includes('colors[colorOffset + channel] / 0.78 * 0.92')) throw new Error('任務243：天空雲朵的光照對比仍未柔化');
-  if (!worldSource.includes('const cloudBrightness = 0.16 + daylight * 0.84;')
-    || !worldSource.includes('const elevation = -0.54 + Math.sin(daylightArc * Math.PI) * 0.36;')
-    || !worldSource.includes('const azimuth = -2.36 + (daylightArc - 0.5) * 0.9;')) {
+  if (!worldSource.includes('const cloudBrightness = 0.035 + daylight * 0.965;')
+    || !worldSource.includes('const cloudOpacity = (environmentState.isRaining ? 0.36 : 0.42) * (0.28 + daylight * 0.72);')
+    || !worldSource.includes('const elevation = -0.48 + Math.sin(daylightArc * Math.PI) * 0.30;')
+    || !worldSource.includes('const azimuth = -2.36 + (daylightArc - 0.5) * 0.32;')) {
     throw new Error('任務246：夜間雲朵未隨日照變暗，或太陽路徑未對齊初始鏡頭可視天空');
   }
   if (!worldSource.includes("day: ['#78c9f5', '#b8e5ff', '#e6f5ff']") || !worldSource.includes('colors[1]} 78%')) throw new Error('任務244：晴朗白天天空配色或漸層比例不符合規格');
