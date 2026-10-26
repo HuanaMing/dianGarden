@@ -1182,6 +1182,7 @@
       if (queueIndex < 0) queueIndex = jobQueue.findIndex(isEligibleJob);
       if (queueIndex < 0) continue;
       const [job] = jobQueue.splice(queueIndex, 1);
+      const wasReturning = returningDrones.has(droneIndex);
       returningDrones.delete(droneIndex);
       updateBatteries();
       activeJobs.set(droneIndex, job);
@@ -1229,6 +1230,13 @@
       else if (job.kind === 'harvest') started = world.animateHarvest?.(job.index, commit, finish, shouldReturn, droneIndex, onReturnComplete);
       else if (job.kind === 'water') started = world.animateWater?.(job.index, commit, finish, shouldReturn, droneIndex, onReturnComplete, onWaterWorkStart);
       else started = world.animateExpansion?.(job.position, commit, finish, shouldReturn, droneIndex, onReturnComplete);
+      if (started === 'no-route') {
+        activeJobs.delete(droneIndex);
+        if (wasReturning) returningDrones.add(droneIndex);
+        jobQueue.unshift(job);
+        renderJobQueue();
+        break;
+      }
       if (started === undefined || started === false) finish();
     }
     renderJobQueue();
