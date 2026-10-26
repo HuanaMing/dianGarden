@@ -461,6 +461,13 @@ checks.push(`任務255：八台無人機持續更新電量、去程及返航途�
 const cancelledWaterMotion = await droneTeleportPage.evaluate(async () => {
   window.__dgDroneFrames.length = 0;
   window.__dgCancelCompleted = false;
+  // Isolate one drone on an unobstructed plot so this test measures cancellation continuity,
+  // not the separate eight-drone pathfinding contention case above.
+  window.skyWorld.setDroneCount(1);
+  window.skyWorld.setLandCount(1);
+  window.skyWorld.setPlotPositions([{ x: 0, z: -1.5, y: 0 }]);
+  window.skyWorld.setDockPosition({ x: 0, z: 1.5, y: 0 });
+  window.skyWorld.setDroneDocks([{ x: 0, z: 1.5, y: 0, deployed: true, deploymentOrder: 1, battery: 100 }]);
   const started = window.skyWorld.animateWater(0, () => {}, () => {}, () => true, 0);
   if (started !== true) return { started, callback: false, maxStep: Infinity, frameCount: 0 };
   await new Promise(resolve => setTimeout(resolve, 600));
@@ -470,7 +477,7 @@ const cancelledWaterMotion = await droneTeleportPage.evaluate(async () => {
   while (!window.__dgCancelCompleted && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 100));
   const frames = window.__dgDroneFrames;
   const positions = frames.map(values => {
-    const perDrone = (values.length / 3) / 8;
+    const perDrone = values.length / 3;
     if (!Number.isInteger(perDrone) || perDrone < 1) return null;
     let x = 0, z = 0;
     for (let vertex = 0; vertex < perDrone; vertex += 1) {
