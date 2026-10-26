@@ -161,7 +161,7 @@
   let environmentState = { phase: 'day', isDay: true, isRaining: false, rainBlend: 0, daylightProgress: 1, phaseProgress: 0, lightLevel: 1, sunflowerYaw: 0, worldTimeMs: 60_000 };
   let environmentBackground = '';
   const SKY_PALETTES = {
-    day: ['#c9ecfa', '#e6f6f5', '#f2f8e9'],
+    day: ['#d8f2ff', '#effcfb', '#f8fbea'],
     night: ['#14263d', '#273b54', '#526175'],
     warm: ['#e3bfa7', '#eadac8', '#e5e3d5'],
     rainDay: ['#a8c5d0', '#c9dada', '#d8e2d1'],
@@ -1545,8 +1545,8 @@
     const daylight = Math.max(0, Math.min(1, environmentState.daylightProgress));
     const rainDim = environmentState.rainBlend * 0.2;
     // Keep plant colors saturated and soft: favor fill light over hard directional contrast.
-    const ambient = 0.12 + daylight * 0.4 - rainDim * 0.1;
-    const sunStrength = daylight * (environmentState.isRaining ? 0.3 : 0.38);
+    const ambient = 0.12 + daylight * 0.44 - rainDim * 0.1;
+    const sunStrength = daylight * (environmentState.isRaining ? 0.3 : 0.42);
     let sunR = sunStrength, sunG = sunStrength, sunB = sunStrength;
     if (environmentState.phase === 'dawn' || environmentState.phase === 'dusk') {
       sunG *= 0.82; sunB *= 0.62;
