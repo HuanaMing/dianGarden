@@ -1607,7 +1607,8 @@ try {
     || !worldSource.includes('const cloudBrightness = 0.008 + daylight * 0.992;')
     || !worldSource.includes('const cloudOpacity = (environmentState.isRaining ? 0.36 : 0.42) * (0.03 + daylight * 0.97);')
     || !worldSource.includes('const orbitProgress = cycleTime / cycle;')
-    || !worldSource.includes('const azimuth = orbitProgress * Math.PI * 2;')
+    || !worldSource.includes('const solarNoonProgress = (5 * 60_000) / cycle;')
+    || !worldSource.includes('const azimuth = (orbitProgress - solarNoonProgress) * Math.PI * 2 + Math.PI / 2;')
     || !worldSource.includes('const orbitTilt = Math.PI / 12;')
     || !worldSource.includes('const sunDirection = [Math.sin(azimuth) * Math.cos(orbitTilt), Math.sin(azimuth) * Math.sin(orbitTilt), Math.cos(azimuth)];')
     || worldSource.includes('environmentState.rainBlend < 0.7')
@@ -1621,6 +1622,14 @@ try {
     throw new Error('任務246：夜間雲朵亮度、太陽完整常駐軌跡或相機向上仰角不符合規格');
   }
   if (!worldSource.includes("day: ['#78c9f5', '#b8e5ff', '#e6f5ff']") || !worldSource.includes('colors[1]} 78%')) throw new Error('任務244：晴朗白天天空配色或漸層比例不符合規格');
+  const solarNoonAzimuth = ((5 * 60_000 / (16 * 60_000) - 5 / 16) * Math.PI * 2) + Math.PI / 2;
+  const solarMidnightAzimuth = ((13 * 60_000 / (16 * 60_000) - 5 / 16) * Math.PI * 2) + Math.PI / 2;
+  const noonElevation = Math.asin(Math.sin(solarNoonAzimuth) * Math.sin(Math.PI / 12));
+  const midnightElevation = Math.asin(Math.sin(solarMidnightAzimuth) * Math.sin(Math.PI / 12));
+  if (Math.abs(noonElevation - Math.PI / 12) > 1e-10 || Math.abs(midnightElevation + Math.PI / 12) > 1e-10) {
+    throw new Error('任務246：太陽應在正午到達最高點、午夜到達最低點');
+  }
+  checks.push('任務246：太陽軌跡最高點對齊正午、最低點對齊午夜');
   checks.push('任務242：半徑10天空球與深度渲染順序；任務243：柔化雲朵明暗；任務244：提高晴天藍度；任務245：方向基底太陽模型；任務246：夜間雲朵近乎隱沒、太陽沿傾斜15度的真正大圓運行、相機以固定焦點向上／向下旋轉70度');
   if (!worldSource.includes('function findDroneRoute(start, goal, droneIndex)') || !worldSource.includes('const landObstacles = plotPositions.map((plot, index)') || !worldSource.includes('landObstacles.some(({ x, z }) => Math.abs(point[0] * step - x) < TILE * 0.5 + 0.12')) throw new Error('任務241：無人機尋路尚未把延伸到底部的地塊側牆列為障礙');
   checks.push('任務241：無人機尋路會避開地塊側牆，並允許從起點／終點地塊離開及抵達');
