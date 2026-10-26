@@ -879,13 +879,17 @@
         ];
       const rainRadius = 3;
       for (let drop = 0; drop < 72; drop += 1) {
-        const fall = (time * 0.0028 + drop * 0.137) % 1;
+        const fall = (time * 0.0014 + drop * 0.137) % 1;
         const angle = drop * 2.399963229728653 + time * 0.0004;
         const radius = rainRadius * Math.sqrt((drop * 0.61803398875) % 1);
         const x = rainEye[0] + Math.cos(angle) * radius;
         const z = rainEye[2] + Math.sin(angle) * radius;
-        const y = rainEye[1] + 2.2 - fall * 4.4;
-        addBox(effectPositions, effectColors, x, y - 0.22, z, x + 0.012, y, z + 0.012, rainPalette);
+        const rainTop = rainEye[1] + 10;
+        const rainBottom = rainEye[1] - 10;
+        const y = rainTop - fall * (rainTop - rainBottom);
+        const dropLength = 0.22;
+        const dropWidth = 0.0035;
+        addBox(effectPositions, effectColors, x, y - dropLength, z, x + dropWidth, y, z + dropWidth, rainPalette);
       }
     }
     plotStates.forEach((plot, index) => {
