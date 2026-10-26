@@ -1132,7 +1132,36 @@
       const saturatedCore = [1, 0.78, 0.42].map((value, index) => value + ([1, 0.55, 0.2][index] - value) * warm);
       const luminance = saturatedCore[0] * 0.2126 + saturatedCore[1] * 0.7152 + saturatedCore[2] * 0.0722;
       const core = saturatedCore.map((value) => luminance + (value - luminance) * 0.8);
-      addIcosahedron(P, C, x, y, z, 0.55, core);
+      // Refine the icosahedron three times: 20 faces become 1,280 (64x).
+      const coreVertices = [
+        [-1,1.618,0],[1,1.618,0],[-1,-1.618,0],[1,-1.618,0],[0,-1,1.618],[0,1,1.618],[0,-1,-1.618],[0,1,-1.618],
+        [1.618,0,-1],[1.618,0,1],[-1.618,0,-1],[-1.618,0,1],
+      ].map(normalize3);
+      let coreFaces = [[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+      for (let level = 0; level < 3; level += 1) {
+        const midpointCache = new Map();
+        const midpoint = (a, b) => {
+          const key = a < b ? `${a}:${b}` : `${b}:${a}`;
+          if (midpointCache.has(key)) return midpointCache.get(key);
+          const point = normalize3(coreVertices[a].map((value, axis) => (value + coreVertices[b][axis]) * 0.5));
+          const index = coreVertices.length;
+          coreVertices.push(point);
+          midpointCache.set(key, index);
+          return index;
+        };
+        const refinedFaces = [];
+        for (const [a, b, c] of coreFaces) {
+          const ab = midpoint(a, b);
+          const bc = midpoint(b, c);
+          const ca = midpoint(c, a);
+          refinedFaces.push([a, ab, ca], [b, bc, ab], [c, ca, bc], [ab, bc, ca]);
+        }
+        coreFaces = refinedFaces;
+      }
+      for (const face of coreFaces) {
+        const tri = face.map((index) => coreVertices[index].map((value, axis) => [x, y, z][axis] + value * 0.55));
+        addTriangle(P, C, tri[0], tri[1], tri[2], core);
+      }
       const [right, up] = billboardBasis(f);
       // Twelve short rays share one direction-derived billboard basis.
       for (let i = 0; i < 12; i += 1) {
@@ -1220,8 +1249,8 @@
     const moonCenter = moonDirection.map((value) => value * SKY_SPHERE_RADIUS);
     const [moonRight, moonUp] = billboardBasis(moonDirection);
     const moonOpacity = Math.max(0, 0.8 - sunVisibility);
-    // Temporary test light: eight directions, advancing every three real seconds.
-    const moonLightStep = Math.floor(performance.now() / 3000) % 8;
+    // Keep one moon phase for each complete in-game day/night cycle.
+    const moonLightStep = Math.floor(environmentState.worldTimeMs / cycle) % 8;
     const phaseAngle = moonLightStep * Math.PI / 4;
     const moonViewDirection = moonDirection.map((value) => -value);
     const phaseLightDirection = normalize3(moonViewDirection.map((value, axis) =>
