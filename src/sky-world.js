@@ -17,6 +17,7 @@
     attribute vec3 aColor;
     attribute vec3 aNormal;
     attribute float aOpacity;
+    attribute float aMoon;
     uniform mat4 uProjection;
     uniform mat4 uView;
     uniform vec3 uEyeDir;
@@ -26,11 +27,13 @@
     uniform vec3 uDroneLightPos[8];
     uniform float uDroneLightStrength[8];
     uniform float uDroneSelfIllumination;
+    uniform float uMoonPhase;
     varying vec3 vColor;
     varying float vOpacity;
     void main() {
       gl_Position = uProjection * uView * vec4(aPosition, 1.0);
       vec3 n = normalize(aNormal);
+      float moonBackFacing = step(dot(n, normalize(uEyeDir)), 0.0);
       if (dot(n, uEyeDir) < 0.0) n = -n;
       float ndl = max(dot(n, normalize(uSunDir)), 0.0);
       vec3 lighting = uAmbient + uSunColor * ndl;
@@ -46,7 +49,8 @@
       }
       // Keep drone bodies softly visible at night; this uniform is enabled only for the drone draw pass.
       lighting += vec3(1.0, 0.76, 0.46) * uDroneSelfIllumination;
-      vColor = aColor * lighting;
+      float moonShade = mix(1.0, 0.12, clamp(uMoonPhase, 0.0, 1.0) * moonBackFacing);
+      vColor = aColor * lighting * mix(1.0, moonShade, step(0.5, aMoon));
       vOpacity = aOpacity;
     }
   `;
@@ -97,6 +101,8 @@
     droneLightPos: gl.getUniformLocation(program, 'uDroneLightPos[0]'),
     droneLightStrength: gl.getUniformLocation(program, 'uDroneLightStrength[0]'),
     droneSelfIllumination: gl.getUniformLocation(program, 'uDroneSelfIllumination'),
+    moon: gl.getAttribLocation(program, 'aMoon'),
+    moonPhase: gl.getUniformLocation(program, 'uMoonPhase'),
   };
   const positionBuffer = gl.createBuffer();
   const colorBuffer = gl.createBuffer();
