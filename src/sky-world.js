@@ -1264,9 +1264,25 @@
       const center = moonCenter.map((value,axis) => value + moonRight[axis]*cx + moonUp[axis]*cy + moonDirection[axis]*depth);
       const start = positions.length / 3;
       addOctahedron(positions, colors, center[0],center[1],center[2],radius,radius*0.62,radius,[0.36,0.35,0.29]);
-      for (let i = start; i < positions.length / 3; i += 1) {
-        const point = [positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]];
-        opacities.push(vertexMoonOpacity(point));
+      for (let i = start; i < positions.length / 3; i += 3) {
+        const points = [0, 1, 2].map((vertex) => {
+          const offset = (i + vertex) * 3;
+          return [positions[offset], positions[offset + 1], positions[offset + 2]];
+        });
+        const [a, b, c] = points;
+        const edgeA = b.map((value, axis) => value - a[axis]);
+        const edgeB = c.map((value, axis) => value - a[axis]);
+        let faceNormal = normalize3([
+          edgeA[1] * edgeB[2] - edgeA[2] * edgeB[1],
+          edgeA[2] * edgeB[0] - edgeA[0] * edgeB[2],
+          edgeA[0] * edgeB[1] - edgeA[1] * edgeB[0],
+        ]);
+        const faceCenter = [0, 1, 2].map((axis) => (a[axis] + b[axis] + c[axis]) / 3);
+        if (faceCenter.reduce((sum, value, axis) => sum + (value - moonCenter[axis]) * faceNormal[axis], 0) < 0) {
+          faceNormal = faceNormal.map((value) => -value);
+        }
+        const faceOpacity = vertexMoonOpacity(faceCenter, faceNormal);
+        opacities.push(faceOpacity, faceOpacity, faceOpacity);
       }
     }
 
