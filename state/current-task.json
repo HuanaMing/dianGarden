@@ -6,9 +6,9 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "等待 GitHub Actions 回歸驗收；之後由使用者實機確認相機固定焦點旋轉與太陽傾斜15度真正大圓的視覺效果。",
+  "nextAction": "相機已改為繞明確的外部世界座標焦點旋轉，視線直接對準焦點；等待 GitHub Actions 回歸驗收及使用者實機確認相機環繞與太陽軌跡。",
   "taskFiles": [
     "tasks/active/246-night-cloud-sun-visibility.md"
   ],
-  "result": "已更新相機環繞幾何，使向上／向下旋轉共用固定抬高焦點；太陽軌跡改為傾斜15度的真正大圓（仰角約 -15° 至 +15°）。已更新瀏覽器回歸測試斷言，尚待 CI 與使用者實機視覺驗收。"
+  "result": "已修正相機環繞：以獨立 orbitCenter 作為外部焦點，相機位置由焦點加球面偏移計算，視線直接對準 orbitCenter；同距離下旋轉時焦點固定，且最大 -70° 仰角時相機維持在地面上方。已更新瀏覽器回歸斷言，尚待 CI 與實機視覺驗收。"
 }
