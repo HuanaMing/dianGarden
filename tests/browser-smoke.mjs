@@ -1915,17 +1915,56 @@ try {
     throw new Error('任務228：重新載入後株位索引發生變化');
   }
   await multiPlantPage.evaluate(() => window.onSkyPlotActivate?.(4));
-  const maturePlantActions = await multiPlantPage.locator('#farm-dialog .manual-plant-actions .harvest').count();
-  const growingPlantActions = await multiPlantPage.locator('#farm-dialog .manual-plant-actions .water').count();
-  if (maturePlantActions !== 2 || growingPlantActions !== 1) {
-    throw new Error(`任務228：各株成熟／生長狀態未獨立計算：${JSON.stringify({ maturePlantActions, growingPlantActions })}`);
+  const plantChoices = multiPlantPage.locator('#farm-dialog .manual-plant-choice');
+  if (await plantChoices.count() !== 3) throw new Error('任務250：每株手動花卉應顯示一個像素圖按鈕');
+  const initialPlantGrid = await multiPlantPage.locator('#farm-dialog [data-manual-plant-list]').evaluate(element => ({
+    columns: getComputedStyle(element).gridTemplateColumns.trim().split(/\\s+/).length,
+    iconCount: element.querySelectorAll('img.manual-plant-pixel-icon').length,
+    iconSources: [...element.querySelectorAll('img.manual-plant-pixel-icon')].map(image => image.getAttribute('src')),
+  }));
+  if (initialPlantGrid.columns !== 5 || initialPlantGrid.iconCount !== 3 || initialPlantGrid.iconSources.some(source => !source)) {
+    throw new Error('任務250：手動花株圖示必須是固定五欄的 PNG 像素圖：' + JSON.stringify(initialPlantGrid));
   }
-  await multiPlantPage.locator('#farm-dialog .manual-plant-actions .harvest').first().click();
-  const remainingPlantsAfterHarvest = await multiPlantPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots[4].plants);
-  if (remainingPlantsAfterHarvest.length !== 2 || JSON.stringify(remainingPlantsAfterHarvest.map(plant => plant.positionIndex)) !== JSON.stringify([2, 3])) {
-    throw new Error('任務228：收成單株時影響其他花株或重排其株位');
+  const coinsBeforeEmptyHarvest = await multiPlantPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).coins);
+  await multiPlantPage.locator('#farm-dialog [data-harvest-selected]').click();
+  const emptySelectionNotice = (await multiPlantPage.locator('#toast').innerText()).trim();
+  const coinsAfterEmptyHarvest = await multiPlantPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).coins);
+  if (emptySelectionNotice !== '選取花種以收成' || coinsAfterEmptyHarvest !== coinsBeforeEmptyHarvest) {
+    throw new Error('任務250：空選取收成提示或金幣狀態不正確：' + JSON.stringify({ emptySelectionNotice, coinsBeforeEmptyHarvest, coinsAfterEmptyHarvest }));
   }
-  checks.push('任務228：手動地塊多株獨立生長與收成、穩定不規則座標、有限越界及重載持久性通過');
+  const firstChoice = multiPlantPage.locator('#farm-dialog [data-manual-plant-position="1"]');
+  await firstChoice.click();
+  if (await firstChoice.getAttribute('aria-pressed') !== 'true') throw new Error('任務250：點擊花株圖示未選取');
+  await firstChoice.click();
+  if (await firstChoice.getAttribute('aria-pressed') !== 'false') throw new Error('任務250：再次點擊花株圖示未取消選取');
+  await firstChoice.click();
+  await multiPlantPage.locator('#farm-dialog [data-manual-plant-position="3"]').click();
+  await multiPlantPage.setViewportSize({ width: 390, height: 844 });
+  const mobilePlantGrid = await multiPlantPage.locator('#farm-dialog [data-manual-plant-list]').evaluate(element => ({
+    columns: getComputedStyle(element).gridTemplateColumns.trim().split(/\\s+/).length,
+    overflowX: element.scrollWidth > element.clientWidth,
+  }));
+  if (mobilePlantGrid.columns !== 5 || mobilePlantGrid.overflowX) {
+    throw new Error('任務250：手機手動花株圖示必須維持五欄且不可水平溢出：' + JSON.stringify(mobilePlantGrid));
+  }
+  const coinsBeforeMultiHarvest = await multiPlantPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).coins);
+  await multiPlantPage.locator('#farm-dialog [data-harvest-selected]').click();
+  const remainingPlantsAfterMultiHarvest = await multiPlantPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots[4].plants);
+  const coinsAfterMultiHarvest = await multiPlantPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).coins);
+  if (JSON.stringify(remainingPlantsAfterMultiHarvest.map(plant => plant.positionIndex)) !== JSON.stringify([2])
+    || coinsAfterMultiHarvest <= coinsBeforeMultiHarvest) {
+    throw new Error('任務250：多選收成未只移除兩株已選取成熟花卉：' + JSON.stringify({ remaining: remainingPlantsAfterMultiHarvest.map(plant => plant.positionIndex), coinsBeforeMultiHarvest, coinsAfterMultiHarvest }));
+  }
+  await multiPlantPage.locator('#farm-dialog [data-manual-plant-position="2"]').click();
+  const coinsBeforeImmatureHarvest = await multiPlantPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).coins);
+  await multiPlantPage.locator('#farm-dialog [data-harvest-selected]').click();
+  const immatureSelectionNotice = (await multiPlantPage.locator('#toast').innerText()).trim();
+  const afterImmatureHarvest = await multiPlantPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')));
+  if (immatureSelectionNotice !== '選取的花株尚未成熟。' || afterImmatureHarvest.coins !== coinsBeforeImmatureHarvest
+    || afterImmatureHarvest.plots[4].plants.length !== 1 || afterImmatureHarvest.plots[4].plants[0].positionIndex !== 2) {
+    throw new Error('任務250：未成熟花株不應被收成或扣改金幣：' + JSON.stringify({ immatureSelectionNotice, coinsBeforeImmatureHarvest, after: afterImmatureHarvest.plots[4].plants }));
+  }
+  checks.push('任務228／250：多株手動花卉資料與株位持久性、像素圖五欄、多選／取消選取、空選取通知及只收成已選成熟花株通過');
   await multiPlantPage.close();
 
   const legacyPlantPage = await browser.newPage({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 1 });
