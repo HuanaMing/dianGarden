@@ -1,15 +1,15 @@
 {
-  "name": "任務248：星星閃爍與日月可見度連動",
+  "name": "任務249：雨滴動畫跟隨鏡頭",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務247重做已修正雨天月亮可見度公式；任務248已加入84顆固定星星，每顆以3至5秒獨立週期閃爍，透明度乘上月亮可見度。已更新回歸測試與任務文件，待檢查測試執行結果並進行實機驗收。",
+  "nextAction": "任務249已將雨滴分布改為跟隨相機位置與朝向，並增加至72顆；已更新靜態回歸斷言。接著確認程式與測試檔內容、執行可用的語法／瀏覽器測試，等待使用者視覺驗收。未手動觸發GitHub Pages部署。",
   "taskFiles": [
     "tasks/active/247-rainy-moon-visibility.md",
-    "tasks/active/248-sun-moon-visibility-curve.md"
+    "tasks/active/249-camera-following-rain.md"
   ],
-  "result": "已修改 src/sky-world.js 的雨天月亮透明度及星星繪製／閃爍；已更新 tests/browser-smoke.mjs 的規格斷言，並建立任務247重做及更新任務248文件。尚未執行 Playwright／GitHub Actions，尚未進行實機視覺驗收。"
+  "result": "任務248已由使用者於2026-10-26驗收完成並歸檔。任務249已修改src/sky-world.js，雨滴依3D相機位置與朝向分布，2D模式以鏡頭目標為中心，數量由44增加至72；已更新tests/browser-smoke.mjs靜態斷言。尚未執行Playwright／GitHub Actions，也未進行瀏覽器視覺驗收。"
 }
