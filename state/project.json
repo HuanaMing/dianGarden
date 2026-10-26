@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "任務243–245：雲朵光照、晴天天空與太陽模型（分別規劃、合併推送）",
-  "nextAction": "依序完成243、244、245；合併執行 JavaScript／Playwright 驗收後一次推送。",
+  "activeTask": "任務246：修正夜間雲朵過亮與太陽不可見",
+  "nextAction": "驗證任務246的夜間雲朵亮度、手機初始鏡頭太陽可視性與回歸測試；完成使用者視覺驗收後再更新任務狀態。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署：需使用者明確批准後手動觸發。",
