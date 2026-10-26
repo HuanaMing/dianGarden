@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "任務240：新增遠方背景小島並移除文字雲",
-  "nextAction": "任務240的 Playwright 桌面／手機自動驗收已通過（GitHub Actions run 40219167948）。下一步等待使用者實機視覺驗收三座遠方小島的可見度、視差與舊雲移除效果。",
+  "activeTask": "無；任務240已取消結案",
+  "nextAction": "等待使用者指定下一項任務。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署：需使用者明確批准後手動觸發。",
