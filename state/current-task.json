@@ -1,12 +1,12 @@
 {
-  "name": "無目前執行任務",
-  "status": "idle",
+  "name": "任務239重做：雲朵XZ展幅",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "等待使用者指定下一項任務。",
-  "taskFile": null,
-  "result": "任務240依使用者要求取消並結案。已撤銷背景小島及文字雲移除的程式修改，恢復任務239完成時的原有遠景雲層；測試斷言與架構文件同步恢復。任務歸檔至 tasks/done/240-distant-islands.md，active 原檔已刪除。本次撤銷尚未重新執行自動化測試；未手動部署 GitHub Pages。"
+  "nextAction": "驗證雲朵幾何與瀏覽器規格測試；確認 XZ 水平展幅接近且 Y 軸保持扁平。",
+  "taskFile": "tasks/active/239-world-space-sky.md",
+  "result": "已修改 src/sky-world.js 中三個雲塊的 X/Z 半徑與側塊偏移，並更新 tests/browser-smoke.mjs 的任務239幾何規格斷言。尚未執行語法檢查或瀏覽器驗收。"
 }
