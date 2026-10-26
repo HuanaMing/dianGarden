@@ -1119,12 +1119,14 @@
         animation.returning = animation.shouldReturn?.() !== false;
         if (!animation.departed) { animation.departed = true; animation.onDeparture?.(); }
         state.lastCompletedPlotIndex = Number.isInteger(animation.targetPlotIndex) ? animation.targetPlotIndex : null;
-        state.animation = null;
+        // Keep the completed-work animation as the position owner while callbacks run.
+        // render() may synchronously call setDroneDocks(); a null animation would make it snap
+        // the drone back to its dock before the next same-plot job can take over.
         const onComplete = animation.onComplete;
         animation.onComplete = null;
-        droneDebugLog('work-complete-handoff', { droneIndex: index, kind: animation.kind, location: state.location.slice(), target: animation.target.slice(), elapsed: candidate.elapsed, returning: animation.returning ?? null });
+        droneDebugLog('work-complete-handoff', { droneIndex: index, kind: animation.kind, location: state.location.slice(), target: animation.target.slice(), elapsed: candidate.elapsed, returning: animation.returning ?? null, positionOwnerRetained: state.animation === animation });
         onComplete?.();
-        droneDebugLog('work-complete-handoff-result', { droneIndex: index, activeKind: state.animation?.kind ?? null, location: state.location.slice(), restoredPreviousAnimation: state.animation === null });
+        droneDebugLog('work-complete-handoff-result', { droneIndex: index, kind: animation.kind, activeKind: state.animation?.kind ?? null, location: state.location.slice(), previousAnimationRetained: state.animation === animation, nextAnimationStarted: state.animation !== animation });
         if (state.animation === null) {
           animation.elapsed = Math.max(candidate.elapsed, candidate.returnStart);
           state.animation = animation;
