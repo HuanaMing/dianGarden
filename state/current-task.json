@@ -1,15 +1,21 @@
 {
-  "name": "任務255：追查並修正無人機偶發瞬移",
+  "name": "任務256：無人機任務與動畫系統重構規劃",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "緊急回復派工：已撤回尋路失敗時拒絕動畫並中斷佇列的策略，恢復直線備援以避免全機停工；先確認無人機能重新起飛，再修正 A* 尋路失敗的真正原因並設計不會穿越障礙的退路。需要執行語法檢查與 Playwright 行為測試；目前遠端測試裝置離線，尚未驗證。",
+  "nextAction": "重構規格與任務257–261階段文件已建立。下一步執行任務257：盤點 game.js／sky-world.js 的實際呼叫鏈、建立座標連續性測試並跑可用語法／Playwright 基準。優先處理任務255留下的派工停滯與直線尋路備援風險；尚未修改重構核心程式，尚未執行測試。",
   "taskFiles": [
+    "tasks/active/256-drone-system-refactor-plan.md",
     "tasks/active/255-drone-teleportation-follow-up.md",
-    "tasks/active/254-flower-rotation-from-drone-heading.md"
+    "tasks/active/254-flower-rotation-from-drone-heading.md",
+    "tasks/inbox/257-drone-system-audit-baseline.md",
+    "tasks/inbox/258-drone-task-lifecycle-dispatch.md",
+    "tasks/inbox/259-drone-state-motion-controller.md",
+    "tasks/inbox/260-drone-animation-migration.md",
+    "tasks/inbox/261-drone-refactor-regression-acceptance.md"
   ],
-  "result": "使用者回報上一輪修改後所有無人機在有電、有待辦時都不動。已緊急撤回可能造成派工停滯的路徑拒絕與 queue break；恢復尋路失敗時的直線備援並保留診斷。這是暫時止血，可能重新暴露路徑穿越障礙風險；尚未執行語法／Playwright 測試，需優先確認遊戲恢復派工。"
+  "result": "已建立 docs/drone-system-refactor.md，明確定義任務管理、無人機狀態機、位置／路徑控制、動畫呈現四層，事件契約、派工失敗政策、座標連續性、五階段實作計畫及驗收條件。任務257–261已建立於 inbox，依序承接盤點、任務生命週期、狀態與位置控制、動畫遷移及整合回歸。尚未修改無人機核心程式，尚未執行語法或瀏覽器測試。"
 }
