@@ -1843,3 +1843,13 @@
 - 完成版已歸檔至 `tasks/done/239-world-space-sky.md`，並已移除 active 原檔。
 - 本輪未另外執行自動化測試，不記為本輪自動化測試通過。
 - 下一項待辦為 `tasks/inbox/240-distant-islands.md`，尚未開始。
+
+
+## 2026-10-26 — 任務240取消結案
+
+- 使用者決定不採用遠方背景小島及移除原有文字雲的視覺變更，要求刪除並結案。
+- 已撤銷任務240的 `src/sky-world.js` 修改，恢復任務239完成時的遠景雲層與緩慢漂移行為；移除三座新增背景小島。
+- 已將 `tests/browser-smoke.mjs` 的斷言及 `docs/architecture.md` 的架構描述恢復為原有遠景雲層版本。
+- 已將任務紀錄移至 `tasks/done/240-distant-islands.md`，標示「已取消並結案（非功能完成）」，並刪除 `tasks/active/240-distant-islands.md`。
+- 已更新 `state/current-task.json` 與 `state/project.json`，目前沒有執行中的任務，等待使用者指定下一項工作。
+- 撤銷後已重新讀取檢查程式、測試及架構文件：背景小島程式與相關斷言不存在，原有雲層程式與測試斷言已恢復。本次撤銷尚未重新執行自動化測試；未手動部署 GitHub Pages。
