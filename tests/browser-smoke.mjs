@@ -69,6 +69,13 @@ if (!skyWorldSource.includes("const dronePhaseTransitions = {")
   || !skyWorldSource.includes("setDronePhase(index, 'waiting_path', 'return-route-blocked')")) {
   throw new Error('任務259：無人機狀態機或可觀察的主要階段缺失');
 }
+if (!gameSource.includes("function cancelRainWaterJobs()")
+  || !gameSource.includes("cancelRainWaterJobs();")
+  || !gameSource.includes("world.cancelDroneAnimation?.(droneIndex, finish)")
+  || !skyWorldSource.includes("cancelDroneAnimation(droneIndex, onReturnComplete)")
+  || !skyWorldSource.includes("setDronePhase(droneIndex, route ? 'returning' : 'waiting_path', 'work-cancelled-return')")) {
+  throw new Error('任務262：雨後取消澆水工作未保留動畫位置控制權並安全返航');
+}
 if (!skyWorldSource.includes("const dockPositionsChanged = docks.map((dock, index) => {")
   || !skyWorldSource.includes("else if (dockPositionsChanged[index]) {")
   || !skyWorldSource.includes("if (animation.returning === true) {")
@@ -451,6 +458,43 @@ if (droneMotion.invalid || droneMotion.maxStep > 0.8) {
 }
 checks.push(`任務257：播種後接續澆水的交接位置連續（${droneMotion.frameCount} 個取樣，最大位移 ${droneMotion.maxStep.toFixed(3)}）`);
 checks.push(`任務255：八台無人機持續更新電量、去程及返航途中移動停靠平台時位置連續（${droneMotion.frameCount} 個取樣，最大位移 ${droneMotion.maxStep.toFixed(3)}）`);
+const cancelledWaterMotion = await droneTeleportPage.evaluate(async () => {
+  window.__dgDroneFrames.length = 0;
+  window.__dgCancelCompleted = false;
+  const started = window.skyWorld.animateWater(0, () => {}, () => {}, () => true, 0);
+  if (started !== true) return { started, callback: false, maxStep: Infinity, frameCount: 0 };
+  await new Promise(resolve => setTimeout(resolve, 600));
+  const cancelled = window.skyWorld.cancelDroneAnimation(0, () => { window.__dgCancelCompleted = true; });
+  if (cancelled !== true) return { started, cancelled, callback: false, maxStep: Infinity, frameCount: window.__dgDroneFrames.length };
+  const deadline = Date.now() + 12000;
+  while (!window.__dgCancelCompleted && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 100));
+  const frames = window.__dgDroneFrames;
+  const positions = frames.map(values => {
+    const perDrone = (values.length / 3) / 8;
+    if (!Number.isInteger(perDrone) || perDrone < 1) return null;
+    let x = 0, z = 0;
+    for (let vertex = 0; vertex < perDrone; vertex += 1) {
+      x += values[vertex * 3];
+      z += values[vertex * 3 + 2];
+    }
+    return [x / perDrone, z / perDrone];
+  });
+  let maxStep = 0;
+  for (let index = 1; index < positions.length; index += 1) {
+    if (!positions[index] || !positions[index - 1]) return { started, cancelled, callback: window.__dgCancelCompleted, maxStep: Infinity, frameCount: frames.length };
+    maxStep = Math.max(maxStep, Math.hypot(
+      positions[index][0] - positions[index - 1][0],
+      positions[index][1] - positions[index - 1][1],
+    ));
+  }
+  return { started, cancelled, callback: window.__dgCancelCompleted, maxStep, frameCount: frames.length, phase: window.skyWorld.getDronePhase(0) };
+});
+if (cancelledWaterMotion.started !== true || cancelledWaterMotion.cancelled !== true
+  || cancelledWaterMotion.callback !== true || cancelledWaterMotion.frameCount < 5
+  || cancelledWaterMotion.maxStep > 0.8) {
+  throw new Error('任務262：取消進行中的澆水動畫時無人機未從當前位置連續返航：' + JSON.stringify(cancelledWaterMotion));
+}
+checks.push(`任務262：澆水工作取消後從當前位置安全返航（${cancelledWaterMotion.frameCount} 個取樣，最大位移 ${cancelledWaterMotion.maxStep.toFixed(3)}）`);
 await droneTeleportPage.close();
 
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
