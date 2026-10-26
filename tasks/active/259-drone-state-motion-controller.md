@@ -26,10 +26,12 @@
 - 語法檢查與針對性測試通過後才進入動畫替換階段。
 
 ## 依賴
-任務257已完成；任務258生命週期契約已實作，瀏覽器回歸仍有任務257的預期失敗待本階段修正；規格 `docs/drone-system-refactor.md`。
+任務257、258已完成；工作交接與安全尋路的動態回歸已通過，狀態機回歸由最新 run #787 驗證中；規格 `docs/drone-system-refactor.md`。
 
 ## 執行紀錄
 - 2026-10-27：開始第三階段，先處理工作完成回呼期間的動畫所有權與座標重設問題，再處理路徑失敗備援安全化。
 - 2026-10-27：修改 `src/sky-world.js`，工作完成回呼執行期間保留舊動畫作為位置所有者；若回呼派發下一個同地塊任務，新動畫可直接從當前位置接手，避免 `render() → setDroneDocks()` 在 animation 為 null 時將無人機重設到停靠平台。
 - 2026-10-27：GitHub Actions run #781 通過完整 Playwright 驗收。新播種→澆水交接測試取樣 120 幀，最大單次水平位移從基準的 2.159 降至 0.054；原任務255八機平台移動／電量更新測試亦通過（120 個取樣，最大位移 0.054）。生命週期契約檢查通過。詳見 [工作流程 run #781](https://github.com/HuanaMing/dianGarden/actions/runs/40373426835)。
 - 2026-10-27：移除 A* 失敗後的直線 `[start, goal]` 備援，避免無安全路徑時穿越地塊或無人機。`startDroneAnimation()` 現在回報 `waiting_path`／`waiting_path_returning`；派工器將任務放回佇列、記錄重試原因，並在本輪略過該阻塞任務，讓其他可行任務繼續。返航平台改位若無安全新路徑，無人機暫停在當前位置，定期重試，不套用空路徑或直接穿障。GitHub Actions run #784 已通過完整 Playwright 驗收，含尋路失敗契約來源檢查與平台改位重規劃檢查；播種→澆水交接及八機平台移動測試各 120 個取樣，最大單次水平位移 0.061，browserErrors 為空。詳見 [工作流程 run #784](https://github.com/HuanaMing/dianGarden/actions/runs/40374342098)。後續另將 A* 開放清單從每次排序改為二元堆積，以降低搜尋大量候選節點時的阻塞風險；其回歸由 run #785 驗證中。
+- 2026-10-27：將 A* 開放清單由每輪排序改為二元堆積，避免候選節點多時排序成本阻塞瀏覽器；GitHub Actions run #785 通過，見 [工作流程 run #785](https://github.com/HuanaMing/dianGarden/actions/runs/40374796682)。
+- 2026-10-27：加入無人機主要階段 `docked / idle / outbound / working / returning / waiting_path`、合法轉換檢查與 `getDronePhase()` 診斷介面。新增狀態轉換來源檢查及播種→澆水交接階段測試；GitHub Actions run #787 驗證中。
