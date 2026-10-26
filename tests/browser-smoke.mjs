@@ -1603,14 +1603,19 @@ try {
   if (!worldSource.includes('function uploadSky(time)') || !worldSource.includes('const skyOpacityBuffer = gl.createBuffer()') || !worldSource.includes('const SKY_SPHERE_RADIUS = 10;') || !worldSource.includes('cloud.azimuth + Math.sin(elapsed * cloud.speed + cloud.phase) * 0.048') || !worldSource.includes('Math.cos(cloud.elevation) * SKY_SPHERE_RADIUS') || !worldSource.includes('opacities.push(cloudOpacity)') || worldSource.includes('eye[0] + cloud.x') || !worldSource.includes('function addSun(P, C, dir, warm)') || !worldSource.includes('function billboardBasis(dir)') || !worldSource.includes('addIcosahedron(P, C, x, y, z, 0.55, core)') || !worldSource.includes('i < 12; i += 1') || !worldSource.includes('worldTimeMs: Number.isFinite(state.worldTimeMs)')) throw new Error('任務242／245：天空球、雲朵、太陽模型或天體方向基底不符合規格');
   if (!worldSource.includes('skyView[12] = 0;') || !worldSource.includes('skyView[13] = 0;') || !worldSource.includes('skyView[14] = 0;') || !worldSource.includes('gl.disable(gl.DEPTH_TEST);') || !worldSource.includes('gl.enable(gl.DEPTH_TEST);')) throw new Error('任務242：天體渲染未清除視圖平移或未在繪製地塊前切換深度測試');
   if (!worldSource.includes('gl.uniform3f(locations.ambient, 0.88, 0.88, 0.88);') || !worldSource.includes('colors[colorOffset + channel] / 0.78 * 0.92')) throw new Error('任務243：天空雲朵的光照對比仍未柔化');
-  if (!worldSource.includes('const cloudBrightness = 0.035 + daylight * 0.965;')
-    || !worldSource.includes('const cloudOpacity = (environmentState.isRaining ? 0.36 : 0.42) * (0.28 + daylight * 0.72);')
-    || !worldSource.includes('const elevation = -0.48 + Math.sin(daylightArc * Math.PI) * 0.30;')
-    || !worldSource.includes('const azimuth = -2.36 + (daylightArc - 0.5) * 0.32;')) {
-    throw new Error('任務246：夜間雲朵未隨日照變暗，或太陽路徑未對齊初始鏡頭可視天空');
+  if (!worldSource.includes("const daylight = environmentState.phase === 'night' ? 0 : Math.max(0, Math.min(1, environmentState.daylightProgress));")
+    || !worldSource.includes('const cloudBrightness = 0.008 + daylight * 0.992;')
+    || !worldSource.includes('const cloudOpacity = (environmentState.isRaining ? 0.36 : 0.42) * (0.03 + daylight * 0.97);')
+    || !worldSource.includes('const orbitProgress = cycleTime / cycle;')
+    || !worldSource.includes('const azimuth = orbitProgress * Math.PI * 2;')
+    || !worldSource.includes('const elevation = Math.PI / 4;')
+    || worldSource.includes('environmentState.rainBlend < 0.7')
+    || !worldSource.includes('const eyePitch = Math.max(0.18, pitch);')
+    || !worldSource.includes('pitch = Math.max(-70 * Math.PI / 180, Math.min(70 * Math.PI / 180, pitch + deltaY * 0.006));')) {
+    throw new Error('任務246：夜間雲朵亮度、太陽完整常駐軌跡或相機向上仰角不符合規格');
   }
   if (!worldSource.includes("day: ['#78c9f5', '#b8e5ff', '#e6f5ff']") || !worldSource.includes('colors[1]} 78%')) throw new Error('任務244：晴朗白天天空配色或漸層比例不符合規格');
-  checks.push('任務242：半徑10天空球與深度渲染順序；任務243：柔化雲朵明暗；任務244：提高晴天藍度；任務245：方向基底太陽模型');
+  checks.push('任務242：半徑10天空球與深度渲染順序；任務243：柔化雲朵明暗；任務244：提高晴天藍度；任務245：方向基底太陽模型；任務246：夜間雲朵近乎隱沒、太陽全時段以45度仰角環繞、相機可向上仰望70度');
   if (!worldSource.includes('function findDroneRoute(start, goal, droneIndex)') || !worldSource.includes('const landObstacles = plotPositions.map((plot, index)') || !worldSource.includes('landObstacles.some(({ x, z }) => Math.abs(point[0] * step - x) < TILE * 0.5 + 0.12')) throw new Error('任務241：無人機尋路尚未把延伸到底部的地塊側牆列為障礙');
   checks.push('任務241：無人機尋路會避開地塊側牆，並允許從起點／終點地塊離開及抵達');
   if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("wreath.src = 'assets/wreath.webp';") || worldSource.includes('touch-hold-progress')) throw new Error('移動模式即時拖曳或花草環素材實作不符');
