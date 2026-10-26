@@ -1,15 +1,16 @@
 {
-  "name": "任務259：建立無人機狀態機與連續位置控制",
+  "name": "任務262：修正雨後澆水任務取消造成的無人機瞬移",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務257已由使用者確認驗收完成：實際遊玩時檢查所有任務類型，暫未發現瞬移，日後若重現再追查。任務258已完成。任務259的交接位置修正由 run #781 通過；無安全路徑時等待重試與八機平台移動回歸由 run #784 通過；A* 二元堆積優化由 run #785 通過。最近新增的無人機階段狀態機測試在 run #787 因 tests/browser-smoke.mjs 語法錯誤失敗；下一步先修正測試腳本語法並重跑自動驗收，再判斷狀態機階段是否完成。動畫全面遷移與任務261最終回歸尚未完成。",
+  "nextAction": "任務262由使用者實際回報重現：雨後全株濕潤，已領取澆水工作的無人機瞬移。已新增 skyWorld.cancelDroneAnimation，讓取消動畫從當前位置安全返航；applyRainMoisture 現在取消排隊中與未成功提交的活動澆水工作。tests/browser-smoke.mjs 已新增取消契約與動態位置連續性測試。run #790 在既有 PC 長按環時間敏感測試失敗，未跑到新增測試；run #791 正在驗證新增測試。待取得 run #791 結果並修正任何失敗，再同步完整回歸。",
   "taskFiles": [
     "tasks/active/256-drone-system-refactor-plan.md",
     "tasks/active/259-drone-state-motion-controller.md",
+    "tasks/active/262-rain-cancels-watering-drone-teleport.md",
     "tasks/active/255-drone-teleportation-follow-up.md",
     "tasks/active/254-flower-rotation-from-drone-heading.md",
     "tasks/inbox/260-drone-animation-migration.md",
@@ -17,5 +18,5 @@
     "tasks/done/257-drone-system-audit-baseline.md",
     "tasks/done/258-drone-task-lifecycle-dispatch.md"
   ],
-  "result": "任務257使用者實機驗收完成。自動化基準曾重現工作交接瞬移，最大單次水平位移 2.159；修正動畫位置所有權後，run #781 將交接最大位移降至 0.054。安全尋路等待重試及八機平台移動由 run #784 通過，最大位移 0.061 且 browserErrors 為空；A* 二元堆積優化由 run #785 通過。最近狀態機測試 run #787 因測試腳本語法錯誤失敗，需先修復再驗證。全套動畫遷移與最終回歸尚未完成。"
+  "result": "任務262程式修正已提交：雨後濕潤時取消無效澆水任務，已領取工作會從目前位置安全返航，無路徑時等待重試。run #789（只有動畫 API 修改，未包含遊戲層雨水取消與動態測試）通過；run #790 在既有 PC 長按環測試因時間條件失敗，新增動態測試未執行；run #791 正在驗證完整修改與動態取消測試。"
 }
