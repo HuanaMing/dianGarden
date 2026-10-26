@@ -229,6 +229,7 @@
     await window.diangardenCloudReady;
   }
   const game = loadGame();
+  if (game.cameraPose && window.dianGardenCamera?.restore) window.dianGardenCamera.restore(game.cameraPose);
   let rainStartedAt = game.lastObservedRaining ? Date.now() : null;
   function getAutomaticPlotCount() { return window.gardenEconomy.getAutomaticPlotCount(game.plots); }
   function getLandCost() { return window.gardenEconomy.getLandCost(getAutomaticPlotCount()); }
@@ -420,6 +421,8 @@
       updateBatteries(game.lastOnlineAt);
       window.skyEnvironment.advance(game, game.lastOnlineAt);
       game.savedAt = game.lastOnlineAt;
+      const cameraPose = window.dianGardenCamera?.getState?.();
+      if (cameraPose) game.cameraPose = cameraPose;
       const { flowerVariants, ...saveData } = game;
       localStorage.setItem(FLOWER_VARIANTS_KEY, JSON.stringify(flowerVariants));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
@@ -431,6 +434,14 @@
   }
   function notify(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(toastTimeout); toastTimeout = setTimeout(() => toast.classList.remove('show'), 2100); }
   function updateSaveStatus() { if (!saveStatus) return; saveStatus.textContent = persistenceWarning || (cloudSessionExpired ? '暫停同步雲端進度' : '進度會自動儲存'); saveStatus.classList.toggle('save-warning', !persistenceAvailable || cloudSessionExpired); }
+  let lastCameraPoseSnapshot = JSON.stringify(game.cameraPose || null);
+  window.setInterval(() => {
+    if (skipSaveOnExit || isResetting || !persistenceAvailable) return;
+    const currentPose = window.dianGardenCamera?.getState?.();
+    if (!currentPose) return;
+    const snapshot = JSON.stringify(currentPose);
+    if (snapshot !== lastCameraPoseSnapshot && save()) lastCameraPoseSnapshot = JSON.stringify(game.cameraPose || currentPose);
+  }, 1200);
   if (migratedLegacyManualPlants) save();
   if (offlineReport) save();
   window.addEventListener('pagehide', () => { if (!isResetting && !skipSaveOnExit) save(); });
