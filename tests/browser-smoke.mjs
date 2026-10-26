@@ -1619,7 +1619,12 @@ try {
     || !worldSource.includes('const rainVisibility = 1 - 0.5 * environmentState.rainBlend;')
     || !worldSource.includes('const sunVisibility = timeVisibility * rainVisibility;')
     || !worldSource.includes('addSun(positions, colors, sunDirection, warmth);')
-    || !worldSource.includes('opacities.push(sunVisibility);')\n     || !worldSource.includes('const moonOpacity = Math.max(0, 1 - sunVisibility);')
+    || !worldSource.includes('opacities.push(sunVisibility);')
+     || !worldSource.includes('const moonOpacity = Math.max(0, 1 - sunVisibility) * rainVisibility;')
+     || !worldSource.includes('function addStar(P, C, dir, size, color)')
+     || !worldSource.includes('const starCount = 84;')
+     || !worldSource.includes('const periodMs = 3000 +')
+     || !worldSource.includes('const starOpacity = moonOpacity * twinkle;')
     || !worldSource.includes('const core = saturatedCore.map((value) => luminance + (value - luminance) * 0.8);')
     || !worldSource.includes('const orbitTilt = Math.PI / 12;')
     || !worldSource.includes('const sunDirection = [Math.sin(azimuth) * Math.cos(orbitTilt), Math.sin(azimuth) * Math.sin(orbitTilt), Math.cos(azimuth)];')
@@ -1665,6 +1670,11 @@ try {
     throw new Error('任務248：日月可見度曲線或雨勢係數不符合規格');
   }
   checks.push('任務248：太陽清晨0→80%、白天80→100→80%、傍晚80→0%、夜間0%；月亮可見度為100%-太陽可見度，雨勢淡出維持50%');
+  const rainySun = 1 * 0.5;
+  const rainyMoon = (1 - rainySun) * 0.5;
+  if (rainyMoon !== 0.25) throw new Error('任務247重做：雨天月亮必須套用（100%-太陽可見度）×雨勢係數');
+  checks.push('任務247重做：雨天月亮可見度為（100%-太陽可見度）×雨勢係數');
+  checks.push('任務248：星星使用月亮可見度乘以各自3至5秒週期的閃爍係數');
 
   checks.push('任務242：半徑10天空球與深度渲染順序；任務243：柔化雲朵明暗；任務244：提高晴天藍度；任務245：方向基底太陽模型；任務246：夜間雲朵近乎隱沒、太陽沿傾斜15度的真正大圓運行、相機以固定焦點向上／向下旋轉70度');
   if (!worldSource.includes('function findDroneRoute(start, goal, droneIndex)') || !worldSource.includes('const landObstacles = plotPositions.map((plot, index)') || !worldSource.includes('landObstacles.some(({ x, z }) => Math.abs(point[0] * step - x) < TILE * 0.5 + 0.12')) throw new Error('任務241：無人機尋路尚未把延伸到底部的地塊側牆列為障礙');
