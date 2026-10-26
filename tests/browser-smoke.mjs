@@ -108,6 +108,18 @@ if (!skyWorldSource.includes("localStorage.getItem('sky-garden-drone-debug-v1') 
   throw new Error('任務255：動畫交接、位置跳變或路徑失敗診斷鉤子缺失');
 }
 checks.push('任務255：尋路失敗不會阻斷派工佇列；診斷可追蹤交接、跳位與路徑失敗（直線備援暫時恢復，仍需後續安全化）');
+if (!gameSource.includes("job.status = 'queued';")
+  || !gameSource.includes("job.status = 'assigned';")
+  || !gameSource.includes("job.status = 'running';")
+  || !gameSource.includes("if (job.resultAttempted || job.cancelled")
+  || !gameSource.includes("job.resultCommitted = completeJob(job) === true;")
+  || !gameSource.includes("job.status = 'succeeded';")
+  || !gameSource.includes("job.status = 'failed';")
+  || !gameSource.includes("job.status = 'cancelled';")) {
+  throw new Error('任務258：任務排隊、派發、執行、結果一次性提交及終態契約缺失');
+}
+checks.push('任務258：任務物件具備 queued／assigned／running／succeeded／failed／cancelled 生命週期及結果一次性提交保護');
+
 
 const encyclopediaPage = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
 await encyclopediaPage.addInitScript(() => {
