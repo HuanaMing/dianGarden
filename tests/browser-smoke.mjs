@@ -94,13 +94,12 @@ if (!gameSource.includes('const priority = (candidate) => returningDrones.has(ca
   throw new Error('任務255：返航無人機應優先接續原地後續工作，不可被滿電但遠離目標的無人機搶先');
 }
 checks.push('任務255：返航中的無人機優先於滿電待命無人機，避免同一地塊的連續工作跨機接手');
-if (skyWorldSource.includes('return [start, goal];')
-  || !skyWorldSource.includes("droneDebugLog('route-failed'")
-  || !skyWorldSource.includes("if (!outboundRoute || !returnRoute)")
-  || !skyWorldSource.includes("return 'no-route';")
-  || !gameSource.includes("if (started === 'no-route')")
-  || !gameSource.includes("jobQueue.unshift(job);")) {
-  throw new Error('任務255：找不到安全路徑時仍可能直線穿越障礙，或工作未保留等待重試');
+if (!skyWorldSource.includes("droneDebugLog('route-failed'")
+  || !skyWorldSource.includes("fallback: 'direct'")
+  || !skyWorldSource.includes("return [start, goal];")
+  || skyWorldSource.includes("return 'no-route';")
+  || gameSource.includes("if (started === 'no-route')")) {
+  throw new Error('任務255：尋路失敗診斷缺失，或仍可能因無路徑而阻斷派工');
 }
 if (!skyWorldSource.includes("localStorage.getItem('sky-garden-drone-debug-v1') === 'true'")
   || !skyWorldSource.includes("droneDebugLog('work-complete-handoff'")
@@ -108,7 +107,7 @@ if (!skyWorldSource.includes("localStorage.getItem('sky-garden-drone-debug-v1') 
   || !skyWorldSource.includes("droneDebugLog('position-jump'")) {
   throw new Error('任務255：動畫交接、位置跳變或路徑失敗診斷鉤子缺失');
 }
-checks.push('任務255：無安全路徑時不再採用直線備援，工作保留佇列；診斷可追蹤交接、跳位與路徑失敗');
+checks.push('任務255：尋路失敗不會阻斷派工佇列；診斷可追蹤交接、跳位與路徑失敗（直線備援暫時恢復，仍需後續安全化）');
 
 const encyclopediaPage = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
 await encyclopediaPage.addInitScript(() => {
