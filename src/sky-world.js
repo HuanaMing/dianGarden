@@ -1220,19 +1220,18 @@
     const moonCenter = moonDirection.map((value) => value * SKY_SPHERE_RADIUS);
     const [moonRight, moonUp] = billboardBasis(moonDirection);
     const moonOpacity = Math.max(0, 0.8 - sunVisibility);
-    const phaseAngle = orbitProgress * Math.PI * 2;
-    // Rotate the illuminated hemisphere around the moon; alpha is interpolated per vertex,
-    // so the unlit part reveals the sky without a second, sky-colored cover sphere.
-    const phaseLightDirection = normalize3(moonDirection.map((value, axis) =>
-      -value * Math.cos(phaseAngle) + moonRight[axis] * Math.sin(phaseAngle)));
-    const smoothVisibility = (value) => {
-      const t = Math.max(0, Math.min(1, (value + 0.12) / 0.24));
-      return t * t * (3 - 2 * t);
-    };
-    const vertexMoonOpacity = (point) => {
-      const normal = normalize3(point.map((value, axis) => value - moonCenter[axis]));
+    // Temporary test light: eight directions, advancing every three real seconds.
+    const moonLightStep = Math.floor(performance.now() / 3000) % 8;
+    const phaseAngle = moonLightStep * Math.PI / 4;
+    const moonViewDirection = moonDirection.map((value) => -value);
+    const phaseLightDirection = normalize3(moonViewDirection.map((value, axis) =>
+      value * Math.cos(phaseAngle) + moonRight[axis] * Math.sin(phaseAngle)));
+    // Face-level opacity: only faces lit from the front and facing the viewer remain visible.
+    const vertexMoonOpacity = (point, faceNormal = null) => {
+      const normal = faceNormal || normalize3(point.map((value, axis) => value - moonCenter[axis]));
       const lightDot = normal.reduce((sum, value, axis) => sum + value * phaseLightDirection[axis], 0);
-      return moonOpacity * smoothVisibility(lightDot);
+      const viewDot = normal.reduce((sum, value, axis) => sum + value * moonViewDirection[axis], 0);
+      return lightDot > 0 && viewDot > 0 ? moonOpacity : 0;
     };
     const addMoonIcosahedron = (center, radius, color) => {
       const verts = [
@@ -1243,7 +1242,19 @@
       for (const face of faces) {
         const tri = face.map((index) => verts[index].map((value, axis) => center[axis] + value * radius));
         addTriangle(positions, colors, tri[0], tri[1], tri[2], color);
-        for (const point of tri) opacities.push(vertexMoonOpacity(point));
+        const edgeA = tri[1].map((value, axis) => value - tri[0][axis]);
+        const edgeB = tri[2].map((value, axis) => value - tri[0][axis]);
+        let faceNormal = normalize3([
+          edgeA[1] * edgeB[2] - edgeA[2] * edgeB[1],
+          edgeA[2] * edgeB[0] - edgeA[0] * edgeB[2],
+          edgeA[0] * edgeB[1] - edgeA[1] * edgeB[0],
+        ]);
+        const faceCenter = [0, 1, 2].map((axis) => (tri[0][axis] + tri[1][axis] + tri[2][axis]) / 3);
+        if (faceCenter.reduce((sum, value, axis) => sum + (value - center[axis]) * faceNormal[axis], 0) < 0) {
+          faceNormal = faceNormal.map((value) => -value);
+        }
+        const faceOpacity = vertexMoonOpacity(faceCenter, faceNormal);
+        opacities.push(faceOpacity, faceOpacity, faceOpacity);
       }
     };
     addMoonIcosahedron(moonCenter, 0.46, [0.96,0.94,0.82]);
