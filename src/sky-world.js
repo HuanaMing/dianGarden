@@ -984,14 +984,34 @@
       const outboundDuration = climbDuration + horizontalDuration + descentDuration;
       animation.climbDuration = climbDuration;
       animation.horizontalDuration = horizontalDuration;
-      const returnClimbDuration = durationForDistance(Math.abs(laneY - workY));
+      const returnReplan = animation.returning === true ? animation.returnReplan : null;
+      const returnClimbStartY = returnReplan ? returnReplan.startY : workY;
+      const returnClimbDuration = durationForDistance(Math.abs(laneY - returnClimbStartY));
       const returnDistance = routeLength(animation.returnRoute);
       const returnHorizontalDuration = durationForDistance(returnDistance);
       const returnDescentDuration = durationForDistance(Math.abs(laneY - idleY));
       const returnDuration = returnClimbDuration + returnHorizontalDuration + returnDescentDuration;
-      const returnStart = outboundDuration + hoverDuration;
+      const workReturnStart = outboundDuration + hoverDuration;
+      const returnStart = returnReplan ? returnReplan.elapsed : workReturnStart;
       let x, y, z, workProgress = 0;
-      if (elapsed < climbDuration) {
+      if (returnReplan && elapsed >= returnStart) {
+        const returnElapsed = Math.min(returnDuration, elapsed - returnStart);
+        if (returnElapsed < returnClimbDuration) {
+          const progress = returnClimbDuration ? returnElapsed / returnClimbDuration : 1;
+          [x, z] = returnReplan.start;
+          y = returnClimbStartY + (laneY - returnClimbStartY) * progress;
+        } else if (returnElapsed < returnClimbDuration + returnHorizontalDuration) {
+          const progress = returnHorizontalDuration
+            ? (returnElapsed - returnClimbDuration) / returnHorizontalDuration : 1;
+          [x, z] = sampleRoute(animation.returnRoute, progress);
+          y = laneY;
+        } else {
+          const progress = returnDescentDuration
+            ? (returnElapsed - returnClimbDuration - returnHorizontalDuration) / returnDescentDuration : 1;
+          x = idleX; z = idleZ;
+          y = laneY + (idleY - laneY) * progress;
+        }
+      } else if (elapsed < climbDuration) {
         x = startX; z = startZ;
         y = startY + (laneY - startY) * (elapsed / climbDuration);
       } else if (elapsed < climbDuration + horizontalDuration) {
@@ -1028,10 +1048,10 @@
           }
         }
       }
-      const workComplete = elapsed >= returnStart;
+      const workComplete = elapsed >= workReturnStart;
       const completing = animation.workCompleted === true && elapsed >= returnStart + returnDuration;
       if (completing) { x = idleX; y = idleY; z = idleZ; }
-      return { x, y, z, elapsed, workProgress, workComplete, completing, returnStart };
+      return { x, y, z, elapsed, workProgress, workComplete, completing, returnStart: workReturnStart };
     });
 
     for (let index = 0; index < droneCount; index += 1) {
@@ -2510,7 +2530,19 @@
         else if (dockPositionsChanged[index]) {
           // Battery/deployment updates arrive frequently; they must not replace an in-flight route.
           animation.idlePosition = { x: dock.x, z: dock.z };
-          if (animation.returning) animation.returnRoute = findDroneRoute(animation.target, [dock.x, dock.z], index);
+          if (animation.returning === true) {
+            // Replan from the drone's actual current position and restart only the return segment's clock.
+            // Reusing elapsed against a route beginning at the original target causes visible position jumps.
+            animation.returnRoute = findDroneRoute(droneStates[index].location, [dock.x, dock.z], index);
+            animation.returnReplan = {
+              elapsed: animation.elapsed,
+              start: droneStates[index].location.slice(),
+              startY: droneStates[index].y,
+            };
+          } else if (animation.returning !== false) {
+            // A dock moved during outbound travel/work: aim the not-yet-started return route at its new position.
+            animation.returnRoute = findDroneRoute(animation.target, [dock.x, dock.z], index);
+          }
         }
       });
       uploadWorld();
