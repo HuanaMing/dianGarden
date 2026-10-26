@@ -1226,12 +1226,17 @@
     const moonViewDirection = moonDirection.map((value) => -value);
     const phaseLightDirection = normalize3(moonViewDirection.map((value, axis) =>
       value * Math.cos(phaseAngle) + moonRight[axis] * Math.sin(phaseAngle)));
-    // Face-level opacity: only faces lit from the front and facing the viewer remain visible.
-    const vertexMoonOpacity = (point, faceNormal = null) => {
-      const normal = faceNormal || normalize3(point.map((value, axis) => value - moonCenter[axis]));
+    // Interpolate opacity per sphere vertex instead of assigning a hard on/off value per triangle.
+    // This keeps the terminator smooth and avoids direction-dependent faceting.
+    const vertexMoonOpacity = (point) => {
+      const normal = normalize3(point.map((value, axis) => value - moonCenter[axis]));
       const lightDot = normal.reduce((sum, value, axis) => sum + value * phaseLightDirection[axis], 0);
       const viewDot = normal.reduce((sum, value, axis) => sum + value * moonViewDirection[axis], 0);
-      return lightDot > 0 && viewDot > 0 ? moonOpacity : 0;
+      const smoothVisibility = (dot) => {
+        const t = Math.max(0, Math.min(1, dot / 0.12));
+        return t * t * (3 - 2 * t);
+      };
+      return moonOpacity * smoothVisibility(lightDot) * smoothVisibility(viewDot);
     };
     const addMoonIcosphere = (center, radius, color) => {
       const vertices = [
@@ -1259,23 +1264,11 @@
           refinedFaces.push([a, ab, ca], [b, bc, ab], [c, ca, bc], [ab, bc, ca]);
         }
         faces = refinedFaces;
-      }
-      for (const face of faces) {
-        const tri = face.map((index) => vertices[index].map((value, axis) => center[axis] + value * radius));
-        addTriangle(positions, colors, tri[0], tri[1], tri[2], color);
-        const edgeA = tri[1].map((value, axis) => value - tri[0][axis]);
-        const edgeB = tri[2].map((value, axis) => value - tri[0][axis]);
-        let faceNormal = normalize3([
-          edgeA[1] * edgeB[2] - edgeA[2] * edgeB[1],
-          edgeA[2] * edgeB[0] - edgeA[0] * edgeB[2],
-          edgeA[0] * edgeB[1] - edgeA[1] * edgeB[0],
-        ]);
-        const faceCenter = [0, 1, 2].map((axis) => (tri[0][axis] + tri[1][axis] + tri[2][axis]) / 3);
-        if (faceCenter.reduce((sum, value, axis) => sum + (value - center[axis]) * faceNormal[axis], 0) < 0) {
-          faceNormal = faceNormal.map((value) => -value);
-        }
-        const faceOpacity = vertexMoonOpacity(faceCenter, faceNormal);
-        opacities.push(faceOpacity, faceOpacity, faceOpacity);
+            opacities.push(
+          vertexMoonOpacity(tri[0]),
+          vertexMoonOpacity(tri[1]),
+          vertexMoonOpacity(tri[2]),
+        );
       }
     };
     addMoonIcosphere(moonCenter, 0.46, [0.96,0.94,0.82]);
