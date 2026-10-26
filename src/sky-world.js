@@ -1197,7 +1197,7 @@
       : 0.12 + 0.35 * Math.min(1, Math.abs(environmentState.phaseProgress - 0.5) * 2);
     const sunStart = positions.length / 3;
     addSun(positions, colors, sunDirection, warmth, sunVisibility);
-    for (let i = sunStart; i < positions.length / 3; i += 1) opacities.push(sunVisibility);
+    for (let i = sunStart; i < positions.length / 3; i += 1) opacities.push(1);
 
     skyVertexCount = positions.length / 3;
     gl.bindBuffer(gl.ARRAY_BUFFER, skyPositionBuffer);
