@@ -1180,6 +1180,7 @@
     const world = window.skyWorld;
     if (!world || !jobQueue.length) { renderJobQueue(); return; }
     const startIndex = nextDroneIndex;
+    const blockedJobsThisPass = new Set();
     const candidateOrder = game.drones.map((drone, index) => ({ drone, index, rotation: (index - startIndex + game.drones.length) % game.drones.length }))
       .filter(({ drone, index }) => drone.deployed !== false && !activeJobs.has(index))
       .sort((a, b) => {
@@ -1196,6 +1197,7 @@
       
       if (game.drones[droneIndex]?.deployed === false || activeJobs.has(droneIndex)) continue;
       const isEligibleJob = (job) => {
+        if (blockedJobsThisPass.has(job.id)) return false;
         if (game.drones[droneIndex].battery < estimateJobBattery(job, droneIndex)) return false;
         if ([...activeJobs.values()].some((active) => active.kind === 'expand')) return false;
         if (job.kind === 'expand' && activeJobs.size) return false;
@@ -1268,6 +1270,18 @@
       else if (job.kind === 'harvest') started = world.animateHarvest?.(job.index, commit, finish, shouldReturn, droneIndex, onReturnComplete);
       else if (job.kind === 'water') started = world.animateWater?.(job.index, commit, finish, shouldReturn, droneIndex, onReturnComplete, onWaterWorkStart);
       else started = world.animateExpansion?.(job.position, commit, finish, shouldReturn, droneIndex, onReturnComplete);
+      if (started === 'waiting_path' || started === 'waiting_path_returning') {
+        activeJobs.delete(droneIndex);
+        job.status = 'queued';
+        job.droneIndex = null;
+        job.attempts = (job.attempts || 0) + 1;
+        job.lastError = 'no_safe_route';
+        job.lastAttemptAt = Date.now();
+        jobQueue.unshift(job);
+        blockedJobsThisPass.add(job.id);
+        if (started === 'waiting_path_returning') returningDrones.add(droneIndex);
+        continue;
+      }
       if (started === true && job.status === 'assigned') {
         job.status = 'running';
         job.startedAt = Date.now();
