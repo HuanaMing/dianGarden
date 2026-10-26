@@ -1608,9 +1608,9 @@ try {
     || !worldSource.includes('const cloudOpacity = (environmentState.isRaining ? 0.36 : 0.42) * (0.03 + daylight * 0.97);')
     || !worldSource.includes('const orbitProgress = cycleTime / cycle;')
     || !worldSource.includes('const azimuth = orbitProgress * Math.PI * 2;')
-    || !worldSource.includes('const elevation = Math.PI / 4;')
+    || !worldSource.includes('const elevation = Math.PI / 12;')
     || worldSource.includes('environmentState.rainBlend < 0.7')
-    || !worldSource.includes('const eyePitch = Math.max(0.18, pitch);')
+    || !worldSource.includes('const eyePitch = Math.max(0.18, Math.abs(pitch));')
     || !worldSource.includes('pitch = Math.max(-70 * Math.PI / 180, Math.min(70 * Math.PI / 180, pitch + deltaY * 0.006));')) {
     throw new Error('任務246：夜間雲朵亮度、太陽完整常駐軌跡或相機向上仰角不符合規格');
   }
