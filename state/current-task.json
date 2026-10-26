@@ -1,15 +1,14 @@
 {
-  "name": "任務252：存檔保存並恢復鏡頭位置",
+  "name": "任務254：花株朝向依播種無人機旋轉",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "實作相機姿態讀取／還原與節流自動存檔；修正任務251驗收後仍殘留的手機三欄舊測試預期，等待最新 Playwright 桌面／手機回歸結果。",
+  "nextAction": "確認任務254 Playwright 瀏覽器回歸工作流程結果；若通過，請使用者視覺驗收播種花株的朝向與跨階段穩定性。",
   "taskFiles": [
-    "tasks/active/252-save-camera-pose.md",
-    "tasks/active/247-rainy-moon-visibility.md"
+    "tasks/active/254-flower-rotation-from-drone-heading.md"
   ],
-  "result": "任務250、251已由使用者於2026-10-26明確驗收完成。任務252已建立 active 任務紀錄並移除 inbox 原檔。已新增相機狀態介面與存檔欄位，並以 1.2 秒間隔僅在姿態變動時保存；舊存檔無 cameraPose 時仍沿用預設鏡頭。瀏覽器測試發現任務251完成後的舊斷言仍期待手機三欄，已同步改為五欄；最新回歸執行中。"
+  "result": "任務252已由使用者驗收完成。任務253已實作星星仰角限制但仍待使用者驗收。任務254已修改 game.js、sky-world.js 與 browser-smoke.mjs：播種時記錄實際執行無人機航向、每株保存 rotation、舊存檔缺少 rotation 時預設 0，且所有花株頂點繞根部旋轉。GitHub Pages workflow 成功；包含新回歸斷言的 Playwright workflow 仍在執行中。"
 }
