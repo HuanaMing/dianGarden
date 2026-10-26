@@ -1918,7 +1918,7 @@ try {
   const plantChoices = multiPlantPage.locator('#farm-dialog .manual-plant-choice');
   if (await plantChoices.count() !== 3) throw new Error('任務250：每株手動花卉應顯示一個像素圖按鈕');
   const initialPlantGrid = await multiPlantPage.locator('#farm-dialog [data-manual-plant-list]').evaluate(element => ({
-    columns: getComputedStyle(element).gridTemplateColumns.trim().split(/\\s+/).length,
+    columns: getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).length,
     iconCount: element.querySelectorAll('img.manual-plant-pixel-icon').length,
     iconSources: [...element.querySelectorAll('img.manual-plant-pixel-icon')].map(image => image.getAttribute('src')),
   }));
@@ -1941,7 +1941,7 @@ try {
   await multiPlantPage.locator('#farm-dialog [data-manual-plant-position="3"]').click();
   await multiPlantPage.setViewportSize({ width: 390, height: 844 });
   const mobilePlantGrid = await multiPlantPage.locator('#farm-dialog [data-manual-plant-list]').evaluate(element => ({
-    columns: getComputedStyle(element).gridTemplateColumns.trim().split(/\\s+/).length,
+    columns: getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).length,
     overflowX: element.scrollWidth > element.clientWidth,
   }));
   if (mobilePlantGrid.columns !== 5 || mobilePlantGrid.overflowX) {
