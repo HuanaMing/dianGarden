@@ -1158,7 +1158,9 @@
     const candidateOrder = game.drones.map((drone, index) => ({ drone, index, rotation: (index - startIndex + game.drones.length) % game.drones.length }))
       .filter(({ drone, index }) => drone.deployed !== false && !activeJobs.has(index))
       .sort((a, b) => {
-        const priority = (candidate) => candidate.drone.battery === 100 ? 0 : returningDrones.has(candidate.index) ? 1 : 2;
+        // A drone returning from a plot should keep that plot's next queued task,
+        // even if another drone happens to have a full battery.
+        const priority = (candidate) => returningDrones.has(candidate.index) ? 0 : candidate.drone.battery === 100 ? 1 : 2;
         const priorityDifference = priority(a) - priority(b);
         if (priorityDifference !== 0) return priorityDifference;
         if (priority(a) === 2 && a.drone.battery !== b.drone.battery) return b.drone.battery - a.drone.battery;
