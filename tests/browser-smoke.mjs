@@ -1611,9 +1611,12 @@ try {
     || !worldSource.includes('const orbitTilt = Math.PI / 12;')
     || !worldSource.includes('const sunDirection = [Math.sin(azimuth) * Math.cos(orbitTilt), Math.sin(azimuth) * Math.sin(orbitTilt), Math.cos(azimuth)];')
     || worldSource.includes('environmentState.rainBlend < 0.7')
-    || !worldSource.includes('const orbitCenterY = distance * 0.8;')
+    || !worldSource.includes('const orbitCenterY = Math.max(0.8, distance * Math.sin(70 * Math.PI / 180) + 0.12);')
+    || !worldSource.includes('const orbitCenter = [targetX, orbitCenterY, targetZ];')
     || !worldSource.includes('const horizontal = Math.cos(pitch) * distance;')
-    || !worldSource.includes('orbitCenterY + Math.sin(pitch) * distance')
+    || !worldSource.includes('const viewCenter = cameraMode === \'2d\' ? [targetX, 0, targetZ] : orbitCenter;')
+    || !worldSource.includes('orbitCenter[1] + Math.sin(pitch) * distance')
+    || worldSource.includes('eye[1] + cameraForward[1] * distance')
     || !worldSource.includes('pitch = Math.max(-70 * Math.PI / 180, Math.min(70 * Math.PI / 180, pitch + deltaY * 0.006));')) {
     throw new Error('任務246：夜間雲朵亮度、太陽完整常駐軌跡或相機向上仰角不符合規格');
   }
