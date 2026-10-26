@@ -1768,10 +1768,10 @@ try {
       return { left: rect.left, right: rect.right, panelLeft: panel.left, panelRight: panel.right };
     }),
   }));
-  if (mobileManualTab.selected !== 'true' || mobileManualTab.columns !== 3 || mobileManualTab.labels.length !== 1
+  if (mobileManualTab.selected !== 'true' || mobileManualTab.columns !== 5 || mobileManualTab.labels.length !== 1
     || mobileManualTab.labels.some(label => !label.startsWith('手動地塊 '))
     || mobileManualTab.bounds.some(rect => rect.left < rect.panelLeft || rect.right > rect.panelRight)) {
-    throw new Error('手機手動地塊分頁分類、三欄網格或邊界不正確：' + JSON.stringify(mobileManualTab));
+    throw new Error('手機手動地塊分頁分類、五欄網格或邊界不正確：' + JSON.stringify(mobileManualTab));
   }
   await maturePage.locator('#farm-tab-auto').click();
   const mobileAutoTab = await maturePage.locator('#plot-selector [data-plot-button]').evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-label')));
@@ -1779,7 +1779,7 @@ try {
     || mobileAutoTab.length !== 2 || mobileAutoTab.some(label => !label.startsWith('自動地塊 '))) throw new Error('手機自動地塊分頁沒有正確分類');
   const manualModesAfterTabs = await maturePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')).plots.map(plot => plot.manual === true));
   if (JSON.stringify(manualModesBeforeTabs) !== JSON.stringify(manualModesAfterTabs)) throw new Error('切換農地分頁改動了存檔內的手動／自動地塊分類');
-  checks.push('任務218：桌面五欄、手機三欄，手動／自動地塊正確分類且不改存檔');
+  checks.push('任務218：桌面／手機五欄，手動／自動地塊正確分類且不改存檔');
   await maturePage.evaluate(() => window.onSkyPlotActivate?.(2));
   const matureSwitch = maturePage.locator('#farm-dialog [data-plot-mode-switch]');
   if (!(await matureSwitch.isEnabled())) throw new Error('成熟植物所在手動地塊不能切換為草地');
@@ -2125,7 +2125,7 @@ try {
     });
     return { columns: getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length, panel: { left: panel.left, right: panel.right }, cards };
   });
-  if (mobilePlotLayout.columns !== 3 || mobilePlotLayout.cards.length !== 2 || mobilePlotLayout.cards.some(rect => rect.left < mobilePlotLayout.panel.left - 1 || rect.right > mobilePlotLayout.panel.right + 1)) {
+  if (mobilePlotLayout.columns !== 5 || mobilePlotLayout.cards.length !== 2 || mobilePlotLayout.cards.some(rect => rect.left < mobilePlotLayout.panel.left - 1 || rect.right > mobilePlotLayout.panel.right + 1)) {
     throw new Error('任務218：手機地塊分頁未能正常排列或超出清單：' + JSON.stringify(mobilePlotLayout));
   }
   checks.push('任務218：手機手動／自動分頁可操作且地塊卡片不水平溢出通過');
