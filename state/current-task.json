@@ -1,14 +1,15 @@
 {
-  "name": "任務254：花株朝向依播種無人機旋轉",
+  "name": "任務255：追查並修正無人機偶發瞬移",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "等待任務254重做後的 Playwright 瀏覽器工作流程完成；通過後請使用者視覺驗收不同播種方向與生長階段的花株朝向。",
+  "nextAction": "等待任務255更新後的 Playwright 瀏覽器驗收；通過後仍需確認是否有其他非平台改位情境造成瞬移，並請使用者進行實機觀察。",
   "taskFiles": [
+    "tasks/active/255-drone-teleportation-follow-up.md",
     "tasks/active/254-flower-rotation-from-drone-heading.md"
   ],
-  "result": "任務254重做：確認花株不旋轉的直接原因是 skyWorld.setPlots() 在將 game.plots 投影到繪圖狀態時漏傳一般地塊的 rotation 欄位。已補上 rotation: plot.rotation，並在 browser-smoke.mjs 增加回歸斷言。新一輪 Playwright workflow 尚在執行。任務253仍待使用者驗收。"
+  "result": "任務255已定位一個剩餘缺陷：飛行中停靠平台改位時，返航路徑可能被替換但沿用舊動畫 elapsed。已修改為返航途中從無人機目前位置重規劃，去程／作業期間則更新尚未開始的返航路徑。已新增八台無人機在去程及返航途中移動停靠平台的回歸案例；首次瀏覽器工作流程因任務225舊的來源字串斷言不再符合新邏輯而失敗，已更新該斷言，等待新工作流程結果。"
 }
