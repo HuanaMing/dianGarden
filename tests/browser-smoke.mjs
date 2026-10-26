@@ -573,8 +573,8 @@ try {
   await page.locator('#farm-tab-auto').click();
   await page.setViewportSize({ width: 390, height: 844 });
   const mobileFarmGrid = await page.locator('#plot-selector').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length);
-  if (mobileFarmGrid !== 3 || await page.locator('#plot-selector [data-plot-button]').count() !== 3) {
-    throw new Error('手機農地管理網格應維持可操作的響應式欄數，實際欄數：' + mobileFarmGrid);
+  if (mobileFarmGrid !== 5 || await page.locator('#plot-selector [data-plot-button]').count() !== 3) {
+    throw new Error('手機農地管理網格應固定五欄，實際欄數：' + mobileFarmGrid);
   }
   const mobilePlotBounds = await page.locator('#plot-selector [data-plot-button]').first().boundingBox();
   const mobilePanelBounds = await page.locator('#farm-management-panel').boundingBox();
