@@ -305,6 +305,7 @@ await droneTeleportPage.addInitScript(() => {
   }));
   window.__dgWebglBuffers = [];
   window.__dgDroneFrames = [];
+  window.__dgHandoffCount = 0;
   window.__dgBoundBuffer = null;
   const originalCreateBuffer = WebGLRenderingContext.prototype.createBuffer;
   WebGLRenderingContext.prototype.createBuffer = function (...args) {
@@ -344,7 +345,14 @@ await droneTeleportPage.evaluate(async () => {
   window.skyWorld.setDroneDocks(docks);
   window.__dgDroneFrames.length = 0;
   for (let index = 0; index < 8; index += 1) {
-    window.skyWorld.animatePlant(index, () => {}, () => {}, () => true, index);
+    window.skyWorld.animatePlant(index, () => {}, () => {
+      if (index !== 0) return;
+      // Reproduce the real game handoff: rendering updates dock/battery state synchronously
+      // inside the work-complete callback, then the same drone starts the next job.
+      window.__dgHandoffCount += 1;
+      window.skyWorld.setDroneDocks(docks.map((dock) => ({ ...dock, battery: 99.98 })));
+      window.skyWorld.animateWater(index, () => {}, () => {}, () => true, index);
+    }, () => true, index);
   }
   for (let tick = 1; tick <= 80; tick += 1) {
     // Move all docks during outbound travel, then move them again during return flight.
@@ -389,11 +397,15 @@ const droneMotion = await droneTeleportPage.evaluate(() => {
       maxStep = Math.max(maxStep, distance);
     }
   }
-  return { frameCount: frames.length, maxStep, invalid: false };
+  return { frameCount: frames.length, maxStep, invalid: false, handoffCount: window.__dgHandoffCount };
 });
-if (droneMotion.invalid || droneMotion.maxStep > 0.8) {
-  throw new Error('任務255：八台無人機於電量更新及去程／返航途中移動停靠平台時偵測到非預期跳位：' + JSON.stringify(droneMotion));
+if (droneMotion.handoffCount !== 1) {
+  throw new Error('任務257：未能觸發一次播種後接續澆水的工作動畫交接：' + JSON.stringify(droneMotion));
 }
+if (droneMotion.invalid || droneMotion.maxStep > 0.8) {
+  throw new Error('任務257：工作完成回呼同步更新停靠資料並接續澆水時偵測到非預期跳位：' + JSON.stringify(droneMotion));
+}
+checks.push(`任務257：播種後接續澆水的交接位置連續（${droneMotion.frameCount} 個取樣，最大位移 ${droneMotion.maxStep.toFixed(3)}）`);
 checks.push(`任務255：八台無人機持續更新電量、去程及返航途中移動停靠平台時位置連續（${droneMotion.frameCount} 個取樣，最大位移 ${droneMotion.maxStep.toFixed(3)}）`);
 await droneTeleportPage.close();
 
