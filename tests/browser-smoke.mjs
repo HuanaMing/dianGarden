@@ -33,6 +33,17 @@ if (!skyWorldSource.includes("const starMinElevation = -15 * Math.PI / 180;")
   || !skyWorldSource.includes("const periodMs = 3000 +")) {
   throw new Error('任務253星星仰角範圍或原有閃爍／月亮可見度公式缺失');
 }
+if (!gameSource.includes("job.droneIndex = droneIndex;")
+  || !gameSource.includes("window.skyWorld?.getDroneHeading?.(job.droneIndex)")
+  || !gameSource.includes("rotation: Number.isFinite(plant.rotation) ? plant.rotation : 0")
+  || !gameSource.includes("rotation: Number.isFinite(plot.rotation) ? plot.rotation : 0")
+  || !gameSource.includes("plant.rotation === undefined || (Number.isFinite(plant.rotation)")
+  || !skyWorldSource.includes("getDroneHeading(droneIndex = 0)")
+  || !skyWorldSource.includes("x + offsetX * cosine + offsetZ * sine")
+  || !skyWorldSource.includes("z - offsetX * sine + offsetZ * cosine")
+  || !skyWorldSource.includes("Number.isFinite(plant.rotation) ? plant.rotation : 0")) {
+  throw new Error('任務254播種無人機航向記錄、舊存檔預設值或整株根部旋轉邏輯缺失');
+}
 if (!skyWorldSource.includes("window.dianGardenCamera = Object.freeze({")
   || !skyWorldSource.includes("getState: getCameraPose,")
   || !skyWorldSource.includes("restore: restoreCameraPose,")
