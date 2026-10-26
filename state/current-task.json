@@ -1,15 +1,15 @@
 {
-  "name": "任務250：手動地塊花株多選收成",
+  "name": "任務252：存檔保存並恢復鏡頭位置",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務250 Playwright 桌面／手機自動驗收已通過（run 40330636971），等待使用者實際查看介面並確認驗收；確認後依序啟動任務251。",
+  "nextAction": "實作相機姿態讀取／還原與節流自動存檔；修正任務251驗收後仍殘留的手機三欄舊測試預期，等待最新 Playwright 桌面／手機回歸結果。",
   "taskFiles": [
-    "tasks/active/247-rainy-moon-visibility.md",
-    "tasks/active/250-manual-plot-multi-harvest.md"
+    "tasks/active/252-save-camera-pose.md",
+    "tasks/active/247-rainy-moon-visibility.md"
   ],
-  "result": "任務249已由使用者於2026-10-26明確驗收通過，完成版已歸檔至tasks/done並移除active原檔。任務250已將手動地塊逐株文字卡片改為固定五欄PNG像素圖按鈕，支援多選與取消選取；批次收成只收取已選取且成熟花株，未選取或未成熟花株保留，空選取提示為「選取花種以收成」。更新後的Playwright桌面／手機完整瀏覽器驗收run 40330636971成功。GitHub Pages自動工作流程run 40330205318成功，未手動觸發部署。任務250等待使用者視覺驗收。"
+  "result": "任務250、251已由使用者於2026-10-26明確驗收完成。任務252已建立 active 任務紀錄並移除 inbox 原檔。已新增相機狀態介面與存檔欄位，並以 1.2 秒間隔僅在姿態變動時保存；舊存檔無 cameraPose 時仍沿用預設鏡頭。瀏覽器測試發現任務251完成後的舊斷言仍期待手機三欄，已同步改為五欄；最新回歸執行中。"
 }
