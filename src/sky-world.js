@@ -1082,15 +1082,15 @@
     };
     const addCloud = (x, y, z, scale = 1) => {
       const start = positions.length / 3;
-      const daylight = Math.max(0, Math.min(1, environmentState.daylightProgress));
-      // Keep cloud faces soft, but let the whole cloud darken with the night sky.
-      const cloudBrightness = 0.035 + daylight * 0.965;
+      const daylight = environmentState.phase === 'night' ? 0 : Math.max(0, Math.min(1, environmentState.daylightProgress));
+      // At night, keep clouds almost imperceptible; daytime cloud softness remains unchanged.
+      const cloudBrightness = 0.008 + daylight * 0.992;
       const cloudColor = (environmentState.isRaining ? [0.62, 0.72, 0.76] : [0.86, 0.93, 0.96])
         .map((channel) => channel * cloudBrightness);
       addCloudLobe(x, y, z, 0.96 * scale, 0.24 * scale, 0.96 * scale, cloudColor);
       addCloudLobe(x - 0.42 * scale, y + 0.08 * scale, z + 0.36 * scale, 0.68 * scale, 0.3 * scale, 0.68 * scale, cloudColor.map((channel) => Math.min(1, channel * 1.04)));
       addCloudLobe(x + 0.38 * scale, y + 0.02 * scale, z - 0.4 * scale, 0.7 * scale, 0.27 * scale, 0.7 * scale, cloudColor.map((channel) => channel * 0.96));
-      const cloudOpacity = (environmentState.isRaining ? 0.36 : 0.42) * (0.28 + daylight * 0.72);
+      const cloudOpacity = (environmentState.isRaining ? 0.36 : 0.42) * (0.03 + daylight * 0.97);
       for (let i = start; i < positions.length / 3; i += 1) opacities.push(cloudOpacity);
     };
     function normalize3(v) {
@@ -1175,22 +1175,18 @@
     }
     const cycle = window.skyEnvironment?.DAY_CYCLE_MS || 16 * 60_000;
     const cycleTime = ((environmentState.worldTimeMs % cycle) + cycle) % cycle;
-    const daylightArc = Math.max(0, Math.min(1, cycleTime / (11 * 60_000)));
-    if (daylightArc > 0.015 && daylightArc < 0.985 && environmentState.daylightProgress > 0.03 && environmentState.rainBlend < 0.7) {
-      // Keep the daylight arc in the default camera's visible sky sector.
-      // The sky view removes camera translation but retains its downward pitch.
-      const elevation = -0.48 + Math.sin(daylightArc * Math.PI) * 0.30;
-      // Keep the sun's daytime sweep within the default mobile camera's narrow horizontal field of view.
-      const azimuth = -2.36 + (daylightArc - 0.5) * 0.32;
-      const horizontal = Math.cos(elevation);
-      const sunDirection = [Math.sin(azimuth) * horizontal, Math.sin(elevation), Math.cos(azimuth) * horizontal];
-      const warmth = environmentState.phase === 'day'
-        ? 1
-        : 0.12 + 0.35 * Math.min(1, Math.abs(environmentState.phaseProgress - 0.5) * 2);
-      const sunStart = positions.length / 3;
-      addSun(positions, colors, sunDirection, warmth);
-      for (let i = sunStart; i < positions.length / 3; i += 1) opacities.push(1);
-    }
+    // The sun completes one full orbit per day/night cycle and stays visible in all weather and phases.
+    const orbitProgress = cycleTime / cycle;
+    const azimuth = orbitProgress * Math.PI * 2;
+    const elevation = Math.PI / 4;
+    const horizontal = Math.cos(elevation);
+    const sunDirection = [Math.sin(azimuth) * horizontal, Math.sin(elevation), Math.cos(azimuth) * horizontal];
+    const warmth = environmentState.phase === 'day'
+      ? 1
+      : 0.12 + 0.35 * Math.min(1, Math.abs(environmentState.phaseProgress - 0.5) * 2);
+    const sunStart = positions.length / 3;
+    addSun(positions, colors, sunDirection, warmth);
+    for (let i = sunStart; i < positions.length / 3; i += 1) opacities.push(1);
 
     skyVertexCount = positions.length / 3;
     gl.bindBuffer(gl.ARRAY_BUFFER, skyPositionBuffer);
@@ -1534,8 +1530,10 @@
       forward[1] + cameraUp[1] * ny * tangent,
       forward[2] + right[2] * nx * aspect * tangent + cameraUp[2] * ny * tangent,
     ];
-    const horizontal = Math.cos(pitch) * distance;
-    const eye = [targetX + Math.sin(yaw) * horizontal, Math.sin(pitch) * distance, targetZ + Math.cos(yaw) * horizontal];
+    // Keep the camera physically above the garden while allowing its view direction to tilt upward.
+    const eyePitch = Math.max(0.18, pitch);
+    const horizontal = Math.cos(eyePitch) * distance;
+    const eye = [targetX + Math.sin(yaw) * horizontal, Math.sin(eyePitch) * distance, targetZ + Math.cos(yaw) * horizontal];
     if (Math.abs(ray[1]) < 0.0001) return null;
     const distanceToGround = (groundY - eye[1]) / ray[1];
     if (distanceToGround < 0) return null;
@@ -1636,10 +1634,17 @@
     gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
     gl.disableVertexAttribArray(locations.opacity);
     gl.vertexAttrib1f(locations.opacity, 1);
-    const horizontal = Math.cos(pitch) * distance;
-    const eye = cameraMode === '2d' ? [targetX, topDownHeight, targetZ] : [targetX + Math.sin(yaw) * horizontal, Math.sin(pitch) * distance, targetZ + Math.cos(yaw) * horizontal];
+    const eyePitch = Math.max(0.18, pitch);
+    const horizontal = Math.cos(eyePitch) * distance;
+    const eye = cameraMode === '2d' ? [targetX, topDownHeight, targetZ] : [targetX + Math.sin(yaw) * horizontal, Math.sin(eyePitch) * distance, targetZ + Math.cos(yaw) * horizontal];
+    const cameraForward = [-Math.sin(yaw) * Math.cos(pitch), -Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)];
+    const viewCenter = cameraMode === '2d' ? [targetX, 0, targetZ] : [
+      eye[0] + cameraForward[0] * distance,
+      eye[1] + cameraForward[1] * distance,
+      eye[2] + cameraForward[2] * distance,
+    ];
     currentProjection = perspective(Math.PI / 4, canvas.width / Math.max(canvas.height, 1), 0.1, 100);
-    currentView = cameraMode === '2d' ? lookAt(eye, [targetX, 0, targetZ], [0, 0, -1]) : lookAt(eye, [targetX, 0, targetZ], [0, 1, 0]);
+    currentView = cameraMode === '2d' ? lookAt(eye, viewCenter, [0, 0, -1]) : lookAt(eye, viewCenter, [0, 1, 0]);
     gl.uniformMatrix4fv(locations.projection, false, currentProjection);
     gl.uniformMatrix4fv(locations.view, false, currentView);
     uploadSky(time);
@@ -1957,7 +1962,7 @@
     if (rotateHoldGesture) {
       if (cameraMode !== '2d') {
         yaw -= deltaX * 0.008;
-        pitch = Math.max(0.18, Math.min(1.28, pitch + deltaY * 0.006));
+        pitch = Math.max(-70 * Math.PI / 180, Math.min(70 * Math.PI / 180, pitch + deltaY * 0.006));
       }
     } else if (cameraMode === '2d') {
       const panScale = topDownHeight / 12 * 0.012;
