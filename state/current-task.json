@@ -10,5 +10,5 @@
   "taskFiles": [
     "tasks/active/254-flower-rotation-from-drone-heading.md"
   ],
-  "result": "任務252已由使用者驗收完成。任務253已實作星星仰角限制但仍待使用者驗收。任務254已修改 game.js、sky-world.js 與 browser-smoke.mjs：播種時記錄實際執行無人機航向、每株保存 rotation、舊存檔缺少 rotation 時預設 0，且所有花株頂點繞根部旋轉。GitHub Pages workflow 成功；包含新回歸斷言的 Playwright workflow 仍在執行中。"
+  "result": "任務252已由使用者驗收完成。任務253已實作星星仰角限制但仍待使用者驗收。任務254已修改 game.js、sky-world.js 與 browser-smoke.mjs：播種時記錄實際執行無人機航向、每株保存 rotation、舊存檔缺少 rotation 時預設 0，且所有花株頂點繞根部旋轉。首輪 Playwright 因任務218殘留手機三欄舊預期而失敗，已修正為五欄並觸發新一輪回歸；GitHub Pages workflow 成功。"
 }
