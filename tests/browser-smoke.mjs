@@ -1680,7 +1680,11 @@ try {
     || !worldSource.includes('const radius = rainRadius * Math.sqrt((drop * 0.61803398875) % 1);')
     || !worldSource.includes('const x = rainEye[0] + Math.cos(angle) * radius;')
     || !worldSource.includes('const z = rainEye[2] + Math.sin(angle) * radius;')
-    || !worldSource.includes('const y = rainEye[1] + 2.2 - fall * 4.4;')
+    || !worldSource.includes('const rainTop = rainEye[1] + 10;')
+    || !worldSource.includes('const rainBottom = rainEye[1] - 10;')
+    || !worldSource.includes('const y = rainTop - fall * (rainTop - rainBottom);')
+    || !worldSource.includes('const dropLength = 0.22;')
+    || !worldSource.includes('const dropWidth = 0.0035;')
     || !worldSource.includes('for (let drop = 0; drop < 72; drop += 1)')) {
     throw new Error('任務249：雨滴應限制在以鏡頭為中心、半徑3單位的垂直圓柱內');
   }
