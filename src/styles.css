@@ -822,14 +822,13 @@ input, [contenteditable="true"]{
 }
 
 
-/* 任務228：手動地塊中的每株花各自顯示生長與照料狀態。 */
-.manual-plant-list{display:grid;gap:8px;max-height:34vh;overflow:auto;margin:10px 0}
-.manual-plant-card{display:grid;gap:8px;padding:11px;border:1px solid #e3eadc;border-radius:12px;background:#fbfcf6}
-.manual-plant-card-heading{display:grid;gap:3px}
-.manual-plant-card-heading strong{font-size:13px;color:#3f6550}
-.manual-plant-card-heading small{font-size:11px;color:#7a9180}
-.manual-plant-actions{display:flex;justify-content:flex-end;gap:8px}
-.manual-plant-actions .action-button{padding:7px 11px;font-size:11px}
+/* 任務250：手動地塊以固定五欄的像素花株圖示多選收成。 */
+.manual-plant-list{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;max-height:34vh;overflow-y:auto;overflow-x:hidden;margin:10px 0}
+.manual-plant-choice{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;aspect-ratio:1;padding:4px;border:1px solid #dce7d8;border-radius:10px;background:#fbfcf6;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s}
+.manual-plant-choice .manual-plant-pixel-icon{display:block;width:32px;height:32px;max-width:100%;object-fit:contain;image-rendering:pixelated}
+.manual-plant-choice.is-selected{border-color:#659c70;background:#eaf5e8;box-shadow:inset 0 0 0 2px #9bc99d}
+.manual-plant-choice:focus-visible{outline:2px solid #4f855b;outline-offset:2px}
+.manual-harvest-selected{display:block;width:100%;margin:0 0 8px}
 .manual-seed-heading{margin:12px 0 6px;color:#718678;font-size:11px;font-weight:800}
 
 
