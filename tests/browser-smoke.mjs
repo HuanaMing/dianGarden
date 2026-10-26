@@ -27,6 +27,14 @@ if (!cloudSaveSource.includes("const needsChoice = authenticated && statusNode.d
   || !gameSource.includes("cloudSessionExpired ? '暫停同步雲端進度' : '進度會自動儲存'")) {
   throw new Error('同步狀態、異地登入後隱藏登入入口、停止雲端請求或暫停同步提示邏輯缺失');
 }
+if (!skyWorldSource.includes("window.dianGardenCamera = Object.freeze({")
+  || !skyWorldSource.includes("getState: getCameraPose,")
+  || !skyWorldSource.includes("restore: restoreCameraPose,")
+  || !gameSource.includes("if (game.cameraPose && window.dianGardenCamera?.restore)")
+  || !gameSource.includes("if (cameraPose) game.cameraPose = cameraPose;")
+  || !gameSource.includes("window.setInterval(() => {\n    if (skipSaveOnExit || isResetting || !persistenceAvailable) return;")) {
+  throw new Error('任務252相機姿態讀取／還原、自動存檔或節流保存邏輯缺失');
+}
 if (!skyWorldSource.includes("const renderingPauseReasons = new Set(galleryMode ? [] : ['startup']);")
   || !skyWorldSource.includes("setRenderingPaused,")
   || !skyWorldSource.includes("if (isRenderingPaused()) {")
