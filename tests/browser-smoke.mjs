@@ -1608,14 +1608,17 @@ try {
     || !worldSource.includes('const cloudOpacity = (environmentState.isRaining ? 0.36 : 0.42) * (0.03 + daylight * 0.97);')
     || !worldSource.includes('const orbitProgress = cycleTime / cycle;')
     || !worldSource.includes('const azimuth = orbitProgress * Math.PI * 2;')
-    || !worldSource.includes('const elevation = Math.PI / 12;')
+    || !worldSource.includes('const orbitTilt = Math.PI / 12;')
+    || !worldSource.includes('const sunDirection = [Math.sin(azimuth) * Math.cos(orbitTilt), Math.sin(azimuth) * Math.sin(orbitTilt), Math.cos(azimuth)];')
     || worldSource.includes('environmentState.rainBlend < 0.7')
-    || !worldSource.includes('const eyePitch = Math.max(0.18, Math.abs(pitch));')
+    || !worldSource.includes('const orbitCenterY = distance * 0.8;')
+    || !worldSource.includes('const horizontal = Math.cos(pitch) * distance;')
+    || !worldSource.includes('orbitCenterY + Math.sin(pitch) * distance')
     || !worldSource.includes('pitch = Math.max(-70 * Math.PI / 180, Math.min(70 * Math.PI / 180, pitch + deltaY * 0.006));')) {
     throw new Error('任務246：夜間雲朵亮度、太陽完整常駐軌跡或相機向上仰角不符合規格');
   }
   if (!worldSource.includes("day: ['#78c9f5', '#b8e5ff', '#e6f5ff']") || !worldSource.includes('colors[1]} 78%')) throw new Error('任務244：晴朗白天天空配色或漸層比例不符合規格');
-  checks.push('任務242：半徑10天空球與深度渲染順序；任務243：柔化雲朵明暗；任務244：提高晴天藍度；任務245：方向基底太陽模型；任務246：夜間雲朵近乎隱沒、太陽全時段以45度仰角環繞、相機可向上仰望70度');
+  checks.push('任務242：半徑10天空球與深度渲染順序；任務243：柔化雲朵明暗；任務244：提高晴天藍度；任務245：方向基底太陽模型；任務246：夜間雲朵近乎隱沒、太陽沿傾斜15度的真正大圓運行、相機以固定焦點向上／向下旋轉70度');
   if (!worldSource.includes('function findDroneRoute(start, goal, droneIndex)') || !worldSource.includes('const landObstacles = plotPositions.map((plot, index)') || !worldSource.includes('landObstacles.some(({ x, z }) => Math.abs(point[0] * step - x) < TILE * 0.5 + 0.12')) throw new Error('任務241：無人機尋路尚未把延伸到底部的地塊側牆列為障礙');
   checks.push('任務241：無人機尋路會避開地塊側牆，並允許從起點／終點地塊離開及抵達');
   if (!worldSource.includes("heightEdit?.kind === 'plot' && heightEdit.index === pressedPlot && heightEdit.mode === 'move'") || !worldSource.includes("wreath.src = 'assets/wreath.webp';") || worldSource.includes('touch-hold-progress')) throw new Error('移動模式即時拖曳或花草環素材實作不符');
