@@ -6,9 +6,9 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "確認任務254 Playwright 瀏覽器回歸工作流程結果；若通過，請使用者視覺驗收播種花株的朝向與跨階段穩定性。",
+  "nextAction": "等待任務254重做後的 Playwright 瀏覽器工作流程完成；通過後請使用者視覺驗收不同播種方向與生長階段的花株朝向。",
   "taskFiles": [
     "tasks/active/254-flower-rotation-from-drone-heading.md"
   ],
-  "result": "任務252已由使用者驗收完成。任務253已實作星星仰角限制但仍待使用者驗收。任務254已修改 game.js、sky-world.js 與 browser-smoke.mjs：播種時記錄實際執行無人機航向、每株保存 rotation、舊存檔缺少 rotation 時預設 0，且所有花株頂點繞根部旋轉。首輪 Playwright 因任務218殘留手機三欄舊預期而失敗，已修正為五欄並觸發新一輪回歸；GitHub Pages workflow 成功。"
+  "result": "任務254重做：確認花株不旋轉的直接原因是 skyWorld.setPlots() 在將 game.plots 投影到繪圖狀態時漏傳一般地塊的 rotation 欄位。已補上 rotation: plot.rotation，並在 browser-smoke.mjs 增加回歸斷言。新一輪 Playwright workflow 尚在執行。任務253仍待使用者驗收。"
 }
