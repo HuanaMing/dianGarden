@@ -374,10 +374,31 @@
 
   const droneStates = Array.from({ length: 8 }, (_, index) => ({
     animation: null,
+    phase: index === 0 ? 'idle' : 'docked',
     location: index === 0 ? [dockPosition.x, dockPosition.z] : [0, 0],
     y: DRONE_IDLE_Y,
     heading: 0,
   }));
+  const dronePhaseTransitions = {
+    docked: ['idle', 'outbound', 'working'],
+    idle: ['docked', 'outbound', 'working'],
+    outbound: ['working', 'returning', 'waiting_path', 'idle', 'docked'],
+    working: ['outbound', 'returning', 'waiting_path', 'idle', 'docked'],
+    returning: ['outbound', 'working', 'waiting_path', 'idle', 'docked'],
+    waiting_path: ['returning', 'outbound', 'working', 'idle', 'docked'],
+  };
+  function setDronePhase(droneIndex, nextPhase, reason) {
+    const state = droneStates[droneIndex];
+    if (!state || state.phase === nextPhase) return Boolean(state);
+    const previousPhase = state.phase || 'idle';
+    if (!(dronePhaseTransitions[previousPhase] || []).includes(nextPhase)) {
+      droneDebugLog('phase-transition-invalid', { droneIndex, previousPhase, nextPhase, reason });
+      return false;
+    }
+    state.phase = nextPhase;
+    droneDebugLog('phase-transition', { droneIndex, previousPhase, nextPhase, reason });
+    return true;
+  }
   let droneFrameTime = performance.now();
 
   const flowerModelRegistry = window.dianGardenFlowerModels;
@@ -999,7 +1020,8 @@
     droneFrameTime = time;
     const proposals = droneStates.map((state, index) => {
       if (!state.animation) {
-      const [idleX, idleZ] = getDockPosition(index);
+        const [idleX, idleZ] = getDockPosition(index);
+        setDronePhase(index, droneDocks[index]?.deployed === false ? 'docked' : 'idle', 'idle-frame');
         return { x: idleX, y: DRONE_IDLE_Y + getDockHeight(index) + Math.sin(time * 0.0022 + index * 1.7) * DRONE_IDLE_BOB, z: idleZ, elapsed: null, workProgress: 0, completing: false };
       }
       const animation = state.animation;
@@ -1014,10 +1036,12 @@
           animation.returnReplan = { elapsed: animation.elapsed, start: state.location.slice(), startY: state.y };
           animation.routeBlocked = false;
           animation.pendingDock = null;
+          setDronePhase(index, 'returning', 'return-route-recovered');
           droneDebugLog('return-replan-recovered', { droneIndex: index, location: state.location.slice(), dock: pendingDock });
         }
       }
       if (animation.routeBlocked && animation.returning === true) {
+        setDronePhase(index, 'waiting_path', 'return-route-blocked');
         return { x: state.location[0], y: state.y, z: state.location[1], elapsed: animation.elapsed + delta, workProgress: 0, workComplete: false, completing: false, returnStart: animation.elapsed };
       }
       let elapsed = animation.elapsed + delta;
@@ -1046,6 +1070,10 @@
       const returnDuration = returnClimbDuration + returnHorizontalDuration + returnDescentDuration;
       const workReturnStart = outboundDuration + hoverDuration;
       const returnStart = returnReplan ? returnReplan.elapsed : workReturnStart;
+      if (animation.routeBlocked && animation.returning === true) setDronePhase(index, 'waiting_path', 'return-route-blocked');
+      else if (animation.returning === true || elapsed >= returnStart) setDronePhase(index, 'returning', 'return-segment');
+      else if (elapsed < outboundDuration) setDronePhase(index, 'outbound', 'outbound-segment');
+      else setDronePhase(index, 'working', 'work-segment');
       let x, y, z, workProgress = 0;
       if (returnReplan && elapsed >= returnStart) {
         const returnElapsed = Math.min(returnDuration, elapsed - returnStart);
@@ -1178,6 +1206,7 @@
         }
       } else if (animation && candidate.completing && state.animation === animation) {
         state.animation = null;
+        setDronePhase(index, droneDocks[index]?.deployed === false ? 'docked' : 'idle', 'return-complete');
         const onReturnComplete = animation.onReturnComplete;
         animation.onReturnComplete = null;
         onReturnComplete?.();
@@ -2445,12 +2474,16 @@
       cruiseReleased: continueAtTarget,
       ...options,
     };
+    setDronePhase(droneIndex, continueAtTarget ? 'working' : 'outbound', 'animation-start');
     droneDebugLog('animation-start', { droneIndex, kind, from: start, target: target.slice(), continueAtTarget, outboundWaypoints: outboundRoute.length, returnWaypoints: returnRoute.length });
     return true;
   }
   window.skyWorld = {
     getDroneHeading(droneIndex = 0) {
       return Number.isInteger(droneIndex) ? droneStates[droneIndex]?.heading ?? 0 : 0;
+    },
+    getDronePhase(droneIndex = 0) {
+      return Number.isInteger(droneIndex) ? droneStates[droneIndex]?.phase ?? 'docked' : 'docked';
     },
     animatePlant(index, onDeparture, onComplete, shouldReturn, droneIndex = 0, onReturnComplete) {
       if (!Number.isInteger(index) || index < 0 || index >= landCount) return false;
@@ -2594,8 +2627,10 @@
       droneDocks[0] = { ...droneDocks[0], ...dockPosition };
       droneDocks.forEach((dock, index) => {
         const animation = droneStates[index]?.animation;
-        if (!animation) droneStates[index].location = [dock.x, dock.z];
-        else if (dockPositionsChanged[index]) {
+        if (!animation) {
+          droneStates[index].location = [dock.x, dock.z];
+          setDronePhase(index, dock.deployed === false ? 'docked' : 'idle', 'dock-sync');
+        } else if (dockPositionsChanged[index]) {
           // Battery/deployment updates arrive frequently; they must not replace an in-flight route.
           const newDock = { x: dock.x, z: dock.z, y: dock.y || 0 };
           if (animation.returning === true) {
