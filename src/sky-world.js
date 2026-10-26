@@ -869,10 +869,23 @@
     const effectNow = Date.now();
     if (environmentState.isRaining) {
       const rainPalette = { top: [0.48, 0.69, 0.76], front: [0.36, 0.57, 0.65], right: [0.32, 0.52, 0.61], back: [0.42, 0.63, 0.7], left: [0.36, 0.57, 0.65], bottom: [0.28, 0.46, 0.54] };
-      for (let drop = 0; drop < 44; drop += 1) {
+      // Anchor rain to the camera instead of the world origin, like the sky-sphere backdrop.
+      // A camera-oriented rain volume keeps the whole visible scene covered while panning and orbiting.
+      const rainEye = cameraMode === '2d'
+        ? [targetX, topDownHeight, targetZ]
+        : [
+          targetX + Math.sin(yaw) * Math.cos(pitch) * distance,
+          Math.sin(pitch) * distance,
+          targetZ + Math.cos(yaw) * Math.cos(pitch) * distance,
+        ];
+      const rainForward = cameraMode === '2d' ? [0, 0] : [-Math.sin(yaw), -Math.cos(yaw)];
+      const rainRight = cameraMode === '2d' ? [1, 0] : [Math.cos(yaw), -Math.sin(yaw)];
+      for (let drop = 0; drop < 72; drop += 1) {
         const fall = (time * 0.0028 + drop * 0.137) % 1;
-        const x = Math.sin(drop * 14.31) * 3.1 + Math.sin(time * 0.0004 + drop) * 0.12;
-        const z = Math.cos(drop * 7.17) * 2.4;
+        const lateral = Math.sin(drop * 14.31) * 5.2 + Math.sin(time * 0.0004 + drop) * 0.12;
+        const forward = -3 + ((drop * 0.61803398875) % 1) * 11;
+        const x = rainEye[0] + rainRight[0] * lateral + rainForward[0] * forward;
+        const z = rainEye[2] + rainRight[1] * lateral + rainForward[1] * forward;
         const y = 4.1 - fall * 4.4;
         addBox(effectPositions, effectColors, x, y - 0.22, z, x + 0.012, y, z + 0.012, rainPalette);
       }
