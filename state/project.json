@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "任務253：限制星星仰角範圍",
-  "nextAction": "任務252已由使用者驗收完成；任務253已實作星星仰角限制，等待包含新增回歸檢查的 Playwright 驗收。",
+  "activeTask": "任務254：花株朝向依播種無人機旋轉",
+  "nextAction": "任務254已完成核心程式與回歸斷言提交，等待 Playwright 瀏覽器工作流程結果及使用者視覺驗收；任務253仍待使用者驗收。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署：需使用者明確批准後手動觸發。",
