@@ -1177,7 +1177,10 @@
     const cycleTime = ((environmentState.worldTimeMs % cycle) + cycle) % cycle;
     // The sun completes one full orbit per day/night cycle and stays visible in all weather and phases.
     const orbitProgress = cycleTime / cycle;
-    const azimuth = orbitProgress * Math.PI * 2;
+    // Align the orbital high point with solar noon (the midpoint of the 10-minute daytime span)
+    // and the low point 8 minutes later at midnight in the 16-minute day/night cycle.
+    const solarNoonProgress = (5 * 60_000) / cycle;
+    const azimuth = (orbitProgress - solarNoonProgress) * Math.PI * 2 + Math.PI / 2;
     // Tilt the orbital plane 15 degrees from the horizontal equatorial plane.
     // This produces a true great circle: elevation varies smoothly from -15 to +15 degrees.
     const orbitTilt = Math.PI / 12;
