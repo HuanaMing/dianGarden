@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "任務239重做：雲朵XZ展幅（等待使用者視覺驗收）",
-  "nextAction": "等待使用者確認雲朵外觀是否符合要求。",
+  "activeTask": "任務241＋242：無人機側牆避障與天空球渲染（合併驗收）",
+  "nextAction": "兩項任務一併完成並驗證後，建立單一提交推送；Pages 會依既有 workflow 自動部署。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署：需使用者明確批准後手動觸發。",

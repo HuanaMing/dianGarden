@@ -1853,3 +1853,9 @@
 - 已將任務紀錄移至 `tasks/done/240-distant-islands.md`，標示「已取消並結案（非功能完成）」，並刪除 `tasks/active/240-distant-islands.md`。
 - 已更新 `state/current-task.json` 與 `state/project.json`，目前沒有執行中的任務，等待使用者指定下一項工作。
 - 撤銷後已重新讀取檢查程式、測試及架構文件：背景小島程式與相關斷言不存在，原有雲層程式與測試斷言已恢復。本次撤銷尚未重新執行自動化測試；未手動部署 GitHub Pages。
+
+
+## 2026-10-26 — 任務239重做：雲朵XZ展幅（使用者驗收）
+
+- 結果：使用者確認前述改動皆已驗收完成；天空球座標改造由任務242接手。
+- 檔案：`tasks/done/239-world-space-sky-redo.md`

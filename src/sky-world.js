@@ -795,8 +795,20 @@
     const obstacles = droneStates.map((state, index) => ({ state, index }))
       .filter(({ state, index }) => index !== droneIndex && index < droneCount && droneDocks[index]?.deployed !== false)
       .map(({ state }) => state.location.slice());
+    const endpointPlotIndex = (point) => plotPositions.findIndex((plot) => plot
+      && Math.abs(point[0] - plot.x) <= TILE * 0.5
+      && Math.abs(point[1] - plot.z) <= TILE * 0.5);
+    const startPlotIndex = endpointPlotIndex(start);
+    const goalPlotIndex = endpointPlotIndex(goal);
+    // Side walls extend from each tile's rim down to the connected group's bottom.
+    // Treat each wall-bounded tile footprint as a horizontal route obstacle, except
+    // the start/destination tiles so a drone can leave and arrive at its own platform.
+    const landObstacles = plotPositions.map((plot, index) => ({ x: plot.x, z: plot.z, index }))
+      .filter(({ index }) => index !== startPlotIndex && index !== goalPlotIndex);
     const blocked = (point) => key(point) !== key(startGrid) && key(point) !== key(goalGrid)
-      && obstacles.some(([x, z]) => Math.hypot(point[0] * step - x, point[1] * step - z) < 0.62);
+      && (obstacles.some(([x, z]) => Math.hypot(point[0] * step - x, point[1] * step - z) < 0.62)
+        || landObstacles.some(({ x, z }) => Math.abs(point[0] * step - x) < TILE * 0.5 + 0.12
+          && Math.abs(point[1] * step - z) < TILE * 0.5 + 0.12));
     const minX = Math.floor((Math.min(startGrid[0], goalGrid[0]) * step - 3) / step);
     const maxX = Math.ceil((Math.max(startGrid[0], goalGrid[0]) * step + 3) / step);
     const minZ = Math.floor((Math.min(startGrid[1], goalGrid[1]) * step - 3) / step);
@@ -1048,45 +1060,49 @@
     gl.bufferData(gl.ARRAY_BUFFER, calculateFaceNormals(effectPositions), gl.DYNAMIC_DRAW);
   }
 
+  const SKY_SPHERE_RADIUS = 10;
   function uploadSky(time) {
     if (galleryMode) { skyVertexCount = 0; return; }
     const positions = [];
     const colors = [];
     const opacities = [];
-    const horizontal = Math.cos(pitch) * distance;
-    const eye = cameraMode === '2d' ? [targetX, topDownHeight, targetZ] : [targetX + Math.sin(yaw) * horizontal, Math.sin(pitch) * distance, targetZ + Math.cos(yaw) * horizontal];
-    const addCloud = (x, y, z, drift, scale = 1) => {
+    const addCloud = (x, y, z, scale = 1) => {
       const start = positions.length / 3;
       const cloudColor = environmentState.isRaining ? [0.62, 0.72, 0.76] : [0.86, 0.93, 0.96];
-      addOctahedron(positions, colors, x + drift, y, z, 0.96 * scale, 0.24 * scale, 0.96 * scale, cloudColor);
-      addOctahedron(positions, colors, x - 0.42 * scale + drift, y + 0.08 * scale, z + 0.36 * scale, 0.68 * scale, 0.3 * scale, 0.68 * scale, cloudColor.map((channel) => Math.min(1, channel * 1.04)));
-      addOctahedron(positions, colors, x + 0.38 * scale + drift, y + 0.02 * scale, z - 0.4 * scale, 0.7 * scale, 0.27 * scale, 0.7 * scale, cloudColor.map((channel) => channel * 0.96));
+      addOctahedron(positions, colors, x, y, z, 0.96 * scale, 0.24 * scale, 0.96 * scale, cloudColor);
+      addOctahedron(positions, colors, x - 0.42 * scale, y + 0.08 * scale, z + 0.36 * scale, 0.68 * scale, 0.3 * scale, 0.68 * scale, cloudColor.map((channel) => Math.min(1, channel * 1.04)));
+      addOctahedron(positions, colors, x + 0.38 * scale, y + 0.02 * scale, z - 0.4 * scale, 0.7 * scale, 0.27 * scale, 0.7 * scale, cloudColor.map((channel) => channel * 0.96));
       for (let i = start; i < positions.length / 3; i += 1) opacities.push(environmentState.isRaining ? 0.36 : 0.42);
     };
-    // Use seconds-scale phase progression so the cloud drift is visibly slow, not nearly imperceptible.
+    // Each cloud stores angular coordinates on the sky sphere, not a fixed world-space offset.
+    // Scales are reduced in proportion to the old offset distance to preserve apparent size.
     const elapsed = time * 0.001;
-    // Keep clouds camera-relative, but much closer to eye height so they visibly sit lower in the sky.
     const clouds = [
-      { x: -46, y: -24.0, z: -42, speed: 0.14, phase: 0.2, scale: 3.0 },
-      { x: -30, y: 3.0, z: -50, speed: 0.18, phase: 1.1, scale: 3.3 },
-      { x: -14, y: -18.0, z: -44, speed: 0.12, phase: 2.2, scale: 3.6 },
-      { x: 4, y: 5.0, z: -52, speed: 0.16, phase: 3.3, scale: 3.9 },
-      { x: 22, y: -22.0, z: -40, speed: 0.2, phase: 4.4, scale: 3.2 },
-      { x: 42, y: 2.0, z: -48, speed: 0.13, phase: 5.1, scale: 3.7 },
-      { x: 50, y: 4.0, z: -20, speed: 0.17, phase: 0.8, scale: 3.4 },
-      { x: -48, y: 1.0, z: -12, speed: 0.15, phase: 2.7, scale: 3.8 },
-      { x: -26, y: -10.0, z: 8, speed: 0.19, phase: 4, scale: 3.1 },
-      { x: -5, y: -8.0, z: 22, speed: 0.14, phase: 5.5, scale: 3.5 },
-      { x: 18, y: 6.0, z: 40, speed: 0.16, phase: 1.6, scale: 4.0 },
-      { x: 40, y: -6.0, z: 30, speed: 0.12, phase: 3.8, scale: 3.6 },
-      { x: -42, y: -19.0, z: 38, speed: 0.18, phase: 5.9, scale: 3.3 },
-      { x: -18, y: -14.0, z: 48, speed: 0.13, phase: 2.9, scale: 3.9 },
-      { x: 12, y: -20.0, z: 50, speed: 0.2, phase: 0.5, scale: 3.4 },
-      { x: 36, y: -12.0, z: 46, speed: 0.15, phase: 4.8, scale: 3.7 },
+      { azimuth: -2.311, elevation: -0.368, speed: 0.14, phase: 0.2, scale: 0.45 },
+      { azimuth: -2.601, elevation: 0.051, speed: 0.18, phase: 1.1, scale: 0.57 },
+      { azimuth: -2.834, elevation: -0.372, speed: 0.12, phase: 2.2, scale: 0.73 },
+      { azimuth: 3.065, elevation: 0.096, speed: 0.16, phase: 3.3, scale: 0.74 },
+      { azimuth: 2.639, elevation: -0.449, speed: 0.2, phase: 4.4, scale: 0.63 },
+      { azimuth: 2.423, elevation: 0.031, speed: 0.13, phase: 5.1, scale: 0.58 },
+      { azimuth: 1.951, elevation: 0.074, speed: 0.17, phase: 0.8, scale: 0.63 },
+      { azimuth: -1.816, elevation: 0.020, speed: 0.15, phase: 2.7, scale: 0.77 },
+      { azimuth: -1.272, elevation: -0.352, speed: 0.19, phase: 4, scale: 1.07 },
+      { azimuth: -0.223, elevation: -0.341, speed: 0.14, phase: 5.5, scale: 1.46 },
+      { azimuth: 0.423, elevation: 0.136, speed: 0.16, phase: 1.6, scale: 0.90 },
+      { azimuth: 0.927, elevation: -0.119, speed: 0.12, phase: 3.8, scale: 0.71 },
+      { azimuth: -0.835, elevation: -0.324, speed: 0.18, phase: 5.9, scale: 0.55 },
+      { azimuth: -0.359, elevation: -0.267, speed: 0.13, phase: 2.9, scale: 0.73 },
+      { azimuth: 0.236, elevation: -0.371, speed: 0.2, phase: 0.5, scale: 0.62 },
+      { azimuth: 0.664, elevation: -0.203, speed: 0.15, phase: 4.8, scale: 0.62 },
     ];
     for (const cloud of clouds) {
-      const drift = Math.sin(elapsed * cloud.speed + cloud.phase) * 2.4;
-      addCloud(eye[0] + cloud.x, eye[1] + cloud.y, eye[2] + cloud.z, drift, cloud.scale);
+      // A small angular drift preserves the old slow, gentle motion on the sphere.
+      const azimuth = cloud.azimuth + Math.sin(elapsed * cloud.speed + cloud.phase) * 0.048;
+      const horizontalRadius = Math.cos(cloud.elevation) * SKY_SPHERE_RADIUS;
+      const x = Math.sin(azimuth) * horizontalRadius;
+      const y = Math.sin(cloud.elevation) * SKY_SPHERE_RADIUS;
+      const z = Math.cos(azimuth) * horizontalRadius;
+      addCloud(x, y, z, cloud.scale);
     }
 
     skyVertexCount = positions.length / 3;
@@ -1584,9 +1600,17 @@
     gl.bindBuffer(gl.ARRAY_BUFFER, skyOpacityBuffer);
     gl.enableVertexAttribArray(locations.opacity);
     gl.vertexAttribPointer(locations.opacity, 1, gl.FLOAT, false, 0, 0);
+    const skyView = new Float32Array(currentView);
+    skyView[12] = 0;
+    skyView[13] = 0;
+    skyView[14] = 0;
+    gl.uniformMatrix4fv(locations.view, false, skyView);
+    gl.disable(gl.DEPTH_TEST);
     gl.depthMask(false);
     gl.drawArrays(gl.TRIANGLES, 0, skyVertexCount);
     gl.depthMask(true);
+    gl.enable(gl.DEPTH_TEST);
+    gl.uniformMatrix4fv(locations.view, false, currentView);
     gl.disableVertexAttribArray(locations.opacity);
     gl.vertexAttrib1f(locations.opacity, 1);
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
