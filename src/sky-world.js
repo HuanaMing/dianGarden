@@ -17,7 +17,6 @@
     attribute vec3 aColor;
     attribute vec3 aNormal;
     attribute float aOpacity;
-    attribute float aMoon;
     uniform mat4 uProjection;
     uniform mat4 uView;
     uniform vec3 uEyeDir;
@@ -27,13 +26,11 @@
     uniform vec3 uDroneLightPos[8];
     uniform float uDroneLightStrength[8];
     uniform float uDroneSelfIllumination;
-    uniform float uMoonPhase;
     varying vec3 vColor;
     varying float vOpacity;
     void main() {
       gl_Position = uProjection * uView * vec4(aPosition, 1.0);
       vec3 n = normalize(aNormal);
-      float moonBackFacing = step(dot(n, normalize(uEyeDir)), 0.0);
       if (dot(n, uEyeDir) < 0.0) n = -n;
       float ndl = max(dot(n, normalize(uSunDir)), 0.0);
       vec3 lighting = uAmbient + uSunColor * ndl;
@@ -49,8 +46,7 @@
       }
       // Keep drone bodies softly visible at night; this uniform is enabled only for the drone draw pass.
       lighting += vec3(1.0, 0.76, 0.46) * uDroneSelfIllumination;
-      float moonShade = mix(1.0, 0.12, clamp(uMoonPhase, 0.0, 1.0) * moonBackFacing);
-      vColor = aColor * lighting * mix(1.0, moonShade, step(0.5, aMoon));
+      vColor = aColor * lighting;
       vOpacity = aOpacity;
     }
   `;
@@ -101,8 +97,6 @@
     droneLightPos: gl.getUniformLocation(program, 'uDroneLightPos[0]'),
     droneLightStrength: gl.getUniformLocation(program, 'uDroneLightStrength[0]'),
     droneSelfIllumination: gl.getUniformLocation(program, 'uDroneSelfIllumination'),
-    moon: gl.getAttribLocation(program, 'aMoon'),
-    moonPhase: gl.getUniformLocation(program, 'uMoonPhase'),
   };
   const positionBuffer = gl.createBuffer();
   const colorBuffer = gl.createBuffer();
@@ -115,7 +109,6 @@
   const skyColorBuffer = gl.createBuffer();
   const skyOpacityBuffer = gl.createBuffer();
   const skyNormalBuffer = gl.createBuffer();
-  const skyMoonBuffer = gl.createBuffer();
   const normalBuffer = gl.createBuffer();
   const droneNormalBuffer = gl.createBuffer();
   const effectNormalBuffer = gl.createBuffer();
@@ -1073,7 +1066,6 @@
     const positions = [];
     const colors = [];
     const opacities = [];
-    const moonFlags = [];
     const addCloudLobe = (x, y, z, rx, ry, rz, color) => {
       const start = positions.length / 3;
       addOctahedron(positions, colors, x, y, z, rx, ry, rz, color);
@@ -1099,7 +1091,7 @@
       addCloudLobe(x - 0.42 * scale, y + 0.08 * scale, z + 0.36 * scale, 0.68 * scale, 0.3 * scale, 0.68 * scale, cloudColor.map((channel) => Math.min(1, channel * 1.04)));
       addCloudLobe(x + 0.38 * scale, y + 0.02 * scale, z - 0.4 * scale, 0.7 * scale, 0.27 * scale, 0.7 * scale, cloudColor.map((channel) => channel * 0.96));
       const cloudOpacity = (environmentState.isRaining ? 0.36 : 0.42) * (0.03 + daylight * 0.97);
-      for (let i = start; i < positions.length / 3; i += 1) { opacities.push(cloudOpacity); moonFlags.push(0); }
+      for (let i = start; i < positions.length / 3; i += 1) opacities.push(cloudOpacity);
     };
     function normalize3(v) {
       const length = Math.hypot(v[0], v[1], v[2]) || 1;
@@ -1222,42 +1214,50 @@
     const warmth = 1;
     const sunStart = positions.length / 3;
     addSun(positions, colors, sunDirection, warmth);
-    for (let i = sunStart; i < positions.length / 3; i += 1) { opacities.push(sunVisibility); moonFlags.push(0); }
+    for (let i = sunStart; i < positions.length / 3; i += 1) opacities.push(sunVisibility);
 
     const moonDirection = sunDirection.map((value) => -value);
     const moonCenter = moonDirection.map((value) => value * SKY_SPHERE_RADIUS);
-    const moonPhase = 0.5 + 0.5 * Math.cos(orbitProgress * Math.PI * 2);
     const [moonRight, moonUp] = billboardBasis(moonDirection);
-    const addMoonIcosahedron = (center, radius, color, flag) => {
+    const moonOpacity = Math.max(0, 0.8 - sunVisibility);
+    const phaseAngle = orbitProgress * Math.PI * 2;
+    // Rotate the illuminated hemisphere around the moon; alpha is interpolated per vertex,
+    // so the unlit part reveals the sky without a second, sky-colored cover sphere.
+    const phaseLightDirection = normalize3(moonDirection.map((value, axis) =>
+      -value * Math.cos(phaseAngle) + moonRight[axis] * Math.sin(phaseAngle)));
+    const smoothVisibility = (value) => {
+      const t = Math.max(0, Math.min(1, (value + 0.12) / 0.24));
+      return t * t * (3 - 2 * t);
+    };
+    const vertexMoonOpacity = (point) => {
+      const normal = normalize3(point.map((value, axis) => value - moonCenter[axis]));
+      const lightDot = normal.reduce((sum, value, axis) => sum + value * phaseLightDirection[axis], 0);
+      return moonOpacity * smoothVisibility(lightDot);
+    };
+    const addMoonIcosahedron = (center, radius, color) => {
       const verts = [
         [-1,1.618,0],[1,1.618,0],[-1,-1.618,0],[1,-1.618,0],[0,-1,1.618],[0,1,1.618],[0,-1,-1.618],[0,1,-1.618],
         [1.618,0,-1],[1.618,0,1],[-1.618,0,-1],[-1.618,0,1],
       ].map(normalize3);
       const faces = [[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
-      const start = positions.length / 3;
       for (const face of faces) {
-        const tri = face.map((index) => verts[index].map((v, axis) => center[axis] + v * radius));
+        const tri = face.map((index) => verts[index].map((value, axis) => center[axis] + value * radius));
         addTriangle(positions, colors, tri[0], tri[1], tri[2], color);
+        for (const point of tri) opacities.push(vertexMoonOpacity(point));
       }
-      for (let i = start; i < positions.length / 3; i += 1) { opacities.push(Math.max(0, 0.8 - sunVisibility)); moonFlags.push(flag); }
     };
-    addMoonIcosahedron(moonCenter, 0.46, [0.96,0.94,0.82], 1);
+    addMoonIcosahedron(moonCenter, 0.46, [0.96,0.94,0.82]);
     const craterSpecs = [[-0.18,0.08,0.09],[0.10,0.17,0.12],[0.19,-0.08,0.08],[-0.06,-0.16,0.14],[-0.23,-0.12,0.10]];
     for (const [cx,cy,radius] of craterSpecs) {
       const depth = Math.sqrt(Math.max(0.05, 0.46 * 0.46 - cx * cx - cy * cy));
-      const center = moonCenter.map((v,axis) => v + moonRight[axis]*cx + moonUp[axis]*cy + moonDirection[axis]*depth);
+      const center = moonCenter.map((value,axis) => value + moonRight[axis]*cx + moonUp[axis]*cy + moonDirection[axis]*depth);
       const start = positions.length / 3;
       addOctahedron(positions, colors, center[0],center[1],center[2],radius,radius*0.62,radius,[0.36,0.35,0.29]);
-      for (let i=start;i<positions.length/3;i+=1) { opacities.push(Math.max(0,0.8-sunVisibility)); moonFlags.push(1); }
+      for (let i = start; i < positions.length / 3; i += 1) {
+        const point = [positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]];
+        opacities.push(vertexMoonOpacity(point));
+      }
     }
-    const coverOffset = 0.08 + (1 - moonPhase) * 0.78;
-    const coverCenter = moonCenter.map((v,axis) => v + moonRight[axis]*coverOffset);
-    const daylight = Math.max(0,Math.min(1,environmentState.daylightProgress));
-    const moonWarmth = environmentState.phase === 'dawn' || environmentState.phase === 'dusk' ? 0.28*4*environmentState.phaseProgress*(1-environmentState.phaseProgress) : 0;
-    const skyTop = mixSkyColor(mixSkyColor(SKY_PALETTES.night[0],SKY_PALETTES.day[0],daylight),SKY_PALETTES.warm[0],moonWarmth);
-    const coverHex = mixSkyColor(skyTop,mixSkyColor(SKY_PALETTES.rainNight[0],SKY_PALETTES.rainDay[0],daylight),environmentState.rainBlend);
-    const coverColor = [1,3,5].map((index)=>Number.parseInt(coverHex.slice(index,index+2),16)/255);
-    addMoonIcosahedron(coverCenter,0.50,coverColor,0);
 
     skyVertexCount = positions.length / 3;
     gl.bindBuffer(gl.ARRAY_BUFFER, skyPositionBuffer);
@@ -1268,8 +1268,6 @@
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(opacities), gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, skyNormalBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, calculateFaceNormals(positions), gl.DYNAMIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, skyMoonBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(moonFlags), gl.DYNAMIC_DRAW);
   }
 
   function calculateFaceNormals(positions) {
@@ -1764,12 +1762,8 @@
     gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, skyNormalBuffer);
     gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
-    gl.bindBuffer(gl.ARRAY_BUFFER, skyMoonBuffer);
-    gl.enableVertexAttribArray(locations.moon);
-    gl.vertexAttribPointer(locations.moon, 1, gl.FLOAT, false, 0, 0);
     const cycleLength = window.skyEnvironment?.DAY_CYCLE_MS || 16 * 60_000;
     const cyclePosition = ((environmentState.worldTimeMs % cycleLength) + cycleLength) % cycleLength / cycleLength;
-    gl.uniform1f(locations.moonPhase, 0.5 + 0.5 * Math.cos(cyclePosition * Math.PI * 2));
     gl.bindBuffer(gl.ARRAY_BUFFER, skyOpacityBuffer);
     gl.enableVertexAttribArray(locations.opacity);
     gl.vertexAttribPointer(locations.opacity, 1, gl.FLOAT, false, 0, 0);
@@ -1784,8 +1778,6 @@
     gl.disable(gl.DEPTH_TEST);
     gl.depthMask(false);
     gl.drawArrays(gl.TRIANGLES, 0, skyVertexCount);
-    gl.disableVertexAttribArray(locations.moon);
-    gl.vertexAttrib1f(locations.moon, 0);
     gl.depthMask(true);
     gl.enable(gl.DEPTH_TEST);
     gl.uniform3f(locations.ambient, ambient, ambient * (environmentState.phase === 'night' ? 0.86 : 1), ambient * (environmentState.phase === 'night' ? 1.12 : 1));
