@@ -6,10 +6,10 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務249已依最新要求重做：雨滴以鏡頭位置為中心，在半徑3單位的垂直圓柱內落下；已更新回歸測試與任務文件，等待使用者視覺驗收。任務250～254仍在tasks/inbox，尚未開始實作。",
+  "nextAction": "任務249依使用者最新回饋再次調整：雨滴變細，垂直落雨範圍擴至鏡頭上下各10單位，等待視覺驗收。任務250～254仍在tasks/inbox，尚未開始實作。",
   "taskFiles": [
     "tasks/active/247-rainy-moon-visibility.md",
     "tasks/active/249-camera-following-rain.md"
   ],
-  "result": "任務248已由使用者於2026-10-26驗收完成並歸檔。任務249第二版已修改src/sky-world.js：72個雨滴分布在以鏡頭位置為中心、半徑3單位的垂直圓柱內，雨滴高度隨鏡頭高度計算；已更新tests/browser-smoke.mjs及任務驗收文件。尚未執行Playwright／GitHub Actions，也未進行瀏覽器視覺驗收。"
+  "result": "任務249已將72個雨滴分布在鏡頭中心半徑3單位的垂直圓柱內；本次再將雨滴寬度由0.012縮至0.0035、長度設為0.22，垂直範圍擴大至鏡頭上下各10單位，並降低循環速度。已更新靜態回歸斷言及任務文件。尚未執行Playwright／GitHub Actions或瀏覽器視覺驗收。"
 }
