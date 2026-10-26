@@ -1253,8 +1253,8 @@
     const coverOffset = 0.08 + (1 - moonPhase) * 0.78;
     const coverCenter = moonCenter.map((v,axis) => v + moonRight[axis]*coverOffset);
     const daylight = Math.max(0,Math.min(1,environmentState.daylightProgress));
-    const warmth = environmentState.phase === 'dawn' || environmentState.phase === 'dusk' ? 0.28*4*environmentState.phaseProgress*(1-environmentState.phaseProgress) : 0;
-    const skyTop = mixSkyColor(mixSkyColor(SKY_PALETTES.night[0],SKY_PALETTES.day[0],daylight),SKY_PALETTES.warm[0],warmth);
+    const moonWarmth = environmentState.phase === 'dawn' || environmentState.phase === 'dusk' ? 0.28*4*environmentState.phaseProgress*(1-environmentState.phaseProgress) : 0;
+    const skyTop = mixSkyColor(mixSkyColor(SKY_PALETTES.night[0],SKY_PALETTES.day[0],daylight),SKY_PALETTES.warm[0],moonWarmth);
     const coverHex = mixSkyColor(skyTop,mixSkyColor(SKY_PALETTES.rainNight[0],SKY_PALETTES.rainDay[0],daylight),environmentState.rainBlend);
     const coverColor = [1,3,5].map((index)=>Number.parseInt(coverHex.slice(index,index+2),16)/255);
     addMoonIcosahedron(coverCenter,0.50,coverColor,0);
