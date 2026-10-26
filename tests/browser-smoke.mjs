@@ -63,7 +63,13 @@ if (!skyWorldSource.includes("const renderingPauseReasons = new Set(galleryMode 
   || !cloudSaveSource.includes("setRenderingPaused?.('cloud-restore', false)")) {
   throw new Error('登入／雲端還原／更新期間的繪圖暫停與失敗復原機制缺失');
 }
-if (!skyWorldSource.includes("const dockPositionsChanged = docks.map((dock, index) => {")
+if (!skyWorldSource.includes("const dronePhaseTransitions = {")
+  || !skyWorldSource.includes("function setDronePhase(droneIndex, nextPhase, reason)")
+  || !skyWorldSource.includes("getDronePhase(droneIndex = 0)")
+  || !skyWorldSource.includes("setDronePhase(index, 'waiting_path', 'return-route-blocked')")) {
+  throw new Error('任務259：無人機狀態機或可觀察的主要階段缺失');
+}
+if (!skyWorldSource.includes("const dockPositionsChanged = docks.map((dock, index) => {
   || !skyWorldSource.includes("else if (dockPositionsChanged[index]) {")
   || !skyWorldSource.includes("if (animation.returning === true) {")
   || !skyWorldSource.includes("const newRoute = findDroneRoute(droneStates[index].location, [dock.x, dock.z], index);")
@@ -323,6 +329,10 @@ await droneTeleportPage.addInitScript(() => {
   window.__dgWebglBuffers = [];
   window.__dgDroneFrames = [];
   window.__dgHandoffCount = 0;
+  window.__dgHandoffPhase = null;
+  window.__dgNextAnimationStarted = null;
+  window.__dgInitialAnimationStarted = null;
+  window.__dgInitialPhase = null;
   window.__dgBoundBuffer = null;
   const originalCreateBuffer = WebGLRenderingContext.prototype.createBuffer;
   WebGLRenderingContext.prototype.createBuffer = function (...args) {
@@ -362,14 +372,19 @@ await droneTeleportPage.evaluate(async () => {
   window.skyWorld.setDroneDocks(docks);
   window.__dgDroneFrames.length = 0;
   for (let index = 0; index < 8; index += 1) {
-    window.skyWorld.animatePlant(index, () => {}, () => {
+    const started = window.skyWorld.animatePlant(index, () => {}, () => {
       if (index !== 0) return;
       // Reproduce the real game handoff: rendering updates dock/battery state synchronously
       // inside the work-complete callback, then the same drone starts the next job.
       window.__dgHandoffCount += 1;
       window.skyWorld.setDroneDocks(docks.map((dock) => ({ ...dock, battery: 99.98 })));
-      window.skyWorld.animateWater(index, () => {}, () => {}, () => true, index);
+      window.__dgNextAnimationStarted = window.skyWorld.animateWater(index, () => {}, () => {}, () => true, index);
+      window.__dgHandoffPhase = window.skyWorld.getDronePhase(index);
     }, () => true, index);
+    if (index === 0) {
+      window.__dgInitialAnimationStarted = started;
+      window.__dgInitialPhase = window.skyWorld.getDronePhase(index);
+    }
   }
   for (let tick = 1; tick <= 80; tick += 1) {
     // Move all docks during outbound travel, then move them again during return flight.
@@ -414,10 +429,22 @@ const droneMotion = await droneTeleportPage.evaluate(() => {
       maxStep = Math.max(maxStep, distance);
     }
   }
-  return { frameCount: frames.length, maxStep, invalid: false, handoffCount: window.__dgHandoffCount };
+  return {
+    frameCount: frames.length, maxStep, invalid: false, handoffCount: window.__dgHandoffCount,
+    initialAnimationStarted: window.__dgInitialAnimationStarted,
+    initialPhase: window.__dgInitialPhase,
+    nextAnimationStarted: window.__dgNextAnimationStarted,
+    handoffPhase: window.__dgHandoffPhase,
+  };
 });
+if (droneMotion.initialAnimationStarted !== true || droneMotion.initialPhase !== 'outbound') {
+  throw new Error('任務259：新任務未正確進入 outbound 狀態：' + JSON.stringify(droneMotion));
+}
 if (droneMotion.handoffCount !== 1) {
   throw new Error('任務257：未能觸發一次播種後接續澆水的工作動畫交接：' + JSON.stringify(droneMotion));
+}
+if (droneMotion.nextAnimationStarted !== true || droneMotion.handoffPhase !== 'working') {
+  throw new Error('任務259：同地塊後續工作未從當前位置接手並進入 working 狀態：' + JSON.stringify(droneMotion));
 }
 if (droneMotion.invalid || droneMotion.maxStep > 0.8) {
   throw new Error('任務257：工作完成回呼同步更新停靠資料並接續澆水時偵測到非預期跳位：' + JSON.stringify(droneMotion));
