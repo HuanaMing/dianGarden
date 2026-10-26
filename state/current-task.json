@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "任務257已完成盤點並以 Playwright 重現工作交接跳位（基準最大水平位移 2.159）。任務258已加入任務生命週期狀態及結果一次性提交保護。任務259已修改 sky-world.js：工作完成回呼期間保留原動畫作為位置所有者，避免 render→setDroneDocks 將無人機重設至停靠平台。GitHub Actions run #781 正在驗證修正；若通過，再處理尋路失敗的安全備援與等待重試，之後逐步遷移動畫。",
+  "nextAction": "任務257已完成盤點並建立動態回歸測試，基準最大單次水平位移 2.159。任務258已實作任務生命週期與結果一次性提交保護。任務259修正工作完成回呼期間動畫暫時為 null 造成的停靠位置重設；run #781 通過，交接測試 120 個取樣最大位移 0.054。移除直線穿障備援、加入無路徑排隊重試與返航改位等待；run #784 通過，交接與八機平台移動測試最大位移 0.061。最近再將 A* 開放清單改為二元堆積以降低尋路阻塞，run #785 驗證中。",
   "taskFiles": [
     "tasks/active/256-drone-system-refactor-plan.md",
     "tasks/active/259-drone-state-motion-controller.md",
@@ -17,5 +17,5 @@
     "tasks/done/257-drone-system-audit-baseline.md",
     "tasks/done/258-drone-task-lifecycle-dispatch.md"
   ],
-  "result": "已建立完整重構規格與階段文件。基準瀏覽器測試確認播種完成後同步更新停靠資料並接續澆水會出現最大 2.159 的單次水平位移。已在 src/game.js 明確化任務生命週期及結果提交保護，並在 src/sky-world.js 保留工作完成期間的動畫位置所有權；修正後的 Playwright 結果待 run #781。尚未完成尋路失敗安全化、全套動畫遷移或最終回歸驗收。"
+  "result": "已建立重構規格與五階段任務文件。瀏覽器基準測試確認工作交接瞬移；修正動畫位置所有權後，播種→澆水交接由 2.159 降至 0.054 最大水平位移。任務生命週期契約與安全尋路等待重試已加入，run #784 通過，最大位移 0.061 且 browserErrors 為空。A* 二元堆積優化的最新回歸仍待 run #785；全套動畫遷移與最終回歸尚未完成。"
 }
