@@ -151,6 +151,7 @@
       && (plot.waterSource === undefined || plot.waterSource === null || ['rain', 'drone', 'manual'].includes(plot.waterSource))
       && (plot.growthBonusMs === undefined || (Number.isFinite(plot.growthBonusMs) && plot.growthBonusMs >= 0))
       && (plot.plantHeight === undefined || plot.plantHeight === null || (Number.isFinite(plot.plantHeight) && plot.plantHeight >= 0.9 && plot.plantHeight <= 1.1))
+      && (plot.rotation === undefined || (Number.isFinite(plot.rotation) && plot.rotation >= -Math.PI && plot.rotation <= Math.PI))
       && (plot.variantId === undefined || plot.variantId === null || flowerVariants.some((variant) => variant.id === plot.variantId && variant.cropIndex === plot.crop))
       && (plot.crop !== null || plot.variantId === undefined || plot.variantId === null)
       && ((plot.waterStartedAt === undefined && plot.waterUntil === undefined)
@@ -165,6 +166,7 @@
           && Number.isFinite(plant.plantedAt) && plant.plantedAt >= 0
           && (plant.positionIndex === undefined || (Number.isSafeInteger(plant.positionIndex) && plant.positionIndex >= 1))
           && (plant.plantHeight === undefined || (Number.isFinite(plant.plantHeight) && plant.plantHeight >= 0.9 && plant.plantHeight <= 1.1))
+          && (plant.rotation === undefined || (Number.isFinite(plant.rotation) && plant.rotation >= -Math.PI && plant.rotation <= Math.PI))
           && (plant.watered === undefined || typeof plant.watered === 'boolean')
           && (plant.waterSource === undefined || plant.waterSource === null || ['rain', 'drone', 'manual'].includes(plant.waterSource))
           && (plant.growthBonusMs === undefined || (Number.isFinite(plant.growthBonusMs) && plant.growthBonusMs >= 0))
@@ -187,7 +189,7 @@
     const plots = saved.plots.map((plot, index) => {
       const manual = plot.manual === true;
       const legacyPlants = plot.crop === null ? [] : [{
-        crop: plot.crop, plantedAt: plot.plantedAt, plantHeight: plot.plantHeight,
+        crop: plot.crop, plantedAt: plot.plantedAt, plantHeight: plot.plantHeight, rotation: plot.rotation,
         variantId: plot.variantId, variantName: plot.variantName, variantColor: plot.variantColor,
         watered: plot.watered, waterSource: plot.waterSource, waterWetnessStart: plot.waterWetnessStart,
         waterStartedAt: plot.waterStartedAt, waterUntil: plot.waterUntil, growthBonusMs: plot.growthBonusMs,
@@ -197,6 +199,7 @@
         ...plant,
         positionIndex: Number.isSafeInteger(plant.positionIndex) && plant.positionIndex >= 1 ? plant.positionIndex : plantIndex + 1,
         plantHeight: Number.isFinite(plant.plantHeight) ? plant.plantHeight : 1,
+        rotation: Number.isFinite(plant.rotation) ? plant.rotation : 0,
         watered: plant.watered === true,
         waterSource: plant.waterSource || null,
         growthBonusMs: Number.isFinite(plant.growthBonusMs) ? plant.growthBonusMs : 0,
@@ -211,6 +214,7 @@
         y: isHalfUnitHeight(plot.y) ? plot.y : 0,
         plantedAt: plot.crop === null ? null : plot.plantedAt,
         plantHeight: plot.crop === null ? null : Number.isFinite(plot.plantHeight) ? plot.plantHeight : 1,
+        rotation: Number.isFinite(plot.rotation) ? plot.rotation : 0,
         plants,
         capacityLevel: manual && Number.isSafeInteger(plot.capacityLevel) && plot.capacityLevel >= 1 ? plot.capacityLevel : 1,
         nextPlantPosition: manual ? Math.max(maxPositionIndex + 1, Number.isSafeInteger(plot.nextPlantPosition) && plot.nextPlantPosition >= 1 ? plot.nextPlantPosition : 1) : undefined,
@@ -247,7 +251,7 @@
       && new Set(savedSelection).size === savedSelection.length) game.autoCropSelection = savedSelection;
     else localStorage.setItem(AUTO_CROP_KEY, JSON.stringify(game.autoCropSelection));
   } catch (_) { /* Keep the selection loaded from the garden save when preference storage is unavailable. */ }
-  const PLANT_STATE_FIELDS = ['crop', 'plantedAt', 'plantHeight', 'variantId', 'variantName', 'variantColor', 'watered', 'waterSource', 'waterWetnessStart', 'waterStartedAt', 'waterUntil', 'growthBonusMs', 'waterVisualStartedAt'];
+  const PLANT_STATE_FIELDS = ['crop', 'plantedAt', 'plantHeight', 'rotation', 'variantId', 'variantName', 'variantColor', 'watered', 'waterSource', 'waterWetnessStart', 'waterStartedAt', 'waterUntil', 'growthBonusMs', 'waterVisualStartedAt'];
   function getPlotPlants(plot) {
     if (!plot) return [];
     if (plot.manual === true && Array.isArray(plot.plants)) return plot.plants;
@@ -261,7 +265,7 @@
   function syncManualPrimary(plot) {
     if (!plot || plot.manual !== true) return;
     const first = Array.isArray(plot.plants) ? plot.plants[0] : null;
-    const defaults = { crop: null, plantedAt: null, plantHeight: null, variantId: null, variantName: null, variantColor: null, watered: false, waterSource: null, waterWetnessStart: null, growthBonusMs: 0, waterVisualStartedAt: null };
+    const defaults = { crop: null, plantedAt: null, plantHeight: null, rotation: 0, variantId: null, variantName: null, variantColor: null, watered: false, waterSource: null, waterWetnessStart: null, growthBonusMs: 0, waterVisualStartedAt: null };
     for (const field of PLANT_STATE_FIELDS) {
       if (field === 'waterStartedAt' || field === 'waterUntil') {
         if (Number.isFinite(first?.[field])) plot[field] = first[field];
@@ -1102,12 +1106,14 @@
       const variant = job.variantId ? game.flowerVariants.find((item) => item.id === job.variantId) : null;
       if (!plot || isDroneExcluded(plot) || plot.crop !== null || !crop || game.coins < crop.seedCost) return notify('播種任務條件已改變，已略過。');
       if (job.variantId && (!variant || variant.cropIndex !== job.cropIndex)) return notify('花色變種資料已改變，播種任務已略過。');
-      game.coins -= crop.seedCost; plot.crop = job.cropIndex; plot.variantId = variant?.id || null; plot.variantName = variant?.name || null; plot.variantColor = variant?.color || null; plot.plantedAt = Date.now(); plot.plantHeight = 0.9 + Math.random() * 0.2; plot.watered = false; plot.waterSource = null; plot.growthBonusMs = 0; save(); render(); if (!job.automatic) notify(`種下了${variant ? `${crop.name}・${variant.name}` : crop.name}，期待它長大吧！`); return;
+      const droneHeading = window.skyWorld?.getDroneHeading?.(job.droneIndex);
+      const rotation = Number.isFinite(droneHeading) ? Math.max(-Math.PI, Math.min(Math.PI, droneHeading)) : 0;
+      game.coins -= crop.seedCost; plot.crop = job.cropIndex; plot.variantId = variant?.id || null; plot.variantName = variant?.name || null; plot.variantColor = variant?.color || null; plot.plantedAt = Date.now(); plot.plantHeight = 0.9 + Math.random() * 0.2; plot.rotation = rotation; plot.watered = false; plot.waterSource = null; plot.growthBonusMs = 0; save(); render(); if (!job.automatic) notify(`種下了${variant ? `${crop.name}・${variant.name}` : crop.name}，期待它長大吧！`); return;
     }
     if (job.kind === 'harvest') {
       const plot = game.plots[job.index]; if (!plot || isDroneExcluded(plot) || plot.crop === null) return notify('收成任務條件已改變，已略過。');
       const crop = getPlantedCrop(plot); if (growthElapsed(plot) < crop.growTime) return notify('作物尚未成熟，收成任務已略過。');
-      const reward = getHarvestReward(crop); game.coins += reward; plot.crop = null; plot.variantId = null; plot.variantName = null; plot.variantColor = null; plot.plantedAt = null; plot.plantHeight = null; plot.watered = false; plot.waterSource = null; plot.growthBonusMs = 0; delete plot.waterStartedAt; delete plot.waterUntil; save(); render();
+      const reward = getHarvestReward(crop); game.coins += reward; plot.crop = null; plot.variantId = null; plot.variantName = null; plot.variantColor = null; plot.plantedAt = null; plot.plantHeight = null; plot.rotation = 0; plot.watered = false; plot.waterSource = null; plot.growthBonusMs = 0; delete plot.waterStartedAt; delete plot.waterUntil; save(); render();
       if (job.automatic) {
         planAutomaticJobs();
         const replantIndex = jobQueue.findIndex((queued) => queued.kind === 'plant' && queued.index === job.index);
@@ -1188,6 +1194,7 @@
       const commit = () => {
         if (job.committed || job.cancelled) return;
         job.committed = true;
+        job.droneIndex = droneIndex;
         completeJob(job);
       };
       const finish = () => {
@@ -1241,7 +1248,7 @@
       const positionIndex = Number.isSafeInteger(plot.nextPlantPosition) && plot.nextPlantPosition >= 1 ? plot.nextPlantPosition : Math.max(1, ...plants.map((plant) => (plant.positionIndex || 0) + 1));
       const plantState = {
         crop: cropIndex, variantId: variant?.id || null, variantName: variant?.name || null, variantColor: variant?.color || null,
-        plantedAt: Date.now(), plantHeight: 0.9 + Math.random() * 0.2, positionIndex,
+        plantedAt: Date.now(), plantHeight: 0.9 + Math.random() * 0.2, rotation: 0, positionIndex,
         watered: false, waterSource: null, waterWetnessStart: null, growthBonusMs: 0,
       };
       plot.plants = [...plants, plantState];
