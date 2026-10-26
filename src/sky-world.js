@@ -1126,10 +1126,10 @@
         addTriangle(P, C, points[0], points[1], points[2], color.map((channel) => channel * shade));
       }
     }
-    function addSun(P, C, dir, warm, visibility) {
+    function addSun(P, C, dir, warm) {
       const f = normalize3(dir);
       const [x, y, z] = f.map((value) => value * SKY_SPHERE_RADIUS);
-      const core = [1, 0.96, 0.78].map((value, index) => (value + ([1, 0.62, 0.35][index] - value) * warm) * visibility);
+      const core = [1, 0.96, 0.78].map((value, index) => value + ([1, 0.62, 0.35][index] - value) * warm);
       addIcosahedron(P, C, x, y, z, 0.55, core);
       const [right, up] = billboardBasis(f);
       // Twelve short rays share one direction-derived billboard basis.
@@ -1196,8 +1196,8 @@
       ? 1
       : 0.12 + 0.35 * Math.min(1, Math.abs(environmentState.phaseProgress - 0.5) * 2);
     const sunStart = positions.length / 3;
-    addSun(positions, colors, sunDirection, warmth, sunVisibility);
-    for (let i = sunStart; i < positions.length / 3; i += 1) opacities.push(1);
+    addSun(positions, colors, sunDirection, warmth);
+    for (let i = sunStart; i < positions.length / 3; i += 1) opacities.push(sunVisibility);
 
     skyVertexCount = positions.length / 3;
     gl.bindBuffer(gl.ARRAY_BUFFER, skyPositionBuffer);
