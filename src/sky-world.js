@@ -1129,7 +1129,7 @@
     function addSun(P, C, dir, warm) {
       const f = normalize3(dir);
       const [x, y, z] = f.map((value) => value * SKY_SPHERE_RADIUS);
-      const core = [1, 0.96, 0.78].map((value, index) => value + ([1, 0.62, 0.35][index] - value) * warm);
+      const core = [1, 0.78, 0.42].map((value, index) => value + ([1, 0.55, 0.2][index] - value) * warm);
       addIcosahedron(P, C, x, y, z, 0.55, core);
       const [right, up] = billboardBasis(f);
       // Twelve short rays share one direction-derived billboard basis.
