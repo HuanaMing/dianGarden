@@ -1,14 +1,14 @@
 {
-  "name": "任務246：修正夜間雲朵過亮與太陽不可見",
+  "name": "任務246：修正夜間雲朵過亮與太陽軌跡／相機視角",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "檢查任務246的瀏覽器回歸驗收與Pages自動部署；若測試發現問題，修正後再次驗證，等待使用者視覺驗收。",
+  "nextAction": "檢查任務246的JavaScript／Playwright驗收與Pages自動部署；確認夜間雲朵、太陽完整環繞與相機向上仰望，再等待使用者視覺驗收。",
   "taskFiles": [
     "tasks/active/246-night-cloud-sun-visibility.md"
   ],
-  "result": "已寫入夜間雲朵亮度／透明度與太陽路徑修正，並更新對應回歸測試；等待自動化驗收。"
+  "result": "已調整夜間雲朵亮度與透明度、太陽全時段以45度仰角完整環繞，以及相機向上仰望70度的視線控制；等待自動化驗收與使用者視覺驗收。"
 }
