@@ -1,14 +1,14 @@
 {
-  "name": "任務246：修正夜間雲朵過亮與太陽軌跡／相機視角",
+  "name": "任務248：調整太陽與月亮的可見度曲線",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "太陽可見度已改為分時線性漸變：清晨50–60%、白天60–100–60%、傍晚60–50%、夜晚50–-20%（負透明度截為0%）；雨勢係數仍由100%漸變至50%。太陽橘色飽和度降低20%。等待自動測試及實機視覺驗收。",
+  "nextAction": "太陽已改為凌晨0→80%、白天80→100→80%、傍晚80→0%、夜間0%；月亮可見度改為100%減去太陽可見度。已更新瀏覽器回歸測試，下一步檢查程式與測試語法並等待自動測試／實機驗收。",
   "taskFiles": [
-    "tasks/active/246-night-cloud-sun-visibility.md"
+    "tasks/active/248-sun-moon-visibility-curve.md"
   ],
-  "result": "已更新 src/sky-world.js 的太陽可見度曲線與 RGB 飽和度；已更新 tests/browser-smoke.mjs 的靜態斷言以檢查新曲線與 alpha 透明度。已將追加規格記錄於 tasks/active/246-night-cloud-sun-visibility.md。尚未執行 CI 或實機視覺驗收。"
+  "result": "已提交 src/sky-world.js 與 tests/browser-smoke.mjs 修改，並建立任務248規格及執行紀錄。保留降雨時太陽可見度逐漸淡出至50%的既有行為。尚未執行 Playwright／GitHub Actions，也未進行使用者實機視覺驗收。"
 }
