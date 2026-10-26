@@ -1060,7 +1060,7 @@
       const cloudColor = environmentState.isRaining ? [0.62, 0.72, 0.76] : [0.86, 0.93, 0.96];
       addOctahedron(positions, colors, x + drift, y, z, 0.96 * scale, 0.24 * scale, 0.96 * scale, cloudColor);
       addOctahedron(positions, colors, x - 0.42 * scale + drift, y + 0.08 * scale, z + 0.36 * scale, 0.68 * scale, 0.3 * scale, 0.68 * scale, cloudColor.map((channel) => Math.min(1, channel * 1.04)));
-      addOctahedron(positions, colors, x + 0.56 * scale + drift, y + 0.02 * scale, z - 0.06 * scale, 0.78 * scale, 0.27 * scale, 0.48 * scale, cloudColor.map((channel) => channel * 0.96));
+      addOctahedron(positions, colors, x + 0.38 * scale + drift, y + 0.02 * scale, z - 0.4 * scale, 0.7 * scale, 0.27 * scale, 0.7 * scale, cloudColor.map((channel) => channel * 0.96));
       for (let i = start; i < positions.length / 3; i += 1) opacities.push(environmentState.isRaining ? 0.36 : 0.42);
     };
     // Use seconds-scale phase progression so the cloud drift is visibly slow, not nearly imperceptible.
