@@ -380,12 +380,21 @@
 
 
   // Flower-specific geometry lives in src/model/ and is dispatched through the shared registry.
-  function addFlowerModel(positions, colors, x, z, flowerIndex, stage, heightMultiplier = 1, customColor = null) {
+  function addFlowerModel(positions, colors, x, z, flowerIndex, stage, heightMultiplier = 1, customColor = null, rotation = 0) {
     const modelPositions = [];
     const modelColors = [];
     addFlowerGeometry(modelPositions, modelColors, x, z, flowerIndex, stage, customColor);
+    const angle = Number.isFinite(rotation) ? rotation : 0;
+    const cosine = Math.cos(angle), sine = Math.sin(angle);
     for (let i = 0; i < modelPositions.length; i += 3) {
-      positions.push(modelPositions[i], 0.055 + (modelPositions[i + 1] - 0.055) * heightMultiplier, modelPositions[i + 2]);
+      const offsetX = modelPositions[i] - x;
+      const offsetZ = modelPositions[i + 2] - z;
+      // Rotate every vertex around the root so seeds, stems, leaves, and blooms share one heading.
+      positions.push(
+        x + offsetX * cosine + offsetZ * sine,
+        0.055 + (modelPositions[i + 1] - 0.055) * heightMultiplier,
+        z - offsetX * sine + offsetZ * cosine,
+      );
       colors.push(modelColors[i], modelColors[i + 1], modelColors[i + 2]);
     }
   }
@@ -1571,7 +1580,8 @@
         const stage = getPlotVisualStage(plant, stageKey);
         const flowerVertexStart = positions.length;
         addFlowerModel(positions, colors, plantX, plantZ, plant.crop, stage,
-          Number.isFinite(plant.plantHeight) ? plant.plantHeight : 1, plant.customColor);
+          Number.isFinite(plant.plantHeight) ? plant.plantHeight : 1, plant.customColor,
+          Number.isFinite(plant.rotation) ? plant.rotation : 0);
         for (let vertex = flowerVertexStart + 1; vertex < positions.length; vertex += 3) positions[vertex] += plantBaseY;
       });
     }
@@ -2351,6 +2361,9 @@
     return true;
   }
   window.skyWorld = {
+    getDroneHeading(droneIndex = 0) {
+      return Number.isInteger(droneIndex) ? droneStates[droneIndex]?.heading ?? 0 : 0;
+    },
     animatePlant(index, onDeparture, onComplete, shouldReturn, droneIndex = 0, onReturnComplete) {
       if (!Number.isInteger(index) || index < 0 || index >= landCount) return false;
       const [targetX, targetZ] = getPlotPosition(index);
