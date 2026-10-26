@@ -1,15 +1,16 @@
 {
-  "name": "任務241＋242：無人機側牆避障與天空球渲染",
+  "name": "任務243–245：雲朵光照、晴天天空與太陽模型",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "完成無人機尋路側牆避障與半徑10天空球渲染，執行語法及瀏覽器回歸驗收後，兩項任務一起推送。",
+  "nextAction": "分別完成任務243雲朵柔光、244晴天藍色漸層、245方向基底太陽模型；三項完成後一起執行驗證並合併推送。",
   "taskFiles": [
-    "tasks/active/241-drone-side-wall-pathfinding.md",
-    "tasks/active/242-sky-sphere-rendering.md"
+    "tasks/active/243-soft-cloud-lighting.md",
+    "tasks/active/244-blue-day-sky.md",
+    "tasks/active/245-sun-billboard-model.md"
   ],
-  "result": "已確認實作範圍；尚未推送程式修改。"
+  "result": "已完成三項獨立規劃，尚未推送。"
 }

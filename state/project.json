@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "任務241＋242：無人機側牆避障與天空球渲染（合併驗收）",
-  "nextAction": "兩項任務一併完成並驗證後，建立單一提交推送；Pages 會依既有 workflow 自動部署。",
+  "activeTask": "任務243–245：雲朵光照、晴天天空與太陽模型（分別規劃、合併推送）",
+  "nextAction": "依序完成243、244、245；合併執行 JavaScript／Playwright 驗收後一次推送。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署：需使用者明確批准後手動觸發。",

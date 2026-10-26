@@ -161,7 +161,7 @@
   let environmentState = { phase: 'day', isDay: true, isRaining: false, rainBlend: 0, daylightProgress: 1, phaseProgress: 0, lightLevel: 1, sunflowerYaw: 0, worldTimeMs: 60_000 };
   let environmentBackground = '';
   const SKY_PALETTES = {
-    day: ['#d8f2ff', '#effcfb', '#f8fbea'],
+    day: ['#78c9f5', '#b8e5ff', '#e6f5ff'],
     night: ['#14263d', '#273b54', '#526175'],
     warm: ['#e3bfa7', '#eadac8', '#e5e3d5'],
     rainDay: ['#a8c5d0', '#c9dada', '#d8e2d1'],
@@ -185,7 +185,7 @@
       const rainy = mixSkyColor(SKY_PALETTES.rainNight[index], SKY_PALETTES.rainDay[index], daylight);
       return mixSkyColor(warmed, rainy, rainBlend);
     });
-    return `linear-gradient(180deg, ${colors[0]} 0%, ${colors[1]} 64%, ${colors[2]} 100%)`;
+    return `linear-gradient(180deg, ${colors[0]} 0%, ${colors[1]} 78%, ${colors[2]} 100%)`;
   }
   let rainStartedAt = null;
   let lastSoilTransitionUploadAt = 0;
@@ -1066,14 +1066,78 @@
     const positions = [];
     const colors = [];
     const opacities = [];
+    const addCloudLobe = (x, y, z, rx, ry, rz, color) => {
+      const start = positions.length / 3;
+      addOctahedron(positions, colors, x, y, z, rx, ry, rz, color);
+      // Geometry colors have baked-in 0.78 lower-face shading. Lift that shade to 0.92
+      // so clouds remain softly dimensional without strong dark/light patches.
+      for (let vertex = start; vertex < positions.length / 3; vertex += 1) {
+        const faceIndex = Math.floor((vertex - start) / 3) % 8;
+        if (faceIndex < 4) continue;
+        const colorOffset = vertex * 3;
+        for (let channel = 0; channel < 3; channel += 1) {
+          colors[colorOffset + channel] = Math.min(1, colors[colorOffset + channel] / 0.78 * 0.92);
+        }
+      }
+    };
     const addCloud = (x, y, z, scale = 1) => {
       const start = positions.length / 3;
       const cloudColor = environmentState.isRaining ? [0.62, 0.72, 0.76] : [0.86, 0.93, 0.96];
-      addOctahedron(positions, colors, x, y, z, 0.96 * scale, 0.24 * scale, 0.96 * scale, cloudColor);
-      addOctahedron(positions, colors, x - 0.42 * scale, y + 0.08 * scale, z + 0.36 * scale, 0.68 * scale, 0.3 * scale, 0.68 * scale, cloudColor.map((channel) => Math.min(1, channel * 1.04)));
-      addOctahedron(positions, colors, x + 0.38 * scale, y + 0.02 * scale, z - 0.4 * scale, 0.7 * scale, 0.27 * scale, 0.7 * scale, cloudColor.map((channel) => channel * 0.96));
+      addCloudLobe(x, y, z, 0.96 * scale, 0.24 * scale, 0.96 * scale, cloudColor);
+      addCloudLobe(x - 0.42 * scale, y + 0.08 * scale, z + 0.36 * scale, 0.68 * scale, 0.3 * scale, 0.68 * scale, cloudColor.map((channel) => Math.min(1, channel * 1.04)));
+      addCloudLobe(x + 0.38 * scale, y + 0.02 * scale, z - 0.4 * scale, 0.7 * scale, 0.27 * scale, 0.7 * scale, cloudColor.map((channel) => channel * 0.96));
       for (let i = start; i < positions.length / 3; i += 1) opacities.push(environmentState.isRaining ? 0.36 : 0.42);
     };
+    function normalize3(v) {
+      const length = Math.hypot(v[0], v[1], v[2]) || 1;
+      return [v[0] / length, v[1] / length, v[2] / length];
+    }
+    function cross3(a, b) {
+      return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+    }
+    function billboardBasis(dir) {
+      const f = normalize3(dir);
+      const upHint = Math.abs(f[1]) > 0.95 ? [1, 0, 0] : [0, 1, 0];
+      const right = normalize3(cross3(upHint, f));
+      const up = cross3(f, right);
+      return [right, up];
+    }
+    function addBillboardOctahedron(P, C, center, right, up, forward, rx, ry, rz, color) {
+      const local = [
+        [0, ry, 0], [0, -ry, 0], [rx, 0, 0], [-rx, 0, 0], [0, 0, -rz], [0, 0, rz],
+      ];
+      const faces = [
+        [0, 4, 2], [0, 2, 5], [0, 5, 3], [0, 3, 4],
+        [1, 2, 4], [1, 5, 2], [1, 3, 5], [1, 4, 3],
+      ];
+      const transform = ([x, y, z]) => [
+        center[0] + right[0] * x + up[0] * y + forward[0] * z,
+        center[1] + right[1] * x + up[1] * y + forward[1] * z,
+        center[2] + right[2] * x + up[2] * y + forward[2] * z,
+      ];
+      for (let i = 0; i < faces.length; i += 1) {
+        const shade = i < 4 ? 1 : 0.95;
+        const points = faces[i].map((index) => transform(local[index]));
+        addTriangle(P, C, points[0], points[1], points[2], color.map((channel) => channel * shade));
+      }
+    }
+    function addSun(P, C, dir, warm) {
+      const f = normalize3(dir);
+      const [x, y, z] = f.map((value) => value * SKY_SPHERE_RADIUS);
+      const core = [1, 0.96, 0.78].map((value, index) => value + ([1, 0.62, 0.35][index] - value) * warm);
+      addIcosahedron(P, C, x, y, z, 0.55, core);
+      const [right, up] = billboardBasis(f);
+      // Twelve short rays share one direction-derived billboard basis.
+      for (let i = 0; i < 12; i += 1) {
+        const angle = i / 12 * Math.PI * 2;
+        const rx = Math.cos(angle), ry = Math.sin(angle);
+        const radial = normalize3([right[0] * rx + up[0] * ry, right[1] * rx + up[1] * ry, right[2] * rx + up[2] * ry]);
+        const tangent = normalize3([-right[0] * ry + up[0] * rx, -right[1] * ry + up[1] * rx, -right[2] * ry + up[2] * rx]);
+        const center = [x + radial[0] * 0.95, y + radial[1] * 0.95, z + radial[2] * 0.95];
+        // Local Y points radially outward; local X follows the narrow tangent axis.
+        addBillboardOctahedron(P, C, center, tangent, radial, f, 0.08, 0.3, 0.08, core.map((value) => value * 0.95));
+      }
+    }
     // Each cloud stores angular coordinates on the sky sphere, not a fixed world-space offset.
     // Scales are reduced in proportion to the old offset distance to preserve apparent size.
     const elapsed = time * 0.001;
@@ -1103,6 +1167,21 @@
       const y = Math.sin(cloud.elevation) * SKY_SPHERE_RADIUS;
       const z = Math.cos(azimuth) * horizontalRadius;
       addCloud(x, y, z, cloud.scale);
+    }
+    const cycle = window.skyEnvironment?.DAY_CYCLE_MS || 16 * 60_000;
+    const cycleTime = ((environmentState.worldTimeMs % cycle) + cycle) % cycle;
+    const daylightArc = Math.max(0, Math.min(1, cycleTime / (11 * 60_000)));
+    if (daylightArc > 0.015 && daylightArc < 0.985 && environmentState.daylightProgress > 0.03 && environmentState.rainBlend < 0.7) {
+      const elevation = Math.sin(daylightArc * Math.PI) * 0.78;
+      const azimuth = -Math.PI / 2 + daylightArc * Math.PI;
+      const horizontal = Math.cos(elevation);
+      const sunDirection = [Math.sin(azimuth) * horizontal, Math.sin(elevation), Math.cos(azimuth) * horizontal];
+      const warmth = environmentState.phase === 'day'
+        ? 1
+        : 0.12 + 0.35 * Math.min(1, Math.abs(environmentState.phaseProgress - 0.5) * 2);
+      const sunStart = positions.length / 3;
+      addSun(positions, colors, sunDirection, warmth);
+      for (let i = sunStart; i < positions.length / 3; i += 1) opacities.push(1);
     }
 
     skyVertexCount = positions.length / 3;
@@ -1605,11 +1684,16 @@
     skyView[13] = 0;
     skyView[14] = 0;
     gl.uniformMatrix4fv(locations.view, false, skyView);
+    // Clouds and the sun use near-uniform sky lighting, avoiding strong face-to-face contrast.
+    gl.uniform3f(locations.ambient, 0.88, 0.88, 0.88);
+    gl.uniform3f(locations.sunColor, 0.12, 0.12, 0.12);
     gl.disable(gl.DEPTH_TEST);
     gl.depthMask(false);
     gl.drawArrays(gl.TRIANGLES, 0, skyVertexCount);
     gl.depthMask(true);
     gl.enable(gl.DEPTH_TEST);
+    gl.uniform3f(locations.ambient, ambient, ambient * (environmentState.phase === 'night' ? 0.86 : 1), ambient * (environmentState.phase === 'night' ? 1.12 : 1));
+    gl.uniform3f(locations.sunColor, sunR, sunG, sunB);
     gl.uniformMatrix4fv(locations.view, false, currentView);
     gl.disableVertexAttribArray(locations.opacity);
     gl.vertexAttrib1f(locations.opacity, 1);
