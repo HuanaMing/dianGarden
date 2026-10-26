@@ -1759,7 +1759,7 @@ try {
   const matureSwitch = maturePage.locator('#farm-dialog [data-plot-mode-switch]');
   if (!(await matureSwitch.isEnabled())) throw new Error('成熟植物所在手動地塊不能切換為草地');
   await matureSwitch.click();
-  if (!(await maturePage.locator('#farm-dialog .manual-plant-card-heading strong').innerText()).includes('已成熟')) throw new Error('成熟植物轉成草地後沒有保留');
+  if (!(await maturePage.locator('#farm-dialog .manual-plant-choice').first().getAttribute('aria-label')).includes('已成熟')) throw new Error('成熟植物轉成草地後沒有保留');
   if (await maturePage.locator('#farm-dialog [data-plot-mode-switch]').getAttribute('data-mode') !== 'grass') throw new Error('成熟植物所在地塊未切換為草地');
   checks.push('成熟植物可隨手動地塊切換成草地並保留');
   await maturePage.close();
@@ -1901,9 +1901,9 @@ try {
     throw new Error('任務228：手動地塊位置函數未符合置中、可重現、不重複及有限越界要求：' + JSON.stringify(placementResult));
   }
   await multiPlantPage.evaluate(() => window.onSkyPlotActivate?.(4));
-  await multiPlantPage.locator('#farm-dialog[open] .manual-plant-card').first().waitFor({ state: 'visible', timeout: 8000 });
-  const multiPlantCardCount = await multiPlantPage.locator('#farm-dialog .manual-plant-card').count();
-  if (multiPlantCardCount !== 3) throw new Error(`任務228：預期顯示3株獨立花卉，實際為 ${multiPlantCardCount} 株`);
+  await multiPlantPage.locator('#farm-dialog[open] .manual-plant-choice').first().waitFor({ state: 'visible', timeout: 8000 });
+  const multiPlantCardCount = await multiPlantPage.locator('#farm-dialog .manual-plant-choice').count();
+  if (multiPlantCardCount !== 3) throw new Error(`任務228／250：預期顯示3株獨立花卉圖示，實際為 ${multiPlantCardCount} 株`);
   const multiPlantSaveAfterLoad = await multiPlantPage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-guest-save-v1')));
   if (multiPlantSaveAfterLoad.plots[4].plants?.length !== 3 || multiPlantSaveAfterLoad.plots[4].capacityLevel !== 3) {
     throw new Error('任務228：多株資料或容量未在載入後保留');
@@ -1974,8 +1974,8 @@ try {
   }, plotTabSave());
   await legacyPlantPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   await legacyPlantPage.evaluate(() => window.onSkyPlotActivate?.(4));
-  await legacyPlantPage.locator('#farm-dialog[open] .manual-plant-card-heading strong').waitFor({ state: 'visible', timeout: 8000 });
-  const migratedLegacyPlantTitle = await legacyPlantPage.locator('#farm-dialog .manual-plant-card-heading strong').innerText();
+  await legacyPlantPage.locator('#farm-dialog[open] .manual-plant-choice').waitFor({ state: 'visible', timeout: 8000 });
+  const migratedLegacyPlantTitle = await legacyPlantPage.locator('#farm-dialog .manual-plant-choice').first().getAttribute('aria-label');
   if (!migratedLegacyPlantTitle.includes('向日葵') || !migratedLegacyPlantTitle.includes('已成熟')) {
     throw new Error('任務228：舊版單株手動地塊存檔遷移未保留花種或成熟狀態：' + migratedLegacyPlantTitle);
   }
@@ -2028,8 +2028,8 @@ try {
     if (dialog?.open) dialog.close();
     window.onSkyPlotActivate?.(3);
   });
-  await manualUpgradePage.locator('#farm-dialog[open] .manual-plant-card').first().waitFor({ state: 'visible', timeout: 8000 });
-  const visiblePlantCardsAtCapacity = await manualUpgradePage.locator('#farm-dialog .manual-plant-card').count();
+  await manualUpgradePage.locator('#farm-dialog[open] .manual-plant-choice').first().waitFor({ state: 'visible', timeout: 8000 });
+  const visiblePlantCardsAtCapacity = await manualUpgradePage.locator('#farm-dialog .manual-plant-choice').count();
   const fullCapacityHeading = await manualUpgradePage.locator('#farm-dialog .manual-seed-heading').innerText();
   const seedOptionsAtCapacity = await manualUpgradePage.locator('#farm-dialog [data-manual-seed-options] .seed-option').count();
   if (fullCapacity.plants.length !== 4 || visiblePlantCardsAtCapacity !== 4 || seedOptionsAtCapacity !== 0 || !fullCapacityHeading.includes('名額已滿')) {
