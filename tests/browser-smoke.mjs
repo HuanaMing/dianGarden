@@ -27,6 +27,12 @@ if (!cloudSaveSource.includes("const needsChoice = authenticated && statusNode.d
   || !gameSource.includes("cloudSessionExpired ? '暫停同步雲端進度' : '進度會自動儲存'")) {
   throw new Error('同步狀態、異地登入後隱藏登入入口、停止雲端請求或暫停同步提示邏輯缺失');
 }
+if (!skyWorldSource.includes("const starMinElevation = -15 * Math.PI / 180;")
+  || !skyWorldSource.includes("const starMaxElevation = 70 * Math.PI / 180;")
+  || !skyWorldSource.includes("const starOpacity = moonOpacity * twinkle;")
+  || !skyWorldSource.includes("const periodMs = 3000 +")) {
+  throw new Error('任務253星星仰角範圍或原有閃爍／月亮可見度公式缺失');
+}
 if (!skyWorldSource.includes("window.dianGardenCamera = Object.freeze({")
   || !skyWorldSource.includes("getState: getCameraPose,")
   || !skyWorldSource.includes("restore: restoreCameraPose,")
