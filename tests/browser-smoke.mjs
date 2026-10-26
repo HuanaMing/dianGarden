@@ -1614,7 +1614,7 @@ try {
     || !worldSource.includes('const rainVisibility = 1 - 0.5 * environmentState.rainBlend;')
     || !worldSource.includes('const sunVisibility = timeVisibility * rainVisibility;')
     || !worldSource.includes('addSun(positions, colors, sunDirection, warmth, sunVisibility);')
-    || !worldSource.includes('opacities.push(sunVisibility);')
+    || !worldSource.includes('opacities.push(1);')
     || !worldSource.includes('const orbitTilt = Math.PI / 12;')
     || !worldSource.includes('const sunDirection = [Math.sin(azimuth) * Math.cos(orbitTilt), Math.sin(azimuth) * Math.sin(orbitTilt), Math.cos(azimuth)];')
     || worldSource.includes('environmentState.rainBlend < 0.7')
