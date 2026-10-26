@@ -1611,15 +1611,15 @@ try {
     || !worldSource.includes('const solarPhaseAngle = (orbitProgress - solarNoonProgress) * Math.PI * 2;')
     || !worldSource.includes('const azimuth = solarPhaseAngle + Math.PI / 2;')
     || !worldSource.includes('const cycleMinute = cycleTime / 60_000;')
-    || !worldSource.includes('timeVisibility = interpolateVisibility(0.5, 0.6, cycleMinute);')
-    || !worldSource.includes('timeVisibility = interpolateVisibility(0.6, 1, (cycleMinute - 1) / 4);')
-    || !worldSource.includes('timeVisibility = interpolateVisibility(1, 0.6, (cycleMinute - 5) / 5);')
-    || !worldSource.includes('timeVisibility = interpolateVisibility(0.6, 0.5, cycleMinute - 10);')
-    || !worldSource.includes('timeVisibility = interpolateVisibility(0.5, -0.2, (cycleMinute - 11) / 5);')
+    || !worldSource.includes('timeVisibility = interpolateVisibility(0, 0.8, cycleMinute);')
+    || !worldSource.includes('timeVisibility = interpolateVisibility(0.8, 1, (cycleMinute - 1) / 4);')
+    || !worldSource.includes('timeVisibility = interpolateVisibility(1, 0.8, (cycleMinute - 5) / 5);')
+    || !worldSource.includes('timeVisibility = interpolateVisibility(0.8, 0, cycleMinute - 10);')
+    || !worldSource.includes('timeVisibility = 0;')
     || !worldSource.includes('const rainVisibility = 1 - 0.5 * environmentState.rainBlend;')
-    || !worldSource.includes('const sunVisibility = Math.max(0, timeVisibility) * rainVisibility;')
+    || !worldSource.includes('const sunVisibility = timeVisibility * rainVisibility;')
     || !worldSource.includes('addSun(positions, colors, sunDirection, warmth);')
-    || !worldSource.includes('opacities.push(sunVisibility);')
+    || !worldSource.includes('opacities.push(sunVisibility);')\n     || !worldSource.includes('const moonOpacity = Math.max(0, 1 - sunVisibility);')
     || !worldSource.includes('const core = saturatedCore.map((value) => luminance + (value - luminance) * 0.8);')
     || !worldSource.includes('const orbitTilt = Math.PI / 12;')
     || !worldSource.includes('const sunDirection = [Math.sin(azimuth) * Math.cos(orbitTilt), Math.sin(azimuth) * Math.sin(orbitTilt), Math.cos(azimuth)];')
@@ -1642,14 +1642,29 @@ try {
     throw new Error('任務246：太陽應在正午到達最高點、午夜到達最低點');
   }
   checks.push('任務246：太陽軌跡最高點對齊正午、最低點對齊午夜');
-  const noonTimeVisibility = Math.max(0, 0.4 + 0.6 * Math.cos(0));
-  const midnightTimeVisibility = Math.max(0, 0.4 + 0.6 * Math.cos(Math.PI));
-  const rainyVisibility = 1 - 0.5 * 1;
-  const preRainVisibility = 1 - 0.5 * 0.5;
-  if (noonTimeVisibility !== 1 || midnightTimeVisibility !== 0 || rainyVisibility !== 0.5 || preRainVisibility !== 0.75) {
-    throw new Error('任務246：太陽時間係數或雨勢係數不符合規格');
+  const visibilityAt = (minute) => {
+    if (minute < 1) return 0 + (0.8 - 0) * Math.max(0, Math.min(1, minute));
+    if (minute < 5) return 0.8 + (1 - 0.8) * Math.max(0, Math.min(1, (minute - 1) / 4));
+    if (minute < 10) return 1 + (0.8 - 1) * Math.max(0, Math.min(1, (minute - 5) / 5));
+    if (minute < 11) return 0.8 + (0 - 0.8) * Math.max(0, Math.min(1, minute - 10));
+    return 0;
+  };
+  const dawnStart = visibilityAt(0);
+  const dawnEnd = visibilityAt(1);
+  const noonVisibility = visibilityAt(5);
+  const dayEndVisibility = visibilityAt(10);
+  const duskEnd = visibilityAt(11);
+  const nightVisibility = visibilityAt(13);
+  const rainyVisibility = noonVisibility * (1 - 0.5 * 1);
+  const preRainVisibility = noonVisibility * (1 - 0.5 * 0.5);
+  const moonAtNoon = 1 - noonVisibility;
+  const moonAtNight = 1 - nightVisibility;
+  if (dawnStart !== 0 || dawnEnd !== 0.8 || noonVisibility !== 1 || dayEndVisibility !== 0.8
+    || duskEnd !== 0 || nightVisibility !== 0 || rainyVisibility !== 0.5 || preRainVisibility !== 0.75
+    || moonAtNoon !== 0 || moonAtNight !== 1) {
+    throw new Error('任務248：日月可見度曲線或雨勢係數不符合規格');
   }
-  checks.push('任務246：太陽正午可見度100%、午夜0%，雨勢係數於降雨前5秒平滑漸變至50%');
+  checks.push('任務248：太陽清晨0→80%、白天80→100→80%、傍晚80→0%、夜間0%；月亮可見度為100%-太陽可見度，雨勢淡出維持50%');
 
   checks.push('任務242：半徑10天空球與深度渲染順序；任務243：柔化雲朵明暗；任務244：提高晴天藍度；任務245：方向基底太陽模型；任務246：夜間雲朵近乎隱沒、太陽沿傾斜15度的真正大圓運行、相機以固定焦點向上／向下旋轉70度');
   if (!worldSource.includes('function findDroneRoute(start, goal, droneIndex)') || !worldSource.includes('const landObstacles = plotPositions.map((plot, index)') || !worldSource.includes('landObstacles.some(({ x, z }) => Math.abs(point[0] * step - x) < TILE * 0.5 + 0.12')) throw new Error('任務241：無人機尋路尚未把延伸到底部的地塊側牆列為障礙');
