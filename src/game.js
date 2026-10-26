@@ -489,6 +489,7 @@
       });
       if (plot.manual === true) syncManualPrimary(plot);
     });
+    cancelRainWaterJobs();
   }
   function updateHud() {
     coinsDisplay.textContent = game.coins; updateSaveStatus(); updateAvatarDisplay();
@@ -981,6 +982,29 @@
   function hasPendingJob(kind, index) {
     return [...activeJobs.values()].some((job) => job.kind === kind && job.index === index) || jobQueue.some((job) => job.kind === kind && job.index === index);
   }
+  function cancelRainWaterJobs() {
+    let changed = false;
+    for (let index = jobQueue.length - 1; index >= 0; index -= 1) {
+      const job = jobQueue[index];
+      if (job.kind !== 'water') continue;
+      jobQueue.splice(index, 1);
+      job.cancelled = true;
+      job.status = 'cancelled';
+      job.finishedAt = Date.now();
+      job.cancellationReason = 'rain_moisture';
+      changed = true;
+    }
+    for (const job of activeJobs.values()) {
+      if (job.kind !== 'water' || job.resultCommitted === true || job.cancelled) continue;
+      job.cancelled = true;
+      job.status = 'cancelled';
+      job.finishedAt = Date.now();
+      job.cancellationReason = 'rain_moisture';
+      job.cancelAnimation?.();
+      changed = true;
+    }
+    if (changed) renderJobQueue();
+  }
   function cancelMatureWaterJobs() {
     let changed = false;
     for (let index = jobQueue.length - 1; index >= 0; index -= 1) {
@@ -1255,6 +1279,10 @@
         return true;
       };
       const onReturnComplete = () => returningDrones.delete(droneIndex);
+      job.cancelAnimation = () => {
+        returningDrones.add(droneIndex);
+        return world.cancelDroneAnimation?.(droneIndex, finish) === true;
+      };
       if (job.kind === 'water') {
         const plot = game.plots[job.index];
         if (!plot || plot.crop === null || plot.watered || growthElapsed(plot) >= (crops[plot.crop] || crops[0]).growTime) {
