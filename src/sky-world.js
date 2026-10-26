@@ -1197,8 +1197,10 @@
       timeVisibility = interpolateVisibility(1, 0.6, (cycleMinute - 5) / 5);
     } else if (cycleMinute < 11) {
       timeVisibility = interpolateVisibility(0.6, 0.5, cycleMinute - 10);
+    } else if (cycleMinute < 13) {
+      timeVisibility = interpolateVisibility(0.5, -0.2, (cycleMinute - 11) / 2);
     } else {
-      timeVisibility = interpolateVisibility(0.5, -0.2, (cycleMinute - 11) / 5);
+      timeVisibility = interpolateVisibility(-0.2, 0.5, (cycleMinute - 13) / 3);
     }
     // Alpha cannot be negative, so the requested -20% endpoint is clamped to fully transparent.
     // Rain still fades visibility from 100% to 50% using the existing five-second rainBlend.
