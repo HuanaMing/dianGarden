@@ -6,9 +6,9 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "相機焦點已改為世界中心 (0,0,0) 加上水平平移偏移 [targetX,0,targetZ]，並允許相機穿過地面；等待 GitHub Actions 回歸驗收及使用者實機確認。",
+  "nextAction": "太陽軌道已調整為週期第 5 分鐘正午最高、第 13 分鐘午夜最低；相機焦點仍為世界中心加水平平移偏移並允許穿地。等待 GitHub Actions 回歸驗收及使用者實機確認。",
   "taskFiles": [
     "tasks/active/246-night-cloud-sun-visibility.md"
   ],
-  "result": "依使用者補充，移除為避免穿地而動態抬高焦點的邏輯。相機以 [targetX,0,targetZ] 作為外部焦點，位置依焦點加球面偏移計算，視線直接對準焦點；相機可穿過地面。已更新回歸測試與任務紀錄，尚待 CI 與實機驗收。"
+  "result": "依使用者要求，將太陽傾斜 15 度的大圓軌跡相位對齊正午與午夜，新增測試驗證正午仰角 +15°、午夜 -15°。相機焦點仍為 [targetX,0,targetZ]，允許相機穿過地面。自動測試與實機驗收尚未完成。"
 }
