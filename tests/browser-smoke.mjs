@@ -90,6 +90,10 @@ const browser = await chromium.launch({ headless: true });
 const errors = [];
 const checks = [];
 checks.push('任務225：只有停靠座標改變才重算返航路徑，電量更新不再重設飛行插值');
+if (!gameSource.includes('const priority = (candidate) => returningDrones.has(candidate.index) ? 0 : candidate.drone.battery === 100 ? 1 : 2;')) {
+  throw new Error('任務255：返航無人機應優先接續原地後續工作，不可被滿電但遠離目標的無人機搶先');
+}
+checks.push('任務255：返航中的無人機優先於滿電待命無人機，避免同一地塊的連續工作跨機接手');
 
 const encyclopediaPage = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
 await encyclopediaPage.addInitScript(() => {
