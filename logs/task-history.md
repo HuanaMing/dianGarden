@@ -1890,3 +1890,10 @@
 - 批次收成只處理被選取且成熟的花株；未選取或未成熟花株保留，使用 `positionIndex` 識別株位。空選取時提示「選取花種以收成」，全數未成熟時顯示未成熟提示。
 - 已更新 `src/game.js`、`src/styles.css`、`tests/browser-smoke.mjs`、`tasks/active/250-manual-plot-multi-harvest.md` 及任務狀態資料。
 - 自動化測試結果尚未確認，亦未進行使用者視覺驗收；未手動觸發 GitHub Pages 部署。任務251～254依序待辦，尚未開始。
+
+## 2026-10-26 — 任務250自動驗收結果
+
+- 初次瀏覽器測試 run `40330205355` 因舊回歸案例仍尋找逐株文字卡片而失敗；將草地保留、舊存檔遷移及容量滿載測試改為檢查新圖示按鈕。
+- 修正後桌面／手機 Playwright 完整瀏覽器驗收通過：[run 40330636971](https://github.com/HuanaMing/dianGarden/actions/runs/40330636971)。涵蓋固定五欄、圖示、選取與取消、空選取通知、批次收成、未成熟花株保留及金幣狀態。
+- GitHub Pages 自動部署工作流程由程式提交觸發並成功：[run 40330205318](https://github.com/HuanaMing/dianGarden/actions/runs/40330205318)。未手動觸發部署。
+- 狀態：任務250程式及自動化驗收完成，仍待使用者視覺驗收；任務251尚未開始。
