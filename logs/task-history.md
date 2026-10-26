@@ -1882,3 +1882,11 @@
 - 任務249：雨滴動畫從世界原點附近的小區域改為以相機位置及朝向為中心，3D模式依相機前方／側向分布，2D模式以鏡頭目標為中心；雨滴數量由44增加至72。
 - 已更新 `tests/browser-smoke.mjs` 的任務249靜態斷言。
 - 驗證限制：尚未執行 Playwright／GitHub Actions，也未進行瀏覽器視覺驗收；未手動觸發 GitHub Pages 部署。
+
+## 2026-10-26 — 任務249驗收完成、任務250開始實作
+
+- 任務249：使用者明確確認「驗收通過」。已建立 `tasks/done/249-camera-following-rain.md` 並確認內容完整，之後移除 `tasks/active/249-camera-following-rain.md`。
+- 任務250：手動地塊的逐株文字卡片與個別操作列改為每株一個 PNG 像素圖按鈕，固定五欄；以 `aria-pressed` 呈現選取狀態。
+- 批次收成只處理被選取且成熟的花株；未選取或未成熟花株保留，使用 `positionIndex` 識別株位。空選取時提示「選取花種以收成」，全數未成熟時顯示未成熟提示。
+- 已更新 `src/game.js`、`src/styles.css`、`tests/browser-smoke.mjs`、`tasks/active/250-manual-plot-multi-harvest.md` 及任務狀態資料。
+- 自動化測試結果尚未確認，亦未進行使用者視覺驗收；未手動觸發 GitHub Pages 部署。任務251～254依序待辦，尚未開始。
