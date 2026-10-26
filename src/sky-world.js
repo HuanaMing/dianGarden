@@ -1082,7 +1082,11 @@
     };
     const addCloud = (x, y, z, scale = 1) => {
       const start = positions.length / 3;
-      const cloudColor = environmentState.isRaining ? [0.62, 0.72, 0.76] : [0.86, 0.93, 0.96];
+      const daylight = Math.max(0, Math.min(1, environmentState.daylightProgress));
+      // Keep cloud faces soft, but let the whole cloud darken with the night sky.
+      const cloudBrightness = 0.16 + daylight * 0.84;
+      const cloudColor = (environmentState.isRaining ? [0.62, 0.72, 0.76] : [0.86, 0.93, 0.96])
+        .map((channel) => channel * cloudBrightness);
       addCloudLobe(x, y, z, 0.96 * scale, 0.24 * scale, 0.96 * scale, cloudColor);
       addCloudLobe(x - 0.42 * scale, y + 0.08 * scale, z + 0.36 * scale, 0.68 * scale, 0.3 * scale, 0.68 * scale, cloudColor.map((channel) => Math.min(1, channel * 1.04)));
       addCloudLobe(x + 0.38 * scale, y + 0.02 * scale, z - 0.4 * scale, 0.7 * scale, 0.27 * scale, 0.7 * scale, cloudColor.map((channel) => channel * 0.96));
@@ -1172,8 +1176,10 @@
     const cycleTime = ((environmentState.worldTimeMs % cycle) + cycle) % cycle;
     const daylightArc = Math.max(0, Math.min(1, cycleTime / (11 * 60_000)));
     if (daylightArc > 0.015 && daylightArc < 0.985 && environmentState.daylightProgress > 0.03 && environmentState.rainBlend < 0.7) {
-      const elevation = Math.sin(daylightArc * Math.PI) * 0.78;
-      const azimuth = -Math.PI / 2 + daylightArc * Math.PI;
+      // Keep the daylight arc in the default camera's visible sky sector.
+      // The sky view removes camera translation but retains its downward pitch.
+      const elevation = -0.54 + Math.sin(daylightArc * Math.PI) * 0.36;
+      const azimuth = -2.36 + (daylightArc - 0.5) * 0.9;
       const horizontal = Math.cos(elevation);
       const sunDirection = [Math.sin(azimuth) * horizontal, Math.sin(elevation), Math.cos(azimuth) * horizontal];
       const warmth = environmentState.phase === 'day'
