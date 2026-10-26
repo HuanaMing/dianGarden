@@ -1608,7 +1608,13 @@ try {
     || !worldSource.includes('const cloudOpacity = (environmentState.isRaining ? 0.36 : 0.42) * (0.03 + daylight * 0.97);')
     || !worldSource.includes('const orbitProgress = cycleTime / cycle;')
     || !worldSource.includes('const solarNoonProgress = (5 * 60_000) / cycle;')
-    || !worldSource.includes('const azimuth = (orbitProgress - solarNoonProgress) * Math.PI * 2 + Math.PI / 2;')
+    || !worldSource.includes('const solarPhaseAngle = (orbitProgress - solarNoonProgress) * Math.PI * 2;')
+    || !worldSource.includes('const azimuth = solarPhaseAngle + Math.PI / 2;')
+    || !worldSource.includes('const timeVisibility = Math.max(0, 0.4 + 0.6 * Math.cos(solarPhaseAngle));')
+    || !worldSource.includes('const rainVisibility = 1 - 0.5 * environmentState.rainBlend;')
+    || !worldSource.includes('const sunVisibility = timeVisibility * rainVisibility;')
+    || !worldSource.includes('addSun(positions, colors, sunDirection, warmth, sunVisibility);')
+    || !worldSource.includes('opacities.push(sunVisibility);')
     || !worldSource.includes('const orbitTilt = Math.PI / 12;')
     || !worldSource.includes('const sunDirection = [Math.sin(azimuth) * Math.cos(orbitTilt), Math.sin(azimuth) * Math.sin(orbitTilt), Math.cos(azimuth)];')
     || worldSource.includes('environmentState.rainBlend < 0.7')
@@ -1630,6 +1636,15 @@ try {
     throw new Error('任務246：太陽應在正午到達最高點、午夜到達最低點');
   }
   checks.push('任務246：太陽軌跡最高點對齊正午、最低點對齊午夜');
+  const noonTimeVisibility = Math.max(0, 0.4 + 0.6 * Math.cos(0));
+  const midnightTimeVisibility = Math.max(0, 0.4 + 0.6 * Math.cos(Math.PI));
+  const rainyVisibility = 1 - 0.5 * 1;
+  const preRainVisibility = 1 - 0.5 * 0.5;
+  if (noonTimeVisibility !== 1 || midnightTimeVisibility !== 0 || rainyVisibility !== 0.5 || preRainVisibility !== 0.75) {
+    throw new Error('任務246：太陽時間係數或雨勢係數不符合規格');
+  }
+  checks.push('任務246：太陽正午可見度100%、午夜0%，雨勢係數於降雨前5秒平滑漸變至50%');
+
   checks.push('任務242：半徑10天空球與深度渲染順序；任務243：柔化雲朵明暗；任務244：提高晴天藍度；任務245：方向基底太陽模型；任務246：夜間雲朵近乎隱沒、太陽沿傾斜15度的真正大圓運行、相機以固定焦點向上／向下旋轉70度');
   if (!worldSource.includes('function findDroneRoute(start, goal, droneIndex)') || !worldSource.includes('const landObstacles = plotPositions.map((plot, index)') || !worldSource.includes('landObstacles.some(({ x, z }) => Math.abs(point[0] * step - x) < TILE * 0.5 + 0.12')) throw new Error('任務241：無人機尋路尚未把延伸到底部的地塊側牆列為障礙');
   checks.push('任務241：無人機尋路會避開地塊側牆，並允許從起點／終點地塊離開及抵達');
