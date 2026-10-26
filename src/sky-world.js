@@ -275,6 +275,40 @@
     if (cameraMode === '2d') topDownHeight = Math.max(3, Math.min(50, value));
     else distance = Math.max(1.5, Math.min(24, value));
   }
+  function getCameraPose() {
+    return cameraMode === '2d'
+      ? { mode: '2d', topDownHeight, targetX, targetZ }
+      : { mode: '3d', yaw, pitch, distance, targetX, targetZ };
+  }
+  function restoreCameraPose(pose) {
+    if (!pose || typeof pose !== 'object') return false;
+    const finite = (value) => typeof value === 'number' && Number.isFinite(value);
+    if (pose.mode === '2d' && finite(pose.topDownHeight) && finite(pose.targetX) && finite(pose.targetZ)) {
+      cameraMode = '2d';
+      topDownHeight = Math.max(3, Math.min(50, pose.topDownHeight));
+      targetX = Math.max(-100, Math.min(100, pose.targetX));
+      targetZ = Math.max(-100, Math.min(100, pose.targetZ));
+      cameraModeButton && (cameraModeButton.textContent = '返回 3D');
+      cameraModeButton?.setAttribute('aria-pressed', 'true');
+      return true;
+    }
+    if (pose.mode === '3d' && finite(pose.yaw) && finite(pose.pitch) && finite(pose.distance) && finite(pose.targetX) && finite(pose.targetZ)) {
+      cameraMode = '3d';
+      yaw = pose.yaw;
+      pitch = Math.max(-1.35, Math.min(1.35, pose.pitch));
+      distance = Math.max(1.5, Math.min(24, pose.distance));
+      targetX = Math.max(-100, Math.min(100, pose.targetX));
+      targetZ = Math.max(-100, Math.min(100, pose.targetZ));
+      cameraModeButton && (cameraModeButton.textContent = '2D 模式');
+      cameraModeButton?.setAttribute('aria-pressed', 'false');
+      return true;
+    }
+    return false;
+  }
+  window.dianGardenCamera = Object.freeze({
+    getState: getCameraPose,
+    restore: restoreCameraPose,
+  });
   const cameraModeButton = document.querySelector('#camera-mode');
   cameraModeButton?.addEventListener('click', () => {
     if (cameraMode === '3d') {
