@@ -763,7 +763,7 @@
     });
     jobQueueDisplay.querySelectorAll('[data-cancel-job]').forEach((button) => button.addEventListener('click', () => {
       const index = jobQueue.findIndex((job) => job.id === button.dataset.cancelJob);
-      if (index >= 0) { const [removed] = jobQueue.splice(index, 1); renderJobQueue(); notify(`已取消等待中的${jobLabel(removed)}。`); }
+      if (index >= 0) { const [removed] = jobQueue.splice(index, 1); removed.cancelled = true; removed.status = 'cancelled'; removed.finishedAt = Date.now(); renderJobQueue(); notify(`已取消等待中的${jobLabel(removed)}。`); }
     }));
   }
   function renderDroneFleet() {
@@ -990,6 +990,9 @@
       const crop = plot && plot.crop !== null ? crops[plot.crop] || crops[0] : null;
       if (crop && growthElapsed(plot) >= crop.growTime) {
         jobQueue.splice(index, 1);
+        job.cancelled = true;
+        job.status = 'cancelled';
+        job.finishedAt = Date.now();
         changed = true;
       }
     }
@@ -999,6 +1002,8 @@
         const crop = plot && plot.crop !== null ? crops[plot.crop] || crops[0] : null;
         if (crop && growthElapsed(plot) >= crop.growTime) {
           job.cancelled = true;
+          job.status = 'cancelled';
+          job.finishedAt = Date.now();
           changed = true;
         }
       }
@@ -1104,15 +1109,29 @@
     if (job.kind === 'plant') {
       const plot = game.plots[job.index], crop = crops[job.cropIndex];
       const variant = job.variantId ? game.flowerVariants.find((item) => item.id === job.variantId) : null;
-      if (!plot || isDroneExcluded(plot) || plot.crop !== null || !crop || game.coins < crop.seedCost) return notify('播種任務條件已改變，已略過。');
-      if (job.variantId && (!variant || variant.cropIndex !== job.cropIndex)) return notify('花色變種資料已改變，播種任務已略過。');
+      if (!plot || isDroneExcluded(plot) || plot.crop !== null || !crop || game.coins < crop.seedCost) {
+        notify('播種任務條件已改變，已略過。');
+        return false;
+      }
+      if (job.variantId && (!variant || variant.cropIndex !== job.cropIndex)) {
+        notify('花色變種資料已改變，播種任務已略過。');
+        return false;
+      }
       const droneHeading = window.skyWorld?.getDroneHeading?.(job.droneIndex);
       const rotation = Number.isFinite(droneHeading) ? Math.max(-Math.PI, Math.min(Math.PI, droneHeading)) : 0;
-      game.coins -= crop.seedCost; plot.crop = job.cropIndex; plot.variantId = variant?.id || null; plot.variantName = variant?.name || null; plot.variantColor = variant?.color || null; plot.plantedAt = Date.now(); plot.plantHeight = 0.9 + Math.random() * 0.2; plot.rotation = rotation; plot.watered = false; plot.waterSource = null; plot.growthBonusMs = 0; save(); render(); if (!job.automatic) notify(`種下了${variant ? `${crop.name}・${variant.name}` : crop.name}，期待它長大吧！`); return;
+      game.coins -= crop.seedCost; plot.crop = job.cropIndex; plot.variantId = variant?.id || null; plot.variantName = variant?.name || null; plot.variantColor = variant?.color || null; plot.plantedAt = Date.now(); plot.plantHeight = 0.9 + Math.random() * 0.2; plot.rotation = rotation; plot.watered = false; plot.waterSource = null; plot.growthBonusMs = 0; save(); render(); if (!job.automatic) notify(`種下了${variant ? `${crop.name}・${variant.name}` : crop.name}，期待它長大吧！`);
+      return true;
     }
     if (job.kind === 'harvest') {
-      const plot = game.plots[job.index]; if (!plot || isDroneExcluded(plot) || plot.crop === null) return notify('收成任務條件已改變，已略過。');
-      const crop = getPlantedCrop(plot); if (growthElapsed(plot) < crop.growTime) return notify('作物尚未成熟，收成任務已略過。');
+      const plot = game.plots[job.index];
+      if (!plot || isDroneExcluded(plot) || plot.crop === null) {
+        notify('收成任務條件已改變，已略過。');
+        return false;
+      }
+      const crop = getPlantedCrop(plot); if (growthElapsed(plot) < crop.growTime) {
+        notify('作物尚未成熟，收成任務已略過。');
+        return false;
+      }
       const reward = getHarvestReward(crop); game.coins += reward; plot.crop = null; plot.variantId = null; plot.variantName = null; plot.variantColor = null; plot.plantedAt = null; plot.plantHeight = null; plot.rotation = 0; plot.watered = false; plot.waterSource = null; plot.growthBonusMs = 0; delete plot.waterStartedAt; delete plot.waterUntil; save(); render();
       if (job.automatic) {
         planAutomaticJobs();
@@ -1124,26 +1143,32 @@
         }
       }
       else notify(`收成了${crop.name}！獲得 ${reward} 金幣 ✨`);
-      return;
+      return true;
     }
     if (job.kind === 'water') {
       const plot = game.plots[job.index];
-      if (window.skyEnvironment.getState(game).isRaining) return;
-      if (!plot || isDroneExcluded(plot) || plot.crop === null || plot.watered || growthElapsed(plot) >= (crops[plot.crop] || crops[0]).growTime) return;
-      plot.watered = true; plot.waterSource = 'drone'; plot.waterWetnessStart = 1; plot.waterStartedAt = Date.now(); plot.waterUntil = plot.waterStartedAt + WATER_DURATION; save(); render(); if (!job.automatic) notify('澆水完成！這株花接下來 30 秒會以 1.2 倍速度生長。'); return;
+      if (window.skyEnvironment.getState(game).isRaining) return false;
+      if (!plot || isDroneExcluded(plot) || plot.crop === null || plot.watered || growthElapsed(plot) >= (crops[plot.crop] || crops[0]).growTime) return false;
+      plot.watered = true; plot.waterSource = 'drone'; plot.waterWetnessStart = 1; plot.waterStartedAt = Date.now(); plot.waterUntil = plot.waterStartedAt + WATER_DURATION; save(); render(); if (!job.automatic) notify('澆水完成！這株花接下來 30 秒會以 1.2 倍速度生長。');
+      return true;
     }
     const expansionCost = getLandCost();
-    if (game.coins < expansionCost) return notify('擴建任務執行時金幣不足，已略過。');
+    if (game.coins < expansionCost) {
+      notify('擴建任務執行時金幣不足，已略過。');
+      return false;
+    }
     const position = job.position || (() => {
       const candidate = getNextPlotPosition(game.plots, game.drones.map((drone) => drone.dockPosition));
       return candidate ? { x: candidate[0], z: candidate[1] } : null;
     })();
     if (!position || game.plots.some((plot) => plot.x === position.x && plot.z === position.z)
       || game.drones.some((drone) => dockOverlapsPlot(drone.dockPosition, position))) {
-      return notify('擴建位置已被占用，請移動坪台或農地後再試。');
+      notify('擴建位置已被占用，請移動坪台或農地後再試。');
+      return false;
     }
     const { x, z } = position;
     game.coins -= expansionCost; game.plots.push({ crop: null, plantedAt: null, manual: false, grassOnly: false, x, z, y: 0 }); save(); render(); notify('新島開墾完成！這片天空也是你的了 ☁️');
+    return true;
   }
   function processJobQueue() {
     updateBatteries();
@@ -1182,6 +1207,9 @@
       if (queueIndex < 0) queueIndex = jobQueue.findIndex(isEligibleJob);
       if (queueIndex < 0) continue;
       const [job] = jobQueue.splice(queueIndex, 1);
+      job.status = 'assigned';
+      job.assignedAt = Date.now();
+      job.droneIndex = droneIndex;
       returningDrones.delete(droneIndex);
       updateBatteries();
       activeJobs.set(droneIndex, job);
@@ -1194,10 +1222,14 @@
       nextDroneIndex = (droneIndex + 1) % game.drones.length;
       let finished = false;
       const commit = () => {
-        if (job.committed || job.cancelled) return;
+        if (job.resultAttempted || job.cancelled || job.status === 'cancelled' || job.status === 'succeeded' || job.status === 'failed') return;
+        job.resultAttempted = true;
         job.committed = true;
         job.droneIndex = droneIndex;
-        completeJob(job);
+        job.resultCommitted = completeJob(job) === true;
+        job.status = job.resultCommitted ? 'result_committed' : 'failed';
+        if (!job.resultCommitted) job.failureReason = 'result_validation_failed';
+        job.resultCommittedAt = job.resultCommitted ? Date.now() : null;
       };
       const finish = () => {
         if (finished || activeJobs.get(droneIndex) !== job) return;
@@ -1205,6 +1237,10 @@
         const workingPlot = job.kind === 'water' ? game.plots[job.index] : null;
         if (workingPlot) delete workingPlot.waterVisualStartedAt;
         commit();
+        if (job.cancelled || job.status === 'cancelled') job.status = 'cancelled';
+        else if (job.resultCommitted) job.status = 'succeeded';
+        else job.status = 'failed';
+        job.finishedAt = Date.now();
         updateBatteries();
         activeJobs.delete(droneIndex);
         if (job.kind !== 'expand') lastCompletedPlotByDrone.set(droneIndex, job.index);
@@ -1220,6 +1256,9 @@
       if (job.kind === 'water') {
         const plot = game.plots[job.index];
         if (!plot || plot.crop === null || plot.watered || growthElapsed(plot) >= (crops[plot.crop] || crops[0]).growTime) {
+          job.cancelled = true;
+          job.status = 'cancelled';
+          job.finishedAt = Date.now();
           activeJobs.delete(droneIndex);
           continue;
         }
@@ -1229,12 +1268,18 @@
       else if (job.kind === 'harvest') started = world.animateHarvest?.(job.index, commit, finish, shouldReturn, droneIndex, onReturnComplete);
       else if (job.kind === 'water') started = world.animateWater?.(job.index, commit, finish, shouldReturn, droneIndex, onReturnComplete, onWaterWorkStart);
       else started = world.animateExpansion?.(job.position, commit, finish, shouldReturn, droneIndex, onReturnComplete);
+      if (started === true && job.status === 'assigned') {
+        job.status = 'running';
+        job.startedAt = Date.now();
+      }
       if (started === undefined || started === false) finish();
     }
     renderJobQueue();
   }
   function enqueueJob(job) {
     job.id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    job.status = 'queued';
+    job.createdAt = Date.now();
     jobQueue.push(job); renderJobQueue(); processJobQueue();
   }
   function plant(index, cropIndex, variantId = null) {
