@@ -71,7 +71,7 @@ if (!skyWorldSource.includes("const dronePhaseTransitions = {")
 }
 if (!gameSource.includes("function cancelRainWaterJobs()")
   || !gameSource.includes("cancelRainWaterJobs();")
-  || !gameSource.includes("world.cancelDroneAnimation?.(droneIndex, finish)")
+  || !gameSource.includes("world.cancelDroneAnimation?.(droneIndex, () => {")
   || !skyWorldSource.includes("cancelDroneAnimation(droneIndex, onReturnComplete)")
   || !skyWorldSource.includes("setDronePhase(droneIndex, route ? 'returning' : 'waiting_path', 'work-cancelled-return')")) {
   throw new Error('任務262：雨後取消澆水工作未保留動畫位置控制權並安全返航');
