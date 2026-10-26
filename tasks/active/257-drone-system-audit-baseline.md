@@ -23,5 +23,14 @@
 ## 依賴
 `docs/drone-system-refactor.md`；任務255。
 
+## 初步盤點發現
+- `src/game.js` 的 `render()` 會呼叫 `window.skyWorld.setDroneDocks(...)`；`completeJob()` 會在動畫工作完成回呼中同步呼叫 `render()`。
+- `src/sky-world.js` 的 `updateDroneFrame()` 在工作完成時先將 `state.animation = null`，再呼叫 `animation.onComplete`。
+- 同一回呼同步執行遊戲結果提交及 `render()` 時，`setDroneDocks()` 會因該無人機的 animation 為 null 而將 `state.location` 直接設成停靠平台座標。這是具體且可疑的瞬移來源；仍須以動態回歸測試確認。
+- `setDroneDocks()` 另有直線路徑備援 `return [start, goal]`；它可避免派工硬停，但不能作為無安全路徑時的最終策略。
+- 目前 Desktop Commander 裝置離線；已利用 GitHub Actions 的 Playwright 工作流程驗證方式，補入實際工作交接測試，等待工作流程結果。
+
 ## 執行紀錄
-- 2026-10-27：開始盤點。規格已建立；尚未修改核心程式或執行測試。
+- 2026-10-27：開始盤點。規格已建立。
+- 2026-10-27：提交 `tests/browser-smoke.mjs`，增加播種完成後在同步停靠／電量更新回呼中接續澆水的連續性測試；測試使用既有 WebGL 動態頂點取樣，非單純來源字串斷言。
+- 2026-10-27：GitHub Actions 瀏覽器驗收 run #778（commit `8c9c718`）已啟動，結果待確認。核心程式尚未修改；本地 Node／Playwright 測試未執行，因遠端測試裝置離線。
