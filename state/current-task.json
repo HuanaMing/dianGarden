@@ -1,14 +1,15 @@
 {
-  "name": "任務248：調整太陽與月亮的可見度曲線",
+  "name": "任務248：星星閃爍與日月可見度連動",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "太陽已改為凌晨0→80%、白天80→100→80%、傍晚80→0%、夜間0%；月亮可見度改為100%減去太陽可見度。已更新瀏覽器回歸測試，下一步檢查程式與測試語法並等待自動測試／實機驗收。",
+  "nextAction": "任務247重做已修正雨天月亮可見度公式；任務248已加入84顆固定星星，每顆以3至5秒獨立週期閃爍，透明度乘上月亮可見度。已更新回歸測試與任務文件，待檢查測試執行結果並進行實機驗收。",
   "taskFiles": [
+    "tasks/active/247-rainy-moon-visibility.md",
     "tasks/active/248-sun-moon-visibility-curve.md"
   ],
-  "result": "已提交 src/sky-world.js 與 tests/browser-smoke.mjs 修改，並建立任務248規格及執行紀錄。保留降雨時太陽可見度逐漸淡出至50%的既有行為。尚未執行 Playwright／GitHub Actions，也未進行使用者實機視覺驗收。"
+  "result": "已修改 src/sky-world.js 的雨天月亮透明度及星星繪製／閃爍；已更新 tests/browser-smoke.mjs 的規格斷言，並建立任務247重做及更新任務248文件。尚未執行 Playwright／GitHub Actions，尚未進行實機視覺驗收。"
 }
