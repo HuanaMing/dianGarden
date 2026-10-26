@@ -1213,28 +1213,25 @@
     const solarNoonProgress = (5 * 60_000) / cycle;
     const solarPhaseAngle = (orbitProgress - solarNoonProgress) * Math.PI * 2;
     const azimuth = solarPhaseAngle + Math.PI / 2;
-    // Visibility follows the four configured phases, with smooth linear ramps between targets.
+    // Sun visibility follows dawn 0→80%, daytime 80→100→80%, dusk 80→0%, then stays off at night.
     const cycleMinute = cycleTime / 60_000;
     const interpolateVisibility = (start, end, progress) =>
       start + (end - start) * Math.max(0, Math.min(1, progress));
     let timeVisibility;
     if (cycleMinute < 1) {
-      timeVisibility = interpolateVisibility(0.5, 0.6, cycleMinute);
+      timeVisibility = interpolateVisibility(0, 0.8, cycleMinute);
     } else if (cycleMinute < 5) {
-      timeVisibility = interpolateVisibility(0.6, 1, (cycleMinute - 1) / 4);
+      timeVisibility = interpolateVisibility(0.8, 1, (cycleMinute - 1) / 4);
     } else if (cycleMinute < 10) {
-      timeVisibility = interpolateVisibility(1, 0.6, (cycleMinute - 5) / 5);
+      timeVisibility = interpolateVisibility(1, 0.8, (cycleMinute - 5) / 5);
     } else if (cycleMinute < 11) {
-      timeVisibility = interpolateVisibility(0.6, 0.5, cycleMinute - 10);
-    } else if (cycleMinute < 13) {
-      timeVisibility = interpolateVisibility(0.5, -0.2, (cycleMinute - 11) / 2);
+      timeVisibility = interpolateVisibility(0.8, 0, cycleMinute - 10);
     } else {
-      timeVisibility = interpolateVisibility(-0.2, 0.5, (cycleMinute - 13) / 3);
+      timeVisibility = 0;
     }
-    // Alpha cannot be negative, so the requested -20% endpoint is clamped to fully transparent.
-    // Rain still fades visibility from 100% to 50% using the existing five-second rainBlend.
+    // Preserve the existing rain fade: visibility gradually falls to 50% during rain.
     const rainVisibility = 1 - 0.5 * environmentState.rainBlend;
-    const sunVisibility = Math.max(0, timeVisibility) * rainVisibility;
+    const sunVisibility = timeVisibility * rainVisibility;
     // Tilt the orbital plane 15 degrees from the horizontal equatorial plane.
     // This produces a true great circle: elevation varies smoothly from -15 to +15 degrees.
     const orbitTilt = Math.PI / 12;
@@ -1248,7 +1245,7 @@
     const moonDirection = sunDirection.map((value) => -value);
     const moonCenter = moonDirection.map((value) => value * SKY_SPHERE_RADIUS);
     const [moonRight, moonUp] = billboardBasis(moonDirection);
-    const moonOpacity = Math.max(0, 0.8 - sunVisibility);
+    const moonOpacity = Math.max(0, 1 - sunVisibility);
     // Keep one moon phase for each complete in-game day/night cycle.
     const moonLightStep = Math.floor(environmentState.worldTimeMs / cycle) % 8;
     const phaseAngle = moonLightStep * Math.PI / 4;
