@@ -311,7 +311,7 @@ await droneTeleportPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle'
 await droneTeleportPage.locator('#sky-canvas').waitFor({ state: 'visible' });
 await droneTeleportPage.waitForFunction(() => window.__dgDroneFrames.length > 3, null, { timeout: 8000 });
 await droneTeleportPage.evaluate(async () => {
-  const docks = Array.from({ length: 8 }, (_, index) => ({
+  let docks = Array.from({ length: 8 }, (_, index) => ({
     x: -2.8 + index * 0.8, z: 2, y: 0, deployed: true, deploymentOrder: index + 1, battery: 100,
   }));
   const plots = Array.from({ length: 8 }, (_, index) => ({ x: -2.8 + index * 0.8, z: -1.5, y: 0 }));
@@ -324,7 +324,15 @@ await droneTeleportPage.evaluate(async () => {
   for (let index = 0; index < 8; index += 1) {
     window.skyWorld.animatePlant(index, () => {}, () => {}, () => true, index);
   }
-  for (let tick = 1; tick <= 24; tick += 1) {
+  for (let tick = 1; tick <= 80; tick += 1) {
+    // Move all docks during outbound travel, then move them again during return flight.
+    // Both cases used to replace the route without synchronizing its interpolation clock.
+    if (tick === 8 || tick === 55) {
+      const dx = tick === 8 ? 0.6 : 0.7;
+      const dz = tick === 8 ? 0.4 : -0.3;
+      docks = docks.map(dock => ({ ...dock, x: dock.x + dx, z: dock.z + dz }));
+      window.skyWorld.setDockPosition({ x: docks[0].x, z: docks[0].z, y: docks[0].y });
+    }
     window.skyWorld.setDroneDocks(docks.map((dock, index) => ({
       ...dock, battery: Math.max(10, 100 - tick * 0.35 - index * 0.1),
     })));
@@ -362,9 +370,9 @@ const droneMotion = await droneTeleportPage.evaluate(() => {
   return { frameCount: frames.length, maxStep, invalid: false };
 });
 if (droneMotion.invalid || droneMotion.maxStep > 0.8) {
-  throw new Error('任務225：八台無人機連續派工／返航時偵測到非預期跳位：' + JSON.stringify(droneMotion));
+  throw new Error('任務255：八台無人機於電量更新及去程／返航途中移動停靠平台時偵測到非預期跳位：' + JSON.stringify(droneMotion));
 }
-checks.push(`任務225：八台無人機持續更新電量時位置連續（${droneMotion.frameCount} 個取樣，最大位移 ${droneMotion.maxStep.toFixed(3)}）`);
+checks.push(`任務255：八台無人機持續更新電量、去程及返航途中移動停靠平台時位置連續（${droneMotion.frameCount} 個取樣，最大位移 ${droneMotion.maxStep.toFixed(3)}）`);
 await droneTeleportPage.close();
 
 const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
