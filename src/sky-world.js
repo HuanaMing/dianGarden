@@ -2485,6 +2485,16 @@
     getDronePhase(droneIndex = 0) {
       return Number.isInteger(droneIndex) ? droneStates[droneIndex]?.phase ?? 'docked' : 'docked';
     },
+    getDronePosition(droneIndex = 0) {
+      const state = Number.isInteger(droneIndex) ? droneStates[droneIndex] : null;
+      if (!state) return null;
+      return {
+        x: state.location[0], y: state.y, z: state.location[1],
+        phase: state.phase || 'idle',
+        animationKind: state.animation?.kind || null,
+        returning: state.animation?.returning === true,
+      };
+    },
     cancelDroneAnimation(droneIndex, onReturnComplete) {
       if (!Number.isInteger(droneIndex) || droneIndex < 0 || droneIndex >= droneCount) return false;
       const state = droneStates[droneIndex];
