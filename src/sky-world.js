@@ -1178,7 +1178,7 @@
     // The sun completes one full orbit per day/night cycle and stays visible in all weather and phases.
     const orbitProgress = cycleTime / cycle;
     const azimuth = orbitProgress * Math.PI * 2;
-    const elevation = Math.PI / 4;
+    const elevation = Math.PI / 12;
     const horizontal = Math.cos(elevation);
     const sunDirection = [Math.sin(azimuth) * horizontal, Math.sin(elevation), Math.cos(azimuth) * horizontal];
     const warmth = environmentState.phase === 'day'
@@ -1531,7 +1531,7 @@
       forward[2] + right[2] * nx * aspect * tangent + cameraUp[2] * ny * tangent,
     ];
     // Keep the camera physically above the garden while allowing its view direction to tilt upward.
-    const eyePitch = Math.max(0.18, pitch);
+    const eyePitch = Math.max(0.18, Math.abs(pitch));
     const horizontal = Math.cos(eyePitch) * distance;
     const eye = [targetX + Math.sin(yaw) * horizontal, Math.sin(eyePitch) * distance, targetZ + Math.cos(yaw) * horizontal];
     if (Math.abs(ray[1]) < 0.0001) return null;
@@ -1634,7 +1634,7 @@
     gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
     gl.disableVertexAttribArray(locations.opacity);
     gl.vertexAttrib1f(locations.opacity, 1);
-    const eyePitch = Math.max(0.18, pitch);
+    const eyePitch = Math.max(0.18, Math.abs(pitch));
     const horizontal = Math.cos(eyePitch) * distance;
     const eye = cameraMode === '2d' ? [targetX, topDownHeight, targetZ] : [targetX + Math.sin(yaw) * horizontal, Math.sin(eyePitch) * distance, targetZ + Math.cos(yaw) * horizontal];
     const cameraForward = [-Math.sin(yaw) * Math.cos(pitch), -Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)];
