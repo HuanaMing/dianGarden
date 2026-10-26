@@ -1233,14 +1233,35 @@
       const viewDot = normal.reduce((sum, value, axis) => sum + value * moonViewDirection[axis], 0);
       return lightDot > 0 && viewDot > 0 ? moonOpacity : 0;
     };
-    const addMoonIcosahedron = (center, radius, color) => {
-      const verts = [
+    const addMoonIcosphere = (center, radius, color) => {
+      const vertices = [
         [-1,1.618,0],[1,1.618,0],[-1,-1.618,0],[1,-1.618,0],[0,-1,1.618],[0,1,1.618],[0,-1,-1.618],[0,1,-1.618],
         [1.618,0,-1],[1.618,0,1],[-1.618,0,-1],[-1.618,0,1],
       ].map(normalize3);
-      const faces = [[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+      let faces = [[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+      // Three icosphere subdivision rounds turn 20 faces into 1,280 (64x).
+      for (let level = 0; level < 3; level += 1) {
+        const midpointCache = new Map();
+        const midpoint = (a, b) => {
+          const key = a < b ? `${a}:${b}` : `${b}:${a}`;
+          if (midpointCache.has(key)) return midpointCache.get(key);
+          const point = normalize3(vertices[a].map((value, axis) => (value + vertices[b][axis]) * 0.5));
+          const index = vertices.length;
+          vertices.push(point);
+          midpointCache.set(key, index);
+          return index;
+        };
+        const refinedFaces = [];
+        for (const [a, b, c] of faces) {
+          const ab = midpoint(a, b);
+          const bc = midpoint(b, c);
+          const ca = midpoint(c, a);
+          refinedFaces.push([a, ab, ca], [b, bc, ab], [c, ca, bc], [ab, bc, ca]);
+        }
+        faces = refinedFaces;
+      }
       for (const face of faces) {
-        const tri = face.map((index) => verts[index].map((value, axis) => center[axis] + value * radius));
+        const tri = face.map((index) => vertices[index].map((value, axis) => center[axis] + value * radius));
         addTriangle(positions, colors, tri[0], tri[1], tri[2], color);
         const edgeA = tri[1].map((value, axis) => value - tri[0][axis]);
         const edgeB = tri[2].map((value, axis) => value - tri[0][axis]);
@@ -1257,34 +1278,7 @@
         opacities.push(faceOpacity, faceOpacity, faceOpacity);
       }
     };
-    addMoonIcosahedron(moonCenter, 0.46, [0.96,0.94,0.82]);
-    const craterSpecs = [[-0.18,0.08,0.09],[0.10,0.17,0.12],[0.19,-0.08,0.08],[-0.06,-0.16,0.14],[-0.23,-0.12,0.10]];
-    for (const [cx,cy,radius] of craterSpecs) {
-      const depth = Math.sqrt(Math.max(0.05, 0.46 * 0.46 - cx * cx - cy * cy));
-      const center = moonCenter.map((value,axis) => value + moonRight[axis]*cx + moonUp[axis]*cy + moonDirection[axis]*depth);
-      const start = positions.length / 3;
-      addOctahedron(positions, colors, center[0],center[1],center[2],radius,radius*0.62,radius,[0.36,0.35,0.29]);
-      for (let i = start; i < positions.length / 3; i += 3) {
-        const points = [0, 1, 2].map((vertex) => {
-          const offset = (i + vertex) * 3;
-          return [positions[offset], positions[offset + 1], positions[offset + 2]];
-        });
-        const [a, b, c] = points;
-        const edgeA = b.map((value, axis) => value - a[axis]);
-        const edgeB = c.map((value, axis) => value - a[axis]);
-        let faceNormal = normalize3([
-          edgeA[1] * edgeB[2] - edgeA[2] * edgeB[1],
-          edgeA[2] * edgeB[0] - edgeA[0] * edgeB[2],
-          edgeA[0] * edgeB[1] - edgeA[1] * edgeB[0],
-        ]);
-        const faceCenter = [0, 1, 2].map((axis) => (a[axis] + b[axis] + c[axis]) / 3);
-        if (faceCenter.reduce((sum, value, axis) => sum + (value - moonCenter[axis]) * faceNormal[axis], 0) < 0) {
-          faceNormal = faceNormal.map((value) => -value);
-        }
-        const faceOpacity = vertexMoonOpacity(faceCenter, faceNormal);
-        opacities.push(faceOpacity, faceOpacity, faceOpacity);
-      }
-    }
+    addMoonIcosphere(moonCenter, 0.46, [0.96,0.94,0.82]);
 
     skyVertexCount = positions.length / 3;
     gl.bindBuffer(gl.ARRAY_BUFFER, skyPositionBuffer);
