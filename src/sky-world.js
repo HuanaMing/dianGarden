@@ -277,13 +277,18 @@
   }
   function getCameraPose() {
     return cameraMode === '2d'
-      ? { mode: '2d', topDownHeight, targetX, targetZ }
+      ? { mode: '2d', topDownHeight, targetX, targetZ, savedCameraPose: savedCameraPose && { ...savedCameraPose } }
       : { mode: '3d', yaw, pitch, distance, targetX, targetZ };
   }
   function restoreCameraPose(pose) {
     if (!pose || typeof pose !== 'object') return false;
     const finite = (value) => typeof value === 'number' && Number.isFinite(value);
     if (pose.mode === '2d' && finite(pose.topDownHeight) && finite(pose.targetX) && finite(pose.targetZ)) {
+      const previous3d = pose.savedCameraPose;
+      savedCameraPose = previous3d && finite(previous3d.yaw) && finite(previous3d.pitch) && finite(previous3d.distance)
+        && finite(previous3d.targetX) && finite(previous3d.targetZ)
+        ? { yaw: previous3d.yaw, pitch: Math.max(-1.35, Math.min(1.35, previous3d.pitch)), distance: Math.max(1.5, Math.min(24, previous3d.distance)), targetX: Math.max(-100, Math.min(100, previous3d.targetX)), targetZ: Math.max(-100, Math.min(100, previous3d.targetZ)) }
+        : null;
       cameraMode = '2d';
       topDownHeight = Math.max(3, Math.min(50, pose.topDownHeight));
       targetX = Math.max(-100, Math.min(100, pose.targetX));
@@ -294,6 +299,7 @@
     }
     if (pose.mode === '3d' && finite(pose.yaw) && finite(pose.pitch) && finite(pose.distance) && finite(pose.targetX) && finite(pose.targetZ)) {
       cameraMode = '3d';
+      savedCameraPose = null;
       yaw = pose.yaw;
       pitch = Math.max(-1.35, Math.min(1.35, pose.pitch));
       distance = Math.max(1.5, Math.min(24, pose.distance));
