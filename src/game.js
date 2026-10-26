@@ -368,6 +368,10 @@
   let dialogContext = null;
   let selectedManualPlotIndex = null;
   const selectedManualPlantPositions = new Set();
+  dialog.addEventListener('close', () => {
+    selectedManualPlotIndex = null;
+    selectedManualPlantPositions.clear();
+  });
   let activePlotIndex = -1;
   let dockIsSelected = false;
   let isResetting = false;
