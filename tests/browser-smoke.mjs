@@ -66,11 +66,13 @@ if (!skyWorldSource.includes("const renderingPauseReasons = new Set(galleryMode 
 if (!skyWorldSource.includes("const dockPositionsChanged = docks.map((dock, index) => {")
   || !skyWorldSource.includes("else if (dockPositionsChanged[index]) {")
   || !skyWorldSource.includes("if (animation.returning === true) {")
-  || !skyWorldSource.includes("animation.returnRoute = findDroneRoute(droneStates[index].location, [dock.x, dock.z], index);")
+  || !skyWorldSource.includes("const newRoute = findDroneRoute(droneStates[index].location, [dock.x, dock.z], index);")
   || !skyWorldSource.includes("animation.returnReplan = {")
   || !skyWorldSource.includes("} else if (animation.returning !== false) {")
-  || !skyWorldSource.includes("animation.returnRoute = findDroneRoute(animation.target, [dock.x, dock.z], index);")) {
-  throw new Error('任務255：停靠平台改位後未依飛行階段安全重規劃返航路徑');
+  || !skyWorldSource.includes("const newRoute = findDroneRoute(animation.target, [dock.x, dock.z], index);")
+  || !skyWorldSource.includes("animation.routeBlocked = true;")
+  || !skyWorldSource.includes("droneDebugLog('return-replan-recovered'")) {
+  throw new Error('任務259：停靠平台改位後未從當前位置安全重規劃或等待路徑重試');
 }
 if (!cloudSaveSource.includes("localStorage.setItem(GUEST_MODE_KEY, 'true')")
   || !cloudSaveSource.includes("localStorage.removeItem(GUEST_MODE_KEY)")
@@ -95,11 +97,14 @@ if (!gameSource.includes('const priority = (candidate) => returningDrones.has(ca
 }
 checks.push('任務255：返航中的無人機優先於滿電待命無人機，避免同一地塊的連續工作跨機接手');
 if (!skyWorldSource.includes("droneDebugLog('route-failed'")
-  || !skyWorldSource.includes("fallback: 'direct'")
-  || !skyWorldSource.includes("return [start, goal];")
-  || skyWorldSource.includes("return 'no-route';")
+  || !skyWorldSource.includes("fallback: 'none'")
+  || !skyWorldSource.includes("return null;")
+  || skyWorldSource.includes("return [start, goal];")
+  || !skyWorldSource.includes("return keepReturning ? 'waiting_path_returning' : 'waiting_path';")
+  || !gameSource.includes("started === 'waiting_path' || started === 'waiting_path_returning'")
+  || !gameSource.includes("blockedJobsThisPass.add(job.id)")
   || gameSource.includes("if (started === 'no-route')")) {
-  throw new Error('任務255：尋路失敗診斷缺失，或仍可能因無路徑而阻斷派工');
+  throw new Error('任務259：尋路失敗仍可能穿越障礙，或等待重試會阻塞整條派工佇列');
 }
 if (!skyWorldSource.includes("localStorage.getItem('sky-garden-drone-debug-v1') === 'true'")
   || !skyWorldSource.includes("droneDebugLog('work-complete-handoff'")
@@ -107,7 +112,7 @@ if (!skyWorldSource.includes("localStorage.getItem('sky-garden-drone-debug-v1') 
   || !skyWorldSource.includes("droneDebugLog('position-jump'")) {
   throw new Error('任務255：動畫交接、位置跳變或路徑失敗診斷鉤子缺失');
 }
-checks.push('任務255：尋路失敗不會阻斷派工佇列；診斷可追蹤交接、跳位與路徑失敗（直線備援暫時恢復，仍需後續安全化）');
+checks.push('任務259：尋路失敗不再使用直線穿障，工作會排隊重試且本輪不阻塞其他可執行任務；平台返航改位可等待安全路徑');
 if (!gameSource.includes("job.status = 'queued';")
   || !gameSource.includes("job.status = 'assigned';")
   || !gameSource.includes("job.status = 'running';")
