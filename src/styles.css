@@ -461,7 +461,7 @@ input, [contenteditable="true"]{
 
 /* 任務180：環境色彩每秒依日夜進度更新；晴雨視覺只在交替前五秒淡入／淡出。 */
 .world-frame{transition:background 0s linear}
-.world-frame.is-raining:before,.world-frame.is-raining:after{opacity:var(--rain-blend,.72);transition:opacity 1s linear}
+
 .touch-hold-ring{visibility:hidden}
 .touch-hold-ring.is-visible{visibility:visible}
 
