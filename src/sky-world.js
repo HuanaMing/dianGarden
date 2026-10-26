@@ -1129,7 +1129,9 @@
     function addSun(P, C, dir, warm) {
       const f = normalize3(dir);
       const [x, y, z] = f.map((value) => value * SKY_SPHERE_RADIUS);
-      const core = [1, 0.78, 0.42].map((value, index) => value + ([1, 0.55, 0.2][index] - value) * warm);
+      const saturatedCore = [1, 0.78, 0.42].map((value, index) => value + ([1, 0.55, 0.2][index] - value) * warm);
+      const luminance = saturatedCore[0] * 0.2126 + saturatedCore[1] * 0.7152 + saturatedCore[2] * 0.0722;
+      const core = saturatedCore.map((value) => luminance + (value - luminance) * 0.8);
       addIcosahedron(P, C, x, y, z, 0.55, core);
       const [right, up] = billboardBasis(f);
       // Twelve short rays share one direction-derived billboard basis.
@@ -1182,12 +1184,26 @@
     const solarNoonProgress = (5 * 60_000) / cycle;
     const solarPhaseAngle = (orbitProgress - solarNoonProgress) * Math.PI * 2;
     const azimuth = solarPhaseAngle + Math.PI / 2;
-    // Visibility follows time of day: 100% at noon and -20% at midnight (clamped to 0%).
-    const timeVisibility = Math.max(0, 0.4 + 0.6 * Math.cos(solarPhaseAngle));
-    // rainBlend already fades from 0 to 1 over the five seconds before rain, stays at 1 in rain,
-    // and fades back to 0 over the final five seconds. Use it to fade visibility from 100% to 50%.
+    // Visibility follows the four configured phases, with smooth linear ramps between targets.
+    const cycleMinute = cycleTime / 60_000;
+    const interpolateVisibility = (start, end, progress) =>
+      start + (end - start) * Math.max(0, Math.min(1, progress));
+    let timeVisibility;
+    if (cycleMinute < 1) {
+      timeVisibility = interpolateVisibility(0.5, 0.6, cycleMinute);
+    } else if (cycleMinute < 5) {
+      timeVisibility = interpolateVisibility(0.6, 1, (cycleMinute - 1) / 4);
+    } else if (cycleMinute < 10) {
+      timeVisibility = interpolateVisibility(1, 0.6, (cycleMinute - 5) / 5);
+    } else if (cycleMinute < 11) {
+      timeVisibility = interpolateVisibility(0.6, 0.5, cycleMinute - 10);
+    } else {
+      timeVisibility = interpolateVisibility(0.5, -0.2, (cycleMinute - 11) / 5);
+    }
+    // Alpha cannot be negative, so the requested -20% endpoint is clamped to fully transparent.
+    // Rain still fades visibility from 100% to 50% using the existing five-second rainBlend.
     const rainVisibility = 1 - 0.5 * environmentState.rainBlend;
-    const sunVisibility = timeVisibility * rainVisibility;
+    const sunVisibility = Math.max(0, timeVisibility) * rainVisibility;
     // Tilt the orbital plane 15 degrees from the horizontal equatorial plane.
     // This produces a true great circle: elevation varies smoothly from -15 to +15 degrees.
     const orbitTilt = Math.PI / 12;
