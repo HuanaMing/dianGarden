@@ -6,9 +6,9 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "太陽可見度已改為時間係數乘雨勢係數：正午100%、午夜負值截為0%，降雨係數使用 rainBlend 由100%漸變至50%；等待自動測試及實機驗收。",
+  "nextAction": "太陽可見度已改為分時線性漸變：清晨50–60%、白天60–100–60%、傍晚60–50%、夜晚50–-20%（負透明度截為0%）；雨勢係數仍由100%漸變至50%。太陽橘色飽和度降低20%。等待自動測試及實機視覺驗收。",
   "taskFiles": [
     "tasks/active/246-night-cloud-sun-visibility.md"
   ],
-  "result": "已修改 src/sky-world.js，讓太陽顏色與透明度套用時間可見度及雨勢係數；雨勢係數依既有 rainBlend 在降雨前5秒與結束前5秒漸變。已新增 tests/browser-smoke.mjs 係數檢查。尚未執行 CI 或實機視覺驗收。"
+  "result": "已更新 src/sky-world.js 的太陽可見度曲線與 RGB 飽和度；已更新 tests/browser-smoke.mjs 的靜態斷言以檢查新曲線與 alpha 透明度。已將追加規格記錄於 tasks/active/246-night-cloud-sun-visibility.md。尚未執行 CI 或實機視覺驗收。"
 }
