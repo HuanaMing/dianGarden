@@ -1875,3 +1875,10 @@
 - 太陽軌跡仰角改為 15 度（`Math.PI / 12`），每 16 分鐘沿完整 360 度圓弧環繞；夜晚與雨天仍保持可見。
 - 更新 `tests/browser-smoke.mjs` 的相機與太陽軌跡斷言。Playwright 自動驗收 run [40272253211](https://github.com/HuanaMing/dianGarden/actions/runs/40272253211) 成功；GitHub Pages 部署 run [40272231737](https://github.com/HuanaMing/dianGarden/actions/runs/40272231737) 成功。
 - 狀態：等待使用者實機視覺驗收；不將自動測試視為使用者驗收完成。
+
+## 2026-10-26 — 任務248驗收完成、任務249雨滴跟隨鏡頭
+
+- 任務248：使用者確認驗收完成；已將任務文件歸檔至 `tasks/done/248-sun-moon-visibility-curve.md`。
+- 任務249：雨滴動畫從世界原點附近的小區域改為以相機位置及朝向為中心，3D模式依相機前方／側向分布，2D模式以鏡頭目標為中心；雨滴數量由44增加至72。
+- 已更新 `tests/browser-smoke.mjs` 的任務249靜態斷言。
+- 驗證限制：尚未執行 Playwright／GitHub Actions，也未進行瀏覽器視覺驗收；未手動觸發 GitHub Pages 部署。
