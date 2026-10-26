@@ -1676,14 +1676,15 @@ try {
   checks.push('任務247重做：雨天月亮可見度為（100%-太陽可見度）×雨勢係數');
   checks.push('任務248：星星使用月亮可見度乘以各自3至5秒週期的閃爍係數');
   if (!worldSource.includes('const rainEye = cameraMode === \'2d\'')
-    || !worldSource.includes('const rainForward = cameraMode === \'2d\' ? [0, 0] : [-Math.sin(yaw), -Math.cos(yaw)];')
-    || !worldSource.includes('const rainRight = cameraMode === \'2d\' ? [1, 0] : [Math.cos(yaw), -Math.sin(yaw)];')
-    || !worldSource.includes('for (let drop = 0; drop < 72; drop += 1)')
-    || !worldSource.includes('rainEye[0] + rainRight[0] * lateral + rainForward[0] * forward')
-    || !worldSource.includes('rainEye[2] + rainRight[1] * lateral + rainForward[1] * forward')) {
-    throw new Error('任務249：雨滴應依相機位置與朝向覆蓋視野');
+    || !worldSource.includes('const rainRadius = 3;')
+    || !worldSource.includes('const radius = rainRadius * Math.sqrt((drop * 0.61803398875) % 1);')
+    || !worldSource.includes('const x = rainEye[0] + Math.cos(angle) * radius;')
+    || !worldSource.includes('const z = rainEye[2] + Math.sin(angle) * radius;')
+    || !worldSource.includes('const y = rainEye[1] + 2.2 - fall * 4.4;')
+    || !worldSource.includes('for (let drop = 0; drop < 72; drop += 1)')) {
+    throw new Error('任務249：雨滴應限制在以鏡頭為中心、半徑3單位的垂直圓柱內');
   }
-  checks.push('任務249：雨滴分布以相機位置與朝向為中心，並支援2D／3D鏡頭');
+  checks.push('任務249：72個雨滴以鏡頭為中心分布在半徑3單位的垂直圓柱內，並支援2D／3D鏡頭');
 
   checks.push('任務242：半徑10天空球與深度渲染順序；任務243：柔化雲朵明暗；任務244：提高晴天藍度；任務245：方向基底太陽模型；任務246：夜間雲朵近乎隱沒、太陽沿傾斜15度的真正大圓運行、相機以固定焦點向上／向下旋轉70度');
   if (!worldSource.includes('function findDroneRoute(start, goal, droneIndex)') || !worldSource.includes('const landObstacles = plotPositions.map((plot, index)') || !worldSource.includes('landObstacles.some(({ x, z }) => Math.abs(point[0] * step - x) < TILE * 0.5 + 0.12')) throw new Error('任務241：無人機尋路尚未把延伸到底部的地塊側牆列為障礙');
