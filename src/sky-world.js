@@ -897,8 +897,9 @@
         open.push({ point: next, cost: nextCost, score: nextCost + heuristic(next) });
       }
     }
-    droneDebugLog('route-failed', { droneIndex, start: start.slice(), goal: goal.slice(), visited, droneObstacles: obstacles.length, landObstacles: landObstacles.length });
-    return null;
+    droneDebugLog('route-failed', { droneIndex, start: start.slice(), goal: goal.slice(), visited, droneObstacles: obstacles.length, landObstacles: landObstacles.length, fallback: 'direct' });
+    // Keep drones dispatchable if the grid search fails; strict rejection can stall the entire queue.
+    return [start, goal];
   }
 
   function sampleRoute(route, progress) {
@@ -2380,8 +2381,7 @@
     const outboundRoute = findDroneRoute(start, target, droneIndex);
     const returnRoute = findDroneRoute(target, returnGoal, droneIndex);
     if (!outboundRoute || !returnRoute) {
-      droneDebugLog('animation-route-rejected', { droneIndex, kind, start, target, outboundRouteFound: Boolean(outboundRoute), returnRouteFound: Boolean(returnRoute), currentAnimation: state.animation?.kind ?? null });
-      return 'no-route';
+      droneDebugLog('animation-route-fallback', { droneIndex, kind, start, target, outboundRouteFound: Boolean(outboundRoute), returnRouteFound: Boolean(returnRoute), currentAnimation: state.animation?.kind ?? null });
     }
     const laneY = continueAtTarget ? state.y : getCruiseHeight(start, target, droneIndex, options.targetPlotIndex);
     if (!continueAtTarget) droneCruiseHeights[droneIndex] = laneY;
