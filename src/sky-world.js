@@ -897,9 +897,9 @@
         open.push({ point: next, cost: nextCost, score: nextCost + heuristic(next) });
       }
     }
-    droneDebugLog('route-failed', { droneIndex, start: start.slice(), goal: goal.slice(), visited, droneObstacles: obstacles.length, landObstacles: landObstacles.length, fallback: 'direct' });
-    // Keep drones dispatchable if the grid search fails; strict rejection can stall the entire queue.
-    return [start, goal];
+    droneDebugLog('route-failed', { droneIndex, start: start.slice(), goal: goal.slice(), visited, droneObstacles: obstacles.length, landObstacles: landObstacles.length, fallback: 'none' });
+    // A straight segment may cross land or other drones; callers must wait and retry instead.
+    return null;
   }
 
   function sampleRoute(route, progress) {
@@ -975,6 +975,23 @@
         return { x: idleX, y: DRONE_IDLE_Y + getDockHeight(index) + Math.sin(time * 0.0022 + index * 1.7) * DRONE_IDLE_BOB, z: idleZ, elapsed: null, workProgress: 0, completing: false };
       }
       const animation = state.animation;
+      if (animation.routeBlocked && animation.returning === true && animation.pendingDock
+        && animation.elapsed - (animation.lastRouteRetryElapsed ?? -Infinity) >= 500) {
+        animation.lastRouteRetryElapsed = animation.elapsed;
+        const pendingDock = animation.pendingDock;
+        const retryRoute = findDroneRoute(state.location, [pendingDock.x, pendingDock.z], index);
+        if (retryRoute) {
+          animation.idlePosition = { x: pendingDock.x, z: pendingDock.z };
+          animation.returnRoute = retryRoute;
+          animation.returnReplan = { elapsed: animation.elapsed, start: state.location.slice(), startY: state.y };
+          animation.routeBlocked = false;
+          animation.pendingDock = null;
+          droneDebugLog('return-replan-recovered', { droneIndex: index, location: state.location.slice(), dock: pendingDock });
+        }
+      }
+      if (animation.routeBlocked && animation.returning === true) {
+        return { x: state.location[0], y: state.y, z: state.location[1], elapsed: animation.elapsed + delta, workProgress: 0, workComplete: false, completing: false, returnStart: animation.elapsed };
+      }
       let elapsed = animation.elapsed + delta;
       const laneY = Number.isFinite(animation.laneY) ? animation.laneY : DRONE_TRANSIT_Y;
       const idleY = Number.isFinite(animation.idleY) ? animation.idleY : DRONE_IDLE_Y;
@@ -2383,7 +2400,9 @@
     const outboundRoute = findDroneRoute(start, target, droneIndex);
     const returnRoute = findDroneRoute(target, returnGoal, droneIndex);
     if (!outboundRoute || !returnRoute) {
-      droneDebugLog('animation-route-fallback', { droneIndex, kind, start, target, outboundRouteFound: Boolean(outboundRoute), returnRouteFound: Boolean(returnRoute), currentAnimation: state.animation?.kind ?? null });
+      const keepReturning = Boolean(state.animation?.workCompleted && state.animation.returning === true);
+      droneDebugLog('animation-route-failed', { droneIndex, kind, start, target, outboundRouteFound: Boolean(outboundRoute), returnRouteFound: Boolean(returnRoute), currentAnimation: state.animation?.kind ?? null, keepReturning });
+      return keepReturning ? 'waiting_path_returning' : 'waiting_path';
     }
     const laneY = continueAtTarget ? state.y : getCruiseHeight(start, target, droneIndex, options.targetPlotIndex);
     if (!continueAtTarget) droneCruiseHeights[droneIndex] = laneY;
@@ -2550,19 +2569,38 @@
         if (!animation) droneStates[index].location = [dock.x, dock.z];
         else if (dockPositionsChanged[index]) {
           // Battery/deployment updates arrive frequently; they must not replace an in-flight route.
-          animation.idlePosition = { x: dock.x, z: dock.z };
+          const newDock = { x: dock.x, z: dock.z, y: dock.y || 0 };
           if (animation.returning === true) {
             // Replan from the drone's actual current position and restart only the return segment's clock.
-            // Reusing elapsed against a route beginning at the original target causes visible position jumps.
-            animation.returnRoute = findDroneRoute(droneStates[index].location, [dock.x, dock.z], index);
-            animation.returnReplan = {
-              elapsed: animation.elapsed,
-              start: droneStates[index].location.slice(),
-              startY: droneStates[index].y,
-            };
+            const newRoute = findDroneRoute(droneStates[index].location, [dock.x, dock.z], index);
+            if (newRoute) {
+              animation.idlePosition = { x: dock.x, z: dock.z };
+              animation.returnRoute = newRoute;
+              animation.returnReplan = {
+                elapsed: animation.elapsed,
+                start: droneStates[index].location.slice(),
+                startY: droneStates[index].y,
+              };
+              animation.routeBlocked = false;
+              animation.pendingDock = null;
+            } else {
+              animation.routeBlocked = true;
+              animation.pendingDock = newDock;
+              droneDebugLog('return-replan-failed', { droneIndex: index, location: droneStates[index].location.slice(), dock: newDock });
+            }
           } else if (animation.returning !== false) {
             // A dock moved during outbound travel/work: aim the not-yet-started return route at its new position.
-            animation.returnRoute = findDroneRoute(animation.target, [dock.x, dock.z], index);
+            const newRoute = findDroneRoute(animation.target, [dock.x, dock.z], index);
+            if (newRoute) {
+              animation.idlePosition = { x: dock.x, z: dock.z };
+              animation.returnRoute = newRoute;
+              animation.routeBlocked = false;
+              animation.pendingDock = null;
+            } else {
+              animation.routeBlocked = true;
+              animation.pendingDock = newDock;
+              droneDebugLog('return-replan-failed', { droneIndex: index, location: droneStates[index].location.slice(), dock: newDock });
+            }
           }
         }
       });
