@@ -1126,10 +1126,10 @@
         addTriangle(P, C, points[0], points[1], points[2], color.map((channel) => channel * shade));
       }
     }
-    function addSun(P, C, dir, warm) {
+    function addSun(P, C, dir, warm, visibility) {
       const f = normalize3(dir);
       const [x, y, z] = f.map((value) => value * SKY_SPHERE_RADIUS);
-      const core = [1, 0.96, 0.78].map((value, index) => value + ([1, 0.62, 0.35][index] - value) * warm);
+      const core = [1, 0.96, 0.78].map((value, index) => (value + ([1, 0.62, 0.35][index] - value) * warm) * visibility);
       addIcosahedron(P, C, x, y, z, 0.55, core);
       const [right, up] = billboardBasis(f);
       // Twelve short rays share one direction-derived billboard basis.
@@ -1180,7 +1180,14 @@
     // Align the orbital high point with solar noon (the midpoint of the 10-minute daytime span)
     // and the low point 8 minutes later at midnight in the 16-minute day/night cycle.
     const solarNoonProgress = (5 * 60_000) / cycle;
-    const azimuth = (orbitProgress - solarNoonProgress) * Math.PI * 2 + Math.PI / 2;
+    const solarPhaseAngle = (orbitProgress - solarNoonProgress) * Math.PI * 2;
+    const azimuth = solarPhaseAngle + Math.PI / 2;
+    // Visibility follows time of day: 100% at noon and -20% at midnight (clamped to 0%).
+    const timeVisibility = Math.max(0, 0.4 + 0.6 * Math.cos(solarPhaseAngle));
+    // rainBlend already fades from 0 to 1 over the five seconds before rain, stays at 1 in rain,
+    // and fades back to 0 over the final five seconds. Use it to fade visibility from 100% to 50%.
+    const rainVisibility = 1 - 0.5 * environmentState.rainBlend;
+    const sunVisibility = timeVisibility * rainVisibility;
     // Tilt the orbital plane 15 degrees from the horizontal equatorial plane.
     // This produces a true great circle: elevation varies smoothly from -15 to +15 degrees.
     const orbitTilt = Math.PI / 12;
@@ -1189,8 +1196,8 @@
       ? 1
       : 0.12 + 0.35 * Math.min(1, Math.abs(environmentState.phaseProgress - 0.5) * 2);
     const sunStart = positions.length / 3;
-    addSun(positions, colors, sunDirection, warmth);
-    for (let i = sunStart; i < positions.length / 3; i += 1) opacities.push(1);
+    addSun(positions, colors, sunDirection, warmth, sunVisibility);
+    for (let i = sunStart; i < positions.length / 3; i += 1) opacities.push(sunVisibility);
 
     skyVertexCount = positions.length / 3;
     gl.bindBuffer(gl.ARRAY_BUFFER, skyPositionBuffer);
