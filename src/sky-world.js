@@ -2419,7 +2419,7 @@
     setPlots(plots) {
       if (!Array.isArray(plots)) return;
       plotStates = plots.map((plot) => ({
-        crop: plot.crop, plantedAt: plot.plantedAt, plantHeight: plot.plantHeight, customColor: plot.customColor,
+        crop: plot.crop, plantedAt: plot.plantedAt, plantHeight: plot.plantHeight, rotation: plot.rotation, customColor: plot.customColor,
         elapsed: plot.elapsed, growTime: plot.growTime, waterStartedAt: plot.waterStartedAt, waterUntil: plot.waterUntil,
         waterWetnessStart: plot.waterWetnessStart, waterVisualStartedAt: plot.waterVisualStartedAt,
         manual: plot.manual === true, grassOnly: plot.grassOnly === true,
