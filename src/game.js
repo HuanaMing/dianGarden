@@ -1280,8 +1280,13 @@
       };
       const onReturnComplete = () => returningDrones.delete(droneIndex);
       job.cancelAnimation = () => {
-        returningDrones.add(droneIndex);
-        return world.cancelDroneAnimation?.(droneIndex, finish) === true;
+        const cancelled = world.cancelDroneAnimation?.(droneIndex, () => {
+          returningDrones.delete(droneIndex);
+          finish();
+        }) === true;
+        if (cancelled) returningDrones.add(droneIndex);
+        else returningDrones.delete(droneIndex);
+        return cancelled;
       };
       if (job.kind === 'water') {
         const plot = game.plots[job.index];
