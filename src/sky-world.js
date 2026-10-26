@@ -1531,11 +1531,12 @@
       forward[1] + cameraUp[1] * ny * tangent,
       forward[2] + right[2] * nx * aspect * tangent + cameraUp[2] * ny * tangent,
     ];
-    // Orbit around one fixed elevated focus for both upward and downward rotation.
-    // The elevated pivot keeps the camera above ground even at the maximum upward pitch.
-    const orbitCenterY = distance * 0.8;
+    // The camera orbits an explicit world-space pivot; picking uses the same camera pose.
+    // Raise the pivot enough that the camera stays above the ground at -70 degrees.
+    const orbitCenterY = Math.max(0.8, distance * Math.sin(70 * Math.PI / 180) + 0.12);
+    const orbitCenter = [targetX, orbitCenterY, targetZ];
     const horizontal = Math.cos(pitch) * distance;
-    const eye = [targetX + Math.sin(yaw) * horizontal, orbitCenterY + Math.sin(pitch) * distance, targetZ + Math.cos(yaw) * horizontal];
+    const eye = [orbitCenter[0] + Math.sin(yaw) * horizontal, orbitCenter[1] + Math.sin(pitch) * distance, orbitCenter[2] + Math.cos(yaw) * horizontal];
     if (Math.abs(ray[1]) < 0.0001) return null;
     const distanceToGround = (groundY - eye[1]) / ray[1];
     if (distanceToGround < 0) return null;
@@ -1636,15 +1637,17 @@
     gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
     gl.disableVertexAttribArray(locations.opacity);
     gl.vertexAttrib1f(locations.opacity, 1);
-    const orbitCenterY = distance * 0.8;
+    // Use an explicit orbit pivot outside the camera, and always aim directly at it.
+    // The pivot rises with zoom distance so a -70-degree upward view remains above ground.
+    const orbitCenterY = Math.max(0.8, distance * Math.sin(70 * Math.PI / 180) + 0.12);
+    const orbitCenter = [targetX, orbitCenterY, targetZ];
     const horizontal = Math.cos(pitch) * distance;
-    const eye = cameraMode === '2d' ? [targetX, topDownHeight, targetZ] : [targetX + Math.sin(yaw) * horizontal, orbitCenterY + Math.sin(pitch) * distance, targetZ + Math.cos(yaw) * horizontal];
-    const cameraForward = [-Math.sin(yaw) * Math.cos(pitch), -Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch)];
-    const viewCenter = cameraMode === '2d' ? [targetX, 0, targetZ] : [
-      eye[0] + cameraForward[0] * distance,
-      eye[1] + cameraForward[1] * distance,
-      eye[2] + cameraForward[2] * distance,
+    const eye = cameraMode === '2d' ? [targetX, topDownHeight, targetZ] : [
+      orbitCenter[0] + Math.sin(yaw) * horizontal,
+      orbitCenter[1] + Math.sin(pitch) * distance,
+      orbitCenter[2] + Math.cos(yaw) * horizontal,
     ];
+    const viewCenter = cameraMode === '2d' ? [targetX, 0, targetZ] : orbitCenter;
     currentProjection = perspective(Math.PI / 4, canvas.width / Math.max(canvas.height, 1), 0.1, 100);
     currentView = cameraMode === '2d' ? lookAt(eye, viewCenter, [0, 0, -1]) : lookAt(eye, viewCenter, [0, 1, 0]);
     gl.uniformMatrix4fv(locations.projection, false, currentProjection);
