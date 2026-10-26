@@ -642,7 +642,7 @@ input, [contenteditable="true"]{
 .farm-management-heading{flex:none}
 .farm-management-panel .world-plots{
   flex:1;min-height:120px;max-height:none!important;
-  grid-template-columns:repeat(auto-fill,minmax(112px,1fr))!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
   align-content:start;gap:10px;padding:8px 2px 12px;
 }
 .farm-management-panel .world-plots .world-plot-button{min-height:76px;padding:8px}
@@ -686,7 +686,7 @@ input, [contenteditable="true"]{
   .farm-management-panel,.settings-panel,.drone-jobs{
     padding:68px 10px 12px!important;gap:8px;
   }
-  .farm-management-panel .world-plots{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px}
+   .farm-management-panel .world-plots{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:6px}
   .farm-management-panel .world-plots .world-plot-button{min-height:62px;padding:5px 3px}
   .settings-panel{grid-template-columns:minmax(0,1fr)}
   .settings-panel>h2,.settings-panel>.cloud-save-settings,
