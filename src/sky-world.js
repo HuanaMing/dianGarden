@@ -1372,11 +1372,16 @@
 
     // Fixed deterministic star field; each star twinkles with its own 3–5 second cycle.
     const starCount = 84;
+    const starMinElevation = -15 * Math.PI / 180;
+    const starMaxElevation = 70 * Math.PI / 180;
     for (let index = 0; index < starCount; index += 1) {
-      const y = 1 - 2 * ((index + 0.5) / starCount);
+      // Deterministic equal-step sampling over the allowed elevation range.
+      // Y is the vertical axis; azimuth still covers the full 360 degrees.
+      const elevation = starMinElevation
+        + (starMaxElevation - starMinElevation) * ((index + 0.5) / starCount);
       const angle = index * 2.399963229728653;
-      const radial = Math.sqrt(Math.max(0, 1 - y * y));
-      const dir = [Math.cos(angle) * radial, y, Math.sin(angle) * radial];
+      const horizontal = Math.cos(elevation);
+      const dir = [Math.cos(angle) * horizontal, Math.sin(elevation), Math.sin(angle) * horizontal];
       const seed = (Math.sin(index * 127.1 + 311.7) * 43758.5453) % 1;
       const phase = (seed < 0 ? seed + 1 : seed) * Math.PI * 2;
       const periodMs = 3000 + ((Math.sin(index * 74.7 + 19.3) * 43758.5453 % 1 + 1) % 1) * 2000;
