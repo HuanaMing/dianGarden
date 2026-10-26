@@ -1264,7 +1264,11 @@
           refinedFaces.push([a, ab, ca], [b, bc, ab], [c, ca, bc], [ab, bc, ca]);
         }
         faces = refinedFaces;
-            opacities.push(
+      }
+      for (const face of faces) {
+        const tri = face.map((index) => vertices[index].map((value, axis) => center[axis] + value * radius));
+        addTriangle(positions, colors, tri[0], tri[1], tri[2], color);
+        opacities.push(
           vertexMoonOpacity(tri[0]),
           vertexMoonOpacity(tri[1]),
           vertexMoonOpacity(tri[2]),
