@@ -63,6 +63,15 @@ if (!skyWorldSource.includes("const renderingPauseReasons = new Set(galleryMode 
   || !cloudSaveSource.includes("setRenderingPaused?.('cloud-restore', false)")) {
   throw new Error('登入／雲端還原／更新期間的繪圖暫停與失敗復原機制缺失');
 }
+if (!skyWorldSource.includes("const deferredCallbacks = [];")
+  || !skyWorldSource.includes("for (const callback of deferredCallbacks) callback();")
+  || skyWorldSource.includes("animation.onWorkStart?.();")
+  || skyWorldSource.includes("animation.onDeparture?.();")) {
+  throw new Error('任務263：無人機生命週期回呼未延後到全幀位置更新與 WebGL buffer 上傳完成後');
+}
+if (!skyWorldSource.includes("const laneY = getCruiseHeight(continueAtTarget ? target : start, continueAtTarget ? [idlePosition.x, idlePosition.z] : target, droneIndex, options.targetPlotIndex);")) {
+  throw new Error('任務263：同地塊接續工作未使用安全巡航高度');
+}
 if (!skyWorldSource.includes("const dronePhaseTransitions = {")
   || !skyWorldSource.includes("function setDronePhase(droneIndex, nextPhase, reason)")
   || !skyWorldSource.includes("getDronePhase(droneIndex = 0)")
@@ -460,6 +469,92 @@ if (droneMotion.invalid || droneMotion.maxStep > 0.8) {
 checks.push(`任務257：播種後接續澆水的交接位置連續（${droneMotion.frameCount} 個取樣，最大位移 ${droneMotion.maxStep.toFixed(3)}）`);
 checks.push(`任務255：八台無人機持續更新電量、去程及返航途中移動停靠平台時位置連續（${droneMotion.frameCount} 個取樣，最大位移 ${droneMotion.maxStep.toFixed(3)}）`);
 await droneTeleportPage.close();
+
+const handoffRacePage = await browser.newPage({ viewport: { width: 1000, height: 800 }, deviceScaleFactor: 1 });
+await handoffRacePage.addInitScript(() => {
+  const now = Date.now();
+  localStorage.setItem('sky-garden-guest-mode-v1', 'true');
+  localStorage.setItem('sky-garden-guest-save-v1', JSON.stringify({
+    coins: 5000, cropCatalogVersion: 4, gardenName: '跨機派工提案競態測試', autoMode: false,
+    autoCropSelection: [0], worldTimeMs: 60000, worldTimeAnchor: now, lastObservedRaining: false,
+    droneCount: 2, deploymentSequence: 2, dockPosition: { x: -2.8, z: 2, y: 0 },
+    drones: [
+      { dockPosition: { x: -2.8, z: 2, y: 0 }, deployed: true, deploymentOrder: 1, battery: 100, batteryUpdatedAt: now },
+      { dockPosition: { x: 2.8, z: 2, y: 0 }, deployed: true, deploymentOrder: 2, battery: 100, batteryUpdatedAt: now },
+    ],
+    plots: [
+      { crop: null, plantedAt: null, manual: false, grassOnly: false, x: -2.8, z: 2.15, y: 0 },
+      { crop: null, plantedAt: null, manual: false, grassOnly: false, x: 2.8, z: -2, y: 0 },
+    ],
+  }));
+});
+await handoffRacePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+await handoffRacePage.locator('#sky-canvas').waitFor({ state: 'visible' });
+await handoffRacePage.waitForFunction(() => Boolean(window.skyWorld?.getDronePosition?.(1)), null, { timeout: 8000 });
+const crossDroneHandoff = await handoffRacePage.evaluate(async () => {
+  const docks = [
+    { x: -2.8, z: 2, y: 0, deployed: true, deploymentOrder: 1, battery: 100 },
+    { x: 2.8, z: 2, y: 0, deployed: true, deploymentOrder: 2, battery: 100 },
+  ];
+  const plots = [{ x: -2.8, z: 2.15, y: 0 }, { x: 2.8, z: -2, y: 0 }];
+  window.skyWorld.setDockPosition({ x: docks[0].x, z: docks[0].z, y: 0 });
+  window.skyWorld.setLandCount(2);
+  window.skyWorld.setPlotPositions(plots);
+  window.skyWorld.setDroneCount(2);
+  window.skyWorld.setDroneDocks(docks);
+  window.__crossDroneHandoffStarted = false;
+  window.__crossDroneHandoffCallback = false;
+  window.__crossDroneHandoffKind = null;
+  const waterStarted = window.skyWorld.animateWater(1, () => {}, () => {}, () => true, 1);
+  if (waterStarted !== true) return { waterStarted, handoffStarted: false, callback: false, maxStep: Infinity, samples: 0 };
+  const returnDeadline = Date.now() + 12000;
+  while (window.skyWorld.getDronePhase(1) !== 'returning' && Date.now() < returnDeadline) {
+    await new Promise(resolve => setTimeout(resolve, 16));
+  }
+  const returningPhase = window.skyWorld.getDronePhase(1);
+  if (returningPhase !== 'returning') return { waterStarted, returningPhase, handoffStarted: false, callback: false, maxStep: Infinity, samples: 0 };
+  const plantStarted = window.skyWorld.animatePlant(0, () => {}, () => {
+    window.__crossDroneHandoffCallback = true;
+    window.__crossDroneHandoffStarted = window.skyWorld.animatePlant(1, () => {}, () => {}, () => true, 1);
+    window.__crossDroneHandoffKind = window.skyWorld.getDronePosition(1)?.animationKind ?? null;
+  }, () => true, 0);
+  if (plantStarted !== true) return { waterStarted, returningPhase, plantStarted, handoffStarted: false, callback: false, maxStep: Infinity, samples: 0 };
+  const samples = [];
+  let last = Date.now();
+  const sampleDeadline = Date.now() + 10000;
+  while (Date.now() < sampleDeadline) {
+    const now = Date.now();
+    const first = window.skyWorld.getDronePosition(0);
+    const second = window.skyWorld.getDronePosition(1);
+    if (first && second) samples.push({ time: now, positions: [[first.x, first.z], [second.x, second.z]] });
+    if (window.__crossDroneHandoffCallback && now - last > 1400) break;
+    if (!window.__crossDroneHandoffCallback) last = now;
+    await new Promise(resolve => setTimeout(resolve, 16));
+  }
+  let maxStep = 0;
+  for (let i = 1; i < samples.length; i += 1) {
+    for (let drone = 0; drone < 2; drone += 1) {
+      const [x0, z0] = samples[i - 1].positions[drone];
+      const [x1, z1] = samples[i].positions[drone];
+      maxStep = Math.max(maxStep, Math.hypot(x1 - x0, z1 - z0));
+    }
+  }
+  return {
+    waterStarted, returningPhase, plantStarted,
+    handoffStarted: window.__crossDroneHandoffStarted,
+    callback: window.__crossDroneHandoffCallback,
+    animationKind: window.skyWorld.getDronePosition(1)?.animationKind,
+    maxStep, samples: samples.length,
+  };
+});
+if (crossDroneHandoff.waterStarted !== true || crossDroneHandoff.returningPhase !== 'returning'
+  || crossDroneHandoff.plantStarted !== true || crossDroneHandoff.callback !== true
+  || crossDroneHandoff.handoffStarted !== true || crossDroneHandoff.animationKind !== 'plant'
+  || crossDroneHandoff.samples < 20 || crossDroneHandoff.maxStep > 0.8) {
+  throw new Error('任務263：另一台無人機回呼同步派工時，返航中的無人機提案與新動畫發生競態或位置跳變：' + JSON.stringify(crossDroneHandoff));
+}
+checks.push(`任務263：跨機同步派工延後至全幀更新後，返航中的無人機平順接手播種（${crossDroneHandoff.samples} 個取樣，最大位移 ${crossDroneHandoff.maxStep.toFixed(3)}）`);
+await handoffRacePage.close();
 
 const cancelPage = await browser.newPage({ viewport: { width: 1000, height: 800 }, deviceScaleFactor: 1 });
 await cancelPage.addInitScript(() => {
