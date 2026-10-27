@@ -327,6 +327,11 @@ checks.push('未自動登入時先顯示入口選擇；進入訪客模式不會�
 await startupPage.close();
 
 const droneTeleportPage = await browser.newPage({ viewport: { width: 1000, height: 800 }, deviceScaleFactor: 1 });
+const droneTeleportErrors = [];
+droneTeleportPage.on('pageerror', (error) => droneTeleportErrors.push(error.message));
+droneTeleportPage.on('console', (message) => {
+  if (message.type() === 'error') droneTeleportErrors.push(message.text());
+});
 await droneTeleportPage.addInitScript(() => {
   const now = Date.now();
   localStorage.setItem('sky-garden-guest-mode-v1', 'true');
@@ -376,7 +381,18 @@ await droneTeleportPage.addInitScript(() => {
 });
 await droneTeleportPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
 await droneTeleportPage.locator('#sky-canvas').waitFor({ state: 'visible' });
-await droneTeleportPage.waitForFunction(() => window.__dgDroneFrames.length > 3, null, { timeout: 8000 });
+try {
+  await droneTeleportPage.waitForFunction(() => window.__dgDroneFrames.length > 3, null, { timeout: 8000 });
+} catch (error) {
+  const diagnostic = await droneTeleportPage.evaluate(() => ({
+    buffers: window.__dgWebglBuffers.length,
+    frameSamples: window.__dgDroneFrames.length,
+    frameCounter: window.__dgDroneFrameCounter,
+    hasSkyWorld: Boolean(window.skyWorld),
+    message: document.querySelector('#world-message')?.textContent,
+  }));
+  throw new Error(`無人機繪製診斷：${JSON.stringify(diagnostic)}；瀏覽器錯誤：${JSON.stringify(droneTeleportErrors)}；原始錯誤：${error.message}`);
+}
 await droneTeleportPage.evaluate(async () => {
   let docks = Array.from({ length: 8 }, (_, index) => ({
     x: -2.8 + index * 0.8, z: 2, y: 0, deployed: true, deploymentOrder: index + 1, battery: 100,
