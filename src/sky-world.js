@@ -2149,7 +2149,7 @@
     gl.bindBuffer(gl.ARRAY_BUFFER, glowUVBuffer);
     gl.enableVertexAttribArray(glowLocations.uv);
     gl.vertexAttribPointer(glowLocations.uv, 2, gl.FLOAT, false, 0, 0);
-    gl.disable(gl.DEPTH_TEST);
+    // Keep depth testing enabled so nearby terrain can naturally occlude the glow.
     gl.depthMask(false);
     gl.blendFunc(gl.ONE, gl.ONE);
     for (const target of targets) {
