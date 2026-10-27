@@ -919,11 +919,38 @@
         positions[vertex + 1] = rootY + dx * sine + dy * cosine;
       }
     };
-    // Vine-wrapped shoulder struts bridge the cube to each moving wing.
+    // Living vine trellis between the body and each wing root.
+    // Build each curved runner from overlapping small octahedra so it reads as a
+    // rounded vine, with a diagonal cross-runner and tiny leaves; keep it clear
+    // of the moving wing's central opening.
+    const vineDark = [0.22, 0.39, 0.2], vineLight = [0.34, 0.53, 0.27];
+    const addVineCurve = (points, radius = 0.006) => {
+      const steps = 7;
+      for (let step = 0; step <= steps; step += 1) {
+        const t = step / steps;
+        const oneMinus = 1 - t;
+        const px = oneMinus ** 3 * points[0][0] + 3 * oneMinus ** 2 * t * points[1][0] + 3 * oneMinus * t ** 2 * points[2][0] + t ** 3 * points[3][0];
+        const py = oneMinus ** 3 * points[0][1] + 3 * oneMinus ** 2 * t * points[1][1] + 3 * oneMinus * t ** 2 * points[2][1] + t ** 3 * points[3][1];
+        const pz = oneMinus ** 3 * points[0][2] + 3 * oneMinus ** 2 * t * points[1][2] + 3 * oneMinus * t ** 2 * points[2][2] + t ** 3 * points[3][2];
+        addOctahedron(positions, colors, px, py, pz, radius, radius, radius, step % 2 ? vineLight : vineDark);
+      }
+    };
     for (const side of [-1, 1]) {
-      const rootX = x + side * 0.092;
-      addBox(positions, colors, Math.min(x + side * 0.035, rootX), y + 0.035, z - 0.018, Math.max(x + side * 0.035, rootX) + 0.006, y + 0.055, z + 0.018, trim);
-      addOctahedron(positions, colors, rootX, y + 0.055, z + 0.006, 0.018, 0.014, 0.014, leaf);
+      const rootX = x + side * 0.092, rootY = y + 0.055;
+      addVineCurve([
+        [x + side * 0.045, y + 0.035, z - 0.015],
+        [x + side * 0.065, y + 0.085, z - 0.02],
+        [x + side * 0.09, y + 0.075, z + 0.018],
+        [rootX, rootY, z + 0.008],
+      ]);
+      addVineCurve([
+        [x + side * 0.05, y + 0.045, z + 0.018],
+        [x + side * 0.07, y + 0.025, z + 0.02],
+        [x + side * 0.08, y + 0.065, z - 0.018],
+        [rootX, rootY, z - 0.008],
+      ], 0.0045);
+      addOctahedron(positions, colors, x + side * 0.064, y + 0.074, z - 0.012, 0.012, 0.006, 0.009, leaf);
+      addOctahedron(positions, colors, x + side * 0.078, y + 0.04, z + 0.016, 0.011, 0.006, 0.008, vineLight);
       makeWing(side);
     }
     addOctahedron(positions, colors, x, y + 0.006, z + 0.087, 0.035, 0.026, 0.015, getDroneBatteryColor(battery));
