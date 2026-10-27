@@ -1,12 +1,12 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 268,
-  "nextAction": "任務268：無人機本體圓角化、移除腳架並將本體寬度縮至原本80%；程式已提交，待使用者驗收。",
+  "activeTask": null,
+  "nextAction": "任務269本機測試與驗收流程已完成。之後可直接執行 .\\scripts\\run-local-tests.ps1；若已批准的 Node.js 22.23.4 portable 存在，測試入口會在程序內優先使用。正式 GitHub Pages／Cloudflare 部署仍須依當時需求取得明確批准。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署：需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署需使用者明確批准。"
   ],
-  "updatedAt": "2026-10-27"
+  "updatedAt": "2026-10-28"
 }
