@@ -126,15 +126,6 @@
   let glowProgram = null;
   let glowTexture = null;
   let glowLocations = null;
-  const glowPositionBuffer = gl.createBuffer();
-  const glowUVBuffer = gl.createBuffer();
-  const glowOpacityBuffer = gl.createBuffer();
-  const glowUVs = new Float32Array([
-    0, 0, 1, 0, 1, 1,
-    0, 0, 1, 1, 0, 1,
-  ]);
-  gl.bindBuffer(gl.ARRAY_BUFFER, glowUVBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, glowUVs, gl.STATIC_DRAW);
   try {
     glowProgram = gl.createProgram();
     gl.attachShader(glowProgram, makeShader(gl.VERTEX_SHADER, glowVertexSource));
@@ -193,6 +184,16 @@
   const normalBuffer = gl.createBuffer();
   const droneNormalBuffer = gl.createBuffer();
   const effectNormalBuffer = gl.createBuffer();
+  // Keep the original scene buffer creation order stable for diagnostics and existing tests.
+  const glowPositionBuffer = gl.createBuffer();
+  const glowUVBuffer = gl.createBuffer();
+  const glowOpacityBuffer = gl.createBuffer();
+  const glowUVs = new Float32Array([
+    0, 0, 1, 0, 1, 1,
+    0, 0, 1, 1, 0, 1,
+  ]);
+  gl.bindBuffer(gl.ARRAY_BUFFER, glowUVBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, glowUVs, gl.STATIC_DRAW);
   let vertexCount = 0;
   let droneVertexCount = 0;
   let effectVertexCount = 0;
