@@ -893,35 +893,33 @@
     addBox(positions, colors, x - 0.07, y - 0.09, z + 0.04, x - 0.052, y - 0.045, z + 0.057, trim);
     addBox(positions, colors, x + 0.052, y - 0.09, z + 0.04, x + 0.07, y - 0.045, z + 0.057, trim);
 
-    // Two square botanical-glass wings. Each panel is built in the XY plane and
-    // rotated around its own shoulder so the outer edge flaps vertically like a bird's wing.
+    // Wings lie in the XZ plane (normal +Y). Flapping rotates each wing about
+    // its shoulder along Z, moving the outer edge through +Y/-Y like a bird's wing.
     const flap = Math.sin(wingPhase * Math.PI * 4) * 0.48; // 2 complete beats per second
     const makeWing = (side) => {
       const rootX = x + side * 0.092, rootY = y + 0.055, rootZ = z;
       const start = positions.length;
-      const inner = side > 0 ? rootX : rootX - 0.012;
-      const outer = side > 0 ? rootX + 0.245 : rootX - 0.245;
-      const low = rootY - 0.105, high = rootY + 0.105;
-      // Fine wooden perimeter and central muntins.
-      addBox(positions, colors, Math.min(inner, outer), low, rootZ - 0.009, Math.max(inner, outer), low + 0.012, rootZ + 0.009, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
-      addBox(positions, colors, Math.min(inner, outer), high - 0.012, rootZ - 0.009, Math.max(inner, outer), high, rootZ + 0.009, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
-      addBox(positions, colors, Math.min(inner, outer), low, rootZ - 0.009, Math.min(inner, outer) + 0.012, high, rootZ + 0.009, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
-      addBox(positions, colors, Math.max(inner, outer) - 0.012, low, rootZ - 0.009, Math.max(inner, outer), high, rootZ + 0.009, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
-      addBox(positions, colors, Math.min(inner, outer) + 0.085, low + 0.012, rootZ - 0.004, Math.min(inner, outer) + 0.091, high - 0.012, rootZ + 0.004, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
-      addBox(positions, colors, Math.min(inner, outer) + 0.16, low + 0.012, rootZ - 0.004, Math.min(inner, outer) + 0.166, high - 0.012, rootZ + 0.004, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
-      // Pale green glass is deliberately low-contrast to read as translucent in the stylized WebGL palette.
-      const panelX0 = Math.min(inner, outer) + 0.014, panelX1 = Math.max(inner, outer) - 0.014;
-      const panelY0 = low + 0.014, panelY1 = high - 0.014, panelZ = rootZ;
-      addTriangle(positions, colors, [panelX0, panelY0, panelZ], [panelX1, panelY0, panelZ], [panelX1, panelY1, panelZ], glass);
-      addTriangle(positions, colors, [panelX0, panelY0, panelZ], [panelX1, panelY1, panelZ], [panelX0, panelY1, panelZ], glass);
-      // Simple leaf sprigs and pale blossoms on the glass.
+      const inner = rootX;
+      const outer = rootX + side * 0.245;
+      const front = rootZ - 0.105, back = rootZ + 0.105;
+      const minX = Math.min(inner, outer), maxX = Math.max(inner, outer);
+      // Fine wooden perimeter only; keep the central glass completely free of muntins.
+      addBox(positions, colors, minX, rootY - 0.009, front, maxX, rootY + 0.009, front + 0.012, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
+      addBox(positions, colors, minX, rootY - 0.009, back - 0.012, maxX, rootY + 0.009, back, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
+      addBox(positions, colors, minX, rootY - 0.009, front, minX + 0.012, rootY + 0.009, back, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
+      addBox(positions, colors, maxX - 0.012, rootY - 0.009, front, maxX, rootY + 0.009, back, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
+      // One uninterrupted pale-green glass sheet, with delicate botanical marks.
+      const panelX0 = minX + 0.014, panelX1 = maxX - 0.014;
+      const panelZ0 = front + 0.014, panelZ1 = back - 0.014, panelY = rootY;
+      addTriangle(positions, colors, [panelX0, panelY, panelZ0], [panelX1, panelY, panelZ0], [panelX1, panelY, panelZ1], glass);
+      addTriangle(positions, colors, [panelX0, panelY, panelZ0], [panelX1, panelY, panelZ1], [panelX0, panelY, panelZ1], glass);
       for (let sprig = 0; sprig < 3; sprig += 1) {
         const sx = panelX0 + 0.025 + sprig * 0.068;
-        const sy = panelY0 + 0.035 + (sprig % 2) * 0.045;
-        addTriangle(positions, colors, [sx, sy, panelZ + 0.003], [sx + side * 0.028, sy + 0.012, panelZ + 0.003], [sx + side * 0.012, sy + 0.03, panelZ + 0.003], leaf);
-        addTriangle(positions, colors, [sx + 0.02, sy + 0.035, panelZ + 0.004], [sx + 0.035, sy + 0.055, panelZ + 0.004], [sx + 0.045, sy + 0.035, panelZ + 0.004], flower);
+        const sz = panelZ0 + 0.035 + (sprig % 2) * 0.045;
+        addTriangle(positions, colors, [sx, panelY + 0.003, sz], [sx + side * 0.028, panelY + 0.003, sz + 0.012], [sx + side * 0.012, panelY + 0.003, sz + 0.03], leaf);
+        addTriangle(positions, colors, [sx + 0.02, panelY + 0.004, sz + 0.035], [sx + 0.035, panelY + 0.004, sz + 0.055], [sx + 0.045, panelY + 0.004, sz + 0.035], flower);
       }
-      // Rotate every wing vertex around the shoulder, then the whole drone's heading.
+      // Rotate the whole frame and glass about the shoulder, flapping in +/-Y.
       const angle = side * flap;
       const cosine = Math.cos(angle), sine = Math.sin(angle);
       for (let vertex = start; vertex < positions.length; vertex += 3) {
