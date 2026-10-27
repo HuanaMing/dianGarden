@@ -55,3 +55,5 @@
 
 
 - 預乘 Alpha／加法混色測試（2026-10-27）：光暈 fragment shader 改為輸出已乘上 `texel.a * vOpacity` 的 RGB，混色改為 `gl.blendFunc(gl.ONE, gl.ONE)`，避免硬體混色階段再次乘 Alpha。理論上在未預乘來源 RGB 的情況下，與原本 `SRC_ALPHA, ONE` 的 RGB 貢獻等價；此提交是測試路徑，尚未取得新 CI 結果，也尚未用手機實際比較黑點是否消失。
+
+- 紋理生成方式測試（2026-10-27）：使用者回報預乘 Alpha／加法混色後，太陽與月亮中央斑點仍未改善。下一步將 Canvas 2D 的徑向漸層改為逐像素建立 RGBA：RGB 固定為白色，只按半徑計算 Alpha，再上傳 WebGL，藉此排除 CanvasGradient 插值及 canvas-to-texture alpha 轉換因素。已提交至 `src/sky-world.js`（commit `b0375c9`）；手機視覺結果與新 CI 尚待確認。
