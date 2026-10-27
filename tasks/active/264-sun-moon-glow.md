@@ -51,3 +51,4 @@
 - Pages 工作流程在推送 `src/sky-world.js` 至 main 後自動觸發並成功完成（run 40456103358）；本次沒有手動觸發部署。由於專用天體近景尚未在截圖中確認，任務維持 active，待補視覺驗收。
 
 - 尺寸調整（2026-10-27）：依使用者指定，太陽與月亮光暈的 `size` 參數皆設為 `3.8`，已提交至 `src/sky-world.js`。此修改尚未進行天體近景視覺驗收。
+- Shader 精度測試（2026-10-27）：將光暈專用 fragment shader 的 `precision mediump float` 改為 `precision highp float`，用來排查太陽／月亮光暈內部的彩色斑點。程式已提交；尚待確認瀏覽器支援、CI 結果與實際天體近景是否改善。
