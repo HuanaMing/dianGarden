@@ -238,7 +238,7 @@
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
     };
     wingWindowImage.onerror = () => console.warn('Drone wing window image could not be loaded: ../assets/無人機翅膀.png');
-    wingWindowImage.src = new URL('../assets/無人機翅膀.png', document.baseURI).href;
+    wingWindowImage.src = new URL('assets/無人機翅膀.png', document.baseURI).href;
   } catch (error) {
     console.warn('Drone wing window texture disabled:', error);
     if (wingWindowProgram) gl.deleteProgram(wingWindowProgram);
