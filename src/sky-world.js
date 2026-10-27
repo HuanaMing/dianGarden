@@ -1391,7 +1391,13 @@
         }
       }
       if (Math.hypot(candidate.x - previousX, candidate.z - previousZ) > 0.0001) state.heading = Math.atan2(candidate.x - previousX, candidate.z - previousZ);
-      if (droneDocks[index]?.deployed !== false) addDrone(positions, colors, windowPositions, windowUVs, candidate.x, candidate.y, candidate.z, time / 1000, state.heading, droneDocks[index]?.battery ?? 100);
+      if (droneDocks[index]?.deployed !== false) {
+        const isMoving = movementDistance > 0.0001;
+        const flapFrequency = isMoving ? 2 : 0.5;
+        const flapAmplitude = isMoving ? 0.48 : 0.22;
+        const individualWingPhase = time / 1000 + index * 0.173;
+        addDrone(positions, colors, windowPositions, windowUVs, candidate.x, candidate.y, candidate.z, individualWingPhase, state.heading, droneDocks[index]?.battery ?? 100, flapFrequency, flapAmplitude);
+      }
       if (animation && candidate.workProgress > 0) {
         if (!animation.workStarted) {
           animation.workStarted = true;
