@@ -98,6 +98,87 @@
     droneLightStrength: gl.getUniformLocation(program, 'uDroneLightStrength[0]'),
     droneSelfIllumination: gl.getUniformLocation(program, 'uDroneSelfIllumination'),
   };
+  const glowVertexSource = `
+    attribute vec3 aPosition;
+    attribute vec2 aUV;
+    attribute float aOpacity;
+    uniform mat4 uProjection;
+    uniform mat4 uView;
+    varying vec2 vUV;
+    varying float vOpacity;
+    void main() {
+      gl_Position = uProjection * uView * vec4(aPosition, 1.0);
+      vUV = aUV;
+      vOpacity = aOpacity;
+    }
+  `;
+  const glowFragmentSource = `
+    precision mediump float;
+    uniform sampler2D uTex;
+    uniform vec3 uTint;
+    varying vec2 vUV;
+    varying float vOpacity;
+    void main() {
+      vec4 texel = texture2D(uTex, vUV);
+      gl_FragColor = vec4(texel.rgb * uTint, texel.a * vOpacity);
+    }
+  `;
+  let glowProgram = null;
+  let glowTexture = null;
+  let glowLocations = null;
+  const glowPositionBuffer = gl.createBuffer();
+  const glowUVBuffer = gl.createBuffer();
+  const glowOpacityBuffer = gl.createBuffer();
+  const glowUVs = new Float32Array([
+    0, 0, 1, 0, 1, 1,
+    0, 0, 1, 1, 0, 1,
+  ]);
+  gl.bindBuffer(gl.ARRAY_BUFFER, glowUVBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, glowUVs, gl.STATIC_DRAW);
+  try {
+    glowProgram = gl.createProgram();
+    gl.attachShader(glowProgram, makeShader(gl.VERTEX_SHADER, glowVertexSource));
+    gl.attachShader(glowProgram, makeShader(gl.FRAGMENT_SHADER, glowFragmentSource));
+    gl.linkProgram(glowProgram);
+    if (!gl.getProgramParameter(glowProgram, gl.LINK_STATUS)) {
+      throw new Error(gl.getProgramInfoLog(glowProgram) || 'glow program link failed');
+    }
+    glowLocations = {
+      position: gl.getAttribLocation(glowProgram, 'aPosition'),
+      uv: gl.getAttribLocation(glowProgram, 'aUV'),
+      opacity: gl.getAttribLocation(glowProgram, 'aOpacity'),
+      projection: gl.getUniformLocation(glowProgram, 'uProjection'),
+      view: gl.getUniformLocation(glowProgram, 'uView'),
+      texture: gl.getUniformLocation(glowProgram, 'uTex'),
+      tint: gl.getUniformLocation(glowProgram, 'uTint'),
+    };
+    const textureCanvas = document.createElement('canvas');
+    textureCanvas.width = textureCanvas.height = 128;
+    const textureContext = textureCanvas.getContext('2d');
+    if (!textureContext) throw new Error('glow texture canvas unavailable');
+    const radius = textureCanvas.width / 2;
+    const gradient = textureContext.createRadialGradient(radius, radius, 0, radius, radius, radius);
+    [[0, 1], [0.12, 0.55], [0.35, 0.14], [1, 0]].forEach(([stop, alpha]) => {
+      gradient.addColorStop(stop, `rgba(255,255,255,${alpha})`);
+    });
+    textureContext.fillStyle = gradient;
+    textureContext.fillRect(0, 0, textureCanvas.width, textureCanvas.height);
+    glowTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, glowTexture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textureCanvas);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  } catch (error) {
+    console.warn('Sun/moon glow disabled:', error);
+    if (glowProgram) gl.deleteProgram(glowProgram);
+    if (glowTexture) gl.deleteTexture(glowTexture);
+    glowProgram = null;
+    glowTexture = null;
+    glowLocations = null;
+  }
+
   const positionBuffer = gl.createBuffer();
   const colorBuffer = gl.createBuffer();
   const dronePositionBuffer = gl.createBuffer();
@@ -116,6 +197,7 @@
   let droneVertexCount = 0;
   let effectVertexCount = 0;
   let skyVertexCount = 0;
+  let skyGlowState = null;
   let landCount = galleryMode ? 1 : 3;
   let plotPositions = galleryMode ? [{ x: 0, z: 0, y: 0 }] : [{ x: -1, z: 0, y: 0 }, { x: 0, z: 0, y: 0 }, { x: 1, z: 0, y: 0 }];
   let galleryFlowerIndex = 0;
@@ -1426,8 +1508,16 @@
     // Rain also attenuates moonlight: (100% - sun visibility) × rain visibility.
     const moonOpacity = Math.max(0, 1 - sunVisibility) * rainVisibility;
     // Keep one moon phase for each complete in-game day/night cycle.
-    const moonLightStep = Math.floor(environmentState.worldTimeMs / cycle) % 8;
+    const moonLightStep = ((Math.floor(environmentState.worldTimeMs / cycle) % 8) + 8) % 8;
     const phaseAngle = moonLightStep * Math.PI / 4;
+    const moonIllumination = Math.max(0, Math.min(1, (1 + Math.cos(phaseAngle)) * 0.5));
+    skyGlowState = {
+      sunCenter: sunDirection.map((value) => value * SKY_SPHERE_RADIUS),
+      sunOpacity: Math.max(0, Math.min(1, sunVisibility)),
+      moonCenter,
+      moonOpacity: Math.max(0, Math.min(1, moonOpacity)),
+      moonGlowFactor: 0.12 + 0.88 * Math.pow(moonIllumination, 0.72),
+    };
     const moonViewDirection = moonDirection.map((value) => -value);
     const phaseLightDirection = normalize3(moonViewDirection.map((value, axis) =>
       value * Math.cos(phaseAngle) + moonRight[axis] * Math.sin(phaseAngle)));
@@ -1933,6 +2023,62 @@
       uploadWorld();
     }
   }
+  function drawSunMoonGlow(skyView, eye, viewCenter) {
+    if (!glowProgram || !glowTexture || !glowLocations || !skyGlowState || galleryMode) return;
+    const forward = normalize3(viewCenter.map((value, axis) => value - eye[axis]));
+    const upHint = cameraMode === '2d' ? [0, 0, -1] : [0, 1, 0];
+    const right = normalize3(cross3(forward, upHint));
+    const up = normalize3(cross3(right, forward));
+    const targets = [
+      { center: skyGlowState.sunCenter, size: 1.34, tint: [1.0, 0.68, 0.30], opacity: skyGlowState.sunOpacity * 0.72 },
+      { center: skyGlowState.moonCenter, size: 0.88, tint: [0.72, 0.84, 1.0], opacity: skyGlowState.moonOpacity * skyGlowState.moonGlowFactor * 0.58 },
+    ];
+    gl.useProgram(glowProgram);
+    gl.uniformMatrix4fv(glowLocations.projection, false, currentProjection);
+    gl.uniformMatrix4fv(glowLocations.view, false, skyView);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, glowTexture);
+    gl.uniform1i(glowLocations.texture, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, glowUVBuffer);
+    gl.enableVertexAttribArray(glowLocations.uv);
+    gl.vertexAttribPointer(glowLocations.uv, 2, gl.FLOAT, false, 0, 0);
+    gl.disable(gl.DEPTH_TEST);
+    gl.depthMask(false);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    for (const target of targets) {
+      const opacity = Math.max(0, Math.min(1, target.opacity));
+      if (opacity <= 0.001) continue;
+      const half = target.size * 0.5;
+      const corners = [
+        [-1, -1], [1, -1], [1, 1],
+        [-1, -1], [1, 1], [-1, 1],
+      ];
+      const vertices = [];
+      for (const [x, y] of corners) {
+        vertices.push(
+          target.center[0] + right[0] * x * half + up[0] * y * half,
+          target.center[1] + right[1] * x * half + up[1] * y * half,
+          target.center[2] + right[2] * x * half + up[2] * y * half,
+        );
+      }
+      gl.bindBuffer(gl.ARRAY_BUFFER, glowPositionBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(glowLocations.position);
+      gl.vertexAttribPointer(glowLocations.position, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, glowOpacityBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(6).fill(opacity), gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(glowLocations.opacity);
+      gl.vertexAttribPointer(glowLocations.opacity, 1, gl.FLOAT, false, 0, 0);
+      gl.uniform3fv(glowLocations.tint, new Float32Array(target.tint));
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+    gl.disableVertexAttribArray(glowLocations.uv);
+    gl.disableVertexAttribArray(glowLocations.opacity);
+    gl.disableVertexAttribArray(glowLocations.position);
+    gl.depthMask(true);
+    gl.enable(gl.DEPTH_TEST);
+  }
+
   function draw(time) {
     if (isRenderingPaused()) {
       previousTime = time;
@@ -2039,6 +2185,14 @@
     gl.drawArrays(gl.TRIANGLES, 0, skyVertexCount);
     gl.depthMask(true);
     gl.enable(gl.DEPTH_TEST);
+    drawSunMoonGlow(skyView, eye, viewCenter);
+    gl.useProgram(program);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.depthMask(true);
+    gl.enable(gl.DEPTH_TEST);
+    gl.enableVertexAttribArray(locations.position);
+    gl.enableVertexAttribArray(locations.color);
+    gl.enableVertexAttribArray(locations.normal);
     gl.uniform3f(locations.ambient, ambient, ambient * (environmentState.phase === 'night' ? 0.86 : 1), ambient * (environmentState.phase === 'night' ? 1.12 : 1));
     gl.uniform3f(locations.sunColor, sunR, sunG, sunB);
     gl.uniformMatrix4fv(locations.view, false, currentView);
