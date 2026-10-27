@@ -1394,9 +1394,10 @@
       if (droneDocks[index]?.deployed !== false) {
         const verticalDelta = candidate.y - previousY;
         const dock = droneDocks[index];
-        const isOnPlatform = Boolean(dock)
+        const isOnPlatform = !animation
+          && Boolean(dock)
           && Math.hypot(candidate.x - dock.x, candidate.z - dock.z) < 0.08
-          && Math.abs(candidate.y - (dock.y || 0)) < 0.08;
+          && Math.abs(candidate.y - (DRONE_IDLE_Y + (dock.y || 0))) < DRONE_IDLE_BOB + 0.01;
         let flapFrequency = 2;
         let flapAmplitude = 0.48;
         if (isOnPlatform) {
