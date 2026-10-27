@@ -883,7 +883,7 @@
     const body = { top: [0.58, 0.48, 0.31], front: [0.38, 0.33, 0.23], right: [0.31, 0.37, 0.27], back: [0.46, 0.38, 0.26], left: [0.34, 0.4, 0.29], bottom: [0.23, 0.27, 0.2] };
     const trim = { top: [0.7, 0.59, 0.39], front: [0.52, 0.43, 0.31], right: [0.44, 0.48, 0.33], back: [0.58, 0.48, 0.33], left: [0.46, 0.49, 0.35], bottom: [0.3, 0.33, 0.24] };
     const wood = [0.55, 0.39, 0.24], woodLight = [0.72, 0.56, 0.36];
-    const glass = [0.67, 0.82, 0.67], leaf = [0.35, 0.62, 0.37], flower = [0.94, 0.88, 0.72];
+    const glass = [0.0335, 0.041, 0.0335], leaf = [0.35, 0.62, 0.37], flower = [0.94, 0.88, 0.72];
     addBox(positions, colors, x - 0.105, y - 0.075, z - 0.085, x + 0.105, y + 0.075, z + 0.085, body);
     // Existing landing skids remain unchanged.
     addBox(positions, colors, x - 0.115, y - 0.105, z - 0.07, x + 0.115, y - 0.087, z - 0.045, trim);
