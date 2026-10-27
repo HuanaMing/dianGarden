@@ -1,12 +1,14 @@
 {
-  "name": "目前沒有執行中的任務",
-  "status": "idle",
+  "name": "任務266：無人機植物玻璃花窗振翅模型",
+  "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "等待使用者指定下一項工作；若太陽／月亮或無人機光暈再次出現問題，另開新任務追蹤。",
-  "taskFiles": [],
-  "result": "任務264「太陽與月亮的柔和光暈」與任務265「無人機的柔和光暈」均已由使用者確認驗收完成，完成版已歸檔至 tasks/done/。"
+  "nextAction": "已建立 tasks/active/266.md 並修改 src/sky-world.js；接著確認自動驗收結果、檢查差異並修正問題。",
+  "taskFiles": [
+    "tasks/active/266.md"
+  ],
+  "result": "設計已確認；程式修改已提交，待自動驗收與差異檢查。"
 }
