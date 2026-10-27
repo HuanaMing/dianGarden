@@ -1067,6 +1067,19 @@
       makeWing(side);
     }
     addOctahedron(positions, colors, x, y + 0.006, z + 0.087, 0.035, 0.026, 0.015, getDroneBatteryColor(battery));
+    // Scale every drone component around its center so the silhouette, rounded body,
+    // wing span, vine trellis, battery light, and flap amplitude keep the same proportions.
+    const modelScale = 0.6;
+    for (let vertex = firstWindowVertex; vertex < windowPositions.length; vertex += 3) {
+      windowPositions[vertex] = x + (windowPositions[vertex] - x) * modelScale;
+      windowPositions[vertex + 1] = y + (windowPositions[vertex + 1] - y) * modelScale;
+      windowPositions[vertex + 2] = z + (windowPositions[vertex + 2] - z) * modelScale;
+    }
+    for (let vertex = firstVertex; vertex < positions.length; vertex += 3) {
+      positions[vertex] = x + (positions[vertex] - x) * modelScale;
+      positions[vertex + 1] = y + (positions[vertex + 1] - y) * modelScale;
+      positions[vertex + 2] = z + (positions[vertex + 2] - z) * modelScale;
+    }
     const cosine = Math.cos(heading), sine = Math.sin(heading);
     for (let vertex = firstWindowVertex; vertex < windowPositions.length; vertex += 3) {
       const localX = windowPositions[vertex] - x, localZ = windowPositions[vertex + 2] - z;
