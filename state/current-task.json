@@ -1,15 +1,16 @@
 {
-  "name": "任務262：修正雨後澆水任務取消造成的無人機瞬移",
+  "name": "任務263：追查播種去程無人機瞬移",
   "status": "in_progress",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "雨後澆水取消修正已提交並通過 GitHub Actions run #797。Playwright 動態取消動畫測試取樣 89 次，最大單次水平位移 0.064 且返航完成回呼成功；既有播種→澆水交接及八機平台移動測試最大位移皆 0.054，browserErrors 為空。雨水取消排隊／活動澆水工作的連接由契約檢查與呼叫鏈確認，但尚未完整模擬自然雨季時序的端到端測試。下一步請使用者在遊戲中觀察「雨後全株濕潤、活動澆水工作取消」情境；若再現，補做可控天氣的端到端測試。任務259狀態機重構與任務260動畫遷移尚未完成。",
+  "nextAction": "使用者回報獨立新案例：無人機單純前往播種途中瞬移，沒有其他事件參與。已檢查 startDroneAnimation、findDroneRoute、sampleRoute、updateDroneFrame 與 setDroneDocks；動畫增量已限制最多16ms，尚無足夠證據確定根因。下一步建立獨立播種去程動態位置連續性測試，追查位置所有權／動畫狀態交接。任務262雨後取消澆水修正仍待使用者實際情境驗收，不視為已根除所有瞬移。",
   "taskFiles": [
     "tasks/active/256-drone-system-refactor-plan.md",
     "tasks/active/259-drone-state-motion-controller.md",
+    "tasks/active/263-drone-outbound-plant-teleport.md",
     "tasks/active/262-rain-cancels-watering-drone-teleport.md",
     "tasks/active/255-drone-teleportation-follow-up.md",
     "tasks/active/254-flower-rotation-from-drone-heading.md",
@@ -18,5 +19,5 @@
     "tasks/done/257-drone-system-audit-baseline.md",
     "tasks/done/258-drone-task-lifecycle-dispatch.md"
   ],
-  "result": "任務262程式修正已提交。雨水濕潤時會取消無效澆水工作；活動動畫從當前位置安全返航，找不到安全路徑時等待重試。GitHub Actions run #797 通過：取消返航 89 個取樣、最大位移 0.064；既有交接與八機平台測試各 120 個取樣、最大位移 0.054；browserErrors 為空。仍待使用者在實際遊戲中確認原始雨後情境是否排除。"
+  "result": "任務263已建立並開始調查。尚未修改飛行程式，也尚未執行新測試；目前不能宣稱一般播種去程瞬移已修復。"
 }
