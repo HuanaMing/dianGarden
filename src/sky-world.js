@@ -941,7 +941,7 @@
     return lowCharge.map((channel, index) => channel + (fullCharge[index] - channel) * charge);
   }
 
-  function addDrone(positions, colors, windowPositions, windowUVs, x, y, z, wingPhase, heading, battery = 100) {
+  function addDrone(positions, colors, windowPositions, windowUVs, x, y, z, wingPhase, heading, battery = 100, flapFrequency = 2, flapAmplitude = 0.48) {
     const firstVertex = positions.length;
     const firstWindowVertex = windowPositions.length;
     const body = { top: [0.58, 0.48, 0.31], front: [0.38, 0.33, 0.23], right: [0.31, 0.37, 0.27], back: [0.46, 0.38, 0.26], left: [0.34, 0.4, 0.29], bottom: [0.23, 0.27, 0.2] };
@@ -959,7 +959,7 @@
 
     // Wings lie in the XZ plane (normal +Y). Flapping rotates each wing about
     // its shoulder along Z, moving the outer edge through +Y/-Y like a bird's wing.
-    const flap = Math.sin(wingPhase * Math.PI * 4) * 0.48; // 2 complete beats per second
+    const flap = Math.sin(wingPhase * Math.PI * 2 * flapFrequency) * flapAmplitude;
     const makeWing = (side) => {
       const rootX = x + side * 0.15, rootY = y + 0.055, rootZ = z;
       const start = positions.length;
