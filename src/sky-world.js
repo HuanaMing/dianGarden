@@ -148,12 +148,30 @@
     const textureContext = textureCanvas.getContext('2d');
     if (!textureContext) throw new Error('glow texture canvas unavailable');
     const radius = textureCanvas.width / 2;
-    const gradient = textureContext.createRadialGradient(radius, radius, 0, radius, radius, radius);
-    [[0, 1], [0.12, 0.55], [0.35, 0.14], [1, 0]].forEach(([stop, alpha]) => {
-      gradient.addColorStop(stop, `rgba(255,255,255,${alpha})`);
-    });
-    textureContext.fillStyle = gradient;
-    textureContext.fillRect(0, 0, textureCanvas.width, textureCanvas.height);
+    // Build the glow alpha per pixel instead of relying on CanvasGradient's
+    // color interpolation/premultiplication when the canvas becomes a WebGL texture.
+    const imageData = textureContext.createImageData(textureCanvas.width, textureCanvas.height);
+    const alphaStops = [[0, 1], [0.12, 0.55], [0.35, 0.14], [1, 0]];
+    for (let y = 0; y < textureCanvas.height; y += 1) {
+      for (let x = 0; x < textureCanvas.width; x += 1) {
+        const distance = Math.hypot((x + 0.5 - radius) / radius, (y + 0.5 - radius) / radius);
+        let alpha = 0;
+        if (distance <= 1) {
+          let stopIndex = 1;
+          while (stopIndex < alphaStops.length - 1 && distance > alphaStops[stopIndex][0]) stopIndex += 1;
+          const [start, startAlpha] = alphaStops[stopIndex - 1];
+          const [end, endAlpha] = alphaStops[stopIndex];
+          const t = (distance - start) / (end - start);
+          alpha = startAlpha + (endAlpha - startAlpha) * t;
+        }
+        const offset = (y * textureCanvas.width + x) * 4;
+        imageData.data[offset] = 255;
+        imageData.data[offset + 1] = 255;
+        imageData.data[offset + 2] = 255;
+        imageData.data[offset + 3] = Math.round(alpha * 255);
+      }
+    }
+    textureContext.putImageData(imageData, 0, 0);
     glowTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, glowTexture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textureCanvas);
