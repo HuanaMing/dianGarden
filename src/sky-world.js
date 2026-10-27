@@ -992,7 +992,7 @@
     const trim = { top: [0.7, 0.59, 0.39], front: [0.52, 0.43, 0.31], right: [0.44, 0.48, 0.33], back: [0.58, 0.48, 0.33], left: [0.46, 0.49, 0.35], bottom: [0.3, 0.33, 0.24] };
     const wood = [0.55, 0.39, 0.24], woodLight = [0.72, 0.56, 0.36];
     const leaf = [0.35, 0.62, 0.37];
-    addRoundedBox(positions, colors, x - 0.105, y - 0.075, z - 0.085, x + 0.105, y + 0.075, z + 0.085, body, 0.028, 5);
+    addRoundedBox(positions, colors, x - 0.084, y - 0.075, z - 0.085, x + 0.084, y + 0.075, z + 0.085, body, 0.028, 5);
 
     // Wings lie in the XZ plane (normal +Y). Flapping rotates each wing about
     // its shoulder along Z, moving the outer edge through +Y/-Y like a bird's wing.
