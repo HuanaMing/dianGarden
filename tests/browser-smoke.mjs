@@ -1744,6 +1744,26 @@ try {
   }
   await page.screenshot({ path: `${outputDir}/garden-desktop.png`, fullPage: true });
 
+  // Capture the celestial glow directly by aligning the camera with each sky direction.
+  const originalCameraPose = await page.evaluate(() => window.dianGardenCamera?.getState());
+  const celestialCameraReady = await page.evaluate(() => Boolean(window.dianGardenCamera?.restore));
+  if (celestialCameraReady) {
+    await page.evaluate(() => window.dianGardenCamera.restore({
+      mode: '3d', yaw: Math.PI, pitch: 0.15, distance: 6.6, targetX: 0, targetZ: 0,
+    }));
+    await page.waitForTimeout(250);
+    await page.screenshot({ path: `${outputDir}/sun-glow.png`, fullPage: true });
+    await page.evaluate(() => window.dianGardenCamera.restore({
+      mode: '3d', yaw: 0, pitch: 0.15, distance: 6.6, targetX: 0, targetZ: 0,
+    }));
+    await page.waitForTimeout(250);
+    await page.screenshot({ path: `${outputDir}/moon-glow.png`, fullPage: true });
+    await page.evaluate((pose) => window.dianGardenCamera.restore(pose), originalCameraPose);
+    checks.push('任務264：擷取太陽與月亮置於相機視野內的光暈專項截圖');
+  } else {
+    throw new Error('任務264：無法取得相機控制 API，不能進行天體光暈專項截圖');
+  }
+
   await page.setViewportSize({ width: 667, height: 375 });
   await page.waitForTimeout(350);
   const landscapeTopbar = await page.locator('#world-topbar').boundingBox();
