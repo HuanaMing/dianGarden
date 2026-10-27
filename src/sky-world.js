@@ -900,7 +900,7 @@
       const rootX = x + side * 0.23, rootY = y + 0.055, rootZ = z;
       const start = positions.length;
       const inner = rootX;
-      const outer = rootX + side * 0.2;
+      const outer = rootX + side * 0.15;
       const front = rootZ - 0.105, back = rootZ + 0.105;
       const minX = Math.min(inner, outer), maxX = Math.max(inner, outer);
       // Fine wooden perimeter only; keep the central glass completely free of muntins.
