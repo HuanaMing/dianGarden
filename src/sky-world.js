@@ -188,6 +188,66 @@
     glowLocations = null;
   }
 
+  const wingWindowVertexSource = `
+    attribute vec3 aPosition;
+    attribute vec2 aUV;
+    uniform mat4 uProjection;
+    uniform mat4 uView;
+    varying vec2 vUV;
+    void main() {
+      gl_Position = uProjection * uView * vec4(aPosition, 1.0);
+      vUV = aUV;
+    }
+  `;
+  const wingWindowFragmentSource = `
+    precision mediump float;
+    uniform sampler2D uTexture;
+    varying vec2 vUV;
+    void main() {
+      gl_FragColor = texture2D(uTexture, vUV);
+    }
+  `;
+  let wingWindowProgram = null;
+  let wingWindowTexture = null;
+  let wingWindowLocations = null;
+  try {
+    wingWindowProgram = gl.createProgram();
+    gl.attachShader(wingWindowProgram, makeShader(gl.VERTEX_SHADER, wingWindowVertexSource));
+    gl.attachShader(wingWindowProgram, makeShader(gl.FRAGMENT_SHADER, wingWindowFragmentSource));
+    gl.linkProgram(wingWindowProgram);
+    if (!gl.getProgramParameter(wingWindowProgram, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(wingWindowProgram) || 'wing window program link failed');
+    wingWindowLocations = {
+      position: gl.getAttribLocation(wingWindowProgram, 'aPosition'),
+      uv: gl.getAttribLocation(wingWindowProgram, 'aUV'),
+      projection: gl.getUniformLocation(wingWindowProgram, 'uProjection'),
+      view: gl.getUniformLocation(wingWindowProgram, 'uView'),
+      texture: gl.getUniformLocation(wingWindowProgram, 'uTexture'),
+    };
+    wingWindowTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, wingWindowTexture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const wingWindowImage = new Image();
+    wingWindowImage.onload = () => {
+      gl.bindTexture(gl.TEXTURE_2D, wingWindowTexture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, wingWindowImage);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    };
+    wingWindowImage.onerror = () => console.warn('Drone wing window image could not be loaded: ../assets/無人機翅膀.png');
+    wingWindowImage.src = new URL('../assets/無人機翅膀.png', document.baseURI).href;
+  } catch (error) {
+    console.warn('Drone wing window texture disabled:', error);
+    if (wingWindowProgram) gl.deleteProgram(wingWindowProgram);
+    if (wingWindowTexture) gl.deleteTexture(wingWindowTexture);
+    wingWindowProgram = null;
+    wingWindowTexture = null;
+    wingWindowLocations = null;
+  }
+
   const positionBuffer = gl.createBuffer();
   const colorBuffer = gl.createBuffer();
   const dronePositionBuffer = gl.createBuffer();
@@ -201,6 +261,9 @@
   const skyNormalBuffer = gl.createBuffer();
   const normalBuffer = gl.createBuffer();
   const droneNormalBuffer = gl.createBuffer();
+  const droneWindowPositionBuffer = gl.createBuffer();
+  const droneWindowUVBuffer = gl.createBuffer();
+  let droneWindowVertexCount = 0;
   const effectNormalBuffer = gl.createBuffer();
   // Keep the original scene buffer creation order stable for diagnostics and existing tests.
   const glowPositionBuffer = gl.createBuffer();
@@ -878,8 +941,9 @@
     return lowCharge.map((channel, index) => channel + (fullCharge[index] - channel) * charge);
   }
 
-  function addDrone(positions, colors, x, y, z, wingPhase, heading, battery = 100) {
+  function addDrone(positions, colors, windowPositions, windowUVs, x, y, z, wingPhase, heading, battery = 100) {
     const firstVertex = positions.length;
+    const firstWindowVertex = windowPositions.length;
     const body = { top: [0.58, 0.48, 0.31], front: [0.38, 0.33, 0.23], right: [0.31, 0.37, 0.27], back: [0.46, 0.38, 0.26], left: [0.34, 0.4, 0.29], bottom: [0.23, 0.27, 0.2] };
     const trim = { top: [0.7, 0.59, 0.39], front: [0.52, 0.43, 0.31], right: [0.44, 0.48, 0.33], back: [0.58, 0.48, 0.33], left: [0.46, 0.49, 0.35], bottom: [0.3, 0.33, 0.24] };
     const wood = [0.55, 0.39, 0.24], woodLight = [0.72, 0.56, 0.36];
@@ -897,10 +961,10 @@
     // its shoulder along Z, moving the outer edge through +Y/-Y like a bird's wing.
     const flap = Math.sin(wingPhase * Math.PI * 4) * 0.48; // 2 complete beats per second
     const makeWing = (side) => {
-      const rootX = x + side * 0.18, rootY = y + 0.055, rootZ = z;
+      const rootX = x + side * 0.15, rootY = y + 0.055, rootZ = z;
       const start = positions.length;
       const inner = rootX;
-      const outer = rootX + side * 0.15;
+      const outer = rootX + side * 0.2;
       const front = rootZ - 0.105, back = rootZ + 0.105;
       const minX = Math.min(inner, outer), maxX = Math.max(inner, outer);
       // Fine wooden perimeter only; keep the central glass completely free of muntins.
@@ -908,15 +972,27 @@
       addBox(positions, colors, minX, rootY - 0.009, back - 0.012, maxX, rootY + 0.009, back, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
       addBox(positions, colors, minX, rootY - 0.009, front, minX + 0.012, rootY + 0.009, back, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
       addBox(positions, colors, maxX - 0.012, rootY - 0.009, front, maxX, rootY + 0.009, back, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
-      // The four wooden perimeter bars are independent box meshes.
-      // Keep the entire center empty for now: no glass sheet, muntins, or decoration.
-      // Rotate the whole wooden frame about the shoulder, flapping in +/-Y.
+      // A transparent PNG fills the square opening, slightly above the wooden frame.
+      const imageMinX = minX + 0.012, imageMaxX = maxX - 0.012;
+      const imageFront = front + 0.012, imageBack = back - 0.012;
+      const imageY = rootY + 0.010;
+      windowPositions.push(
+        imageMinX, imageY, imageFront,  imageMaxX, imageY, imageFront,  imageMaxX, imageY, imageBack,
+        imageMinX, imageY, imageFront,  imageMaxX, imageY, imageBack,  imageMinX, imageY, imageBack,
+      );
+      windowUVs.push(0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1);
+      // Rotate both the frame and its image about the same shoulder for synchronized flapping.
       const angle = side * flap;
       const cosine = Math.cos(angle), sine = Math.sin(angle);
       for (let vertex = start; vertex < positions.length; vertex += 3) {
         const dx = positions[vertex] - rootX, dy = positions[vertex + 1] - rootY;
         positions[vertex] = rootX + dx * cosine - dy * sine;
         positions[vertex + 1] = rootY + dx * sine + dy * cosine;
+      }
+      for (let vertex = windowPositions.length - 18; vertex < windowPositions.length; vertex += 3) {
+        const dx = windowPositions[vertex] - rootX, dy = windowPositions[vertex + 1] - rootY;
+        windowPositions[vertex] = rootX + dx * cosine - dy * sine;
+        windowPositions[vertex + 1] = rootY + dx * sine + dy * cosine;
       }
     };
     // Living vine trellis between the body and each wing root.
@@ -955,6 +1031,11 @@
     }
     addOctahedron(positions, colors, x, y + 0.006, z + 0.087, 0.035, 0.026, 0.015, getDroneBatteryColor(battery));
     const cosine = Math.cos(heading), sine = Math.sin(heading);
+    for (let vertex = firstWindowVertex; vertex < windowPositions.length; vertex += 3) {
+      const localX = windowPositions[vertex] - x, localZ = windowPositions[vertex + 2] - z;
+      windowPositions[vertex] = x + localX * cosine + localZ * sine;
+      windowPositions[vertex + 2] = z - localX * sine + localZ * cosine;
+    }
     for (let vertex = firstVertex; vertex < positions.length; vertex += 3) {
       const localX = positions[vertex] - x, localZ = positions[vertex + 2] - z;
       positions[vertex] = x + localX * cosine + localZ * sine;
@@ -1122,6 +1203,8 @@
     const deferCallback = (callback) => { if (typeof callback === 'function') deferredCallbacks.push(callback); };
     const positions = [];
     const colors = [];
+    const windowPositions = [];
+    const windowUVs = [];
     const effectPositions = [];
     const effectColors = [];
     const effectOpacitySpans = [];
@@ -1308,7 +1391,7 @@
         }
       }
       if (Math.hypot(candidate.x - previousX, candidate.z - previousZ) > 0.0001) state.heading = Math.atan2(candidate.x - previousX, candidate.z - previousZ);
-      if (droneDocks[index]?.deployed !== false) addDrone(positions, colors, candidate.x, candidate.y, candidate.z, time / 1000, state.heading, droneDocks[index]?.battery ?? 100);
+      if (droneDocks[index]?.deployed !== false) addDrone(positions, colors, windowPositions, windowUVs, candidate.x, candidate.y, candidate.z, time / 1000, state.heading, droneDocks[index]?.battery ?? 100);
       if (animation && candidate.workProgress > 0) {
         if (!animation.workStarted) {
           animation.workStarted = true;
@@ -1364,6 +1447,11 @@
       }
     }
     droneVertexCount = positions.length / 3;
+    droneWindowVertexCount = windowPositions.length / 3;
+    gl.bindBuffer(gl.ARRAY_BUFFER, droneWindowPositionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(windowPositions), gl.DYNAMIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, droneWindowUVBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(windowUVs), gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, dronePositionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, droneColorBuffer);
@@ -2390,6 +2478,26 @@
     gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
     gl.uniform1f(locations.droneSelfIllumination, nightFactor * 0.624);
     gl.drawArrays(gl.TRIANGLES, 0, droneVertexCount);
+    if (wingWindowProgram && wingWindowTexture && wingWindowLocations && droneWindowVertexCount > 0) {
+      gl.useProgram(wingWindowProgram);
+      gl.uniformMatrix4fv(wingWindowLocations.projection, false, currentProjection);
+      gl.uniformMatrix4fv(wingWindowLocations.view, false, currentView);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, wingWindowTexture);
+      gl.uniform1i(wingWindowLocations.texture, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, droneWindowPositionBuffer);
+      gl.enableVertexAttribArray(wingWindowLocations.position);
+      gl.vertexAttribPointer(wingWindowLocations.position, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, droneWindowUVBuffer);
+      gl.enableVertexAttribArray(wingWindowLocations.uv);
+      gl.vertexAttribPointer(wingWindowLocations.uv, 2, gl.FLOAT, false, 0, 0);
+      gl.depthMask(false);
+      gl.drawArrays(gl.TRIANGLES, 0, droneWindowVertexCount);
+      gl.depthMask(true);
+      gl.disableVertexAttribArray(wingWindowLocations.position);
+      gl.disableVertexAttribArray(wingWindowLocations.uv);
+      gl.useProgram(program);
+    }
     requestAnimationFrame(draw);
   }
 
