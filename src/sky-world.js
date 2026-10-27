@@ -897,10 +897,10 @@
     // its shoulder along Z, moving the outer edge through +Y/-Y like a bird's wing.
     const flap = Math.sin(wingPhase * Math.PI * 4) * 0.48; // 2 complete beats per second
     const makeWing = (side) => {
-      const rootX = x + side * 0.12, rootY = y + 0.055, rootZ = z;
+      const rootX = x + side * 0.23, rootY = y + 0.055, rootZ = z;
       const start = positions.length;
       const inner = rootX;
-      const outer = rootX + side * 0.265;
+      const outer = rootX + side * 0.2;
       const front = rootZ - 0.105, back = rootZ + 0.105;
       const minX = Math.min(inner, outer), maxX = Math.max(inner, outer);
       // Fine wooden perimeter only; keep the central glass completely free of muntins.
@@ -936,7 +936,7 @@
       }
     };
     for (const side of [-1, 1]) {
-      const rootX = x + side * 0.12, rootY = y + 0.055;
+      const rootX = x + side * 0.23, rootY = y + 0.055;
       addVineCurve([
         [x + side * 0.075, y + 0.035, z - 0.015],
         [x + side * 0.09, y + 0.085, z - 0.02],
