@@ -6,9 +6,9 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "依已確認設計，檢查 sky-world.js 天體資料流，實作獨立 WebGL 光暈 program、徑向漸層貼圖及月相強度，然後執行語法／回歸驗證；不觸發正式部署。",
+  "nextAction": "Playwright browser smoke 已通過；補做將太陽或月亮置於畫面內的專項視覺檢查，確認光暈尺寸、顏色與月相強度後再驗收結案。",
   "taskFiles": [
     "tasks/active/264-sun-moon-glow.md"
   ],
-  "result": "已建立並驗證任務264文件，從 inbox 依規範移入 active。尚未修改程式。"
+  "result": "光暈程式已提交；最新 browser smoke run 40456468867 通過且 browserErrors 為空。預設截圖未包含可見天體，專項光暈視覺驗收仍待完成。"
 }
