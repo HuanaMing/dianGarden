@@ -120,7 +120,7 @@
     varying float vOpacity;
     void main() {
       vec4 texel = texture2D(uTex, vUV);
-      gl_FragColor = vec4(texel.rgb * uTint, texel.a * vOpacity);
+      gl_FragColor = vec4(texel.rgb * uTint * texel.a * vOpacity, texel.a * vOpacity);
     }
   `;
   let glowProgram = null;
