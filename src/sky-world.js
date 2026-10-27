@@ -2026,10 +2026,19 @@
   }
   function drawSunMoonGlow(skyView, eye, viewCenter) {
     if (!glowProgram || !glowTexture || !glowLocations || !skyGlowState || galleryMode) return;
-    const forward = normalize3(viewCenter.map((value, axis) => value - eye[axis]));
+    const normalize = (vector) => {
+      const length = Math.hypot(vector[0], vector[1], vector[2]) || 1;
+      return vector.map((value) => value / length);
+    };
+    const cross = (a, b) => [
+      a[1] * b[2] - a[2] * b[1],
+      a[2] * b[0] - a[0] * b[2],
+      a[0] * b[1] - a[1] * b[0],
+    ];
+    const forward = normalize(viewCenter.map((value, axis) => value - eye[axis]));
     const upHint = cameraMode === '2d' ? [0, 0, -1] : [0, 1, 0];
-    const right = normalize3(cross3(forward, upHint));
-    const up = normalize3(cross3(right, forward));
+    const right = normalize(cross(forward, upHint));
+    const up = normalize(cross(right, forward));
     const targets = [
       { center: skyGlowState.sunCenter, size: 1.34, tint: [1.0, 0.68, 0.30], opacity: skyGlowState.sunOpacity * 0.72 },
       { center: skyGlowState.moonCenter, size: 0.88, tint: [0.72, 0.84, 1.0], opacity: skyGlowState.moonOpacity * skyGlowState.moonGlowFactor * 0.58 },
