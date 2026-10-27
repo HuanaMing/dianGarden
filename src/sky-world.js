@@ -1081,7 +1081,7 @@
     }
 
     const clearance = 0.18;
-    let height = Math.max(DRONE_TRANSIT_Y, Number.isFinite(obstacleTop) ? obstacleTop + clearance : DRONE_TRANSIT_Y);
+    let height = Math.max(DRONE_TRANSIT_Y, 1.366 + getDockHeight(droneIndex) + clearance, Number.isFinite(obstacleTop) ? obstacleTop + clearance : DRONE_TRANSIT_Y);
     const reserved = droneCruiseHeights
       .filter((value, index) => index !== droneIndex && Number.isFinite(value))
       .sort((a, b) => a - b);
