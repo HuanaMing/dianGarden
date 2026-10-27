@@ -1926,3 +1926,11 @@
 - 任務251在 active 與 inbox 各有一份同名文件，兩份均保留於 done；inbox 版本另命名為 `251-farm-management-five-columns-inbox-copy.md`。
 - 任務109、212、232既有付費／部署批准條件仍有效，沒有被視為已批准。此次未修改遊戲程式，亦未觸發任何部署。
 - 已更新 `state/current-task.json` 與 `state/project.json`，目前沒有執行中的任務；日後重現時另開新任務。
+
+
+## 2026-10-27 — 任務264與265驗收完成並歸檔
+
+- 任務264「太陽與月亮的柔和光暈」：使用者確認驗收完成；完成版建立於 `tasks/done/264-sun-moon-glow.md`，驗證完成版內容後已刪除 `tasks/active/264-sun-moon-glow.md`。
+- 任務265「無人機的柔和光暈」：依已提交程式與使用者確認的實機驗收結果建立完成版 `tasks/done/265-drone-glow.md`。自動化測試結果未確認，未記為通過。
+- 兩份 done 文件均已重新讀取確認包含結案狀態。未手動觸發生產部署。
+- 已同步更新 `state/project.json` 與 `state/current-task.json`；目前沒有執行中的任務。日後若再次出現問題，另開新任務。
