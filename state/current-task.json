@@ -1,12 +1,14 @@
 {
-  "name": "目前沒有執行中的任務",
-  "status": "idle",
+  "name": "任務264：太陽與月亮的柔和光暈",
+  "status": "active",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "依使用者於2026-10-27的明確指示，所有原位於tasks/active、tasks/inbox、tasks/blocked的任務已行政結案並歸檔至tasks/done。這不代表尚未驗收的功能已通過；若日後再次遇到相關問題，建立新任務。任務109、212、232的既有付費／部署批准要求仍未批准，日後重新提出時仍須先取得必要批准。",
-  "taskFiles": [],
-  "result": "目前沒有排程中的任務。所有未結案任務文件已依使用者指示歸檔至done；各任務原有驗證狀態與未解決事項仍以文件內容為準，若問題再次出現則另開新任務。"
+  "nextAction": "依已確認設計，檢查 sky-world.js 天體資料流，實作獨立 WebGL 光暈 program、徑向漸層貼圖及月相強度，然後執行語法／回歸驗證；不觸發正式部署。",
+  "taskFiles": [
+    "tasks/active/264-sun-moon-glow.md"
+  ],
+  "result": "已建立並驗證任務264文件，從 inbox 依規範移入 active。尚未修改程式。"
 }
