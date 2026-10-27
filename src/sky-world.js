@@ -965,7 +965,7 @@
       const start = positions.length;
       const inner = rootX;
       const outer = rootX + side * 0.2;
-      const front = rootZ - 0.105, back = rootZ + 0.105;
+      const front = rootZ - 0.1, back = rootZ + 0.1;
       const minX = Math.min(inner, outer), maxX = Math.max(inner, outer);
       // Fine wooden perimeter only; keep the central glass completely free of muntins.
       addBox(positions, colors, minX, rootY - 0.009, front, maxX, rootY + 0.009, front + 0.012, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
