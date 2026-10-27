@@ -883,7 +883,7 @@
     const body = { top: [0.58, 0.48, 0.31], front: [0.38, 0.33, 0.23], right: [0.31, 0.37, 0.27], back: [0.46, 0.38, 0.26], left: [0.34, 0.4, 0.29], bottom: [0.23, 0.27, 0.2] };
     const trim = { top: [0.7, 0.59, 0.39], front: [0.52, 0.43, 0.31], right: [0.44, 0.48, 0.33], back: [0.58, 0.48, 0.33], left: [0.46, 0.49, 0.35], bottom: [0.3, 0.33, 0.24] };
     const wood = [0.55, 0.39, 0.24], woodLight = [0.72, 0.56, 0.36];
-    const glass = [0.0335, 0.041, 0.0335], leaf = [0.35, 0.62, 0.37], flower = [0.94, 0.88, 0.72];
+    const leaf = [0.35, 0.62, 0.37];
     addBox(positions, colors, x - 0.105, y - 0.075, z - 0.085, x + 0.105, y + 0.075, z + 0.085, body);
     // Existing landing skids remain unchanged.
     addBox(positions, colors, x - 0.115, y - 0.105, z - 0.07, x + 0.115, y - 0.087, z - 0.045, trim);
@@ -908,17 +908,8 @@
       addBox(positions, colors, minX, rootY - 0.009, back - 0.012, maxX, rootY + 0.009, back, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
       addBox(positions, colors, minX, rootY - 0.009, front, minX + 0.012, rootY + 0.009, back, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
       addBox(positions, colors, maxX - 0.012, rootY - 0.009, front, maxX, rootY + 0.009, back, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
-      // One uninterrupted pale-green glass sheet, with delicate botanical marks.
-      const panelX0 = minX + 0.014, panelX1 = maxX - 0.014;
-      const panelZ0 = front + 0.014, panelZ1 = back - 0.014, panelY = rootY;
-      addTriangle(positions, colors, [panelX0, panelY, panelZ0], [panelX1, panelY, panelZ0], [panelX1, panelY, panelZ1], glass);
-      addTriangle(positions, colors, [panelX0, panelY, panelZ0], [panelX1, panelY, panelZ1], [panelX0, panelY, panelZ1], glass);
-      for (let sprig = 0; sprig < 3; sprig += 1) {
-        const sx = panelX0 + 0.025 + sprig * 0.068;
-        const sz = panelZ0 + 0.035 + (sprig % 2) * 0.045;
-        addTriangle(positions, colors, [sx, panelY + 0.003, sz], [sx + side * 0.028, panelY + 0.003, sz + 0.012], [sx + side * 0.012, panelY + 0.003, sz + 0.03], leaf);
-        addTriangle(positions, colors, [sx + 0.02, panelY + 0.004, sz + 0.035], [sx + 0.035, panelY + 0.004, sz + 0.055], [sx + 0.045, panelY + 0.004, sz + 0.035], flower);
-      }
+      // The four wooden perimeter bars are independent box meshes.
+      // Keep the entire center empty for now: no glass sheet, muntins, or decoration.
       // Rotate the whole frame and glass about the shoulder, flapping in +/-Y.
       const angle = side * flap;
       const cosine = Math.cos(angle), sine = Math.sin(angle);
