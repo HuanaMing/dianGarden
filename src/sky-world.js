@@ -2054,7 +2054,8 @@
     gl.vertexAttribPointer(glowLocations.uv, 2, gl.FLOAT, false, 0, 0);
     gl.disable(gl.DEPTH_TEST);
     gl.depthMask(false);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    // Premultiplied-alpha RGB: add directly so alpha is not applied twice.
+    gl.blendFunc(gl.ONE, gl.ONE);
     for (const target of targets) {
       const opacity = Math.max(0, Math.min(1, target.opacity));
       if (opacity <= 0.001) continue;
