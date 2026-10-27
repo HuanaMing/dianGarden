@@ -1192,7 +1192,7 @@
       if (animation && candidate.workComplete && !animation.workCompleted && state.animation === animation) {
         animation.workCompleted = true;
         animation.returning = animation.shouldReturn?.() !== false;
-        if (!animation.departed) { animation.departed = true; animation.onDeparture?.(); }
+        if (!animation.departed) { animation.departed = true; deferCallback(animation.onDeparture); }
         state.lastCompletedPlotIndex = Number.isInteger(animation.targetPlotIndex) ? animation.targetPlotIndex : null;
         // Keep the completed-work animation as the position owner while callbacks run.
         // render() may synchronously call setDroneDocks(); a null animation would make it snap
