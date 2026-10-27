@@ -878,31 +878,65 @@
     return lowCharge.map((channel, index) => channel + (fullCharge[index] - channel) * charge);
   }
 
-  function addDrone(positions, colors, x, y, z, rotorAngle, heading, battery = 100) {
+  function addDrone(positions, colors, x, y, z, wingPhase, heading, battery = 100) {
     const firstVertex = positions.length;
     const body = { top: [0.58, 0.48, 0.31], front: [0.38, 0.33, 0.23], right: [0.31, 0.37, 0.27], back: [0.46, 0.38, 0.26], left: [0.34, 0.4, 0.29], bottom: [0.23, 0.27, 0.2] };
     const trim = { top: [0.7, 0.59, 0.39], front: [0.52, 0.43, 0.31], right: [0.44, 0.48, 0.33], back: [0.58, 0.48, 0.33], left: [0.46, 0.49, 0.35], bottom: [0.3, 0.33, 0.24] };
-    const rotor = { top: [0.78, 0.69, 0.5], front: [0.53, 0.46, 0.34], right: [0.44, 0.4, 0.3], back: [0.62, 0.53, 0.38], left: [0.47, 0.42, 0.31], bottom: [0.35, 0.33, 0.25] };
+    const wood = [0.55, 0.39, 0.24], woodLight = [0.72, 0.56, 0.36];
+    const glass = [0.67, 0.82, 0.67], leaf = [0.35, 0.62, 0.37], flower = [0.94, 0.88, 0.72];
     addBox(positions, colors, x - 0.105, y - 0.075, z - 0.085, x + 0.105, y + 0.075, z + 0.085, body);
-    // A pair of low skids gives the single-rotor craft a stable landing stance.
+    // Existing landing skids remain unchanged.
     addBox(positions, colors, x - 0.115, y - 0.105, z - 0.07, x + 0.115, y - 0.087, z - 0.045, trim);
     addBox(positions, colors, x - 0.115, y - 0.105, z + 0.045, x + 0.115, y - 0.087, z + 0.07, trim);
     addBox(positions, colors, x - 0.07, y - 0.09, z - 0.057, x - 0.052, y - 0.045, z - 0.04, trim);
     addBox(positions, colors, x + 0.052, y - 0.09, z - 0.057, x + 0.07, y - 0.045, z - 0.04, trim);
     addBox(positions, colors, x - 0.07, y - 0.09, z + 0.04, x - 0.052, y - 0.045, z + 0.057, trim);
     addBox(positions, colors, x + 0.052, y - 0.09, z + 0.04, x + 0.07, y - 0.045, z + 0.057, trim);
-    addBox(positions, colors, x - 0.026, y + 0.075, z - 0.026, x + 0.026, y + 0.15, z + 0.026, trim);
 
-    // One two-blade rotor above the cabin; rotate its single shared axis.
-    const halfLength = 0.19, halfWidth = 0.018;
-    const dx = Math.cos(rotorAngle) * halfLength, dz = Math.sin(rotorAngle) * halfLength;
-    const px = -Math.sin(rotorAngle) * halfWidth, pz = Math.cos(rotorAngle) * halfWidth;
-    const bladeCorners = [
-      [x - dx - px, y + 0.155, z - dz - pz], [x + dx - px, y + 0.155, z + dz - pz],
-      [x + dx + px, y + 0.155, z + dz + pz], [x - dx + px, y + 0.155, z - dz + pz],
-    ];
-    addTriangle(positions, colors, bladeCorners[0], bladeCorners[1], bladeCorners[2], [0.71, 0.61, 0.43]);
-    addTriangle(positions, colors, bladeCorners[0], bladeCorners[2], bladeCorners[3], [0.71, 0.61, 0.43]);
+    // Two square botanical-glass wings. Each panel is built in the XY plane and
+    // rotated around its own shoulder so the outer edge flaps vertically like a bird's wing.
+    const flap = Math.sin(wingPhase * Math.PI * 4) * 0.48; // 2 complete beats per second
+    const makeWing = (side) => {
+      const rootX = x + side * 0.092, rootY = y + 0.055, rootZ = z;
+      const start = positions.length;
+      const inner = side > 0 ? rootX : rootX - 0.012;
+      const outer = side > 0 ? rootX + 0.245 : rootX - 0.245;
+      const low = rootY - 0.105, high = rootY + 0.105;
+      // Fine wooden perimeter and central muntins.
+      addBox(positions, colors, Math.min(inner, outer), low, rootZ - 0.009, Math.max(inner, outer), low + 0.012, rootZ + 0.009, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
+      addBox(positions, colors, Math.min(inner, outer), high - 0.012, rootZ - 0.009, Math.max(inner, outer), high, rootZ + 0.009, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
+      addBox(positions, colors, Math.min(inner, outer), low, rootZ - 0.009, Math.min(inner, outer) + 0.012, high, rootZ + 0.009, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
+      addBox(positions, colors, Math.max(inner, outer) - 0.012, low, rootZ - 0.009, Math.max(inner, outer), high, rootZ + 0.009, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
+      addBox(positions, colors, Math.min(inner, outer) + 0.085, low + 0.012, rootZ - 0.004, Math.min(inner, outer) + 0.091, high - 0.012, rootZ + 0.004, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
+      addBox(positions, colors, Math.min(inner, outer) + 0.16, low + 0.012, rootZ - 0.004, Math.min(inner, outer) + 0.166, high - 0.012, rootZ + 0.004, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
+      // Pale green glass is deliberately low-contrast to read as translucent in the stylized WebGL palette.
+      const panelX0 = Math.min(inner, outer) + 0.014, panelX1 = Math.max(inner, outer) - 0.014;
+      const panelY0 = low + 0.014, panelY1 = high - 0.014, panelZ = rootZ;
+      addTriangle(positions, colors, [panelX0, panelY0, panelZ], [panelX1, panelY0, panelZ], [panelX1, panelY1, panelZ], glass);
+      addTriangle(positions, colors, [panelX0, panelY0, panelZ], [panelX1, panelY1, panelZ], [panelX0, panelY1, panelZ], glass);
+      // Simple leaf sprigs and pale blossoms on the glass.
+      for (let sprig = 0; sprig < 3; sprig += 1) {
+        const sx = panelX0 + 0.025 + sprig * 0.068;
+        const sy = panelY0 + 0.035 + (sprig % 2) * 0.045;
+        addTriangle(positions, colors, [sx, sy, panelZ + 0.003], [sx + side * 0.028, sy + 0.012, panelZ + 0.003], [sx + side * 0.012, sy + 0.03, panelZ + 0.003], leaf);
+        addTriangle(positions, colors, [sx + 0.02, sy + 0.035, panelZ + 0.004], [sx + 0.035, sy + 0.055, panelZ + 0.004], [sx + 0.045, sy + 0.035, panelZ + 0.004], flower);
+      }
+      // Rotate every wing vertex around the shoulder, then the whole drone's heading.
+      const angle = side * flap;
+      const cosine = Math.cos(angle), sine = Math.sin(angle);
+      for (let vertex = start; vertex < positions.length; vertex += 3) {
+        const dx = positions[vertex] - rootX, dy = positions[vertex + 1] - rootY;
+        positions[vertex] = rootX + dx * cosine - dy * sine;
+        positions[vertex + 1] = rootY + dx * sine + dy * cosine;
+      }
+    };
+    // Vine-wrapped shoulder struts bridge the cube to each moving wing.
+    for (const side of [-1, 1]) {
+      const rootX = x + side * 0.092;
+      addBox(positions, colors, Math.min(x + side * 0.035, rootX), y + 0.035, z - 0.018, Math.max(x + side * 0.035, rootX) + 0.006, y + 0.055, z + 0.018, trim);
+      addOctahedron(positions, colors, rootX, y + 0.055, z + 0.006, 0.018, 0.014, 0.014, leaf);
+      makeWing(side);
+    }
     addOctahedron(positions, colors, x, y + 0.006, z + 0.087, 0.035, 0.026, 0.015, getDroneBatteryColor(battery));
     const cosine = Math.cos(heading), sine = Math.sin(heading);
     for (let vertex = firstVertex; vertex < positions.length; vertex += 3) {
@@ -1258,7 +1292,7 @@
         }
       }
       if (Math.hypot(candidate.x - previousX, candidate.z - previousZ) > 0.0001) state.heading = Math.atan2(candidate.x - previousX, candidate.z - previousZ);
-      if (droneDocks[index]?.deployed !== false) addDrone(positions, colors, candidate.x, candidate.y, candidate.z, time * (animation ? 0.04 : 0.012), state.heading, droneDocks[index]?.battery ?? 100);
+      if (droneDocks[index]?.deployed !== false) addDrone(positions, colors, candidate.x, candidate.y, candidate.z, time / 1000, state.heading, droneDocks[index]?.battery ?? 100);
       if (animation && candidate.workProgress > 0) {
         if (!animation.workStarted) {
           animation.workStarted = true;
