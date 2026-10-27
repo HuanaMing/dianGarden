@@ -1,0 +1,7 @@
+# Local development dependencies
+node_modules/
+
+# Temporary browser-test workspace and generated artifacts
+.local-test-workspace/
+test-results/
+logs/local-browser-test.log
