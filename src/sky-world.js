@@ -1375,7 +1375,7 @@
       const state = droneStates[index];
       const candidate = proposals[index];
       const animation = state.animation;
-      const previousX = state.location[0], previousZ = state.location[1];
+      const previousX = state.location[0], previousZ = state.location[1], previousY = state.y;
       const movementDistance = Math.hypot(candidate.x - previousX, candidate.z - previousZ);
       if (movementDistance > 0.75) {
         droneDebugLog('position-jump', { droneIndex: index, from: [previousX, previousZ], to: [candidate.x, candidate.z], distance: movementDistance, kind: animation?.kind ?? null, elapsed: candidate.elapsed, returning: animation?.returning ?? null, target: animation?.target ?? null });
@@ -1392,9 +1392,26 @@
       }
       if (Math.hypot(candidate.x - previousX, candidate.z - previousZ) > 0.0001) state.heading = Math.atan2(candidate.x - previousX, candidate.z - previousZ);
       if (droneDocks[index]?.deployed !== false) {
-        const isMoving = movementDistance > 0.0001;
-        const flapFrequency = isMoving ? 2 : 0.5;
-        const flapAmplitude = isMoving ? 0.48 : 0.22;
+        const verticalDelta = candidate.y - previousY;
+        const dock = droneDocks[index];
+        const isOnPlatform = Boolean(dock)
+          && Math.hypot(candidate.x - dock.x, candidate.z - dock.z) < 0.08
+          && Math.abs(candidate.y - (dock.y || 0)) < 0.08;
+        let flapFrequency = 2;
+        let flapAmplitude = 0.48;
+        if (isOnPlatform) {
+          flapFrequency = 0.5;
+          flapAmplitude = 0.22;
+        } else if (animation && verticalDelta < -0.0001) {
+          flapFrequency = 0.5;
+          flapAmplitude = 0.22;
+        } else if (animation && verticalDelta > 0.0001) {
+          flapFrequency = 3;
+          flapAmplitude = 0.48;
+        } else if (animation && movementDistance > 0.0001) {
+          flapFrequency = 2;
+          flapAmplitude = 0.48;
+        }
         const individualWingPhase = time / 1000 + index * 0.173;
         addDrone(positions, colors, windowPositions, windowUVs, candidate.x, candidate.y, candidate.z, individualWingPhase, state.heading, droneDocks[index]?.battery ?? 100, flapFrequency, flapAmplitude);
       }
