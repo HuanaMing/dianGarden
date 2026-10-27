@@ -2040,8 +2040,8 @@
     const right = normalize(cross(forward, upHint));
     const up = normalize(cross(right, forward));
     const targets = [
-      { center: skyGlowState.sunCenter, size: 1.34, tint: [1.0, 0.68, 0.30], opacity: skyGlowState.sunOpacity * 0.72 },
-      { center: skyGlowState.moonCenter, size: 0.88, tint: [0.72, 0.84, 1.0], opacity: skyGlowState.moonOpacity * skyGlowState.moonGlowFactor * 0.58 },
+      { center: skyGlowState.sunCenter, size: 3.8, tint: [1.0, 0.68, 0.30], opacity: skyGlowState.sunOpacity * 0.72 },
+      { center: skyGlowState.moonCenter, size: 3.8, tint: [0.72, 0.84, 1.0], opacity: skyGlowState.moonOpacity * skyGlowState.moonGlowFactor * 0.58 },
     ];
     gl.useProgram(glowProgram);
     gl.uniformMatrix4fv(glowLocations.projection, false, currentProjection);
