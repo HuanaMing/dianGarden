@@ -6,7 +6,7 @@
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "使用者回報獨立新案例：無人機單純前往播種途中瞬移，沒有其他事件參與。已檢查 startDroneAnimation、findDroneRoute、sampleRoute、updateDroneFrame 與 setDroneDocks；動畫增量已限制最多16ms，尚無足夠證據確定根因。下一步建立獨立播種去程動態位置連續性測試，追查位置所有權／動畫狀態交接。任務262雨後取消澆水修正仍待使用者實際情境驗收，不視為已根除所有瞬移。",
+  "nextAction": "依使用者指出的根因，src/sky-world.js 已改為延後 onDeparture、onWorkStart、onComplete、onReturnComplete 等生命週期回呼，直到整幀所有無人機位置更新及 WebGL buffer 上傳完成；同地塊接續巡航高度改為安全巡航高度計算。tests/browser-smoke.mjs 已新增跨機派工競態的動態位置連續性回歸。相關提交已寫入 main；等待最新 browser-check 結果，尚未宣稱自動測試通過。通過後請使用者實際驗收播種去程瞬移；任務262雨後取消澆水情境仍需獨立驗收。",
   "taskFiles": [
     "tasks/active/256-drone-system-refactor-plan.md",
     "tasks/active/259-drone-state-motion-controller.md",
@@ -19,5 +19,5 @@
     "tasks/done/257-drone-system-audit-baseline.md",
     "tasks/done/258-drone-task-lifecycle-dispatch.md"
   ],
-  "result": "任務263已建立並開始調查。尚未修改飛行程式，也尚未執行新測試；目前不能宣稱一般播種去程瞬移已修復。"
+  "result": "任務263已完成根因對應程式修改並新增跨機派工競態的動態 Playwright 測試。GitHub Actions 結果尚待確認；尚未完成實際遊玩驗收，不能標記為完成。"
 }
