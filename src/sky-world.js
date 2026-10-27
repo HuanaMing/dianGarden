@@ -2108,6 +2108,83 @@
     gl.enable(gl.DEPTH_TEST);
   }
 
+  function drawDroneGlows() {
+    if (!glowProgram || !glowTexture || !glowLocations || galleryMode) return;
+    const normalize = (vector) => {
+      const length = Math.hypot(vector[0], vector[1], vector[2]) || 1;
+      return vector.map((value) => value / length);
+    };
+    const cross = (a, b) => [
+      a[1] * b[2] - a[2] * b[1],
+      a[2] * b[0] - a[0] * b[2],
+      a[0] * b[1] - a[1] * b[0],
+    ];
+    const forward = normalize([
+      currentView[2], currentView[6], currentView[10],
+    ]);
+    const upHint = cameraMode === '2d' ? [0, 0, -1] : [0, 1, 0];
+    const right = normalize(cross(forward, upHint));
+    const up = normalize(cross(right, forward));
+    const daylight = Math.max(0, Math.min(1, environmentState.daylightProgress));
+    const nightFactor = 1 - daylight;
+    const targets = [];
+    for (let index = 0; index < droneCount; index += 1) {
+      const state = droneStates[index];
+      if (!state || droneDocks[index]?.deployed === false) continue;
+      const batteryFactor = Math.max(0.45, Math.min(1, (droneDocks[index]?.battery ?? 100) / 100));
+      targets.push({
+        center: [state.location[0], state.y + 0.035, state.location[1]],
+        size: 0.72,
+        tint: [1.0, 0.68, 0.30],
+        opacity: (0.11 + nightFactor * 0.24) * batteryFactor,
+      });
+    }
+    if (!targets.length) return;
+    gl.useProgram(glowProgram);
+    gl.uniformMatrix4fv(glowLocations.projection, false, currentProjection);
+    gl.uniformMatrix4fv(glowLocations.view, false, currentView);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, glowTexture);
+    gl.uniform1i(glowLocations.texture, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, glowUVBuffer);
+    gl.enableVertexAttribArray(glowLocations.uv);
+    gl.vertexAttribPointer(glowLocations.uv, 2, gl.FLOAT, false, 0, 0);
+    gl.disable(gl.DEPTH_TEST);
+    gl.depthMask(false);
+    gl.blendFunc(gl.ONE, gl.ONE);
+    for (const target of targets) {
+      const half = target.size * 0.5;
+      const corners = [
+        [-1, -1], [1, -1], [1, 1],
+        [-1, -1], [1, 1], [-1, 1],
+      ];
+      const vertices = [];
+      for (const [x, y] of corners) {
+        vertices.push(
+          target.center[0] + right[0] * x * half + up[0] * y * half,
+          target.center[1] + right[1] * x * half + up[1] * y * half,
+          target.center[2] + right[2] * x * half + up[2] * y * half,
+        );
+      }
+      gl.bindBuffer(gl.ARRAY_BUFFER, glowPositionBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(glowLocations.position);
+      gl.vertexAttribPointer(glowLocations.position, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, glowOpacityBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(6).fill(target.opacity), gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(glowLocations.opacity);
+      gl.vertexAttribPointer(glowLocations.opacity, 1, gl.FLOAT, false, 0, 0);
+      gl.uniform3fv(glowLocations.tint, new Float32Array(target.tint));
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+    gl.disableVertexAttribArray(glowLocations.uv);
+    gl.disableVertexAttribArray(glowLocations.opacity);
+    gl.disableVertexAttribArray(glowLocations.position);
+    gl.depthMask(true);
+    gl.enable(gl.DEPTH_TEST);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  }
+
   function draw(time) {
     if (isRenderingPaused()) {
       previousTime = time;
@@ -2248,6 +2325,13 @@
     gl.depthMask(true);
     gl.disableVertexAttribArray(locations.opacity);
     gl.vertexAttrib1f(locations.opacity, 1);
+    drawDroneGlows();
+    gl.useProgram(program);
+    gl.uniformMatrix4fv(locations.projection, false, currentProjection);
+    gl.uniformMatrix4fv(locations.view, false, currentView);
+    gl.enableVertexAttribArray(locations.position);
+    gl.enableVertexAttribArray(locations.color);
+    gl.enableVertexAttribArray(locations.normal);
     gl.bindBuffer(gl.ARRAY_BUFFER, dronePositionBuffer);
     gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, droneColorBuffer);
