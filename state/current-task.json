@@ -1,14 +1,12 @@
 {
-  "name": "任務264：太陽與月亮的柔和光暈",
-  "status": "active",
+  "name": "目前沒有執行中的任務",
+  "status": "idle",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "Playwright browser smoke 已通過；補做將太陽或月亮置於畫面內的專項視覺檢查，確認光暈尺寸、顏色與月相強度後再驗收結案。",
-  "taskFiles": [
-    "tasks/active/264-sun-moon-glow.md"
-  ],
-  "result": "光暈程式已提交；最新 browser smoke run 40456468867 通過且 browserErrors 為空。預設截圖未包含可見天體，專項光暈視覺驗收仍待完成。"
+  "nextAction": "等待使用者指定下一項工作；若太陽／月亮或無人機光暈再次出現問題，另開新任務追蹤。",
+  "taskFiles": [],
+  "result": "任務264「太陽與月亮的柔和光暈」與任務265「無人機的柔和光暈」均已由使用者確認驗收完成，完成版已歸檔至 tasks/done/。"
 }
