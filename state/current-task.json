@@ -1,7 +1,11 @@
 {
   "name": "任務269：本機測試與驗收流程",
   "status": "completed",
-  "pendingApprovals": [],
+  "pendingApprovals": [
+    "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
+    "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
+    "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
+  ],
   "nextAction": "本機驗收已完成。直接執行 .\\scripts\\run-local-tests.ps1 即可；若已批准的 Node.js 22.23.4 portable 存在，腳本會在本次程序中優先使用，不會修改全域 PATH。正式部署仍須另行批准。",
   "taskFiles": [
     "tasks/done/269-local-testing-workflow.md"
