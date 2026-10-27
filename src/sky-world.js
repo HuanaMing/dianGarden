@@ -967,6 +967,8 @@
   }
 
   function updateDroneFrame(time) {
+    const deferredCallbacks = [];
+    const deferCallback = (callback) => { if (typeof callback === 'function') deferredCallbacks.push(callback); };
     const positions = [];
     const colors = [];
     const effectPositions = [];
@@ -1109,7 +1111,7 @@
         x = targetX; y = workY; z = targetZ;
       } else {
         if (animation.returning === undefined) animation.returning = animation.shouldReturn?.() !== false;
-        if (!animation.departed) { animation.departed = true; animation.onDeparture?.(); }
+        if (!animation.departed) { animation.departed = true; deferCallback(animation.onDeparture); }
         if (animation.returning === false) {
           x = targetX; y = workY; z = targetZ;
         } else {
@@ -1159,7 +1161,7 @@
       if (animation && candidate.workProgress > 0) {
         if (!animation.workStarted) {
           animation.workStarted = true;
-          animation.onWorkStart?.();
+          deferCallback(animation.onWorkStart);
         }
         const [targetX, targetZ] = animation.target;
           const targetY = Number.isInteger(animation.targetPlotIndex) ? getPlotHeight(animation.targetPlotIndex) : 0;
@@ -1198,18 +1200,16 @@
         const onComplete = animation.onComplete;
         animation.onComplete = null;
         droneDebugLog('work-complete-handoff', { droneIndex: index, kind: animation.kind, location: state.location.slice(), target: animation.target.slice(), elapsed: candidate.elapsed, returning: animation.returning ?? null, positionOwnerRetained: state.animation === animation });
-        onComplete?.();
-        droneDebugLog('work-complete-handoff-result', { droneIndex: index, kind: animation.kind, activeKind: state.animation?.kind ?? null, location: state.location.slice(), previousAnimationRetained: state.animation === animation, nextAnimationStarted: state.animation !== animation });
-        if (state.animation === null) {
-          animation.elapsed = Math.max(candidate.elapsed, candidate.returnStart);
-          state.animation = animation;
-        }
+        deferCallback(() => {
+          onComplete?.();
+          droneDebugLog('work-complete-handoff-result', { droneIndex: index, kind: animation.kind, activeKind: state.animation?.kind ?? null, location: state.location.slice(), previousAnimationRetained: state.animation === animation, nextAnimationStarted: state.animation !== animation });
+        });
       } else if (animation && candidate.completing && state.animation === animation) {
         state.animation = null;
         setDronePhase(index, droneDocks[index]?.deployed === false ? 'docked' : 'idle', 'return-complete');
         const onReturnComplete = animation.onReturnComplete;
         animation.onReturnComplete = null;
-        onReturnComplete?.();
+        deferCallback(onReturnComplete);
       }
     }
     droneVertexCount = positions.length / 3;
@@ -1232,6 +1232,10 @@
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(effectColors), gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, effectNormalBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, calculateFaceNormals(effectPositions), gl.DYNAMIC_DRAW);
+    // Run lifecycle callbacks only after every drone has applied its proposal for this frame.
+    // A callback may synchronously dispatch a job and replace another drone's animation;
+    // deferring prevents that drone from receiving a proposal computed for its old animation.
+    for (const callback of deferredCallbacks) callback();
   }
 
   const SKY_SPHERE_RADIUS = 10;
@@ -2461,7 +2465,7 @@
       droneDebugLog('animation-route-failed', { droneIndex, kind, start, target, outboundRouteFound: Boolean(outboundRoute), returnRouteFound: Boolean(returnRoute), currentAnimation: state.animation?.kind ?? null, keepReturning });
       return keepReturning ? 'waiting_path_returning' : 'waiting_path';
     }
-    const laneY = continueAtTarget ? state.y : getCruiseHeight(start, target, droneIndex, options.targetPlotIndex);
+    const laneY = getCruiseHeight(continueAtTarget ? target : start, continueAtTarget ? [idlePosition.x, idlePosition.z] : target, droneIndex, options.targetPlotIndex);
     if (!continueAtTarget) droneCruiseHeights[droneIndex] = laneY;
     state.animation = {
       kind, target, start, startY: state.y, continueAtTarget,
