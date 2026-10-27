@@ -219,3 +219,11 @@ GitHub API 回報寫入成功，只代表該操作已被接受，不代表程式
 - 以每約 10 秒完成一次小步提交為工作節奏目標；這是盡力遵循的節奏，不是對工具延遲的保證。若單次工具操作超過 10 秒，操作完成後應立即確認結果並繼續，不為了追求頻率而重複提交或拆出不安全的半成品。
 - 每次寫入後確認工具回報成功；若結果不明或逾時，先重新讀取目標檔案確認是否已寫入，再決定下一步，避免重複提交。
 - 每次提交應聚焦單一目的，保持差異小且可理解。小步提交不會取代測試、風險評估、批准要求或安全檢查。
+
+## Local testing and repository synchronization (2026-10-28)
+
+- Run the documented local validation workflow with `scripts/run-local-tests.ps1`; it covers the Worker API smoke checks, JavaScript/MJS syntax checks, and browser smoke tests where the local environment supports them.
+- Keep generated dependencies and temporary test artifacts out of commits (`node_modules/`, `.local-test-workspace/`, `test-results/`, and local logs).
+- The local preview origin `http://127.0.0.1:4173` is permitted for development CORS testing only; retain the production origin and do not use a wildcard origin.
+- Local test success does not mean GitHub Pages or the Cloudflare Worker has been deployed. Deployment requires explicit user authorization.
+- When syncing local work to GitHub, compare against the remote branch first and preserve newer remote files rather than replacing them wholesale.
