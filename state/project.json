@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": 264,
-  "nextAction": "任務264程式已實作且 Playwright browser smoke 通過；待補太陽／月亮在視野內的專項光暈視覺檢查，再決定結案。",
+  "activeTask": null,
+  "nextAction": "任務264與265均已完成使用者驗收並歸檔至 tasks/done；目前沒有執行中的任務。日後若重現問題，另開新任務。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署：需使用者明確批准後手動觸發。",
