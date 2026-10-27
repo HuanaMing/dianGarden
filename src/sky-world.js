@@ -664,6 +664,50 @@
     addFace(positions, colors, [a, d, c, b], palette.bottom);
   }
 
+
+  function addRoundedBox(positions, colors, x1, y1, z1, x2, y2, z2, palette, radius = 0.025, segments = 4) {
+    const min = [x1, y1, z1], max = [x2, y2, z2];
+    const half = max.map((value, axis) => (value - min[axis]) / 2);
+    const center = min.map((value, axis) => (value + max[axis]) / 2);
+    const r = Math.min(radius, ...half.map(value => value * 0.9));
+    const coreMin = center.map((value, axis) => value - half[axis] + r);
+    const coreMax = center.map((value, axis) => value + half[axis] - r);
+    const rounded = (point) => {
+      const core = point.map((value, axis) => Math.max(coreMin[axis], Math.min(coreMax[axis], value)));
+      const delta = point.map((value, axis) => value - core[axis]);
+      const length = Math.hypot(...delta);
+      return length > r ? core.map((value, axis) => value + delta[axis] * r / length) : point;
+    };
+    const faces = [
+      { axis: 1, sign: 1, a: 0, b: 2, color: palette.top },
+      { axis: 1, sign: -1, a: 0, b: 2, color: palette.bottom },
+      { axis: 2, sign: -1, a: 0, b: 1, color: palette.front },
+      { axis: 2, sign: 1, a: 0, b: 1, color: palette.back },
+      { axis: 0, sign: 1, a: 2, b: 1, color: palette.right },
+      { axis: 0, sign: -1, a: 2, b: 1, color: palette.left },
+    ];
+    for (const face of faces) {
+      const grid = [];
+      for (let i = 0; i <= segments; i += 1) {
+        grid[i] = [];
+        for (let j = 0; j <= segments; j += 1) {
+          const point = [0, 0, 0];
+          point[face.axis] = face.sign > 0 ? max[face.axis] : min[face.axis];
+          point[face.a] = min[face.a] + (max[face.a] - min[face.a]) * i / segments;
+          point[face.b] = min[face.b] + (max[face.b] - min[face.b]) * j / segments;
+          grid[i][j] = rounded(point);
+        }
+      }
+      for (let i = 0; i < segments; i += 1) {
+        for (let j = 0; j < segments; j += 1) {
+          const p00 = grid[i][j], p10 = grid[i + 1][j], p11 = grid[i + 1][j + 1], p01 = grid[i][j + 1];
+          addTriangle(positions, colors, p00, p10, p11, face.color);
+          addTriangle(positions, colors, p00, p11, p01, face.color);
+        }
+      }
+    }
+  }
+
   function addGrassTexture(positions, colors, x, z, half, y, baseColor = [0.43, 0.68, 0.39], surfaceHeightAt = null) {
     const random = (index, salt) => {
       const value = Math.sin(x * 127.1 + z * 311.7 + index * 74.7 + salt * 19.19) * 43758.5453;
@@ -948,14 +992,7 @@
     const trim = { top: [0.7, 0.59, 0.39], front: [0.52, 0.43, 0.31], right: [0.44, 0.48, 0.33], back: [0.58, 0.48, 0.33], left: [0.46, 0.49, 0.35], bottom: [0.3, 0.33, 0.24] };
     const wood = [0.55, 0.39, 0.24], woodLight = [0.72, 0.56, 0.36];
     const leaf = [0.35, 0.62, 0.37];
-    addBox(positions, colors, x - 0.105, y - 0.075, z - 0.085, x + 0.105, y + 0.075, z + 0.085, body);
-    // Existing landing skids remain unchanged.
-    addBox(positions, colors, x - 0.115, y - 0.105, z - 0.07, x + 0.115, y - 0.087, z - 0.045, trim);
-    addBox(positions, colors, x - 0.115, y - 0.105, z + 0.045, x + 0.115, y - 0.087, z + 0.07, trim);
-    addBox(positions, colors, x - 0.07, y - 0.09, z - 0.057, x - 0.052, y - 0.045, z - 0.04, trim);
-    addBox(positions, colors, x + 0.052, y - 0.09, z - 0.057, x + 0.07, y - 0.045, z - 0.04, trim);
-    addBox(positions, colors, x - 0.07, y - 0.09, z + 0.04, x - 0.052, y - 0.045, z + 0.057, trim);
-    addBox(positions, colors, x + 0.052, y - 0.09, z + 0.04, x + 0.07, y - 0.045, z + 0.057, trim);
+    addRoundedBox(positions, colors, x - 0.105, y - 0.075, z - 0.085, x + 0.105, y + 0.075, z + 0.085, body, 0.028, 5);
 
     // Wings lie in the XZ plane (normal +Y). Flapping rotates each wing about
     // its shoulder along Z, moving the outer edge through +Y/-Y like a bird's wing.
