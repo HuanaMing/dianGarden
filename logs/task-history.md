@@ -1934,3 +1934,12 @@
 - 任務265「無人機的柔和光暈」：依已提交程式與使用者確認的實機驗收結果建立完成版 `tasks/done/265-drone-glow.md`。自動化測試結果未確認，未記為通過。
 - 兩份 done 文件均已重新讀取確認包含結案狀態。未手動觸發生產部署。
 - 已同步更新 `state/project.json` 與 `state/current-task.json`；目前沒有執行中的任務。日後若再次出現問題，另開新任務。
+
+
+## 2026-10-28 — 任務269：本機測試與驗收流程
+
+- 新增 `scripts/run-local-tests.ps1` 與 `docs/local-testing.md`，將 Cloudflare Worker API 冒煙測試、JavaScript/MJS 語法檢查及 Playwright 瀏覽器冒煙測試整合為 Windows 本機流程。
+- 新增本機測試專用 `package.json`／`package-lock.json`，固定 Playwright 1.64.1；若已批准的 Node.js 22.23.4 portable 存在，測試腳本會優先使用，不修改全域 PATH。
+- 完整本機流程通過：Worker API 測試、25 個 JS/MJS 檔案語法檢查及 Playwright/Chromium 瀏覽器冒煙測試皆 PASS，結束碼 0。測試涵蓋跨機派工、無人機位置連續性、登入／離線提示、桌面／手機版及 11 種花卉模型。
+- `cloudflare/wrangler.toml` 的 `ALLOWED_ORIGINS` 保留正式 GitHub Pages origin，並加入 `http://127.0.0.1:4173` 供本機預覽使用；未使用萬用字元。
+- 未修改遊戲功能，未將 `node_modules` 或暫存測試工作區提交，亦未觸發 GitHub Pages 或 Cloudflare 部署。正式部署與既有批准事項仍須另行確認。
