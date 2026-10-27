@@ -52,3 +52,6 @@
 
 - 尺寸調整（2026-10-27）：依使用者指定，太陽與月亮光暈的 `size` 參數皆設為 `3.8`，已提交至 `src/sky-world.js`。此修改尚未進行天體近景視覺驗收。
 - Shader 精度測試（2026-10-27）：將光暈專用 fragment shader 的 `precision mediump float` 改為 `precision highp float`，用來排查太陽／月亮光暈內部的彩色斑點。程式已提交；尚待確認瀏覽器支援、CI 結果與實際天體近景是否改善。
+
+
+- 預乘 Alpha／加法混色測試（2026-10-27）：光暈 fragment shader 改為輸出已乘上 `texel.a * vOpacity` 的 RGB，混色改為 `gl.blendFunc(gl.ONE, gl.ONE)`，避免硬體混色階段再次乘 Alpha。理論上在未預乘來源 RGB 的情況下，與原本 `SRC_ALPHA, ONE` 的 RGB 貢獻等價；此提交是測試路徑，尚未取得新 CI 結果，也尚未用手機實際比較黑點是否消失。
