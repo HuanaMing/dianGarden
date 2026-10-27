@@ -1,23 +1,12 @@
 {
-  "name": "任務263：追查播種去程無人機瞬移",
-  "status": "in_progress",
+  "name": "目前沒有執行中的任務",
+  "status": "idle",
   "pendingApprovals": [
     "任務109等待可用Xcode環境；雲端Mac付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署需使用者明確批准後手動觸發。",
     "任務232生產D1 migration與Cloudflare Worker部署仍需使用者明確批准。"
   ],
-  "nextAction": "依使用者指出的根因，src/sky-world.js 已改為延後 onDeparture、onWorkStart、onComplete、onReturnComplete 等生命週期回呼，直到整幀所有無人機位置更新及 WebGL buffer 上傳完成；同地塊接續巡航高度改為安全巡航高度計算。tests/browser-smoke.mjs 已新增跨機派工競態的動態位置連續性回歸。相關提交已寫入 main；等待最新 browser-check 結果，尚未宣稱自動測試通過。通過後請使用者實際驗收播種去程瞬移；任務262雨後取消澆水情境仍需獨立驗收。",
-  "taskFiles": [
-    "tasks/active/256-drone-system-refactor-plan.md",
-    "tasks/active/259-drone-state-motion-controller.md",
-    "tasks/active/263-drone-outbound-plant-teleport.md",
-    "tasks/active/262-rain-cancels-watering-drone-teleport.md",
-    "tasks/active/255-drone-teleportation-follow-up.md",
-    "tasks/active/254-flower-rotation-from-drone-heading.md",
-    "tasks/inbox/260-drone-animation-migration.md",
-    "tasks/inbox/261-drone-refactor-regression-acceptance.md",
-    "tasks/done/257-drone-system-audit-baseline.md",
-    "tasks/done/258-drone-task-lifecycle-dispatch.md"
-  ],
-  "result": "任務263已完成根因對應程式修改並新增跨機派工競態的動態 Playwright 測試。GitHub Actions 結果尚待確認；尚未完成實際遊玩驗收，不能標記為完成。"
+  "nextAction": "依使用者於2026-10-27的明確指示，所有原位於tasks/active、tasks/inbox、tasks/blocked的任務已行政結案並歸檔至tasks/done。這不代表尚未驗收的功能已通過；若日後再次遇到相關問題，建立新任務。任務109、212、232的既有付費／部署批准要求仍未批准，日後重新提出時仍須先取得必要批准。",
+  "taskFiles": [],
+  "result": "目前沒有排程中的任務。所有未結案任務文件已依使用者指示歸檔至done；各任務原有驗證狀態與未解決事項仍以文件內容為準，若問題再次出現則另開新任務。"
 }
