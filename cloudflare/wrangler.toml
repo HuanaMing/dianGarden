@@ -13,4 +13,6 @@ migrations_dir = "migrations"
 # Public Google OAuth Web Client ID; never store a client secret here.
 GOOGLE_CLIENT_ID = "433597292916-ju9hd3hmhfuka06l3t3kisbl6sir8cpu.apps.googleusercontent.com"
 # Exact production GitHub Pages origin. Do not use "*" for a credentialed save API.
-ALLOWED_ORIGINS = "https://huanaming.github.io"
+ALLOWED_ORIGINS = "https://huanaming.github.io,http://127.0.0.1:4173"
+
+[executed on device: CharMing (07eaf469-ae47-42c9-b1a6-f9ac76863107)]
