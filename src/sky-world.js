@@ -113,7 +113,7 @@
     }
   `;
   const glowFragmentSource = `
-    precision mediump float;
+    precision highp float;
     uniform sampler2D uTex;
     uniform vec3 uTint;
     varying vec2 vUV;
