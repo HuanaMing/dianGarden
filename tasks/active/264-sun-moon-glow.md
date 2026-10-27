@@ -27,15 +27,25 @@
 
 ## 驗收條件
 - [ ] 任務需求及設計已記錄於專案任務文件。
-- [ ] JavaScript 語法檢查通過。
+- [x] Playwright 載入與執行整體場景流程成功，瀏覽器錯誤清單為空（GitHub Actions run 40456468867）。
+- [x] 原生 JavaScript 在 Chromium 中成功執行，代表本次載入路徑未出現語法錯誤。
 - [ ] 確認 shader 程式、WebGL resource、buffer/attribute/uniform 綁定完整。
 - [ ] 確認太陽與月亮的光暈分別使用正確的中心、色調、尺寸及透明度。
 - [ ] 確認月相因子呈現眉月較弱、滿月較明顯。
 - [ ] 確認雨勢仍沿用既有係數，且日出／日落及天體消失時光暈同步淡出。
 - [ ] 確認混合、深度與 buffer 狀態不污染後續繪製。
-- [ ] 若可用，執行既有 browser smoke test；只有實際瀏覽器畫面檢查後才能宣稱視覺驗收完成。
+- [x] 既有 Playwright browser smoke test 通過，27 張桌面／手機與圖鑑截圖已保存為 workflow artifact。
+- [ ] 太陽／月亮專用近景視覺驗收：目前預設花園截圖沒有將任一天體置於畫面內，因此尚不能宣稱已完成光暈外觀的專項視覺驗收。
 - [ ] 不手動觸發 GitHub Pages 或 Cloudflare 生產部署。
 
 ## 執行紀錄
 - 狀態：active（開始前）。
 - 目前尚未修改程式；實作與驗證結果將在工作過程中追加。
+
+
+## 執行紀錄（2026-10-27）
+- 已新增獨立光暈 shader program、徑向漸層 texture、UV／位置／透明度 buffers，以及朝向相機的 billboard 繪製函式。
+- 光暈沿用天空視圖矩陣（移除相機平移）；太陽採暖金色與較大尺寸，月亮採冷色與較小尺寸。月相因子依 `(1 + cos(phaseAngle)) / 2` 估算可見亮面比例，並保留最低微弱光暈。
+- 加法混合與深度狀態在光暈繪製後恢復；若 glow shader／貼圖初始化失敗，會停用光暈而不阻斷主場景啟動。
+- 首輪 CI 發現既有 smoke test 對每三次 bufferData 才取樣的方式會因新增貼圖 bufferData 而失去取樣時機；已將取樣改為直接記錄指定無人機位置 buffer，並加上初始化失敗診斷。最新 browser smoke run 40456468867 通過，browserErrors 為空。
+- Pages 工作流程在推送 `src/sky-world.js` 至 main 後自動觸發並成功完成（run 40456103358）；本次沒有手動觸發部署。由於專用天體近景尚未在截圖中確認，任務維持 active，待補視覺驗收。
