@@ -1,8 +1,8 @@
 {
   "name": "花明摸魚花園",
   "status": "active",
-  "activeTask": "任務263：追查播種去程無人機瞬移",
-  "nextAction": "任務263 已依使用者指出的根因修正 updateDroneFrame 的回呼重入：延後所有會觸發派工的生命週期回呼，直到整幀位置更新與 WebGL buffer 上傳完成；同地塊接續改用安全巡航高度。已新增跨機派工競態的動態 Playwright 回歸。等待最新 browser-check 結果，通過後仍需使用者實際遊玩驗收。任務262雨後澆水取消瞬移情境仍待獨立驗收；不宣稱所有瞬移情境已根除。",
+  "activeTask": null,
+  "nextAction": "目前沒有排程中的任務。依使用者指示，所有原active、inbox、blocked任務均已行政結案並歸檔至done；這不代表未驗收項目已通過。若日後再次遇到問題，另開新任務。既有付費／部署批准要求仍有效，未視為已批准。",
   "pendingApprovals": [
     "任務 109 等待可用 Xcode 環境；雲端 Mac 付費使用需先確認。",
     "任務212最新程式版本的GitHub Pages部署：需使用者明確批准後手動觸發。",
