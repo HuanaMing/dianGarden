@@ -1001,6 +1001,7 @@
   }
 
   function addDrone(positions, colors, windowPositions, windowUVs, opacitySpans, emissionSpans, coreSpans, x, y, z, wingPhase, heading, battery = 100, flapFrequency = 2, flapAmplitude = 0.48) {
+    y -= 0.05; // Lower the complete drone body by 0.05 world units.
     const firstVertex = positions.length;
     const firstWindowVertex = windowPositions.length;
     const batteryFactor = Math.max(0, Math.min(1, Number(battery) / 100));
@@ -1017,7 +1018,21 @@
     const wood = [0.38, 0.24, 0.13], woodLight = [0.58, 0.4, 0.23];
     const leaf = [0.35, 0.62, 0.37];
     // Tall, flat-topped walnut clock case; keep the side/back/bottom opaque.
-    addRoundedBox(positions, colors, x - 0.066, y - 0.13, z - 0.07, x + 0.066, y + 0.13, z + 0.07, body, 0.008, 1);
+    // Opaque walnut top and bottom; four vertical faces are translucent glass.
+    const bx0 = x - 0.066, bx1 = x + 0.066, by0 = y - 0.13, by1 = y + 0.13, bz0 = z - 0.07, bz1 = z + 0.07;
+    addBox(positions, colors, bx0, by0, bz0, bx1, by0 + 0.008, bz1, body);
+    addBox(positions, colors, bx0, by1 - 0.008, bz0, bx1, by1, bz1, body);
+    const glassColor = [0.48, 0.58, 0.56];
+    const addGlassQuad = (a, b, c, d) => {
+      const start = positions.length / 3;
+      addTriangle(positions, colors, a, b, c, glassColor);
+      addTriangle(positions, colors, a, c, d, glassColor);
+      opacitySpans.push({ first: start, last: positions.length / 3, opacity: 0.18 });
+    };
+    addGlassQuad([bx0,by0,bz1],[bx1,by0,bz1],[bx1,by1,bz1],[bx0,by1,bz1]);
+    addGlassQuad([bx1,by0,bz0],[bx0,by0,bz0],[bx0,by1,bz0],[bx1,by1,bz0]);
+    addGlassQuad([bx1,by0,bz1],[bx1,by0,bz0],[bx1,by1,bz0],[bx1,by1,bz1]);
+    addGlassQuad([bx0,by0,bz0],[bx0,by0,bz1],[bx0,by1,bz1],[bx0,by1,bz0]);
 
     const hx = 0.066, hy = 0.13, hz = 0.07, t = 0.006;
     const solid = (x1, y1, z1, x2, y2, z2, palette = trim) => {
@@ -1031,16 +1046,7 @@
       solid(x + sa*hx - t, y - hy, z + sb*hz - t, x + sa*hx + t, y + hy, z + sb*hz + t);
       solid(x - hx, y + sa*hy - t, z + sb*hz - t, x + hx, y + sa*hy + t, z + sb*hz + t);
     }
-    // No front muntins: preserve a single clear front window.
-    // The glass is a subtle translucent panel; the other five faces remain opaque walnut.
-    {
-      const glassStart = positions.length / 3;
-      const glassZ = z + hz + 0.001;
-      const glassColor = [0.48, 0.58, 0.56];
-      addTriangle(positions, colors, [x - hx + t, y - hy + t, glassZ], [x + hx - t, y - hy + t, glassZ], [x + hx - t, y + hy - t, glassZ], glassColor);
-      addTriangle(positions, colors, [x - hx + t, y - hy + t, glassZ], [x + hx - t, y + hy - t, glassZ], [x - hx + t, y + hy - t, glassZ], glassColor);
-      opacitySpans.push({ first: glassStart, last: positions.length / 3, opacity: 0.22 });
-    }
+    // No front muntins or extra front pendulum ornament; the body itself supplies the four glass sides.
 
     // Original clock-face design, repositioned to the upper half of the taller case.
     const clockY = y + 0.052;
@@ -1161,18 +1167,7 @@
       addOctahedron(positions, colors, x + side * 0.105, y + 0.04, z + 0.016, 0.011, 0.006, 0.008, vineLight);
       makeWing(side);
     }
-    // Four warm-orange battery segments sit vertically on the front-right face.
-    const litBatterySegments = getDroneBatteryLitCount(battery);
-    const batteryGlow = [1.0, 0.58, 0.22];
-    const batteryDim = [0.24, 0.16, 0.1];
-    for (let segment = 0; segment < 4; segment += 1) {
-      const segmentY = y - 0.045 + segment * 0.03;
-      const segmentColor = segment >= 4 - litBatterySegments ? batteryGlow : batteryDim;
-      addBox(positions, colors,
-        x + 0.043, segmentY - 0.004, z - 0.088,
-        x + 0.068, segmentY + 0.004, z - 0.083,
-        { top: segmentColor, front: segmentColor, right: segmentColor, back: segmentColor, left: segmentColor, bottom: segmentColor });
-    }
+    // Battery indicator removed from the drone exterior.
     // Scale every drone component around its center so the silhouette, rounded body,
     // wing span, vine trellis, battery light, and flap amplitude keep the same proportions.
     const modelScale = 0.6;
