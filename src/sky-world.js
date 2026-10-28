@@ -1075,17 +1075,7 @@
     addOctahedron(positions, colors, x, clockY, z + hz + 0.009, 0.006, 0.006, 0.004, [0.85, 0.65, 0.3]);
     opacitySpans.push({ first: hubStart, last: positions.length / 3, opacity: 1 });
 
-    // Flat top: intentionally no gable/roof geometry.
-    // The pendulum occupies the lower half beneath the preserved clock face.
-    {
-      const pendulumStart = positions.length / 3;
-      const pendulumZ = z + hz + 0.008;
-      const rodColor = [0.48, 0.34, 0.19];
-      addBox(positions, colors, x - 0.002, y - 0.018, pendulumZ, x + 0.002, y - 0.105, pendulumZ + 0.003,
-        { top: rodColor, front: rodColor, right: rodColor, back: rodColor, left: rodColor, bottom: rodColor });
-      addOctahedron(positions, colors, x, y - 0.095, pendulumZ + 0.006, 0.018, 0.023, 0.009, [0.78, 0.55, 0.25]);
-      opacitySpans.push({ first: pendulumStart, last: positions.length / 3, opacity: 1 });
-    }
+    // Flat top: intentionally no gable/roof geometry; front pendulum ornament removed.
 
     // Wings lie in the XZ plane (normal +Y). Flapping rotates each wing about
     // its shoulder along Z, moving the outer edge through +Y/-Y like a bird's wing.
