@@ -237,6 +237,8 @@ GitHub API 回報寫入成功，只代表該操作已被接受，不代表程式
 - The local preview origin `http://127.0.0.1:4173` is permitted for development CORS testing only; retain the production origin and do not use a wildcard origin.
 - Local test success does not mean GitHub Pages or the Cloudflare Worker has been deployed. Deployment requires explicit user authorization.
 - When syncing local work to GitHub, compare against the remote branch first and preserve newer remote files rather than replacing them wholesale.
+- Cloudflare production is connected to this GitHub repository: changes under `cloudflare/` may be automatically synced/deployed and directly affect the live service. Before editing or pushing anything under `cloudflare/`, check the repository's actual deployment/sync workflow and its latest status; treat such changes as production-impacting, test them first, and do not assume a separate manual upload is required.
+- Cloudflare deployment credentials/secrets are managed in the GitHub project/repository settings, not in tracked files. Never request or write API tokens into source files, AGENTS.md, logs, commits, or chat. If deployment is blocked, inspect the actual GitHub/Cloudflare workflow and configuration before concluding credentials are missing; a failed workflow may indicate the workflow's secret names or deployment route do not match the existing GitHub-to-Cloudflare integration. Prefer the configured automatic sync/deployment path and verify the resulting live deployment before claiming success.
 
 
 ## Tool-output contamination prevention

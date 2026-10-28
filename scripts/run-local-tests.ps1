@@ -5,6 +5,9 @@ $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $OriginalLocation = Get-Location
 $Failures = [System.Collections.Generic.List[string]]::new()
 $Workspace = Join-Path $ProjectRoot '.local-test-workspace'
+$DependencyLink = Join-Path $ProjectRoot 'node_modules'
+$CreatedDependencyLink = $false
+$OriginalPlaywrightBrowsersPath = $env:PLAYWRIGHT_BROWSERS_PATH
 $ServerProcess = $null
 
 # Prefer the approved side-by-side Node.js 22 runtime when available. This avoids
@@ -33,6 +36,39 @@ function Invoke-Check([string]$Name, [scriptblock]$Action) {
 }
 try {
     Set-Location -LiteralPath $ProjectRoot
+    $DependencyDoc = Join-Path $ProjectRoot 'LOCAL-DEPENDENCIES.md'
+    if (-not (Test-Path -LiteralPath $DependencyDoc)) { throw 'LOCAL-DEPENDENCIES.md is missing; cannot locate approved local test dependencies.' }
+    $DependencyText = Get-Content -LiteralPath $DependencyDoc -Raw
+    $PlaywrightMatch = [regex]::Match($DependencyText, '(?m)^PLAYWRIGHT_PACKAGE=(.+)$')
+    $ChromiumCacheMatch = [regex]::Match($DependencyText, '(?m)^PLAYWRIGHT_BROWSERS=(.+)$')
+    $VersionMatch = [regex]::Match($DependencyText, '(?m)^PLAYWRIGHT_VERSION=(.+)$')
+    if (-not $PlaywrightMatch.Success -or -not $ChromiumCacheMatch.Success -or -not $VersionMatch.Success) {
+        throw 'LOCAL-DEPENDENCIES.md must list the Playwright package directory, version, and Chromium cache directory.'
+    }
+    $PlaywrightPathValue = [Environment]::ExpandEnvironmentVariables($PlaywrightMatch.Groups[1].Value.Trim())
+    $ChromiumCachePathValue = [Environment]::ExpandEnvironmentVariables($ChromiumCacheMatch.Groups[1].Value.Trim())
+    $PlaywrightDirectory = if ([IO.Path]::IsPathRooted($PlaywrightPathValue)) { [IO.Path]::GetFullPath($PlaywrightPathValue) } else { [IO.Path]::GetFullPath((Join-Path $ProjectRoot $PlaywrightPathValue)) }
+    $ChromiumCacheDirectory = if ([IO.Path]::IsPathRooted($ChromiumCachePathValue)) { [IO.Path]::GetFullPath($ChromiumCachePathValue) } else { [IO.Path]::GetFullPath((Join-Path $ProjectRoot $ChromiumCachePathValue)) }
+    $PlaywrightPackageFile = Join-Path $PlaywrightDirectory 'package.json'
+    if (-not (Test-Path -LiteralPath $PlaywrightPackageFile)) { throw "Playwright package not found at the path documented in LOCAL-DEPENDENCIES.md: $PlaywrightDirectory" }
+    $InstalledPlaywright = Get-Content -LiteralPath $PlaywrightPackageFile -Raw | ConvertFrom-Json
+    if ([string]$InstalledPlaywright.version -ne $VersionMatch.Groups[1].Value.Trim()) {
+        throw "Playwright version mismatch: LOCAL-DEPENDENCIES.md specifies $($VersionMatch.Groups[1].Value.Trim()), installed version is $($InstalledPlaywright.version). Update the local dependency record after verifying the intended installation."
+    }
+    if (-not (Test-Path -LiteralPath $ChromiumCacheDirectory)) { throw "Chromium cache directory from LOCAL-DEPENDENCIES.md does not exist: $ChromiumCacheDirectory" }
+    $env:PLAYWRIGHT_BROWSERS_PATH = $ChromiumCacheDirectory
+    if (-not (Test-Path -LiteralPath (Join-Path $DependencyLink 'playwright\package.json'))) {
+        if (Test-Path -LiteralPath $DependencyLink) {
+            throw "Project node_modules exists but Playwright is not resolvable there. Refusing to overwrite it; use the documented dependency path: $PlaywrightDirectory"
+        }
+        $DependencyTarget = Split-Path -Parent $PlaywrightDirectory
+        if (-not (Test-Path -LiteralPath $DependencyTarget)) { throw "Playwright node_modules directory not found: $DependencyTarget" }
+        New-Item -ItemType Junction -Path $DependencyLink -Target $DependencyTarget | Out-Null
+        $CreatedDependencyLink = $true
+        Write-Host "Using existing Playwright $($InstalledPlaywright.version) from LOCAL-DEPENDENCIES.md via a temporary junction."
+    } else {
+        Write-Host "Using project-resolvable Playwright $($InstalledPlaywright.version); Chromium cache: $ChromiumCacheDirectory"
+    }
     Write-Host 'dianGarden local validation'
     Write-Host "Project: $ProjectRoot"
     Write-Host 'This script does not deploy to GitHub Pages or Cloudflare.'
@@ -161,6 +197,18 @@ try {
     if ($ServerProcess -and -not $ServerProcess.HasExited) { Stop-Process -Id $ServerProcess.Id -Force -ErrorAction SilentlyContinue }
     Remove-Item Env:\GARDEN_TEST_URL -ErrorAction SilentlyContinue
     Remove-Item Env:\GARDEN_TEST_LOCAL -ErrorAction SilentlyContinue
+    if ($CreatedDependencyLink -and (Test-Path -LiteralPath $DependencyLink)) {
+        $LinkItem = Get-Item -LiteralPath $DependencyLink -Force -ErrorAction SilentlyContinue
+        if ($LinkItem -and $LinkItem.Attributes.ToString().Contains('ReparsePoint')) {
+            # Use rmdir for a directory junction; Remove-Item may traverse the target tree.
+            & cmd.exe /c rmdir $DependencyLink | Out-Null
+        }
+    }
+    if ($null -eq $OriginalPlaywrightBrowsersPath) {
+        Remove-Item Env:\PLAYWRIGHT_BROWSERS_PATH -ErrorAction SilentlyContinue
+    } else {
+        $env:PLAYWRIGHT_BROWSERS_PATH = $OriginalPlaywrightBrowsersPath
+    }
     if (Test-Path -LiteralPath $Workspace) { Remove-Item -LiteralPath $Workspace -Recurse -Force -ErrorAction SilentlyContinue }
     Set-Location $OriginalLocation
 }

@@ -17,6 +17,7 @@
     attribute vec3 aColor;
     attribute vec3 aNormal;
     attribute float aOpacity;
+    attribute float aEmission;
     uniform mat4 uProjection;
     uniform mat4 uView;
     uniform vec3 uEyeDir;
@@ -28,6 +29,7 @@
     uniform float uDroneSelfIllumination;
     varying vec3 vColor;
     varying float vOpacity;
+    varying float vEmission;
     void main() {
       gl_Position = uProjection * uView * vec4(aPosition, 1.0);
       vec3 n = normalize(aNormal);
@@ -48,13 +50,15 @@
       lighting += vec3(1.0, 0.76, 0.46) * uDroneSelfIllumination;
       vColor = aColor * lighting;
       vOpacity = aOpacity;
+      vEmission = aEmission;
     }
   `;
   const fragmentSource = `
     precision mediump float;
     varying vec3 vColor;
     varying float vOpacity;
-    void main() { gl_FragColor = vec4(vColor, vOpacity); }
+    varying float vEmission;
+    void main() { gl_FragColor = vec4(vColor + vec3(1.0, 0.93, 0.73) * vEmission, vOpacity); }
   `;
 
   function makeShader(type, source) {
@@ -87,6 +91,7 @@
     position: gl.getAttribLocation(program, 'aPosition'),
     color: gl.getAttribLocation(program, 'aColor'),
     opacity: gl.getAttribLocation(program, 'aOpacity'),
+    emission: gl.getAttribLocation(program, 'aEmission'),
     normal: gl.getAttribLocation(program, 'aNormal'),
     projection: gl.getUniformLocation(program, 'uProjection'),
     view: gl.getUniformLocation(program, 'uView'),
@@ -255,6 +260,8 @@
   const colorBuffer = gl.createBuffer();
   const dronePositionBuffer = gl.createBuffer();
   const droneColorBuffer = gl.createBuffer();
+  const droneOpacityBuffer = gl.createBuffer();
+  const droneEmissionBuffer = gl.createBuffer();
   const effectPositionBuffer = gl.createBuffer();
   const effectColorBuffer = gl.createBuffer();
   const effectOpacityBuffer = gl.createBuffer();
@@ -991,9 +998,14 @@
     return 0;
   }
 
-  function addDrone(positions, colors, windowPositions, windowUVs, x, y, z, wingPhase, heading, battery = 100, flapFrequency = 2, flapAmplitude = 0.48) {
+  function addDrone(positions, colors, windowPositions, windowUVs, opacitySpans, emissionSpans, x, y, z, wingPhase, heading, battery = 100, flapFrequency = 2, flapAmplitude = 0.48) {
     const firstVertex = positions.length;
     const firstWindowVertex = windowPositions.length;
+    const batteryFactor = Math.max(0, Math.min(1, Number(battery) / 100));
+    const coreStart = positions.length / 3;
+    addOctahedron(positions, colors, x, y, z, 0.022, 0.02, 0.022, [1.0, 0.93, 0.73]);
+    opacitySpans.push({ first: coreStart, last: positions.length / 3, opacity: 1 });
+    emissionSpans.push({ first: coreStart, last: positions.length / 3, emission: 0.04 + batteryFactor * 0.85 });
     const body = { top: [0.58, 0.48, 0.31], front: [0.38, 0.33, 0.23], right: [0.31, 0.37, 0.27], back: [0.46, 0.38, 0.26], left: [0.34, 0.4, 0.29], bottom: [0.23, 0.27, 0.2] };
     const trim = { top: [0.7, 0.59, 0.39], front: [0.52, 0.43, 0.31], right: [0.44, 0.48, 0.33], back: [0.58, 0.48, 0.33], left: [0.46, 0.49, 0.35], bottom: [0.3, 0.33, 0.24] };
     const wood = [0.55, 0.39, 0.24], woodLight = [0.72, 0.56, 0.36];
@@ -1011,10 +1023,18 @@
       const front = rootZ - 0.1, back = rootZ + 0.1;
       const minX = Math.min(inner, outer), maxX = Math.max(inner, outer);
       // Fine wooden perimeter only; keep the central glass completely free of muntins.
+      let frameStart = positions.length / 3;
       addBox(positions, colors, minX, rootY - 0.009, front, maxX, rootY + 0.009, front + 0.012, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
+      opacitySpans.push({ first: frameStart, last: positions.length / 3, opacity: 1 });
+      frameStart = positions.length / 3;
       addBox(positions, colors, minX, rootY - 0.009, back - 0.012, maxX, rootY + 0.009, back, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
+      opacitySpans.push({ first: frameStart, last: positions.length / 3, opacity: 1 });
+      frameStart = positions.length / 3;
       addBox(positions, colors, minX, rootY - 0.009, front, minX + 0.012, rootY + 0.009, back, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
+      opacitySpans.push({ first: frameStart, last: positions.length / 3, opacity: 1 });
+      frameStart = positions.length / 3;
       addBox(positions, colors, maxX - 0.012, rootY - 0.009, front, maxX, rootY + 0.009, back, { top: woodLight, front: wood, right: wood, back: woodLight, left: wood, bottom: wood });
+      opacitySpans.push({ first: frameStart, last: positions.length / 3, opacity: 1 });
       // A transparent PNG fills the square opening, slightly above the wooden frame.
       const imageMinX = minX + 0.012, imageMaxX = maxX - 0.012;
       const imageFront = front + 0.012, imageBack = back - 0.012;
@@ -1084,8 +1104,6 @@
         x + 0.068, segmentY + 0.004, z + 0.088,
         { top: segmentColor, front: segmentColor, right: segmentColor, back: segmentColor, left: segmentColor, bottom: segmentColor });
     }
-    // Cream-colored central octahedron reads as a small moon-like light, not a battery indicator.
-    addOctahedron(positions, colors, x, y, z, 0.022, 0.02, 0.022, [1.0, 0.93, 0.73]);
     // Scale every drone component around its center so the silhouette, rounded body,
     // wing span, vine trellis, battery light, and flap amplitude keep the same proportions.
     const modelScale = 0.6;
@@ -1272,6 +1290,8 @@
     const deferCallback = (callback) => { if (typeof callback === 'function') deferredCallbacks.push(callback); };
     const positions = [];
     const colors = [];
+    const droneOpacitySpans = [];
+    const droneEmissionSpans = [];
     const windowPositions = [];
     const windowUVs = [];
     const effectPositions = [];
@@ -1483,7 +1503,7 @@
           flapAmplitude = 0.48;
         }
         const individualWingPhase = time / 1000 + index * 0.173;
-        addDrone(positions, colors, windowPositions, windowUVs, candidate.x, candidate.y, candidate.z, individualWingPhase, state.heading, droneDocks[index]?.battery ?? 100, flapFrequency, flapAmplitude);
+        addDrone(positions, colors, windowPositions, windowUVs, droneOpacitySpans, droneEmissionSpans, candidate.x, candidate.y, candidate.z, individualWingPhase, state.heading, droneDocks[index]?.battery ?? 100, flapFrequency, flapAmplitude);
       }
       if (animation && candidate.workProgress > 0) {
         if (!animation.workStarted) {
@@ -1511,7 +1531,7 @@
           }
           const splash = 0.075 + Math.abs(Math.sin(time * 0.014)) * 0.045;
           addOctahedron(effectPositions, effectColors, targetX, targetY + 0.065, targetZ, splash, 0.014, splash * 0.72, [0.3, 0.66, 0.78]);
-        } else {
+        } else if (animation.kind !== 'plant' && animation.kind !== 'harvest') {
           const pulse = Math.max(0, Math.sin(time * 0.018)) * 0.07;
           addOctahedron(effectPositions, effectColors, targetX, targetY + 0.16 + pulse, targetZ, 0.025 + pulse, 0.035 + pulse, 0.025 + pulse, [0.76, 0.87, 0.45]);
         }
@@ -1549,6 +1569,14 @@
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, droneColorBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.DYNAMIC_DRAW);
+    const droneOpacities = new Float32Array(droneVertexCount).fill(0.7);
+    for (const span of droneOpacitySpans) for (let vertex = span.first; vertex < span.last; vertex += 1) droneOpacities[vertex] = span.opacity;
+    const droneEmissions = new Float32Array(droneVertexCount);
+    for (const span of droneEmissionSpans) for (let vertex = span.first; vertex < span.last; vertex += 1) droneEmissions[vertex] = span.emission;
+    gl.bindBuffer(gl.ARRAY_BUFFER, droneOpacityBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, droneOpacities, gl.DYNAMIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, droneEmissionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, droneEmissions, gl.DYNAMIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, droneNormalBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, calculateFaceNormals(positions), gl.DYNAMIC_DRAW);
     effectVertexCount = effectPositions.length / 3;
@@ -2569,13 +2597,24 @@
     gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, droneNormalBuffer);
     gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, droneOpacityBuffer);
+    gl.enableVertexAttribArray(locations.opacity);
+    gl.vertexAttribPointer(locations.opacity, 1, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, droneEmissionBuffer);
+    gl.enableVertexAttribArray(locations.emission);
+    gl.vertexAttribPointer(locations.emission, 1, gl.FLOAT, false, 0, 0);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    gl.disableVertexAttribArray(locations.opacity);
-    gl.vertexAttrib1f(locations.opacity, 0.7);
+    // Transparent drone geometry must not write depth: the internal core is drawn first,
+    // then remains visible through the 70%-opaque shell instead of being depth-occluded.
+    gl.depthMask(false);
     gl.uniform1f(locations.droneSelfIllumination, nightFactor * 0.624);
     gl.drawArrays(gl.TRIANGLES, 0, droneVertexCount);
+    gl.depthMask(true);
+    gl.disableVertexAttribArray(locations.opacity);
     gl.vertexAttrib1f(locations.opacity, 1);
+    gl.disableVertexAttribArray(locations.emission);
+    gl.vertexAttrib1f(locations.emission, 0);
     if (wingWindowProgram && wingWindowTexture && wingWindowLocations && droneWindowVertexCount > 0) {
       gl.useProgram(wingWindowProgram);
       gl.uniformMatrix4fv(wingWindowLocations.projection, false, currentProjection);
@@ -2583,7 +2622,7 @@
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, wingWindowTexture);
       gl.uniform1i(wingWindowLocations.texture, 0);
-      gl.uniform1f(wingWindowLocations.opacity, 0.7);
+      gl.uniform1f(wingWindowLocations.opacity, 1);
       gl.bindBuffer(gl.ARRAY_BUFFER, droneWindowPositionBuffer);
       gl.enableVertexAttribArray(wingWindowLocations.position);
       gl.vertexAttribPointer(wingWindowLocations.position, 3, gl.FLOAT, false, 0, 0);

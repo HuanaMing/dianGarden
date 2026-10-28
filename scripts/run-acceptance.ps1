@@ -19,8 +19,23 @@ $Node22 = Join-Path $env:LOCALAPPDATA 'Programs\nodejs-22-portable\node-v22.23.4
 $Node = if (Test-Path -LiteralPath $Node22) { $Node22 } else { (Get-Command node -ErrorAction Stop).Source }
 $DependencyLink = Join-Path $ProjectRoot 'node_modules'
 $BorrowedDependencies = $false
-$UserProjectDependencies = Join-Path $env:USERPROFILE 'GuraBot\dianGarden\node_modules'
-if (-not (Test-Path -LiteralPath $DependencyLink) -and (Test-Path -LiteralPath (Join-Path $UserProjectDependencies 'playwright\package.json'))) {
+$DependencyDoc = Join-Path $ProjectRoot 'LOCAL-DEPENDENCIES.md'
+if (-not (Test-Path -LiteralPath $DependencyDoc)) { throw 'LOCAL-DEPENDENCIES.md is missing; cannot locate approved local test dependencies.' }
+$DependencyText = Get-Content -LiteralPath $DependencyDoc -Raw
+$PlaywrightMatch = [regex]::Match($DependencyText, '(?m)^PLAYWRIGHT_PACKAGE=(.+)$')
+$VersionMatch = [regex]::Match($DependencyText, '(?m)^PLAYWRIGHT_VERSION=(.+)$')
+if (-not $PlaywrightMatch.Success -or -not $VersionMatch.Success) { throw 'LOCAL-DEPENDENCIES.md must list the Playwright package directory and version.' }
+$PlaywrightPathValue = [Environment]::ExpandEnvironmentVariables($PlaywrightMatch.Groups[1].Value.Trim())
+$PlaywrightDirectory = if ([IO.Path]::IsPathRooted($PlaywrightPathValue)) { [IO.Path]::GetFullPath($PlaywrightPathValue) } else { [IO.Path]::GetFullPath((Join-Path $ProjectRoot $PlaywrightPathValue)) }
+$PlaywrightPackageFile = Join-Path $PlaywrightDirectory 'package.json'
+if (Test-Path -LiteralPath $PlaywrightPackageFile) {
+    $InstalledPlaywright = Get-Content -LiteralPath $PlaywrightPackageFile -Raw | ConvertFrom-Json
+    if ([string]$InstalledPlaywright.version -ne $VersionMatch.Groups[1].Value.Trim()) {
+        throw "Playwright version mismatch with LOCAL-DEPENDENCIES.md: expected $($VersionMatch.Groups[1].Value.Trim()), found $($InstalledPlaywright.version)."
+    }
+}
+$UserProjectDependencies = Split-Path -Parent $PlaywrightDirectory
+if (-not (Test-Path -LiteralPath $DependencyLink) -and (Test-Path -LiteralPath $PlaywrightPackageFile)) {
     New-Item -ItemType Junction -Path $DependencyLink -Target $UserProjectDependencies | Out-Null
     $BorrowedDependencies = $true
 }
