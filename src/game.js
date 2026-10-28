@@ -101,7 +101,7 @@
   function createFreshGame() {
     const plots = defaultPlotPositions(3).map(({ x, z }) => ({ crop: null, plantedAt: null, manual: false, grassOnly: false, x, z, y: 0 }));
     const dockPosition = { x: 0, z: 1.55, y: 0 };
-    return { coins: STARTING_COINS, cropCatalogVersion: CROP_CATALOG_VERSION, gardenName: '花明摸魚花園', avatarMode: 'auto', avatarCrop: 0, hudCollapsed: false, autoMode: false, autoCropSelection: [0], flowerVariants: [], worldTimeMs: 60_000, worldTimeAnchor: Date.now(), lastObservedRaining: false, droneCount: 1, deploymentSequence: 1, drones: [{ dockPosition, deployed: true, deploymentOrder: 1, battery: 100, batteryUpdatedAt: Date.now() }], lastOnlineAt: null, lastOfflineReturnAt: null, dockPosition, plots };
+    return { coins: STARTING_COINS, cropCatalogVersion: CROP_CATALOG_VERSION, gardenName: '花明摸魚花園', avatarMode: 'auto', avatarCrop: 0, hudCollapsed: false, autoMode: false, autoCropSelection: [0], flowerVariants: [], displayFlower: null, worldTimeMs: 60_000, worldTimeAnchor: Date.now(), lastObservedRaining: false, droneCount: 1, deploymentSequence: 1, drones: [{ dockPosition, deployed: true, deploymentOrder: 1, battery: 100, batteryUpdatedAt: Date.now() }], lastOnlineAt: null, lastOfflineReturnAt: null, dockPosition, plots };
   }
   function isValidVariantList(variants) {
     return Array.isArray(variants) && variants.length <= MAX_FLOWER_VARIANTS
@@ -226,13 +226,14 @@
     // Preserve their coordinates and adapt the lower plots to the new surface rule on load.
     const deployedDocks = drones.filter((drone) => drone.deployed !== false).map((drone) => drone.dockPosition);
     plots.forEach((plot) => { if (plotHasSupportAbove(plot, plots, deployedDocks)) plot.grassOnly = true; });
-    return { ...saved, cropCatalogVersion: CROP_CATALOG_VERSION, gardenName: saved.gardenName || '花明摸魚花園', avatarMode: saved.avatarMode === 'manual' ? 'manual' : 'auto', avatarCrop: Number.isInteger(saved.avatarCrop) && saved.avatarCrop >= 0 && saved.avatarCrop < crops.length ? saved.avatarCrop : 0, hudCollapsed: saved.hudCollapsed === true, autoMode: saved.autoMode === true, autoCropSelection: Array.isArray(saved.autoCropSelection) ? saved.autoCropSelection : [0], flowerVariants, worldTimeMs: Number.isFinite(saved.worldTimeMs) ? saved.worldTimeMs : 60_000, worldTimeAnchor: Number.isFinite(saved.worldTimeAnchor) ? saved.worldTimeAnchor : Date.now(), lastObservedRaining: typeof saved.lastObservedRaining === 'boolean' ? saved.lastObservedRaining : window.skyEnvironment.getState(saved).isRaining, droneCount: drones.length, deploymentSequence, drones, dockPosition, plots };
+    return { ...saved, displayFlower: saved.displayFlower && Number.isInteger(saved.displayFlower.cropIndex) && saved.displayFlower.cropIndex >= 0 && saved.displayFlower.cropIndex < crops.length ? saved.displayFlower : null, cropCatalogVersion: CROP_CATALOG_VERSION, gardenName: saved.gardenName || '花明摸魚花園', avatarMode: saved.avatarMode === 'manual' ? 'manual' : 'auto', avatarCrop: Number.isInteger(saved.avatarCrop) && saved.avatarCrop >= 0 && saved.avatarCrop < crops.length ? saved.avatarCrop : 0, hudCollapsed: saved.hudCollapsed === true, autoMode: saved.autoMode === true, autoCropSelection: Array.isArray(saved.autoCropSelection) ? saved.autoCropSelection : [0], flowerVariants, worldTimeMs: Number.isFinite(saved.worldTimeMs) ? saved.worldTimeMs : 60_000, worldTimeAnchor: Number.isFinite(saved.worldTimeAnchor) ? saved.worldTimeAnchor : Date.now(), lastObservedRaining: typeof saved.lastObservedRaining === 'boolean' ? saved.lastObservedRaining : window.skyEnvironment.getState(saved).isRaining, droneCount: drones.length, deploymentSequence, drones, dockPosition, plots };
   }
   if (window.diangardenCloudReady) {
     // Startup is explicitly gated by cloud-save.js: only a resolved login flow or guest choice may start the game.
     await window.diangardenCloudReady;
   }
   const game = loadGame();
+  window.dianGardenDisplayFlower = game.displayFlower || null;
   if (game.cameraPose && window.dianGardenCamera?.restore) window.dianGardenCamera.restore(game.cameraPose);
   let rainStartedAt = game.lastObservedRaining ? Date.now() : null;
   function getAutomaticPlotCount() { return window.gardenEconomy.getAutomaticPlotCount(game.plots); }
@@ -1156,7 +1157,10 @@
         notify('作物尚未成熟，收成任務已略過。');
         return false;
       }
-      const reward = getHarvestReward(crop); game.coins += reward; plot.crop = null; plot.variantId = null; plot.variantName = null; plot.variantColor = null; plot.plantedAt = null; plot.plantHeight = null; plot.rotation = 0; plot.watered = false; plot.waterSource = null; plot.growthBonusMs = 0; delete plot.waterStartedAt; delete plot.waterUntil; save(); render();
+      const reward = getHarvestReward(crop); game.coins += reward;
+      game.displayFlower = { cropIndex: plot.crop, color: plot.variantColor || null };
+      window.dianGardenDisplayFlower = game.displayFlower;
+      plot.crop = null; plot.variantId = null; plot.variantName = null; plot.variantColor = null; plot.plantedAt = null; plot.plantHeight = null; plot.rotation = 0; plot.watered = false; plot.waterSource = null; plot.growthBonusMs = 0; delete plot.waterStartedAt; delete plot.waterUntil; save(); render();
       if (job.automatic) {
         planAutomaticJobs();
         const replantIndex = jobQueue.findIndex((queued) => queued.kind === 'plant' && queued.index === job.index);
@@ -1367,12 +1371,14 @@
     const plants = getPlotPlants(plot);
     const readyPositions = new Set();
     let reward = 0;
+    let latestHarvestedPlant = null;
     plants.forEach((plant, plantIndex) => {
       const positionIndex = plant.positionIndex || plantIndex + 1;
       if (!selectedManualPlantPositions.has(positionIndex)) return;
       const crop = crops[plant.crop] || crops[0];
       if (growthElapsed(plot, Date.now(), plantIndex) < crop.growTime) return;
       readyPositions.add(positionIndex);
+      latestHarvestedPlant = plant;
       reward += getHarvestReward(getPlantedCrop(plot, plantIndex));
     });
     if (readyPositions.size === 0) {
@@ -1382,6 +1388,11 @@
     plot.plants = plants.filter((plant, plantIndex) => !readyPositions.has(plant.positionIndex || plantIndex + 1));
     for (const positionIndex of readyPositions) selectedManualPlantPositions.delete(positionIndex);
     game.coins += reward;
+    game.displayFlower = {
+      cropIndex: latestHarvestedPlant.crop,
+      color: latestHarvestedPlant.variantColor || null,
+    };
+    window.dianGardenDisplayFlower = game.displayFlower;
     syncManualPrimary(plot);
     save();
     render();
@@ -1397,6 +1408,8 @@
     if (isDroneExcluded(plot)) {
       const plantedCrop = getPlantedCrop(plot, plantIndex);
       const reward = getHarvestReward(crop); game.coins += reward;
+      game.displayFlower = { cropIndex: plant.crop, color: plant.variantColor || null };
+      window.dianGardenDisplayFlower = game.displayFlower;
       if (plot.manual === true) {
         plot.plants.splice(plantIndex, 1);
         syncManualPrimary(plot);

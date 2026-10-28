@@ -1000,20 +1000,80 @@
     return 0;
   }
 
-  function addDrone(positions, colors, windowPositions, windowUVs, opacitySpans, emissionSpans, x, y, z, wingPhase, heading, battery = 100, flapFrequency = 2, flapAmplitude = 0.48) {
+  function addDrone(positions, colors, windowPositions, windowUVs, opacitySpans, emissionSpans, coreSpans, x, y, z, wingPhase, heading, battery = 100, flapFrequency = 2, flapAmplitude = 0.48) {
     const firstVertex = positions.length;
     const firstWindowVertex = windowPositions.length;
     const batteryFactor = Math.max(0, Math.min(1, Number(battery) / 100));
     const coreScale = 0.3 + batteryFactor * 0.4;
     const coreStart = positions.length / 3;
-    addOctahedron(positions, colors, x, y, z, 0.022 * coreScale, 0.04 * coreScale, 0.022 * coreScale, [1.0, 0.96, 0.86]);
+    const swing = Math.sin(wingPhase * Math.PI * 2 * 0.5) * 0.03; // One swing every 2 seconds
+    addOctahedron(positions, colors, x + swing, y - 0.02 + swing * swing * 10, z,
+      0.022 * coreScale, 0.04 * coreScale, 0.022 * coreScale, [1.0, 0.96, 0.86]);
     opacitySpans.push({ first: coreStart, last: positions.length / 3, opacity: 1 });
     emissionSpans.push({ first: coreStart, last: positions.length / 3, emission: 0.35 + batteryFactor * 0.65 });
-    const body = { top: [0.58, 0.45, 0.27], front: [0.38, 0.33, 0.23], right: [0.4, 0.29, 0.18], back: [0.46, 0.38, 0.26], left: [0.42, 0.3, 0.19], bottom: [0.32, 0.22, 0.14] };
-    const trim = { top: [0.7, 0.56, 0.34], front: [0.52, 0.43, 0.31], right: [0.52, 0.37, 0.23], back: [0.58, 0.48, 0.33], left: [0.54, 0.38, 0.24], bottom: [0.38, 0.25, 0.16] };
-    const wood = [0.55, 0.39, 0.24], woodLight = [0.72, 0.56, 0.36];
+    coreSpans.push({ first: coreStart, count: positions.length / 3 - coreStart });
+    const body = { top: [0.38, 0.26, 0.15], front: [0.24, 0.15, 0.085], right: [0.27, 0.16, 0.09], back: [0.32, 0.22, 0.12], left: [0.26, 0.16, 0.09], bottom: [0.2, 0.12, 0.07] };
+    const trim = { top: [0.52, 0.36, 0.2], front: [0.36, 0.23, 0.12], right: [0.37, 0.23, 0.12], back: [0.44, 0.3, 0.17], left: [0.36, 0.22, 0.12], bottom: [0.25, 0.15, 0.08] };
+    const wood = [0.38, 0.24, 0.13], woodLight = [0.58, 0.4, 0.23];
     const leaf = [0.35, 0.62, 0.37];
-    addRoundedBox(positions, colors, x - 0.084, y - 0.075, z - 0.085, x + 0.084, y + 0.075, z + 0.085, body, 0.028, 5);
+    addRoundedBox(positions, colors, x - 0.084, y - 0.075, z - 0.085, x + 0.084, y + 0.075, z + 0.085, body, 0.012, 2);
+
+    const hx = 0.084, hy = 0.075, hz = 0.085, t = 0.007;
+    const solid = (x1, y1, z1, x2, y2, z2, palette = trim) => {
+      const s = positions.length / 3;
+      addBox(positions, colors, x1, y1, z1, x2, y2, z2, palette);
+      opacitySpans.push({ first: s, last: positions.length / 3, opacity: 1 });
+    };
+    // 12 edges form the window frame
+    for (const sa of [-1, 1]) for (const sb of [-1, 1]) {
+      solid(x + sa*hx - t, y + sb*hy - t, z - hz, x + sa*hx + t, y + sb*hy + t, z + hz);
+      solid(x + sa*hx - t, y - hy, z + sb*hz - t, x + sa*hx + t, y + hy, z + sb*hz + t);
+      solid(x - hx, y + sa*hy - t, z + sb*hz - t, x + hx, y + sa*hy + t, z + sb*hz + t);
+    }
+    // Front crossbars divide the face into four panes
+    solid(x - t*0.6, y - hy, z + hz - t, x + t*0.6, y + hy, z + hz + t);
+    solid(x - hx, y - t*0.6, z + hz - t, x + hx, y + t*0.6, z + hz + t);
+
+    // Clock ticks; skip 12, 3, 6, and 9 because the crossbars mark them
+    for (let i = 0; i < 12; i += 1) {
+      if (i % 3 === 0) continue;
+      const a = i / 12 * Math.PI * 2, s = positions.length / 3;
+      addOctahedron(positions, colors, x + Math.sin(a) * 0.056, y + Math.cos(a) * 0.056, z + hz + 0.002,
+        0.005, 0.005, 0.003, [0.96, 0.9, 0.74]);
+      opacitySpans.push({ first: s, last: positions.length / 3, opacity: 1 });
+    }
+    // Clock hands follow game time: 16 minutes per day, with noon at minute 5
+    const dayMs = window.skyEnvironment?.DAY_CYCLE_MS || 16 * 60_000;
+    const cycleT = ((environmentState.worldTimeMs % dayMs) + dayMs) % dayMs;
+    const clockHours = 12 + (cycleT - 5 * 60_000) / dayMs * 24;
+    const addHand = (angle, length, width, color) => {
+      const dx = Math.sin(angle), dy = Math.cos(angle), zf = z + hz + 0.009;
+      const at = (along, side) => [x + dx * along - dy * side, y + dy * along + dx * side, zf];
+      const s = positions.length / 3;
+      addTriangle(positions, colors, at(-0.12 * length, 0), at(0.2 * length, width), at(length, 0), color);
+      addTriangle(positions, colors, at(-0.12 * length, 0), at(length, 0), at(0.2 * length, -width), color);
+      opacitySpans.push({ first: s, last: positions.length / 3, opacity: 1 });
+    };
+    const handColor = [0.2, 0.12, 0.08];
+    addHand((clockHours % 12) / 12 * Math.PI * 2, 0.032, 0.006, handColor);
+    addHand((clockHours % 1) * Math.PI * 2, 0.05, 0.004, handColor);
+    const hubStart = positions.length / 3;
+    addOctahedron(positions, colors, x, y, z + hz + 0.009, 0.006, 0.006, 0.004, [0.85, 0.65, 0.3]);
+    opacitySpans.push({ first: hubStart, last: positions.length / 3, opacity: 1 });
+
+    // Small gable on top; remove this block if not wanted
+    {
+      const e = hx + 0.012, zf = z + hz + 0.012, zb = z - hz - 0.012, yb = y + hy + t, yr = yb + 0.05;
+      const c = [0.45, 0.3, 0.19], s0 = positions.length / 3;
+      addTriangle(positions, colors, [x - e, yb, zf], [x + e, yb, zf], [x, yr, zf], c);
+      addTriangle(positions, colors, [x + e, yb, zb], [x - e, yb, zb], [x, yr, zb], c);
+      for (const s of [-1, 1]) {
+        const shade = c.map((v) => v * (s > 0 ? 0.85 : 1.1));
+        addTriangle(positions, colors, [x + s*e, yb, zf], [x, yr, zf], [x, yr, zb], shade);
+        addTriangle(positions, colors, [x + s*e, yb, zf], [x, yr, zb], [x + s*e, yb, zb], shade);
+      }
+      opacitySpans.push({ first: s0, last: positions.length / 3, opacity: 1 });
+    }
 
     // Wings lie in the XZ plane (normal +Y). Flapping rotates each wing about
     // its shoulder along Z, moving the outer edge through +Y/-Y like a bird's wing.
@@ -1103,8 +1163,8 @@
       const segmentY = y - 0.045 + segment * 0.03;
       const segmentColor = segment >= 4 - litBatterySegments ? batteryGlow : batteryDim;
       addBox(positions, colors,
-        x + 0.043, segmentY - 0.004, z + 0.083,
-        x + 0.068, segmentY + 0.004, z + 0.088,
+        x + 0.043, segmentY - 0.004, z - 0.088,
+        x + 0.068, segmentY + 0.004, z - 0.083,
         { top: segmentColor, front: segmentColor, right: segmentColor, back: segmentColor, left: segmentColor, bottom: segmentColor });
     }
     // Scale every drone component around its center so the silhouette, rounded body,
@@ -1295,6 +1355,7 @@
     const colors = [];
     const droneOpacitySpans = [];
     const droneEmissionSpans = [];
+    const droneCoreSpans = [];
     const windowPositions = [];
     const windowUVs = [];
     const effectPositions = [];
@@ -1492,12 +1553,18 @@
           && Math.abs(candidate.y - (DRONE_IDLE_Y + (dock.y || 0))) < DRONE_IDLE_BOB + 0.01;
         let flapFrequency = 2;
         let flapAmplitude = 0.48;
+        const isDescending = Boolean(animation && verticalDelta < -0.0001);
+        if (!isDescending) state.descentWingAngle = 0;
         if (isOnPlatform) {
           flapFrequency = 0.5;
           flapAmplitude = 0.22;
-        } else if (animation && verticalDelta < -0.0001) {
+        } else if (isDescending) {
           flapFrequency = 0;
-          flapAmplitude = 70 * Math.PI / 180;
+          state.descentWingAngle = Math.min(
+            70 * Math.PI / 180,
+            (state.descentWingAngle || 0) + (10 * Math.PI / 180) * (delta / 1000),
+          );
+          flapAmplitude = state.descentWingAngle;
         } else if (animation && verticalDelta > 0.0001) {
           flapFrequency = 3;
           flapAmplitude = 0.48;
@@ -1508,7 +1575,7 @@
         const individualWingPhase = time / 1000 + index * 0.173;
         const wingAngle = flapFrequency === 0 ? flapAmplitude : Math.sin(individualWingPhase * Math.PI * 2 * flapFrequency) * flapAmplitude;
         const offsetWing = -(0.2 * 0.6 / 2) * Math.sin(wingAngle) * 0.6;
-        addDrone(positions, colors, windowPositions, windowUVs, droneOpacitySpans, droneEmissionSpans, candidate.x, candidate.y + offsetWing, candidate.z, individualWingPhase, state.heading, droneDocks[index]?.battery ?? 100, flapFrequency, flapAmplitude);
+        addDrone(positions, colors, windowPositions, windowUVs, droneOpacitySpans, droneEmissionSpans, droneCoreSpans, candidate.x, candidate.y + offsetWing, candidate.z, individualWingPhase, state.heading, droneDocks[index]?.battery ?? 100, flapFrequency, flapAmplitude);
       }
       if (animation && candidate.workProgress > 0) {
         if (!animation.workStarted) {
@@ -2610,9 +2677,8 @@
     gl.vertexAttribPointer(locations.emission, 1, gl.FLOAT, false, 0, 0);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    // Transparent drone geometry must not write depth: the internal core is drawn first,
-    // then remains visible through the 70%-opaque shell instead of being depth-occluded.
-    gl.depthMask(false);
+    // Let drone surfaces write depth so far-side battery segments are occluded by the near shell.
+    gl.depthMask(true);
     gl.uniform1f(locations.droneSelfIllumination, nightFactor * 0.624);
     gl.drawArrays(gl.TRIANGLES, 0, droneVertexCount);
     gl.depthMask(true);
