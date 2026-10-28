@@ -32,7 +32,7 @@
 
 - `src/index.html`：遊戲頁面結構。
 - `src/styles.css`：版面、空島插畫及手機版樣式。
-- `src/sky-world.js`：使用原生 WebGL 繪製可拼接空島土地，支援土地與無人機停靠平台選取拖曳、相機控制，以及常駐多機的工作動畫與隨電量轉色的中心指示燈。
+- `src/sky-world.js`：使用原生 WebGL 繪製可拼接空島土地，支援土地與無人機停靠平台選取拖曳、相機控制，以及常駐多機的工作動畫、固定奶油色中央八面體與暖橘色電量指示燈。
 - `src/model/general.js`：提供共用花卉幾何工具與模型註冊表。
 - `src/model/`：十一種花卉各自的莖、葉與花頭模型；主畫面及圖鑑共用同一組模型檔案。
 - `src/flower-catalog.js`：花園及圖鑑共用的十一種花卉資料，包括花語靈感、遊戲生長時間、模型高度與經濟數值。
@@ -42,6 +42,9 @@
 - `assets/flowers/`：花卉 PNG 素材集中存放處，目前收納十一種花卉的圖片素材。
 - `docs/`：架構及決策紀錄。
 - `tests/browser-smoke.mjs`：Playwright 桌面／手機瀏覽器回歸與視覺規格驗收。
+- `scripts/run-acceptance.ps1`：本機手動／修改後驗收入口，逾時會回報 FAIL，並呼叫 Discord 通知模組。
+- `scripts/discord-acceptance.mjs`：傳送 PASS／FAIL 摘要及代表性截圖；發送失敗時保留本機待發佇列。
+- `docs/local-testing.md`：本機驗收、Discord Webhook 設定與故障排除。
 - `.github/workflows/browser-check.yml`：自動準備靜態測試站、執行 Chromium 驗收，並保存截圖 artifact。
 - `docs/flower-background.md`：花卉花語、生長節奏與代表株型資料及來源。
 - `state/`：專案與目前任務狀態的 JSON 紀錄。

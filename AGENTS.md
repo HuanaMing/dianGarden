@@ -158,6 +158,13 @@ GitHub API 回報寫入成功，只代表該操作已被接受，不代表程式
 
 修改後，依變更性質與實際可用環境進行適當檢查。
 
+### 7.1 本機已安裝套件與瀏覽器的位置
+
+- 開始任何本機測試前，先讀取專案根目錄的 `LOCAL-DEPENDENCIES.md`；該文件記錄本機已安裝套件、Node.js 與瀏覽器快取的位置。它是本機專用文件，已由本機 Git exclude 忽略，不應提交或 push。
+- 判斷 Playwright、Chromium 或其他工具是否可用前，必須先檢查 `LOCAL-DEPENDENCIES.md` 所列路徑及套件版本。專案根目錄無法直接解析套件，不代表該套件未安裝。
+- 優先重用文件記錄的既有套件及瀏覽器；依文件說明確認路徑後，可採用暫時連結或明確指定模組路徑執行測試，並清理測試後建立的暫時連結。
+- 使用者未授權時，不得因目前工作目錄無法解析套件而安裝新依賴、覆蓋既有 `node_modules` 或重裝瀏覽器。只有在查核文件所列位置與實際環境後，才能回報工具不存在或不可用。
+
 - 檢查修改內容是否符合需求，以及是否有明顯語法、引用、資料流或狀態同步問題。
 - 如果有可用且適合的靜態檢查或測試，可以執行並如實回報。
 - 未經使用者要求，不主動進行實際瀏覽器操作或視覺驗收；若任務明確要求瀏覽器驗收，或驗收條件無法透過其他方式確認，依要求處理。
@@ -222,8 +229,18 @@ GitHub API 回報寫入成功，只代表該操作已被接受，不代表程式
 
 ## Local testing and repository synchronization (2026-10-28)
 
-- Run the documented local validation workflow with `scripts/run-local-tests.ps1`; it covers the Worker API smoke checks, JavaScript/MJS syntax checks, and browser smoke tests where the local environment supports them.
-- Keep generated dependencies and temporary test artifacts out of commits (`node_modules/`, `.local-test-workspace/`, `test-results/`, and local logs).
+- After finishing a coherent set of local code changes, run `scripts/run-acceptance.ps1 -Trigger AfterChange` before reporting completion. This performs the local validation suite, preserves screenshots and logs, and reports PASS/FAIL to the configured Discord webhook when available. Do not run it after every individual file write mid-task.
+- Manual acceptance is available through `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-acceptance.ps1`; no periodic schedule is configured.
+- Configure `DIANGARDEN_DISCORD_WEBHOOK_URL` in the Windows user environment. Never place the webhook URL in tracked files, source code, logs, task records, or chat output. The notification script only accepts Discord webhook hosts and never prints the URL.
+- Failed Discord notifications are queued under the ignored `test-results/discord-outbox/` directory and retried on the next manual or post-change acceptance run, with at most three attempts per run. Pending notifications are retained until delivered.
+- Keep generated dependencies and temporary test artifacts out of commits (`node_modules/`, `.local-test-workspace/`, `test-results/`, and local logs). Generated run artifacts older than 3 days are removed on acceptance runs; pending outbox items are exempt until delivered.
 - The local preview origin `http://127.0.0.1:4173` is permitted for development CORS testing only; retain the production origin and do not use a wildcard origin.
 - Local test success does not mean GitHub Pages or the Cloudflare Worker has been deployed. Deployment requires explicit user authorization.
 - When syncing local work to GitHub, compare against the remote branch first and preserve newer remote files rather than replacing them wholesale.
+
+
+## Tool-output contamination prevention
+
+- Never copy tool-wrapper text, execution-device suffixes, or interface metadata into project files. Only write the actual intended file content.
+- After modifying scripts or source files, run `scripts/check-tool-output-contamination.ps1` and inspect `git diff` before reporting completion.
+- `scripts/run-local-tests.ps1` runs the contamination guard as part of local validation. Treat any match as a failed check and remove only the accidental text, preserving unrelated edits.

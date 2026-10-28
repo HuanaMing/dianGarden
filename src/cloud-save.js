@@ -434,13 +434,10 @@
       cloudRevision = cloudSave ? cloudSave.revision : 0;
       const local = readLocalSave();
       if (cloudSave) {
-        // Restore a cloud revision only once. Startup may update volatile timestamps
-        // after offline simulation, so an already accepted revision must not trigger a reload loop.
+        // An existing cloud save is authoritative for the signed-in account.
         const cloudSignature = signatureOf(cloudSave);
         const localSignature = signatureOf(local);
-        const meta = readMeta();
-        const previouslyLoadedSameRevision = meta.userSub === currentSub && meta.revision === cloudRevision;
-        if (cloudSignature !== localSignature && !previouslyLoadedSameRevision) {
+        if (cloudSignature !== localSignature) {
           localStorage.setItem(STORAGE_KEY, cloudSave.saveData);
           localStorage.setItem(VARIANTS_KEY, cloudSave.variantsData);
           localStorage.setItem(AUTO_CROPS_KEY, cloudSave.autoCropsData);
@@ -458,7 +455,19 @@
         setStatus('已載入最新雲端花園；這台瀏覽器取得目前同步權。', 'success');
       } else {
         syncEnabled = false;
-        if (local) {
+        const meta = readMeta();
+        const hasDifferentKnownOwner = typeof meta.userSub === 'string'
+          && meta.userSub.length > 0
+          && meta.userSub !== currentSub;
+        if (local && hasDifferentKnownOwner) {
+          try {
+            createInitialLocalSave();
+            shouldUploadLocalAsFirstCloudSave = true;
+            setStatus('這份本機花園屬於其他帳號；已建立新的花園，正在同步至目前帳號…');
+          } catch (_) {
+            setStatus('無法建立新的本機花園；為避免上傳其他帳號的進度，已停止首次雲端同步。', 'warning');
+          }
+        } else if (local) {
           shouldUploadLocalAsFirstCloudSave = true;
           setStatus('雲端還沒有存檔，正在自動上傳這台裝置的花園…');
         } else {

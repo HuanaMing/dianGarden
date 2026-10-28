@@ -5,3 +5,7 @@ node_modules/
 .local-test-workspace/
 test-results/
 logs/local-browser-test.log
+
+# Local-only secrets (never commit)
+.env.local
+.env.*.local

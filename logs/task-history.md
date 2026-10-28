@@ -1950,3 +1950,25 @@
 - 依使用者指示，將 tasks/active/266.md、267.md、268.md 歸檔至 tasks/done/，保留原內容並附加歸檔紀錄。
 - 建立 tasks/active/270-drone-battery-indicator.md；任務269已被本機測試工作流程使用，因此本任務編號為270。
 - 本次程式修改及測試結果另行更新；此處不代表已完成視覺驗收。
+
+## 2026-10-28 — 任務270重作
+- 僅無人機主機身透明度固定為70%；翅膀及其他零件維持100%，不受日夜天氣影響。
+- 新增四段暖橘色電量指示燈，中央月光奶油色八面體已經本機瀏覽器畫面檢查確認可見。
+- Cloudflare Worker API smoke、25個 JS/MJS 語法檢查、Playwright browser smoke、git diff --check 均通過。
+- 僅本機修改；未 commit、未 push、未部署。
+
+
+## 2026-10-28 — 任務 271：本機自動驗收與 Discord 截圖通知
+
+- 新增 `scripts/run-acceptance.ps1`，提供手動驗收與修改完成後的驗收入口；逾時預設 480 秒，會終止測試程序樹並標記 FAIL。
+- 新增 `scripts/discord-acceptance.mjs`，以本機環境變數讀取 Webhook，傳送 PASS／FAIL 摘要與代表性截圖；發送失敗時保留待發佇列並於後續驗收重試，每次最多三次。
+- 調整 `scripts/run-local-tests.ps1`，在清理隔離測試工作區前保存截圖與測試日誌。
+- 更新 `AGENTS.md`、`docs/local-testing.md`、`README.md` 與任務狀態，明確禁止自動 commit、push 或部署。
+- 驗證：Worker API smoke test PASS、25 個 JS/MJS 語法檢查 PASS、Playwright browser smoke test PASS，`browserErrors` 為空；PowerShell parser、state JSON 與 `git diff --check` PASS。
+- 尚待：Windows 使用者環境尚未設定 `DIANGARDEN_DISCORD_WEBHOOK_URL`，因此尚未實際驗證 Discord 收訊；通知已保存在本機待發佇列。未 commit、未 push、未部署。
+
+## 2026-10-28 — 任務272：工具輸出污染防護
+- 確認 GitHub 與本機 run-local-tests.ps1 正文沒有污染；未對 GitHub 做無意義修改。
+- 新增污染掃描器並接入本機驗收，更新 AGENTS.md 防護規則。
+- 污染檢查、Worker API smoke、25 個 JS/MJS 語法檢查、Playwright browser smoke 與 Discord PASS 通知均通過。
+- 未 commit、未 push、未部署。

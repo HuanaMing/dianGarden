@@ -41,5 +41,3 @@
 - 已新增本機模式 GARDEN_TEST_LOCAL=1 的 Chromium SwiftShader 參數；不影響 GitHub Actions 預設啟動設定。
 - 首次安裝意外移除的使用者層級套件已按快取可用版本重建常見根套件；原始版本無 lockfile 可核對。
 - 完整本機測試流程已通過；測試涵蓋跨機派工、八台無人機位置連續性、登入／離線提示、11 種花卉模型及桌面／手機版等檢查。測試只修改驗收腳本，沒有修改遊戲功能或觸發部署。
-
-[executed on device: CharMing (07eaf469-ae47-42c9-b1a6-f9ac76863107)]

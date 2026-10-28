@@ -36,6 +36,10 @@ try {
     Write-Host 'dianGarden local validation'
     Write-Host "Project: $ProjectRoot"
     Write-Host 'This script does not deploy to GitHub Pages or Cloudflare.'
+    Invoke-Check 'Tool-output contamination guard' {
+        & (Join-Path $ProjectRoot 'scripts\check-tool-output-contamination.ps1')
+        if ($LASTEXITCODE -ne 0) { throw 'Tool-output contamination guard failed.' }
+    }
     if (-not (Get-Command node -ErrorAction SilentlyContinue)) { throw 'Node.js is required. This script does not install tools.' }
     $PythonCommand = if (Get-Command python -ErrorAction SilentlyContinue) { 'python' } elseif (Get-Command py -ErrorAction SilentlyContinue) { 'py' } else { $null }
     if (-not $PythonCommand) { throw 'Python is required. This script does not install tools.' }
@@ -108,25 +112,52 @@ try {
             $env:GARDEN_TEST_URL = 'http://127.0.0.1:4173/src'
             $env:GARDEN_TEST_LOCAL = '1'
             $BrowserLog = Join-Path $Workspace 'browser-test.log'
-            Push-Location -LiteralPath $Workspace
-            try {
-                node (Join-Path $Workspace 'tests\browser-smoke.mjs') *> $BrowserLog
-                $BrowserExitCode = $LASTEXITCODE
-                Get-Content -LiteralPath $BrowserLog
-                if ($BrowserExitCode -ne 0) {
-                    Copy-Item -LiteralPath $BrowserLog -Destination (Join-Path $ProjectRoot 'logs\local-browser-test.log') -Force
-                    throw "Playwright browser smoke test failed (exit code $BrowserExitCode); output saved to logs/local-browser-test.log."
-                }
-            } finally {
-                Pop-Location
+            $BrowserStdout = Join-Path $Workspace 'browser-test.stdout.log'
+            $BrowserStderr = Join-Path $Workspace 'browser-test.stderr.log'
+            $NodeCommand = (Get-Command node -ErrorAction Stop).Source
+            $BrowserScript = Join-Path $Workspace 'tests\browser-smoke.mjs'
+            $BrowserProcess = Start-Process -FilePath $NodeCommand -ArgumentList @('"' + $BrowserScript + '"') -WorkingDirectory $Workspace -PassThru -Wait -NoNewWindow -RedirectStandardOutput $BrowserStdout -RedirectStandardError $BrowserStderr
+            $BrowserExitCode = $BrowserProcess.ExitCode
+            $BrowserOutput = @()
+            if (Test-Path -LiteralPath $BrowserStdout) { $BrowserOutput += Get-Content -LiteralPath $BrowserStdout }
+            if (Test-Path -LiteralPath $BrowserStderr) { $BrowserOutput += Get-Content -LiteralPath $BrowserStderr }
+            $BrowserOutput | Set-Content -LiteralPath $BrowserLog -Encoding utf8
+            if (Test-Path -LiteralPath $BrowserLog) { Get-Content -LiteralPath $BrowserLog }
+            if ($BrowserExitCode -ne 0) {
+                Copy-Item -LiteralPath $BrowserLog -Destination (Join-Path $ProjectRoot 'logs\local-browser-test.log') -Force
+                throw "Playwright browser smoke test failed (exit code $BrowserExitCode); output saved to logs/local-browser-test.log."
             }
             Write-Host '[PASS] Playwright browser smoke test' -ForegroundColor Green
         }
     }
 } catch {
-    $Failures.Add($_.Exception.Message)
-    Write-Host "[ERROR] $($_.Exception.Message)" -ForegroundColor Red
+    $ErrorText = [string]$_.Exception.Message
+    if ([string]::IsNullOrWhiteSpace($ErrorText)) { $ErrorText = [string]$_ }
+    $ErrorText = $ErrorText -replace '[\r\n]+', ' '
+    $ErrorLine = $_.InvocationInfo.ScriptLineNumber
+    $FailureDetail = 'Acceptance interrupted: ' + $ErrorText + ' (script line ' + $ErrorLine + ')'
+    $Failures.Add($FailureDetail)
+    Write-Host ('[ERROR] ' + $FailureDetail) -ForegroundColor Red
 } finally {
+    if ($env:GARDEN_ACCEPTANCE_ARTIFACT_DIR) {
+        try {
+            New-Item -ItemType Directory -Path $env:GARDEN_ACCEPTANCE_ARTIFACT_DIR -Force | Out-Null
+            $GeneratedResults = Join-Path $Workspace 'test-results'
+            if (Test-Path -LiteralPath $GeneratedResults) {
+                Copy-Item -LiteralPath $GeneratedResults -Destination (Join-Path $env:GARDEN_ACCEPTANCE_ARTIFACT_DIR 'test-results') -Recurse -Force
+            }
+            $GeneratedBrowserLog = Join-Path $Workspace 'browser-test.log'
+            if (Test-Path -LiteralPath $GeneratedBrowserLog) {
+                Copy-Item -LiteralPath $GeneratedBrowserLog -Destination (Join-Path $env:GARDEN_ACCEPTANCE_ARTIFACT_DIR 'browser-test.log') -Force
+            }
+            $LocalBrowserLog = Join-Path $ProjectRoot 'logs\local-browser-test.log'
+            if (Test-Path -LiteralPath $LocalBrowserLog) {
+                Copy-Item -LiteralPath $LocalBrowserLog -Destination (Join-Path $env:GARDEN_ACCEPTANCE_ARTIFACT_DIR 'local-browser-test.log') -Force
+            }
+        } catch {
+            Write-Warning "Could not preserve all acceptance artifacts: $($_.Exception.Message)"
+        }
+    }
     if ($ServerProcess -and -not $ServerProcess.HasExited) { Stop-Process -Id $ServerProcess.Id -Force -ErrorAction SilentlyContinue }
     Remove-Item Env:\GARDEN_TEST_URL -ErrorAction SilentlyContinue
     Remove-Item Env:\GARDEN_TEST_LOCAL -ErrorAction SilentlyContinue
@@ -142,5 +173,3 @@ if ($Failures.Count -eq 0) {
 foreach ($Failure in $Failures) { Write-Host "- $Failure" -ForegroundColor Red }
 Write-Host 'Not all checks passed. Review the output and obtain any required approval.' -ForegroundColor Yellow
 exit 1
-
-[executed on device: CharMing (07eaf469-ae47-42c9-b1a6-f9ac76863107)]

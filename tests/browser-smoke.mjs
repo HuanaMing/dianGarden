@@ -21,6 +21,13 @@ if (!cloudSaveSource.includes("shouldUploadLocalAsFirstCloudSave = true;")
   || !cloudSaveSource.includes("雲端還沒有存檔，正在自動上傳這台裝置的花園")) {
   throw new Error('登入後偵測到雲端無存檔時，未自動上傳現有本機花園');
 }
+if (!cloudSaveSource.includes("const hasDifferentKnownOwner = typeof meta.userSub === 'string'")
+  || !cloudSaveSource.includes("&& meta.userSub !== currentSub;")
+  || !cloudSaveSource.includes("這份本機花園屬於其他帳號；已建立新的花園，正在同步至目前帳號")
+  || !cloudSaveSource.includes("An existing cloud save is authoritative for the signed-in account.")
+  || !cloudSaveSource.includes("currentSub = claims.sub;")) {
+  throw new Error('任務275：雲端優先覆蓋或不同帳號本機存檔隔離邏輯缺失');
+}
 if (indexHtml.includes('登入 Google 後，可在其他裝置找回同一座花園') || indexHtml.includes('雲端同步需要網路。同步失敗不會阻止遊玩')) {
   throw new Error('跨裝置存檔區仍包含已移除的常駐說明文字');
 }
