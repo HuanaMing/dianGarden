@@ -1632,16 +1632,26 @@
   });
   resetProgressButton?.addEventListener('click', () => resetDialog?.showModal());
   resetDialog?.querySelectorAll('[data-cancel-reset]').forEach((button) => button.addEventListener('click', () => resetDialog.close()));
-  confirmResetButton?.addEventListener('click', () => {
+  confirmResetButton?.addEventListener('click', async () => {
+    if (confirmResetButton.disabled) return;
+    confirmResetButton.disabled = true;
     try {
+      // For signed-in gardens, delete the account's cloud save before removing
+      // the local copy. If cloud deletion fails, keep the only known progress.
+      if (typeof window.diangardenResetCloudSave === 'function') {
+        await window.diangardenResetCloudSave();
+      }
       isResetting = true;
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(AUTO_CROP_KEY);
       localStorage.removeItem(FLOWER_VARIANTS_KEY);
+      if (!IS_GUEST_GARDEN) localStorage.removeItem('sky-garden-cloud-sync-v1');
+      resetDialog?.close();
       window.location.reload();
     } catch (_) {
       isResetting = false;
-      notify('無法清除瀏覽器存檔，進度尚未重置。請檢查瀏覽器儲存權限。');
+      confirmResetButton.disabled = false;
+      notify('無法確認雲端或本機存檔已清除；原有進度已保留，請檢查登入狀態與網路後重試。');
     }
   });
   autoModeButton?.addEventListener('click', () => {

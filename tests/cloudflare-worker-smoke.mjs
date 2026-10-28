@@ -90,6 +90,13 @@ const env = {
             saves.set(userId, { ...row, save_data: saveData, variants_data: variantsData, auto_crops_data: autoCropsData, schema_version: schemaVersion, revision: revision + 1, updated_at: updatedAt, saved_at: savedAt });
             return { meta: { changes: 1 } };
           }
+          if (sql.startsWith("DELETE FROM player_saves")) {
+            const [userId, revision, openedAt] = values;
+            const row = saves.get(userId);
+            if (!row || row.revision !== revision || row.opened_at !== openedAt) return { meta: { changes: 0 } };
+            saves.delete(userId);
+            return { meta: { changes: 1 } };
+          }
           throw new Error("Unexpected statement: " + sql);
         },
       };
@@ -101,7 +108,7 @@ async function call(method, { token, body, origin = "https://example.test", path
   const headers = new Headers();
   if (origin) headers.set("Origin", origin);
   if (token) headers.set("Authorization", "Bearer " + token);
-  if (path === "/api/save" && token && ["GET", "PUT"].includes(method)) headers.set("X-DianGarden-Opened-At", String(openedAt));
+  if (path === "/api/save" && token && ["GET", "PUT", "DELETE"].includes(method)) headers.set("X-DianGarden-Opened-At", String(openedAt));
   if (body !== undefined) headers.set("Content-Type", "application/json");
   return worker.fetch(new Request("https://worker.example" + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }), env);
 }
@@ -136,6 +143,13 @@ assert.equal((await staleWrite.json()).revision, 1);
 const updated = await call("PUT", { token: session.accessToken, body: { ...initialSave, baseRevision: 1, saveData: JSON.stringify({ coins: 200, plots: [] }) }, openedAt });
 assert.equal(updated.status, 200);
 assert.equal((await updated.json()).revision, 2);
+const staleReset = await call("DELETE", { token: session.accessToken, body: { baseRevision: 1, openedAt }, openedAt });
+assert.equal(staleReset.status, 409);
+assert.equal((await staleReset.json()).error, "revision_conflict");
+const deleted = await call("DELETE", { token: session.accessToken, body: { baseRevision: 2, openedAt }, openedAt });
+assert.equal(deleted.status, 200);
+assert.deepEqual(await deleted.json(), { status: "deleted", deleted: true, revision: 0 });
+assert.deepEqual(await (await call("GET", { token: session.accessToken, openedAt })).json(), { status: "not_found", revision: 0 });
 
 const otherSession = await createSession("google-user-2");
 assert.deepEqual(await (await call("GET", { token: otherSession.accessToken })).json(), { status: "not_found", revision: 0 });

@@ -21,6 +21,12 @@ if (!cloudSaveSource.includes("shouldUploadLocalAsFirstCloudSave = true;")
   || !cloudSaveSource.includes("雲端還沒有存檔，正在自動上傳這台裝置的花園")) {
   throw new Error('登入後偵測到雲端無存檔時，未自動上傳現有本機花園');
 }
+if (!cloudSaveSource.includes("window.diangardenResetCloudSave = resetCloudSave;")
+  || !cloudSaveSource.includes("await apiRequest('DELETE', { baseRevision: cloudRevision, openedAt: sessionOpenedAt });")
+  || !gameSource.includes("await window.diangardenResetCloudSave();")
+  || !gameSource.includes("if (!IS_GUEST_GARDEN) localStorage.removeItem('sky-garden-cloud-sync-v1');")) {
+  throw new Error('重置進度未先安全清除雲端存檔，或未清除本機同步中繼資料');
+}
 if (!cloudSaveSource.includes("const hasDifferentKnownOwner = typeof meta.userSub === 'string'")
   || !cloudSaveSource.includes("&& meta.userSub !== currentSub;")
   || !cloudSaveSource.includes("這份本機花園屬於其他帳號；已建立新的花園，正在同步至目前帳號")
@@ -1183,7 +1189,7 @@ try {
   const authApiPattern = 'https://diangarden-cloud-save.ry15968.workers.dev/api/**';
   const authCorsHeaders = {
     'access-control-allow-origin': '*',
-    'access-control-allow-methods': 'GET, PUT, POST, OPTIONS',
+    'access-control-allow-methods': 'GET, PUT, DELETE, POST, OPTIONS',
     'access-control-allow-headers': 'authorization,content-type,x-diangarden-opened-at',
     'content-type': 'application/json',
   };
@@ -1409,7 +1415,7 @@ try {
     if (request.method() === 'OPTIONS') {
       const oldWorkerHeaders = {
         'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'GET, PUT, OPTIONS',
+        'access-control-allow-methods': 'GET, PUT, DELETE, OPTIONS',
         'access-control-allow-headers': 'authorization,content-type,x-diangarden-opened-at',
         'content-type': 'application/json',
       };
@@ -1464,7 +1470,7 @@ try {
     const path = new URL(request.url()).pathname;
     const corsHeaders = {
       'access-control-allow-origin': '*',
-      'access-control-allow-methods': 'GET, PUT, POST, OPTIONS',
+      'access-control-allow-methods': 'GET, PUT, DELETE, POST, OPTIONS',
       'access-control-allow-headers': 'authorization,content-type,x-diangarden-opened-at',
       'access-control-max-age': '600',
       'content-type': 'application/json',
@@ -2692,6 +2698,43 @@ try {
   await versionFailurePage.locator('#sky-canvas').waitFor({ state: 'visible', timeout: 10000 });
   checks.push('任務216：版本檢查失敗不會阻擋遊戲啟動');
   await versionFailurePage.close();
+
+  const resetProgressPage = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await resetProgressPage.addInitScript(() => {
+    localStorage.setItem('sky-garden-guest-mode-v1', 'true');
+  });
+  let resetNavigationCount = 0;
+  await resetProgressPage.route(url => url.pathname.endsWith('/index.html') && url.searchParams.has('__dg_reset_probe') === false,
+    async route => {
+      if (!route.request().isNavigationRequest()) return route.continue();
+      resetNavigationCount += 1;
+      if (resetNavigationCount === 1) return route.continue();
+      await route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: '<!doctype html><html><body>reset probe</body></html>' });
+    });
+  await resetProgressPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
+  await resetProgressPage.locator('#sky-canvas').waitFor({ state: 'visible', timeout: 10000 });
+  await resetProgressPage.evaluate(() => {
+    localStorage.setItem('sky-garden-guest-save-v1', JSON.stringify({ coins: 999, plots: [{ crop: 3 }] }));
+    localStorage.setItem('sky-garden-guest-auto-crops-v1', '[3,4]');
+    localStorage.setItem('sky-garden-guest-flower-variants-v1', '[{"id":"reset-probe"}]');
+  });
+  await resetProgressPage.locator('#settings-toggle').click();
+  await resetProgressPage.locator('#reset-progress').click();
+  await Promise.all([
+    resetProgressPage.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 15000 }),
+    resetProgressPage.locator('#confirm-reset').click(),
+  ]);
+  const resetStorage = await resetProgressPage.evaluate(() => ({
+    save: localStorage.getItem('sky-garden-guest-save-v1'),
+    autoCrops: localStorage.getItem('sky-garden-guest-auto-crops-v1'),
+    variants: localStorage.getItem('sky-garden-guest-flower-variants-v1'),
+    syncMeta: localStorage.getItem('sky-garden-cloud-sync-v1'),
+  }));
+  if (resetStorage.save !== null || resetStorage.autoCrops !== null || resetStorage.variants !== null || resetStorage.syncMeta !== null) {
+    throw new Error('重置進度後本機花園資料仍存在：' + JSON.stringify(resetStorage));
+  }
+  checks.push('任務274：訪客重置按鈕清除本機花園、作物選擇、花卉變種及同步中繼資料');
+  await resetProgressPage.close();
 
   if (errors.length) throw new Error(`瀏覽器發現錯誤：\n${errors.join('\n')}`);
   console.log(JSON.stringify({ result: 'PASS', checks, screenshots: [

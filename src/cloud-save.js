@@ -405,9 +405,38 @@
     if (error.message === 'stale_session') return '雲端同步已暫停；本機進度仍會保留。';
     if (error.message === 'invalid_google_id_token' || error.message === 'authentication_required') return 'Google 登入已失效，請重新登入。';
     if (error.message === 'storage_unavailable') return '雲端資料庫暫時無法使用；本機進度仍安全保留。';
+    if (error.message === 'sync_busy') return '雲端同步正在進行，請稍候再重置。';
     if (error.message === 'origin_not_allowed') return '目前網站網址尚未加入雲端 API 允許清單。';
     return '雲端同步暫時失敗；本機遊戲仍可繼續。';
   }
+
+  async function resetCloudSave() {
+    if (GUEST_MODE_ACTIVE || !(accessToken || legacyIdToken)) return true;
+    if (sessionExpired) throw new Error('authentication_required');
+    if (syncBusy) throw new Error('sync_busy');
+
+    clearTimeout(pendingSyncTimer);
+    syncBusy = true;
+    syncEnabled = false;
+    updateButtons(true);
+    setStatus('正在安全地清除目前帳號的雲端花園…');
+    try {
+      await apiRequest('DELETE', { baseRevision: cloudRevision, openedAt: sessionOpenedAt });
+      cloudSave = null;
+      cloudRevision = 0;
+      lastUploadedSignature = '';
+      localStorage.removeItem(SYNC_META_KEY);
+      setStatus('雲端花園已清除。', 'success');
+      return true;
+    } catch (error) {
+      setStatus('雲端花園未能確認清除；本機進度已保留。請確認網路或登入狀態後重試。', 'warning');
+      throw error;
+    } finally {
+      syncBusy = false;
+      updateButtons(Boolean(accessToken || legacyIdToken));
+    }
+  }
+  window.diangardenResetCloudSave = resetCloudSave;
 
   function makeUploadPayload(save, revision) {
     return {

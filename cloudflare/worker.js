@@ -20,7 +20,7 @@ function corsHeaders(request, env) {
   if (!origin || !allowedOrigins(env).includes(origin)) return {};
   return {
     "access-control-allow-origin": origin,
-    "access-control-allow-methods": "GET, PUT, POST, OPTIONS",
+    "access-control-allow-methods": "GET, PUT, DELETE, POST, OPTIONS",
     "access-control-allow-headers": "Authorization, Content-Type, X-DianGarden-Opened-At",
     "access-control-max-age": "86400",
     "vary": "Origin",
@@ -217,6 +217,33 @@ async function handleGetSave(userId, request, env) {
   });
 }
 
+async function handleDeleteSave(userId, request, env) {
+  let payload;
+  try { payload = await readRequestJson(request); }
+  catch (error) { return jsonResponse({ error: error.message }, 400); }
+  if (!payload || !Number.isSafeInteger(payload.baseRevision) || payload.baseRevision < 0
+    || !Number.isSafeInteger(payload.openedAt) || payload.openedAt <= 0) {
+    return jsonResponse({ error: "invalid_reset_request" }, 400);
+  }
+  const sessionOpenedAt = Number(request.headers.get("X-DianGarden-Opened-At") || 0);
+  if (sessionOpenedAt !== payload.openedAt) return jsonResponse({ error: "invalid_session" }, 400);
+
+  const row = await env.DB.prepare("SELECT revision, opened_at FROM player_saves WHERE user_id = ?").bind(userId).first();
+  if (!row) return jsonResponse({ status: "deleted", deleted: false, revision: 0 });
+  if (row.opened_at !== payload.openedAt) return jsonResponse({ error: "stale_session", revision: row.revision }, 409);
+  if (row.revision !== payload.baseRevision) return jsonResponse({ error: "revision_conflict", revision: row.revision }, 409);
+
+  const result = await env.DB.prepare(
+    "DELETE FROM player_saves WHERE user_id = ? AND revision = ? AND opened_at = ?",
+  ).bind(userId, payload.baseRevision, payload.openedAt).run();
+  if (result.meta?.changes !== 1) {
+    const current = await env.DB.prepare("SELECT revision, opened_at FROM player_saves WHERE user_id = ?").bind(userId).first();
+    if (!current) return jsonResponse({ status: "deleted", deleted: false, revision: 0 });
+    return jsonResponse({ error: current.opened_at !== payload.openedAt ? "stale_session" : "revision_conflict", revision: current.revision }, 409);
+  }
+  return jsonResponse({ status: "deleted", deleted: true, revision: 0 });
+}
+
 async function handlePutSave(userId, request, env) {
   let payload;
   try { payload = validateSavePayload(await readRequestJson(request)); }
@@ -277,14 +304,14 @@ export default {
         if (request.method !== "POST") return jsonResponse({ error: "method_not_allowed" }, 405, { allow: "POST, OPTIONS", ...headers });
         response = await revokeSession(await readSessionToken(request, "refreshToken"), env);
       } else {
-        if (!["GET", "PUT"].includes(request.method)) return jsonResponse({ error: "method_not_allowed" }, 405, { allow: "GET, PUT, OPTIONS", ...headers });
+        if (!["GET", "PUT", "DELETE"].includes(request.method)) return jsonResponse({ error: "method_not_allowed" }, 405, { allow: "GET, PUT, DELETE, OPTIONS", ...headers });
         const auth = await authenticateAccessToken(request, env);
         if (auth.response) {
           const responseHeaders = new Headers(auth.response.headers);
           for (const [key, value] of Object.entries(headers)) responseHeaders.set(key, value);
           return new Response(auth.response.body, { status: auth.response.status, headers: responseHeaders });
         }
-        response = request.method === "GET" ? await handleGetSave(auth.userId, request, env) : await handlePutSave(auth.userId, request, env);
+        response = request.method === "GET" ? await handleGetSave(auth.userId, request, env) : request.method === "DELETE" ? await handleDeleteSave(auth.userId, request, env) : await handlePutSave(auth.userId, request, env);
       }
       const responseHeaders = new Headers(response.headers);
       for (const [key, value] of Object.entries(headers)) responseHeaders.set(key, value);
