@@ -4,17 +4,23 @@ import fs from 'node:fs/promises';
 const baseURL = process.env.GARDEN_TEST_URL || 'http://127.0.0.1:4173';
 const outputDir = 'test-results/screenshots';
 
-const indexHtml = await fs.readFile('src/index.html', 'utf8');
-const cloudSaveSource = await fs.readFile('src/cloud-save.js', 'utf8');
-const gameSource = await fs.readFile('src/game.js', 'utf8');
-const skyWorldSource = await fs.readFile('src/sky-world.js', 'utf8');
-const versionCheckSource = await fs.readFile('src/version-check.js', 'utf8');
+const readSource = async (path) => (await fs.readFile(path, 'utf8')).replace(/\r\n/g, '\n');
+const indexHtml = await readSource('src/index.html');
+const cloudSaveSource = await readSource('src/cloud-save.js');
+const gameSource = await readSource('src/game.js');
+const skyWorldSource = await readSource('src/sky-world.js');
+const versionCheckSource = await readSource('src/version-check.js');
 if (!indexHtml.includes('id="startup-garden-dialog"') || !indexHtml.includes('id="start-guest-garden"')
   || !indexHtml.includes('id="return-to-own-garden"')) throw new Error('登入入口／訪客花園控制項缺失');
 if (!cloudSaveSource.includes("signinNode.hidden = true;")
   || !cloudSaveSource.includes("signinNode.hidden = false;")
   || !cloudSaveSource.includes("if (startupSigninNode) startupSigninNode.hidden = true;")
   || !cloudSaveSource.includes("if (startupSigninNode) startupSigninNode.hidden = false;")) throw new Error('Google 登入成功隱藏入口或登出後恢復入口的邏輯缺失');
+if (!cloudSaveSource.includes("shouldUploadLocalAsFirstCloudSave = true;")
+  || !cloudSaveSource.includes("await uploadLocal({ automatic: true });")
+  || !cloudSaveSource.includes("雲端還沒有存檔，正在自動上傳這台裝置的花園")) {
+  throw new Error('登入後偵測到雲端無存檔時，未自動上傳現有本機花園');
+}
 if (indexHtml.includes('登入 Google 後，可在其他裝置找回同一座花園') || indexHtml.includes('雲端同步需要網路。同步失敗不會阻止遊玩')) {
   throw new Error('跨裝置存檔區仍包含已移除的常駐說明文字');
 }
@@ -1206,6 +1212,8 @@ try {
         refreshToken: 'test-session-id.rotated-refresh-secret', idleExpiresAt: Math.floor(Date.now() / 1000) + 2592000,
         userId: 'task232-session-account',
       }) });
+    } else if (url.pathname === '/api/save' && request.method() === 'PUT') {
+      await route.fulfill({ status: 200, headers: authCorsHeaders, body: JSON.stringify({ status: 'ok', revision: 1, updatedAt: new Date().toISOString() }) });
     } else if (url.pathname === '/api/save') {
       await route.fulfill({ status: 200, headers: authCorsHeaders, body: JSON.stringify({ status: 'not_found', revision: 0 }) });
     } else {
@@ -1213,7 +1221,7 @@ try {
     }
   });
   await restoredAuthPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
-  await restoredAuthPage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('雲端還沒有存檔'));
+  await restoredAuthPage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('花園已同步到雲端'));
   const restoredAuthState = await restoredAuthPage.evaluate(() => ({
     session: JSON.parse(localStorage.getItem('sky-garden-auth-session-v1') || 'null'),
     openedAt: Number(sessionStorage.getItem('sky-garden-auth-opened-at-v1')),
@@ -1221,9 +1229,11 @@ try {
     googlePromptCalls: window.__task232GooglePromptCalls,
     startupDialogOpen: Boolean(document.querySelector('#startup-garden-dialog')?.open),
   }));
-  if (restoredAuthRequests.length !== 2 || restoredAuthRequests[0].path !== '/api/session/refresh'
-    || restoredAuthRequests[1].path !== '/api/save' || restoredAuthRequests[1].authorization !== 'Bearer test-session-id.access-secret'
-    || restoredAuthRequests[1].body != null || restoredAuthState.session?.refreshToken !== 'test-session-id.rotated-refresh-secret'
+  if (restoredAuthRequests.length !== 3 || restoredAuthRequests[0].path !== '/api/session/refresh'
+    || restoredAuthRequests[1].path !== '/api/save' || restoredAuthRequests[1].method !== 'GET'
+    || restoredAuthRequests[2].path !== '/api/save' || restoredAuthRequests[2].method !== 'PUT'
+    || restoredAuthRequests[2].authorization !== 'Bearer test-session-id.access-secret'
+    || !restoredAuthRequests[2].body?.saveData || restoredAuthState.session?.refreshToken !== 'test-session-id.rotated-refresh-secret'
     || restoredAuthState.openedAt !== restoredAuthOpenedAt || restoredAuthState.googleInitializeCalls !== 1
     || restoredAuthState.googlePromptCalls !== 0 || restoredAuthState.startupDialogOpen) {
     throw new Error('任務232：重新開啟遊戲未恢復長期登入並輪替更新憑證：' + JSON.stringify({ restoredAuthRequests, restoredAuthState }));
@@ -1287,6 +1297,8 @@ try {
         refreshToken: 'login-session.refresh-2', idleExpiresAt: Math.floor(Date.now() / 1000) + 2592000,
         userId: 'task232-login-account',
       }) });
+    } else if (url.pathname === '/api/save' && request.method() === 'PUT') {
+      await route.fulfill({ status: 200, headers: authCorsHeaders, body: JSON.stringify({ status: 'ok', revision: 1, updatedAt: new Date().toISOString() }) });
     } else {
       await route.fulfill({ status: 200, headers: authCorsHeaders, body: JSON.stringify({ status: 'not_found', revision: 0 }) });
     }
@@ -1294,7 +1306,7 @@ try {
   await credentialPersistencePage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   await credentialPersistencePage.waitForFunction(() => typeof window.__task232CredentialCallback === 'function');
   await credentialPersistencePage.evaluate(token => window.__task232CredentialCallback({ credential: token }), loginToken);
-  await credentialPersistencePage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('雲端還沒有存檔'));
+  await credentialPersistencePage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('花園已同步到雲端'));
   const persistedLogin = await credentialPersistencePage.evaluate(() => JSON.parse(localStorage.getItem('sky-garden-auth-session-v1') || 'null'));
   if (!persistedLogin || persistedLogin.version !== 2 || persistedLogin.refreshToken !== 'login-session.refresh-1'
     || persistedLogin.currentSub !== 'task232-login-account' || JSON.stringify(persistedLogin).includes('header.')
@@ -1305,7 +1317,12 @@ try {
     throw new Error('任務232：Google 登入後未建立遊戲專用工作階段或仍持久保存 Google ID Token：' + JSON.stringify({ persistedLogin, credentialPersistenceRequests }));
   }
   await credentialPersistencePage.reload({ waitUntil: 'networkidle', timeout: 30000 });
-  await credentialPersistencePage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('雲端還沒有存檔'));
+  // Reload may progress from the empty-cloud message directly to the automatic-upload
+  // success message; wait for the durable refresh-token rotation instead of transient UI text.
+  await credentialPersistencePage.waitForFunction(() => {
+    const session = JSON.parse(localStorage.getItem('sky-garden-auth-session-v1') || 'null');
+    return session?.refreshToken === 'login-session.refresh-2';
+  });
   const reloadedLogin = await credentialPersistencePage.evaluate(() => ({
     session: JSON.parse(localStorage.getItem('sky-garden-auth-session-v1') || 'null'),
     googleInitializeCalls: window.__task232GoogleInitializeCalls,
@@ -1396,23 +1413,26 @@ try {
       await route.fulfill({ status: 404, headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' }, body: JSON.stringify({ error: 'not_found' }) });
       return;
     }
-    legacyRequests.push({ path, method: request.method(), authorization: request.headers()['authorization'] });
+    legacyRequests.push({ path, method: request.method(), authorization: request.headers()['authorization'], body: request.postDataJSON?.() });
     await route.fulfill({
       status: 200,
       headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' },
-      body: JSON.stringify({ status: 'not_found', revision: 0 }),
+      body: JSON.stringify(path === '/api/save' && request.method() === 'PUT'
+        ? { status: 'ok', revision: 1, updatedAt: new Date().toISOString() }
+        : { status: 'not_found', revision: 0 }),
     });
   });
   await legacyFallbackPage.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
   await legacyFallbackPage.waitForFunction(() => typeof window.__task232LegacyCallback === 'function');
   await legacyFallbackPage.evaluate(token => window.__task232LegacyCallback({ credential: token }), legacyGoogleToken);
-  await legacyFallbackPage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('雲端還沒有存檔'));
+  await legacyFallbackPage.waitForFunction(() => document.querySelector('#cloud-save-status')?.textContent.includes('花園已同步到雲端'));
   const legacyState = await legacyFallbackPage.evaluate(() => ({
     session: JSON.parse(sessionStorage.getItem('sky-garden-auth-session-v1') || 'null'),
     persistentSession: localStorage.getItem('sky-garden-auth-session-v1'),
   }));
-  if (legacyRequests.length !== 1 || legacyRequests[0].path !== '/api/save'
-    || legacyRequests[0].authorization !== 'Bearer ' + legacyGoogleToken
+  if (legacyRequests.length !== 2 || legacyRequests[0].path !== '/api/save' || legacyRequests[0].method !== 'GET'
+    || legacyRequests[1].path !== '/api/save' || legacyRequests[1].method !== 'PUT'
+    || legacyRequests[0].authorization !== 'Bearer ' + legacyGoogleToken || legacyRequests[1].authorization !== 'Bearer ' + legacyGoogleToken
     || legacyState.session?.version !== 1 || legacyState.session?.idToken !== legacyGoogleToken
     || legacyState.persistentSession !== null) {
     throw new Error('任務232：舊版 Worker 尚未更新時，登入相容降級失敗：' + JSON.stringify({ legacyRequests, legacyState }));

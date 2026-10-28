@@ -143,6 +143,46 @@
     return save ? JSON.stringify([save.saveData, save.variantsData, save.autoCropsData]) : '';
   }
 
+  function createInitialLocalSave() {
+    // Keep the initial record aligned with game.js createFreshGame() so a newly
+    // authenticated account can create its first cloud save without waiting for play.
+    const now = Date.now();
+    const dockPosition = { x: 0, z: 1.55, y: 0 };
+    const saveData = {
+      coins: 120,
+      cropCatalogVersion: 4,
+      gardenName: '花明摸魚花園',
+      avatarMode: 'auto',
+      avatarCrop: 0,
+      hudCollapsed: false,
+      autoMode: false,
+      autoCropSelection: [0],
+      worldTimeMs: 60000,
+      worldTimeAnchor: now,
+      lastObservedRaining: false,
+      droneCount: 1,
+      deploymentSequence: 1,
+      drones: [{ dockPosition, deployed: true, deploymentOrder: 1, battery: 100, batteryUpdatedAt: now }],
+      lastOnlineAt: null,
+      lastOfflineReturnAt: null,
+      dockPosition,
+      plots: [{ x: -1, z: 0 }, { x: 0, z: 0 }, { x: 1, z: 0 }]
+        .map(({ x, z }) => ({ crop: null, plantedAt: null, manual: false, grassOnly: false, x, z, y: 0 })),
+      savedAt: now,
+    };
+    const save = {
+      saveData: JSON.stringify(saveData),
+      variantsData: '[]',
+      autoCropsData: '[0]',
+    };
+    // Only called after the cloud API confirms there is no cloud record and no local
+    // record, so this cannot replace existing progress.
+    localStorage.setItem(STORAGE_KEY, save.saveData);
+    localStorage.setItem(VARIANTS_KEY, save.variantsData);
+    localStorage.setItem(AUTO_CROPS_KEY, save.autoCropsData);
+    return save;
+  }
+
   function parseJwtPayload(token) {
     try {
       const part = token.split('.')[1];
@@ -383,6 +423,7 @@
 
   async function checkCloud({ quiet = false } = {}) {
     if (!(accessToken || legacyIdToken) || sessionExpired) return;
+    let shouldUploadLocalAsFirstCloudSave = false;
     syncBusy = true;
     updateButtons(true);
     if (!quiet) setStatus('正在檢查雲端存檔…');
@@ -417,9 +458,18 @@
         setStatus('已載入最新雲端花園；這台瀏覽器取得目前同步權。', 'success');
       } else {
         syncEnabled = false;
-        setStatus(local
-          ? '雲端還沒有存檔。按「使用這台裝置的花園」即可建立雲端備份。'
-          : '雲端還沒有存檔；先開始遊玩，再將目前花園上傳。', 'choice');
+        if (local) {
+          shouldUploadLocalAsFirstCloudSave = true;
+          setStatus('雲端還沒有存檔，正在自動上傳這台裝置的花園…');
+        } else {
+          try {
+            createInitialLocalSave();
+            shouldUploadLocalAsFirstCloudSave = true;
+            setStatus('雲端還沒有存檔，已建立新的本機花園，正在建立第一份雲端備份…');
+          } catch (_) {
+            setStatus('無法建立初始本機存檔；原有資料未變更，請確認瀏覽器儲存空間可用。', 'warning');
+          }
+        }
       }
       updateButtons(true);
       finishStartupCloud();
@@ -438,6 +488,12 @@
     } finally {
       syncBusy = false;
       updateButtons(Boolean(accessToken || legacyIdToken));
+    }
+    // The initial GET has finished, so uploadLocal can safely acquire the sync lock.
+    // A revision-0 INSERT is guarded by the Worker; if another session created the row
+    // meanwhile, the conflict path re-reads the cloud save instead of overwriting it.
+    if (shouldUploadLocalAsFirstCloudSave && !sessionExpired && (accessToken || legacyIdToken)) {
+      await uploadLocal({ automatic: true });
     }
   }
 
