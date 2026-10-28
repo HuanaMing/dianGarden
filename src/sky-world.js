@@ -1001,7 +1001,7 @@
   }
 
   function addDrone(positions, colors, windowPositions, windowUVs, opacitySpans, emissionSpans, coreSpans, x, y, z, wingPhase, heading, battery = 100, flapFrequency = 2, flapAmplitude = 0.48) {
-    y -= 0.05; // Lower the complete drone body by 0.05 world units.
+    y -= 0.15; // Lower the drone another 0.1 units (0.15 total from original).
     const firstVertex = positions.length;
     const firstWindowVertex = windowPositions.length;
     const batteryFactor = Math.max(0, Math.min(1, Number(battery) / 100));
@@ -1033,6 +1033,44 @@
     addGlassQuad([bx1,by0,bz0],[bx0,by0,bz0],[bx0,by1,bz0],[bx1,by1,bz0]);
     addGlassQuad([bx1,by0,bz1],[bx1,by0,bz0],[bx1,by1,bz0],[bx1,by1,bz1]);
     addGlassQuad([bx0,by0,bz0],[bx0,by0,bz1],[bx0,by1,bz1],[bx0,by1,bz0]);
+
+    // Delicate botanical line-art on all four transparent vertical glass sides.
+    // Tiny octahedra form a fine stem, paired leaves, and a small flower head.
+    const sprigGreen = [0.34, 0.55, 0.31], sprigLight = [0.52, 0.68, 0.38];
+    const petalCream = [0.9, 0.78, 0.56], flowerCenter = [0.82, 0.57, 0.25];
+    const addSprig = (axis, sign) => {
+      const surfaceOffset = 0.002;
+      const point = (u, v) => axis === "z"
+        ? [x + u, y + v, z + sign * (hz + surfaceOffset)]
+        : [x + sign * (hx + surfaceOffset), y + v, z + u];
+      const bead = (u, v, ru, rv, color) => {
+        const p = point(u, v), start = positions.length / 3;
+        addOctahedron(positions, colors, p[0], p[1], p[2], ru, rv, 0.0018, color);
+        opacitySpans.push({ first: start, last: positions.length / 3, opacity: 0.95 });
+      };
+      // Slender climbing stem
+      for (let i = 0; i <= 6; i += 1) {
+        const v = -0.075 + i * 0.021;
+        bead(Math.sin(i * 0.48) * 0.009, v, 0.0022, 0.004, i % 2 ? sprigLight : sprigGreen);
+      }
+      // Alternating leaves
+      for (let i = 0; i < 4; i += 1) {
+        const v = -0.045 + i * 0.032;
+        const side = i % 2 ? -1 : 1;
+        bead(side * 0.016, v, 0.006, 0.0035, i % 2 ? sprigGreen : sprigLight);
+      }
+      // Five-petal flower at the top
+      const fy = 0.065, fx = Math.sin(6 * 0.48) * 0.009;
+      for (let p = 0; p < 5; p += 1) {
+        const a = p * Math.PI * 2 / 5;
+        bead(fx + Math.cos(a) * 0.006, fy + Math.sin(a) * 0.006, 0.0035, 0.0035, petalCream);
+      }
+      bead(fx, fy, 0.003, 0.003, flowerCenter);
+    };
+    addSprig("z", 1);
+    addSprig("z", -1);
+    addSprig("x", 1);
+    addSprig("x", -1);
 
     const hx = 0.066, hy = 0.13, hz = 0.07, t = 0.006;
     const solid = (x1, y1, z1, x2, y2, z2, palette = trim) => {
@@ -1553,7 +1591,7 @@
           flapFrequency = 0;
           state.descentWingAngle = Math.min(
             70 * Math.PI / 180,
-            (state.descentWingAngle || 0) + (20 * Math.PI / 180) * (delta / 1000),
+            (state.descentWingAngle || 0) + (40 * Math.PI / 180) * (delta / 1000),
           );
           flapAmplitude = state.descentWingAngle;
         } else if (animation && verticalDelta > 0.0001) {
