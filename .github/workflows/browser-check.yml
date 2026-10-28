@@ -47,7 +47,7 @@ jobs:
         run: npx playwright install chromium
 
       - name: 準備遊戲圖片資產
-        run: mkdir -p src/assets/flowers src/assets/btn && cp assets/flowers/*.png src/assets/flowers/ && cp assets/wreath.webp src/assets/wreath.webp && cp assets/btn/*.png src/assets/btn/
+        run: mkdir -p src/assets/flowers src/assets/btn && cp assets/flowers/*.png src/assets/flowers/ && cp assets/wreath.webp src/assets/wreath.webp && cp assets/無人機翅膀.png src/assets/無人機翅膀.png && cp assets/btn/*.png src/assets/btn/
 
       - name: 模擬部署版本化資源網址
         run: python3 scripts/version-assets.py src/index.html src/version.json
