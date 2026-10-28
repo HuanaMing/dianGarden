@@ -1012,90 +1012,68 @@
     opacitySpans.push({ first: coreStart, last: positions.length / 3, opacity: 1 });
     emissionSpans.push({ first: coreStart, last: positions.length / 3, emission: 0.35 + batteryFactor * 0.65 });
     coreSpans.push({ first: coreStart, count: positions.length / 3 - coreStart });
+    const body = { top: [0.38, 0.26, 0.15], front: [0.24, 0.15, 0.085], right: [0.27, 0.16, 0.09], back: [0.32, 0.22, 0.12], left: [0.26, 0.16, 0.09], bottom: [0.2, 0.12, 0.07] };
+    const trim = { top: [0.52, 0.36, 0.2], front: [0.36, 0.23, 0.12], right: [0.37, 0.23, 0.12], back: [0.44, 0.3, 0.17], left: [0.36, 0.22, 0.12], bottom: [0.25, 0.15, 0.08] };
     const wood = [0.38, 0.24, 0.13], woodLight = [0.58, 0.4, 0.23];
     const leaf = [0.35, 0.62, 0.37];
+    addRoundedBox(positions, colors, x - 0.084, y - 0.075, z - 0.085, x + 0.084, y + 0.075, z + 0.085, body, 0.012, 2);
 
-    // Bell-shaped clock body: rounded crown, curved shoulders, and a flared lower lip.
-    // A ring mesh replaces the old square clock-house body and its gabled roof.
-    const bellRings = [
-      { y: 0.095, r: 0.018 },
-      { y: 0.078, r: 0.042 },
-      { y: 0.045, r: 0.061 },
-      { y: -0.015, r: 0.070 },
-      { y: -0.060, r: 0.082 },
-      { y: -0.078, r: 0.102 },
-      { y: -0.092, r: 0.103 },
-    ];
-    const bellSegments = 16;
-    const bellColors = [
-      [0.55, 0.37, 0.21], [0.46, 0.29, 0.15], [0.38, 0.23, 0.12],
-      [0.31, 0.18, 0.09], [0.44, 0.28, 0.14], [0.62, 0.43, 0.24],
-    ];
-    for (let ring = 0; ring < bellRings.length - 1; ring += 1) {
-      const upper = bellRings[ring], lower = bellRings[ring + 1];
-      for (let segment = 0; segment < bellSegments; segment += 1) {
-        const a = segment / bellSegments * Math.PI * 2;
-        const b = (segment + 1) / bellSegments * Math.PI * 2;
-        const p1 = [x + Math.cos(a) * upper.r, y + upper.y, z + Math.sin(a) * upper.r];
-        const p2 = [x + Math.cos(b) * upper.r, y + upper.y, z + Math.sin(b) * upper.r];
-        const p3 = [x + Math.cos(b) * lower.r, y + lower.y, z + Math.sin(b) * lower.r];
-        const p4 = [x + Math.cos(a) * lower.r, y + lower.y, z + Math.sin(a) * lower.r];
-        const shade = bellColors[(segment + ring * 2) % bellColors.length];
-        addTriangle(positions, colors, p1, p2, p3, shade);
-        addTriangle(positions, colors, p1, p3, p4, shade);
-      }
+    const hx = 0.084, hy = 0.075, hz = 0.085, t = 0.007;
+    const solid = (x1, y1, z1, x2, y2, z2, palette = trim) => {
+      const s = positions.length / 3;
+      addBox(positions, colors, x1, y1, z1, x2, y2, z2, palette);
+      opacitySpans.push({ first: s, last: positions.length / 3, opacity: 1 });
+    };
+    // 12 edges form the window frame
+    for (const sa of [-1, 1]) for (const sb of [-1, 1]) {
+      solid(x + sa*hx - t, y + sb*hy - t, z - hz, x + sa*hx + t, y + sb*hy + t, z + hz);
+      solid(x + sa*hx - t, y - hy, z + sb*hz - t, x + sa*hx + t, y + hy, z + sb*hz + t);
+      solid(x - hx, y + sa*hy - t, z + sb*hz - t, x + hx, y + sa*hy + t, z + sb*hz + t);
     }
-    // Raised brass rim makes the flared bell silhouette readable from every angle.
-    for (let segment = 0; segment < bellSegments; segment += 1) {
-      const a = segment / bellSegments * Math.PI * 2;
-      const b = (segment + 1) / bellSegments * Math.PI * 2;
-      const inner = 0.088, outer = 0.105, rimY = -0.081;
-      const p1 = [x + Math.cos(a) * inner, y + rimY, z + Math.sin(a) * inner];
-      const p2 = [x + Math.cos(b) * inner, y + rimY, z + Math.sin(b) * inner];
-      const p3 = [x + Math.cos(b) * outer, y + rimY, z + Math.sin(b) * outer];
-      const p4 = [x + Math.cos(a) * outer, y + rimY, z + Math.sin(a) * outer];
-      addTriangle(positions, colors, p1, p2, p3, woodLight);
-      addTriangle(positions, colors, p1, p3, p4, wood);
+    // Front crossbars divide the face into four panes
+    solid(x - t*0.6, y - hy, z + hz - t, x + t*0.6, y + hy, z + hz + t);
+    solid(x - hx, y - t*0.6, z + hz - t, x + hx, y + t*0.6, z + hz + t);
+
+    // Clock ticks; skip 12, 3, 6, and 9 because the crossbars mark them
+    for (let i = 0; i < 12; i += 1) {
+      if (i % 3 === 0) continue;
+      const a = i / 12 * Math.PI * 2, s = positions.length / 3;
+      addOctahedron(positions, colors, x + Math.sin(a) * 0.056, y + Math.cos(a) * 0.056, z + hz + 0.002,
+        0.005, 0.005, 0.003, [0.96, 0.9, 0.74]);
+      opacitySpans.push({ first: s, last: positions.length / 3, opacity: 1 });
     }
-    // Small circular clock dial on the forward-facing side; no square window panes.
-    const dialZ = z - 0.071;
-    const dialRadius = 0.042;
-    const dialCenter = [x, y + 0.015, dialZ - 0.002];
-    for (let segment = 0; segment < 20; segment += 1) {
-      const a = segment / 20 * Math.PI * 2;
-      const b = (segment + 1) / 20 * Math.PI * 2;
-      addTriangle(positions, colors, dialCenter,
-        [x + Math.cos(a) * dialRadius, y + 0.015 + Math.sin(a) * dialRadius, dialZ],
-        [x + Math.cos(b) * dialRadius, y + 0.015 + Math.sin(b) * dialRadius, dialZ],
-        [0.82, 0.72, 0.52]);
-    }
-    for (let tick = 0; tick < 12; tick += 1) {
-      const a = tick / 12 * Math.PI * 2;
-      const tickStart = [x + Math.cos(a) * 0.032, y + 0.015 + Math.sin(a) * 0.032, dialZ - 0.002];
-      const tickEnd = [x + Math.cos(a) * 0.037, y + 0.015 + Math.sin(a) * 0.037, dialZ - 0.002];
-      const tickSide = [-Math.sin(a) * 0.002, Math.cos(a) * 0.002, 0];
-      addTriangle(positions, colors, tickStart,
-        [tickEnd[0] + tickSide[0], tickEnd[1] + tickSide[1], tickEnd[2]],
-        [tickEnd[0] - tickSide[0], tickEnd[1] - tickSide[1], tickEnd[2]], [0.24, 0.15, 0.08]);
-    }
+    // Clock hands follow game time: 16 minutes per day, with noon at minute 5
     const dayMs = window.skyEnvironment?.DAY_CYCLE_MS || 16 * 60_000;
     const cycleT = ((environmentState.worldTimeMs % dayMs) + dayMs) % dayMs;
     const clockHours = 12 + (cycleT - 5 * 60_000) / dayMs * 24;
-    const addHand = (angle, length, color) => {
-      const start = [x, y + 0.015, dialZ - 0.004];
-      const tip = [x + Math.sin(angle) * length, y + 0.015 + Math.cos(angle) * length, dialZ - 0.004];
-      const side = [Math.cos(angle) * 0.002, -Math.sin(angle) * 0.002, 0];
-      addTriangle(positions, colors, start,
-        [tip[0] + side[0], tip[1] + side[1], tip[2]],
-        [tip[0] - side[0], tip[1] - side[1], tip[2]], color);
+    const addHand = (angle, length, width, color) => {
+      const dx = Math.sin(angle), dy = Math.cos(angle), zf = z + hz + 0.009;
+      const at = (along, side) => [x + dx * along - dy * side, y + dy * along + dx * side, zf];
+      const s = positions.length / 3;
+      addTriangle(positions, colors, at(-0.12 * length, 0), at(0.2 * length, width), at(length, 0), color);
+      addTriangle(positions, colors, at(-0.12 * length, 0), at(length, 0), at(0.2 * length, -width), color);
+      opacitySpans.push({ first: s, last: positions.length / 3, opacity: 1 });
     };
-    addHand((clockHours % 12) / 12 * Math.PI * 2, 0.024, [0.2, 0.12, 0.08]);
-    addHand((clockHours % 1) * Math.PI * 2, 0.032, [0.2, 0.12, 0.08]);
-    addOctahedron(positions, colors, x, y + 0.015, dialZ - 0.006, 0.004, 0.004, 0.003, [0.85, 0.65, 0.3]);
+    const handColor = [0.2, 0.12, 0.08];
+    addHand((clockHours % 12) / 12 * Math.PI * 2, 0.032, 0.006, handColor);
+    addHand((clockHours % 1) * Math.PI * 2, 0.05, 0.004, handColor);
+    const hubStart = positions.length / 3;
+    addOctahedron(positions, colors, x, y, z + hz + 0.009, 0.006, 0.006, 0.004, [0.85, 0.65, 0.3]);
+    opacitySpans.push({ first: hubStart, last: positions.length / 3, opacity: 1 });
 
-    // Tiny bell crown and clapper reinforce the silhouette without a house-shaped roof.
-    addOctahedron(positions, colors, x, y + 0.104, z, 0.018, 0.012, 0.018, woodLight);
-    addOctahedron(positions, colors, x, y - 0.106, z, 0.012, 0.014, 0.012, [0.72, 0.49, 0.25]);
+    // Small gable on top; remove this block if not wanted
+    {
+      const e = hx + 0.012, zf = z + hz + 0.012, zb = z - hz - 0.012, yb = y + hy + t, yr = yb + 0.05;
+      const c = [0.45, 0.3, 0.19], s0 = positions.length / 3;
+      addTriangle(positions, colors, [x - e, yb, zf], [x + e, yb, zf], [x, yr, zf], c);
+      addTriangle(positions, colors, [x + e, yb, zb], [x - e, yb, zb], [x, yr, zb], c);
+      for (const s of [-1, 1]) {
+        const shade = c.map((v) => v * (s > 0 ? 0.85 : 1.1));
+        addTriangle(positions, colors, [x + s*e, yb, zf], [x, yr, zf], [x, yr, zb], shade);
+        addTriangle(positions, colors, [x + s*e, yb, zf], [x, yr, zb], [x + s*e, yb, zb], shade);
+      }
+      opacitySpans.push({ first: s0, last: positions.length / 3, opacity: 1 });
+    }
 
     // Wings lie in the XZ plane (normal +Y). Flapping rotates each wing about
     // its shoulder along Z, moving the outer edge through +Y/-Y like a bird's wing.
