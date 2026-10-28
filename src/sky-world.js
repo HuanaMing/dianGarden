@@ -1036,40 +1036,21 @@
     addGlassQuad([bx0,by0,bz0],[bx0,by0,bz1],[bx0,by1,bz1],[bx0,by1,bz0]);
 
     const hx = 0.066, hy = 0.13, hz = 0.07, t = 0.006;
-    // Botanical line art on the four glass panels. Declare dimensions before drawing,
-    // avoiding the temporal-dead-zone ReferenceError that previously blanked the scene.
-    const sprigGreen = [0.34, 0.55, 0.31], sprigLight = [0.52, 0.68, 0.38];
-    const petalCream = [0.9, 0.78, 0.56], flowerCenter = [0.82, 0.57, 0.25];
-    const addSprig = (axis, sign) => {
-      const surfaceOffset = 0.002;
-      const point = (u, v) => axis === 'z'
-        ? [x + u, y + v, z + sign * (hz + surfaceOffset)]
-        : [x + sign * (hx + surfaceOffset), y + v, z + u];
-      const bead = (u, v, ru, rv, color) => {
-        const p = point(u, v), start = positions.length / 3;
-        addOctahedron(positions, colors, p[0], p[1], p[2], ru, rv, 0.0018, color);
-        opacitySpans.push({ first: start, last: positions.length / 3, opacity: 1 });
-      };
-      for (let i = 0; i <= 6; i += 1) {
-        const v = -0.075 + i * 0.021;
-        bead(Math.sin(i * 0.48) * 0.009, v, 0.0022, 0.004, i % 2 ? sprigLight : sprigGreen);
-      }
-      for (let i = 0; i < 4; i += 1) {
-        const v = -0.045 + i * 0.032;
-        const side = i % 2 ? -1 : 1;
-        bead(side * 0.016, v, 0.006, 0.0035, i % 2 ? sprigGreen : sprigLight);
-      }
-      const fy = 0.065, fx = Math.sin(6 * 0.48) * 0.009;
-      for (let p = 0; p < 5; p += 1) {
-        const a = p * Math.PI * 2 / 5;
-        bead(fx + Math.cos(a) * 0.006, fy + Math.sin(a) * 0.006, 0.0035, 0.0035, petalCream);
-      }
-      bead(fx, fy, 0.003, 0.003, flowerCenter);
-    };
-    addSprig('z', 1);
-    addSprig('z', -1);
-    addSprig('x', 1);
-    addSprig('x', -1);
+    // Brass daisy medallion centered on the opaque top cap; no botanical marks on the glass sides.
+    const brassPetal = [0.78, 0.55, 0.23], brassHighlight = [0.93, 0.75, 0.39], brassCenter = [0.98, 0.81, 0.43];
+    const daisyY = by1 + 0.002;
+    const daisyPetalCount = 8;
+    for (let i = 0; i < daisyPetalCount; i += 1) {
+      const a = i * Math.PI * 2 / daisyPetalCount;
+      const px = x + Math.cos(a) * 0.012;
+      const pz = z + Math.sin(a) * 0.012;
+      const petalStart = positions.length / 3;
+      addOctahedron(positions, colors, px, daisyY, pz, 0.006, 0.0018, 0.004, i % 2 ? brassPetal : brassHighlight);
+      opacitySpans.push({ first: petalStart, last: positions.length / 3, opacity: 1 });
+    }
+    const daisyCenterStart = positions.length / 3;
+    addOctahedron(positions, colors, x, daisyY + 0.0005, z, 0.005, 0.0025, 0.005, brassCenter);
+    opacitySpans.push({ first: daisyCenterStart, last: positions.length / 3, opacity: 1 });
     const solid = (x1, y1, z1, x2, y2, z2, palette = trim) => {
       const s = positions.length / 3;
       addBox(positions, colors, x1, y1, z1, x2, y2, z2, palette);
