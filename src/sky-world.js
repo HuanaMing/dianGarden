@@ -289,6 +289,7 @@
   gl.bufferData(gl.ARRAY_BUFFER, glowUVs, gl.STATIC_DRAW);
   let vertexCount = 0;
   let droneVertexCount = 0;
+  let droneGlassSpans = [];
   let effectVertexCount = 0;
   let skyVertexCount = 0;
   let skyGlowState = null;
@@ -1000,7 +1001,7 @@
     return 0;
   }
 
-  function addDrone(positions, colors, windowPositions, windowUVs, opacitySpans, emissionSpans, coreSpans, x, y, z, wingPhase, heading, battery = 100, flapFrequency = 2, flapAmplitude = 0.48) {
+  function addDrone(positions, colors, windowPositions, windowUVs, opacitySpans, emissionSpans, coreSpans, glassSpans, x, y, z, wingPhase, heading, battery = 100, flapFrequency = 2, flapAmplitude = 0.48) {
     y -= 0.05; // Body sits 0.1 units higher than the previous lowered position.
     const firstVertex = positions.length;
     const firstWindowVertex = windowPositions.length;
@@ -1021,14 +1022,19 @@
     // Tall, flat-topped walnut clock case; keep the side/back/bottom opaque.
     // Opaque walnut top and bottom; four vertical faces are translucent glass.
     const bx0 = x - 0.066, bx1 = x + 0.066, by0 = y - 0.13, by1 = y + 0.13, bz0 = z - 0.07, bz1 = z + 0.07;
+    let capStart = positions.length / 3;
     addBox(positions, colors, bx0, by0, bz0, bx1, by0 + 0.008, bz1, capMaterial);
+    opacitySpans.push({ first: capStart, last: positions.length / 3, opacity: 1 });
+    capStart = positions.length / 3;
     addBox(positions, colors, bx0, by1 - 0.008, bz0, bx1, by1, bz1, capMaterial);
+    opacitySpans.push({ first: capStart, last: positions.length / 3, opacity: 1 });
     const glassColor = [0.48, 0.58, 0.56];
     const addGlassQuad = (a, b, c, d) => {
       const start = positions.length / 3;
       addTriangle(positions, colors, a, b, c, glassColor);
       addTriangle(positions, colors, a, c, d, glassColor);
       opacitySpans.push({ first: start, last: positions.length / 3, opacity: 0.18 });
+      glassSpans.push({ first: start, last: positions.length / 3 });
     };
     addGlassQuad([bx0,by0,bz1],[bx1,by0,bz1],[bx1,by1,bz1],[bx0,by1,bz1]);
     addGlassQuad([bx1,by0,bz0],[bx0,by0,bz0],[bx0,by1,bz0],[bx1,by1,bz0]);
@@ -1363,6 +1369,7 @@
     const droneOpacitySpans = [];
     const droneEmissionSpans = [];
     const droneCoreSpans = [];
+    const droneGlassSpansForFrame = [];
     const windowPositions = [];
     const windowUVs = [];
     const effectPositions = [];
@@ -1582,7 +1589,7 @@
         const individualWingPhase = time / 1000 + index * 0.173;
         const wingAngle = flapFrequency === 0 ? flapAmplitude : Math.sin(individualWingPhase * Math.PI * 2 * flapFrequency) * flapAmplitude;
         const offsetWing = -(0.2 * 0.6 / 2) * Math.sin(wingAngle) * 0.6;
-        addDrone(positions, colors, windowPositions, windowUVs, droneOpacitySpans, droneEmissionSpans, droneCoreSpans, candidate.x, candidate.y + offsetWing, candidate.z, individualWingPhase, state.heading, droneDocks[index]?.battery ?? 100, flapFrequency, flapAmplitude);
+        addDrone(positions, colors, windowPositions, windowUVs, droneOpacitySpans, droneEmissionSpans, droneCoreSpans, droneGlassSpansForFrame, candidate.x, candidate.y + offsetWing, candidate.z, individualWingPhase, state.heading, droneDocks[index]?.battery ?? 100, flapFrequency, flapAmplitude);
       }
       if (animation && candidate.workProgress > 0) {
         if (!animation.workStarted) {
@@ -1639,6 +1646,7 @@
       }
     }
     droneVertexCount = positions.length / 3;
+    droneGlassSpans = droneGlassSpansForFrame.sort((a, b) => a.first - b.first);
     droneWindowVertexCount = windowPositions.length / 3;
     gl.bindBuffer(gl.ARRAY_BUFFER, droneWindowPositionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(windowPositions), gl.DYNAMIC_DRAW);
@@ -2684,10 +2692,19 @@
     gl.vertexAttribPointer(locations.emission, 1, gl.FLOAT, false, 0, 0);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    // Let drone surfaces write depth so far-side battery segments are occluded by the near shell.
+    // Draw opaque drone geometry first. Glass panels are excluded from this pass so they
+    // cannot write depth and hide the far-side wing pillars inside the case.
     gl.depthMask(true);
     gl.uniform1f(locations.droneSelfIllumination, nightFactor * 0.624);
-    gl.drawArrays(gl.TRIANGLES, 0, droneVertexCount);
+    let opaqueCursor = 0;
+    for (const span of droneGlassSpans) {
+      if (span.first > opaqueCursor) gl.drawArrays(gl.TRIANGLES, opaqueCursor, span.first - opaqueCursor);
+      opaqueCursor = Math.max(opaqueCursor, span.last);
+    }
+    if (opaqueCursor < droneVertexCount) gl.drawArrays(gl.TRIANGLES, opaqueCursor, droneVertexCount - opaqueCursor);
+    // Blend glass last with depth testing on but depth writes off, preserving interior geometry.
+    gl.depthMask(false);
+    for (const span of droneGlassSpans) gl.drawArrays(gl.TRIANGLES, span.first, span.last - span.first);
     gl.depthMask(true);
     gl.disableVertexAttribArray(locations.opacity);
     gl.vertexAttrib1f(locations.opacity, 1);
