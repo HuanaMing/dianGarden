@@ -48,6 +48,8 @@
       }
       // Keep drone bodies softly visible at night; this uniform is enabled only for the drone draw pass.
       lighting += vec3(1.0, 0.76, 0.46) * uDroneSelfIllumination;
+      // The translucent drone shell should keep its warm wood tone under blue night ambient light
+      if (aOpacity < 0.75) lighting *= vec3(1.12, 1.0, 0.78);
       vColor = aColor * lighting;
       vOpacity = aOpacity;
       vEmission = aEmission;
@@ -1002,12 +1004,13 @@
     const firstVertex = positions.length;
     const firstWindowVertex = windowPositions.length;
     const batteryFactor = Math.max(0, Math.min(1, Number(battery) / 100));
+    const coreScale = 0.3 + batteryFactor * 0.4;
     const coreStart = positions.length / 3;
-    addOctahedron(positions, colors, x, y, z, 0.022, 0.02, 0.022, [1.0, 0.93, 0.73]);
-    opacitySpans.push({ first: coreStart, last: positions.length / 3, opacity: 1 });
-    emissionSpans.push({ first: coreStart, last: positions.length / 3, emission: 0.04 + batteryFactor * 0.85 });
-    const body = { top: [0.58, 0.48, 0.31], front: [0.38, 0.33, 0.23], right: [0.31, 0.37, 0.27], back: [0.46, 0.38, 0.26], left: [0.34, 0.4, 0.29], bottom: [0.23, 0.27, 0.2] };
-    const trim = { top: [0.7, 0.59, 0.39], front: [0.52, 0.43, 0.31], right: [0.44, 0.48, 0.33], back: [0.58, 0.48, 0.33], left: [0.46, 0.49, 0.35], bottom: [0.3, 0.33, 0.24] };
+    addOctahedron(positions, colors, x, y, z, 0.022 * coreScale, 0.04 * coreScale, 0.022 * coreScale, [1.0, 0.96, 0.86]);
+    opacitySpans.push({ first: coreStart, last: positions.length / 3, opacity: 0.8 });
+    emissionSpans.push({ first: coreStart, last: positions.length / 3, emission: 0 });
+    const body = { top: [0.58, 0.45, 0.27], front: [0.38, 0.33, 0.23], right: [0.4, 0.29, 0.18], back: [0.46, 0.38, 0.26], left: [0.42, 0.3, 0.19], bottom: [0.32, 0.22, 0.14] };
+    const trim = { top: [0.7, 0.56, 0.34], front: [0.52, 0.43, 0.31], right: [0.52, 0.37, 0.23], back: [0.58, 0.48, 0.33], left: [0.54, 0.38, 0.24], bottom: [0.38, 0.25, 0.16] };
     const wood = [0.55, 0.39, 0.24], woodLight = [0.72, 0.56, 0.36];
     const leaf = [0.35, 0.62, 0.37];
     addRoundedBox(positions, colors, x - 0.084, y - 0.075, z - 0.085, x + 0.084, y + 0.075, z + 0.085, body, 0.028, 5);
