@@ -641,6 +641,9 @@ page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
 page.on('console', message => {
   if (message.type() === 'error') errors.push(`console: ${message.text()}`);
 });
+// The local static preview has no favicon asset; keep the browser's automatic
+// favicon request from being misreported as a game resource failure.
+await page.route('**/favicon.ico', route => route.fulfill({ status: 204, body: '' }));
 
 try {
   await page.goto(`${baseURL}/index.html`, { waitUntil: 'networkidle', timeout: 30000 });
@@ -776,12 +779,37 @@ try {
   const mouseCanvasBounds = await page.locator('#sky-canvas').boundingBox();
   if (!mouseCanvasBounds) throw new Error('無法取得 PC 畫布位置');
   await page.mouse.move(mouseCanvasBounds.x + 24, mouseCanvasBounds.y + mouseCanvasBounds.height * 0.15);
+  // Control only the hold-ring reveal timer so slow CI scheduling cannot turn a
+  // 100ms assertion into a false failure after the real 200ms timer has elapsed.
+  await page.evaluate(() => {
+    const nativeSetTimeout = window.setTimeout.bind(window);
+    window.__dgHoldRingReveal = null;
+    window.setTimeout = (callback, delay, ...args) => {
+      if (delay === 200 && typeof callback === 'function') {
+        const timerId = nativeSetTimeout(() => {}, 60_000);
+        window.__dgHoldRingReveal = { delay, timerId, callback: () => callback(...args) };
+        return timerId;
+      }
+      return nativeSetTimeout(callback, delay, ...args);
+    };
+  });
   await page.mouse.down();
-  await page.waitForTimeout(100);
   const mouseRing = page.locator('.touch-hold-ring');
   if (await mouseRing.count() !== 1) throw new Error('PC 滑鼠按下時未建立長按計時環');
   if (await mouseRing.evaluate(element => getComputedStyle(element).visibility) !== 'hidden') throw new Error('PC 長按環未延遲 200ms 顯示');
-  await page.waitForTimeout(120);
+  const revealTimer = await page.evaluate(() => {
+    const timer = window.__dgHoldRingReveal;
+    if (!timer) return null;
+    window.clearTimeout(timer.timerId);
+    timer.callback();
+    return {
+      delay: timer.delay,
+      visibility: getComputedStyle(document.querySelector('.touch-hold-ring')).visibility,
+    };
+  });
+  if (!revealTimer || revealTimer.delay !== 200 || revealTimer.visibility !== 'visible') {
+    throw new Error('PC hold-ring reveal timer did not preserve the 200ms delay');
+  }
   if (await mouseRing.evaluate(element => getComputedStyle(element).visibility) !== 'visible') throw new Error('PC 長按環在按下 200ms 後仍未顯示');
   const mouseRingStyle = await mouseRing.evaluate(element => {
     const image = element.querySelector('.touch-hold-wreath');
