@@ -1553,7 +1553,7 @@
           flapFrequency = 0;
           state.descentWingAngle = Math.min(
             70 * Math.PI / 180,
-            (state.descentWingAngle || 0) + (10 * Math.PI / 180) * (delta / 1000),
+            (state.descentWingAngle || 0) + (20 * Math.PI / 180) * (delta / 1000),
           );
           flapAmplitude = state.descentWingAngle;
         } else if (animation && verticalDelta > 0.0001) {
