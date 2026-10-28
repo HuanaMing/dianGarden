@@ -1008,7 +1008,7 @@
     const coreScale = 0.3 + batteryFactor * 0.4;
     const coreStart = positions.length / 3;
     const swing = Math.sin(wingPhase * Math.PI * 2 * 0.5) * 0.03; // One swing every 2 seconds
-    addOctahedron(positions, colors, x + swing, y - 0.02 + swing * swing * 10, z,
+    addOctahedron(positions, colors, x + swing, y - 0.07 + swing * swing * 10, z,
       0.022 * coreScale, 0.04 * coreScale, 0.022 * coreScale, [1.0, 0.96, 0.86]);
     opacitySpans.push({ first: coreStart, last: positions.length / 3, opacity: 1 });
     emissionSpans.push({ first: coreStart, last: positions.length / 3, emission: 0.35 + batteryFactor * 0.65 });
@@ -1035,10 +1035,41 @@
     addGlassQuad([bx1,by0,bz1],[bx1,by0,bz0],[bx1,by1,bz0],[bx1,by1,bz1]);
     addGlassQuad([bx0,by0,bz0],[bx0,by0,bz1],[bx0,by1,bz1],[bx0,by1,bz0]);
 
-    // Glass surfaces kept clear while isolating the rendering regression.
-
-
     const hx = 0.066, hy = 0.13, hz = 0.07, t = 0.006;
+    // Botanical line art on the four glass panels. Declare dimensions before drawing,
+    // avoiding the temporal-dead-zone ReferenceError that previously blanked the scene.
+    const sprigGreen = [0.34, 0.55, 0.31], sprigLight = [0.52, 0.68, 0.38];
+    const petalCream = [0.9, 0.78, 0.56], flowerCenter = [0.82, 0.57, 0.25];
+    const addSprig = (axis, sign) => {
+      const surfaceOffset = 0.002;
+      const point = (u, v) => axis === 'z'
+        ? [x + u, y + v, z + sign * (hz + surfaceOffset)]
+        : [x + sign * (hx + surfaceOffset), y + v, z + u];
+      const bead = (u, v, ru, rv, color) => {
+        const p = point(u, v), start = positions.length / 3;
+        addOctahedron(positions, colors, p[0], p[1], p[2], ru, rv, 0.0018, color);
+        opacitySpans.push({ first: start, last: positions.length / 3, opacity: 1 });
+      };
+      for (let i = 0; i <= 6; i += 1) {
+        const v = -0.075 + i * 0.021;
+        bead(Math.sin(i * 0.48) * 0.009, v, 0.0022, 0.004, i % 2 ? sprigLight : sprigGreen);
+      }
+      for (let i = 0; i < 4; i += 1) {
+        const v = -0.045 + i * 0.032;
+        const side = i % 2 ? -1 : 1;
+        bead(side * 0.016, v, 0.006, 0.0035, i % 2 ? sprigGreen : sprigLight);
+      }
+      const fy = 0.065, fx = Math.sin(6 * 0.48) * 0.009;
+      for (let p = 0; p < 5; p += 1) {
+        const a = p * Math.PI * 2 / 5;
+        bead(fx + Math.cos(a) * 0.006, fy + Math.sin(a) * 0.006, 0.0035, 0.0035, petalCream);
+      }
+      bead(fx, fy, 0.003, 0.003, flowerCenter);
+    };
+    addSprig('z', 1);
+    addSprig('z', -1);
+    addSprig('x', 1);
+    addSprig('x', -1);
     const solid = (x1, y1, z1, x2, y2, z2, palette = trim) => {
       const s = positions.length / 3;
       addBox(positions, colors, x1, y1, z1, x2, y2, z2, palette);
@@ -1144,21 +1175,21 @@
       }
     };
     for (const side of [-1, 1]) {
-      const rootX = x + side * 0.23, rootY = y + 0.055;
+      const rootX = x + side * 0.23, rootY = y + 0.105;
       addVineCurve([
-        [x + side * 0.075, y + 0.035, z - 0.015],
-        [x + side * 0.09, y + 0.085, z - 0.02],
-        [x + side * 0.105, y + 0.075, z + 0.018],
+        [x + side * 0.075, y + 0.085, z - 0.015],
+        [x + side * 0.09, y + 0.135, z - 0.02],
+        [x + side * 0.105, y + 0.125, z + 0.018],
         [rootX, rootY, z + 0.008],
       ]);
       addVineCurve([
-        [x + side * 0.075, y + 0.045, z + 0.018],
-        [x + side * 0.09, y + 0.025, z + 0.02],
-        [x + side * 0.105, y + 0.065, z - 0.018],
+        [x + side * 0.075, y + 0.095, z + 0.018],
+        [x + side * 0.09, y + 0.075, z + 0.02],
+        [x + side * 0.105, y + 0.115, z - 0.018],
         [rootX, rootY, z - 0.008],
       ], 0.0045);
-      addOctahedron(positions, colors, x + side * 0.09, y + 0.074, z - 0.012, 0.012, 0.006, 0.009, leaf);
-      addOctahedron(positions, colors, x + side * 0.105, y + 0.04, z + 0.016, 0.011, 0.006, 0.008, vineLight);
+      addOctahedron(positions, colors, x + side * 0.09, y + 0.124, z - 0.012, 0.012, 0.006, 0.009, leaf);
+      addOctahedron(positions, colors, x + side * 0.105, y + 0.09, z + 0.016, 0.011, 0.006, 0.008, vineLight);
       makeWing(side);
     }
     // Battery indicator removed from the drone exterior.
