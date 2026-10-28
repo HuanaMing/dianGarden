@@ -1943,3 +1943,10 @@
 - 完整本機流程通過：Worker API 測試、25 個 JS/MJS 檔案語法檢查及 Playwright/Chromium 瀏覽器冒煙測試皆 PASS，結束碼 0。測試涵蓋跨機派工、無人機位置連續性、登入／離線提示、桌面／手機版及 11 種花卉模型。
 - `cloudflare/wrangler.toml` 的 `ALLOWED_ORIGINS` 保留正式 GitHub Pages origin，並加入 `http://127.0.0.1:4173` 供本機預覽使用；未使用萬用字元。
 - 未修改遊戲功能，未將 `node_modules` 或暫存測試工作區提交，亦未觸發 GitHub Pages 或 Cloudflare 部署。正式部署與既有批准事項仍須另行確認。
+
+
+## 2026-10-28 — 任務文件歸檔與任務270
+
+- 依使用者指示，將 tasks/active/266.md、267.md、268.md 歸檔至 tasks/done/，保留原內容並附加歸檔紀錄。
+- 建立 tasks/active/270-drone-battery-indicator.md；任務269已被本機測試工作流程使用，因此本任務編號為270。
+- 本次程式修改及測試結果另行更新；此處不代表已完成視覺驗收。
