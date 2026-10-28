@@ -1007,8 +1007,8 @@
     const coreScale = 0.3 + batteryFactor * 0.4;
     const coreStart = positions.length / 3;
     addOctahedron(positions, colors, x, y, z, 0.022 * coreScale, 0.04 * coreScale, 0.022 * coreScale, [1.0, 0.96, 0.86]);
-    opacitySpans.push({ first: coreStart, last: positions.length / 3, opacity: 0.8 });
-    emissionSpans.push({ first: coreStart, last: positions.length / 3, emission: 0 });
+    opacitySpans.push({ first: coreStart, last: positions.length / 3, opacity: 1 });
+    emissionSpans.push({ first: coreStart, last: positions.length / 3, emission: 0.35 + batteryFactor * 0.65 });
     const body = { top: [0.58, 0.45, 0.27], front: [0.38, 0.33, 0.23], right: [0.4, 0.29, 0.18], back: [0.46, 0.38, 0.26], left: [0.42, 0.3, 0.19], bottom: [0.32, 0.22, 0.14] };
     const trim = { top: [0.7, 0.56, 0.34], front: [0.52, 0.43, 0.31], right: [0.52, 0.37, 0.23], back: [0.58, 0.48, 0.33], left: [0.54, 0.38, 0.24], bottom: [0.38, 0.25, 0.16] };
     const wood = [0.55, 0.39, 0.24], woodLight = [0.72, 0.56, 0.36];
@@ -1506,7 +1506,9 @@
           flapAmplitude = 0.48;
         }
         const individualWingPhase = time / 1000 + index * 0.173;
-        addDrone(positions, colors, windowPositions, windowUVs, droneOpacitySpans, droneEmissionSpans, candidate.x, candidate.y, candidate.z, individualWingPhase, state.heading, droneDocks[index]?.battery ?? 100, flapFrequency, flapAmplitude);
+        const wingAngle = Math.sin(individualWingPhase * Math.PI * 2 * flapFrequency) * flapAmplitude;
+        const offsetWing = -(0.2 * 0.6 / 2) * Math.sin(wingAngle) * 0.8;
+        addDrone(positions, colors, windowPositions, windowUVs, droneOpacitySpans, droneEmissionSpans, candidate.x, candidate.y + offsetWing, candidate.z, individualWingPhase, state.heading, droneDocks[index]?.battery ?? 100, flapFrequency, flapAmplitude);
       }
       if (animation && candidate.workProgress > 0) {
         if (!animation.workStarted) {
