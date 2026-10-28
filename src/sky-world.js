@@ -41,7 +41,7 @@
           vec3 lightDirection = normalize(toDroneLight);
           float diffuse = max(dot(n, lightDirection), 0.0);
           float attenuation = 1.0 - smoothstep(0.35, 3.2, lightDistance);
-          lighting += vec3(1.0, 0.82, 0.52) * diffuse * attenuation * uDroneLightStrength[i];
+          lighting += vec3(1.0, 0.94, 0.78) * diffuse * attenuation * uDroneLightStrength[i];
         }
       }
       // Keep drone bodies softly visible at night; this uniform is enabled only for the drone draw pass.
@@ -202,9 +202,11 @@
   const wingWindowFragmentSource = `
     precision mediump float;
     uniform sampler2D uTexture;
+    uniform float uOpacity;
     varying vec2 vUV;
     void main() {
-      gl_FragColor = texture2D(uTexture, vUV);
+      vec4 texel = texture2D(uTexture, vUV);
+      gl_FragColor = vec4(texel.rgb, texel.a * uOpacity);
     }
   `;
   let wingWindowProgram = null;
@@ -222,6 +224,7 @@
       projection: gl.getUniformLocation(wingWindowProgram, 'uProjection'),
       view: gl.getUniformLocation(wingWindowProgram, 'uView'),
       texture: gl.getUniformLocation(wingWindowProgram, 'uTexture'),
+      opacity: gl.getUniformLocation(wingWindowProgram, 'uOpacity'),
     };
     wingWindowTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, wingWindowTexture);
@@ -979,10 +982,13 @@
     return [position.x, position.z];
   }
 
-  function getDroneBatteryColor(battery) {
-    const charge = Math.max(0, Math.min(1, battery / 100));
-    const lowCharge = [0.82, 0.3, 0.27], fullCharge = [0.38, 0.69, 0.43];
-    return lowCharge.map((channel, index) => channel + (fullCharge[index] - channel) * charge);
+  function getDroneBatteryLitCount(battery) {
+    const charge = Math.max(0, Math.min(100, Number(battery) || 0));
+    if (charge >= 75) return 4;
+    if (charge >= 50) return 3;
+    if (charge >= 25) return 2;
+    if (charge >= 10) return 1;
+    return 0;
   }
 
   function addDrone(positions, colors, windowPositions, windowUVs, x, y, z, wingPhase, heading, battery = 100, flapFrequency = 2, flapAmplitude = 0.48) {
@@ -1066,7 +1072,20 @@
       addOctahedron(positions, colors, x + side * 0.105, y + 0.04, z + 0.016, 0.011, 0.006, 0.008, vineLight);
       makeWing(side);
     }
-    addOctahedron(positions, colors, x, y + 0.006, z + 0.087, 0.035, 0.026, 0.015, getDroneBatteryColor(battery));
+    // Four warm-orange battery segments sit vertically on the front-right face.
+    const litBatterySegments = getDroneBatteryLitCount(battery);
+    const batteryGlow = [1.0, 0.58, 0.22];
+    const batteryDim = [0.24, 0.16, 0.1];
+    for (let segment = 0; segment < 4; segment += 1) {
+      const segmentY = y - 0.045 + segment * 0.03;
+      const segmentColor = segment >= 4 - litBatterySegments ? batteryGlow : batteryDim;
+      addBox(positions, colors,
+        x + 0.043, segmentY - 0.004, z + 0.083,
+        x + 0.068, segmentY + 0.004, z + 0.088,
+        { top: segmentColor, front: segmentColor, right: segmentColor, back: segmentColor, left: segmentColor, bottom: segmentColor });
+    }
+    // Cream-colored central octahedron reads as a small moon-like light, not a battery indicator.
+    addOctahedron(positions, colors, x, y, z, 0.022, 0.02, 0.022, [1.0, 0.93, 0.73]);
     // Scale every drone component around its center so the silhouette, rounded body,
     // wing span, vine trellis, battery light, and flap amplitude keep the same proportions.
     const modelScale = 0.6;
@@ -2467,13 +2486,13 @@
       const state = droneStates[index];
       const dock = droneDocks[index];
       const deployed = index < droneCount && dock?.deployed !== false;
-      const batteryFactor = Math.max(0, Math.min(1, (dock?.battery ?? 100) / 35));
+      const batteryFactor = Math.max(0, Math.min(1, (dock?.battery ?? 100) / 100));
       const active = deployed && state;
       const lightPosition = active
-        ? [state.location[0], state.y + 0.155, state.location[1]]
+        ? [state.location[0], state.y, state.location[1]]
         : [0, -100, 0];
       droneLightPositions.push(...lightPosition);
-      // A small warm pool of light, visible only at night and softened by battery level.
+      // A moon-cream light is centered in the drone body and fades steadily with battery level.
       droneLightStrengths.push(active ? nightFactor * 0.34 * batteryFactor : 0);
     }
     gl.uniform3fv(locations.droneLightPos, new Float32Array(droneLightPositions));
@@ -2550,8 +2569,13 @@
     gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, droneNormalBuffer);
     gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.disableVertexAttribArray(locations.opacity);
+    gl.vertexAttrib1f(locations.opacity, 0.7);
     gl.uniform1f(locations.droneSelfIllumination, nightFactor * 0.624);
     gl.drawArrays(gl.TRIANGLES, 0, droneVertexCount);
+    gl.vertexAttrib1f(locations.opacity, 1);
     if (wingWindowProgram && wingWindowTexture && wingWindowLocations && droneWindowVertexCount > 0) {
       gl.useProgram(wingWindowProgram);
       gl.uniformMatrix4fv(wingWindowLocations.projection, false, currentProjection);
@@ -2559,6 +2583,7 @@
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, wingWindowTexture);
       gl.uniform1i(wingWindowLocations.texture, 0);
+      gl.uniform1f(wingWindowLocations.opacity, 0.7);
       gl.bindBuffer(gl.ARRAY_BUFFER, droneWindowPositionBuffer);
       gl.enableVertexAttribArray(wingWindowLocations.position);
       gl.vertexAttribPointer(wingWindowLocations.position, 3, gl.FLOAT, false, 0, 0);
@@ -2572,6 +2597,7 @@
       gl.disableVertexAttribArray(wingWindowLocations.uv);
       gl.useProgram(program);
     }
+    gl.vertexAttrib1f(locations.opacity, 1);
     requestAnimationFrame(draw);
   }
 
