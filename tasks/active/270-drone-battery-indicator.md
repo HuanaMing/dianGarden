@@ -19,4 +19,8 @@
 - [ ] 測試未執行或受環境限制時，明確記錄限制；不將程式碼檢查描述成視覺驗收。
 
 ## 執行紀錄
-- 2026-10-28：開始本機實作；尚待測試及視覺驗收。
+- 2026-10-28：完成程式修改並推送至工作分支 `sync/local-testing-and-cors-2026-10-28`，提交 `69f08dc`；任務文件已依使用者指示直接推送至 `main`。
+- JavaScript 語法檢查：PASS（將 `src/sky-world.js` 複製至暫存路徑後執行 `node --check`）。
+- Cloudflare Worker smoke test：PASS（登入、session、token、CORS、使用者隔離、存檔修訂及所有權測試）。
+- 瀏覽器 smoke test：BLOCKED；Node.js 回報專案 `package.json` 的 package config 無效，尚未完成瀏覽器及視覺驗收。
+- 尚待確認：實際瀏覽器中的燈號位置、70% 透明度與奶油色光源視覺效果。
