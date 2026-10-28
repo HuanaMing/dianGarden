@@ -1016,9 +1016,10 @@
     const trim = { top: [0.52, 0.36, 0.2], front: [0.36, 0.23, 0.12], right: [0.37, 0.23, 0.12], back: [0.44, 0.3, 0.17], left: [0.36, 0.22, 0.12], bottom: [0.25, 0.15, 0.08] };
     const wood = [0.38, 0.24, 0.13], woodLight = [0.58, 0.4, 0.23];
     const leaf = [0.35, 0.62, 0.37];
-    addRoundedBox(positions, colors, x - 0.084, y - 0.075, z - 0.085, x + 0.084, y + 0.075, z + 0.085, body, 0.012, 2);
+    // Tall, flat-topped walnut clock case; keep the side/back/bottom opaque.
+    addRoundedBox(positions, colors, x - 0.066, y - 0.13, z - 0.07, x + 0.066, y + 0.13, z + 0.07, body, 0.008, 1);
 
-    const hx = 0.084, hy = 0.075, hz = 0.085, t = 0.007;
+    const hx = 0.066, hy = 0.13, hz = 0.07, t = 0.006;
     const solid = (x1, y1, z1, x2, y2, z2, palette = trim) => {
       const s = positions.length / 3;
       addBox(positions, colors, x1, y1, z1, x2, y2, z2, palette);
@@ -1030,15 +1031,22 @@
       solid(x + sa*hx - t, y - hy, z + sb*hz - t, x + sa*hx + t, y + hy, z + sb*hz + t);
       solid(x - hx, y + sa*hy - t, z + sb*hz - t, x + hx, y + sa*hy + t, z + sb*hz + t);
     }
-    // Front crossbars divide the face into four panes
-    solid(x - t*0.6, y - hy, z + hz - t, x + t*0.6, y + hy, z + hz + t);
-    solid(x - hx, y - t*0.6, z + hz - t, x + hx, y + t*0.6, z + hz + t);
+    // No front muntins: preserve a single clear front window.
+    // The glass is a subtle translucent panel; the other five faces remain opaque walnut.
+    {
+      const glassStart = positions.length / 3;
+      const glassZ = z + hz + 0.001;
+      const glassColor = [0.48, 0.58, 0.56];
+      addTriangle(positions, colors, [x - hx + t, y - hy + t, glassZ], [x + hx - t, y - hy + t, glassZ], [x + hx - t, y + hy - t, glassZ], glassColor);
+      addTriangle(positions, colors, [x - hx + t, y - hy + t, glassZ], [x + hx - t, y + hy - t, glassZ], [x - hx + t, y + hy - t, glassZ], glassColor);
+      opacitySpans.push({ first: glassStart, last: positions.length / 3, opacity: 0.22 });
+    }
 
-    // Clock ticks; skip 12, 3, 6, and 9 because the crossbars mark them
+    // Original clock-face design, repositioned to the upper half of the taller case.
+    const clockY = y + 0.052;
     for (let i = 0; i < 12; i += 1) {
-      if (i % 3 === 0) continue;
       const a = i / 12 * Math.PI * 2, s = positions.length / 3;
-      addOctahedron(positions, colors, x + Math.sin(a) * 0.056, y + Math.cos(a) * 0.056, z + hz + 0.002,
+      addOctahedron(positions, colors, x + Math.sin(a) * 0.045, clockY + Math.cos(a) * 0.045, z + hz + 0.003,
         0.005, 0.005, 0.003, [0.96, 0.9, 0.74]);
       opacitySpans.push({ first: s, last: positions.length / 3, opacity: 1 });
     }
@@ -1048,7 +1056,7 @@
     const clockHours = 12 + (cycleT - 5 * 60_000) / dayMs * 24;
     const addHand = (angle, length, width, color) => {
       const dx = Math.sin(angle), dy = Math.cos(angle), zf = z + hz + 0.009;
-      const at = (along, side) => [x + dx * along - dy * side, y + dy * along + dx * side, zf];
+      const at = (along, side) => [x + dx * along - dy * side, clockY + dy * along + dx * side, zf];
       const s = positions.length / 3;
       addTriangle(positions, colors, at(-0.12 * length, 0), at(0.2 * length, width), at(length, 0), color);
       addTriangle(positions, colors, at(-0.12 * length, 0), at(length, 0), at(0.2 * length, -width), color);
@@ -1058,21 +1066,19 @@
     addHand((clockHours % 12) / 12 * Math.PI * 2, 0.032, 0.006, handColor);
     addHand((clockHours % 1) * Math.PI * 2, 0.05, 0.004, handColor);
     const hubStart = positions.length / 3;
-    addOctahedron(positions, colors, x, y, z + hz + 0.009, 0.006, 0.006, 0.004, [0.85, 0.65, 0.3]);
+    addOctahedron(positions, colors, x, clockY, z + hz + 0.009, 0.006, 0.006, 0.004, [0.85, 0.65, 0.3]);
     opacitySpans.push({ first: hubStart, last: positions.length / 3, opacity: 1 });
 
-    // Small gable on top; remove this block if not wanted
+    // Flat top: intentionally no gable/roof geometry.
+    // The pendulum occupies the lower half beneath the preserved clock face.
     {
-      const e = hx + 0.012, zf = z + hz + 0.012, zb = z - hz - 0.012, yb = y + hy + t, yr = yb + 0.05;
-      const c = [0.45, 0.3, 0.19], s0 = positions.length / 3;
-      addTriangle(positions, colors, [x - e, yb, zf], [x + e, yb, zf], [x, yr, zf], c);
-      addTriangle(positions, colors, [x + e, yb, zb], [x - e, yb, zb], [x, yr, zb], c);
-      for (const s of [-1, 1]) {
-        const shade = c.map((v) => v * (s > 0 ? 0.85 : 1.1));
-        addTriangle(positions, colors, [x + s*e, yb, zf], [x, yr, zf], [x, yr, zb], shade);
-        addTriangle(positions, colors, [x + s*e, yb, zf], [x, yr, zb], [x + s*e, yb, zb], shade);
-      }
-      opacitySpans.push({ first: s0, last: positions.length / 3, opacity: 1 });
+      const pendulumStart = positions.length / 3;
+      const pendulumZ = z + hz + 0.008;
+      const rodColor = [0.48, 0.34, 0.19];
+      addBox(positions, colors, x - 0.002, y - 0.018, pendulumZ, x + 0.002, y - 0.105, pendulumZ + 0.003,
+        { top: rodColor, front: rodColor, right: rodColor, back: rodColor, left: rodColor, bottom: rodColor });
+      addOctahedron(positions, colors, x, y - 0.095, pendulumZ + 0.006, 0.018, 0.023, 0.009, [0.78, 0.55, 0.25]);
+      opacitySpans.push({ first: pendulumStart, last: positions.length / 3, opacity: 1 });
     }
 
     // Wings lie in the XZ plane (normal +Y). Flapping rotates each wing about
