@@ -1017,7 +1017,7 @@
 
     // Wings lie in the XZ plane (normal +Y). Flapping rotates each wing about
     // its shoulder along Z, moving the outer edge through +Y/-Y like a bird's wing.
-    const flap = Math.sin(wingPhase * Math.PI * 2 * flapFrequency) * flapAmplitude;
+    const flap = flapFrequency === 0 ? flapAmplitude : Math.sin(wingPhase * Math.PI * 2 * flapFrequency) * flapAmplitude;
     const makeWing = (side) => {
       const rootX = x + side * 0.15, rootY = y + 0.055, rootZ = z;
       const start = positions.length;
@@ -1496,8 +1496,8 @@
           flapFrequency = 0.5;
           flapAmplitude = 0.22;
         } else if (animation && verticalDelta < -0.0001) {
-          flapFrequency = 0.5;
-          flapAmplitude = 0.22;
+          flapFrequency = 0;
+          flapAmplitude = 70 * Math.PI / 180;
         } else if (animation && verticalDelta > 0.0001) {
           flapFrequency = 3;
           flapAmplitude = 0.48;
@@ -1506,8 +1506,8 @@
           flapAmplitude = 0.48;
         }
         const individualWingPhase = time / 1000 + index * 0.173;
-        const wingAngle = Math.sin(individualWingPhase * Math.PI * 2 * flapFrequency) * flapAmplitude;
-        const offsetWing = -(0.2 * 0.6 / 2) * Math.sin(wingAngle) * 0.8;
+        const wingAngle = flapFrequency === 0 ? flapAmplitude : Math.sin(individualWingPhase * Math.PI * 2 * flapFrequency) * flapAmplitude;
+        const offsetWing = -(0.2 * 0.6 / 2) * Math.sin(wingAngle) * 0.6;
         addDrone(positions, colors, windowPositions, windowUVs, droneOpacitySpans, droneEmissionSpans, candidate.x, candidate.y + offsetWing, candidate.z, individualWingPhase, state.heading, droneDocks[index]?.battery ?? 100, flapFrequency, flapAmplitude);
       }
       if (animation && candidate.workProgress > 0) {
