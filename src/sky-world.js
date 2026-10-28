@@ -1001,7 +1001,7 @@
   }
 
   function addDrone(positions, colors, windowPositions, windowUVs, opacitySpans, emissionSpans, coreSpans, x, y, z, wingPhase, heading, battery = 100, flapFrequency = 2, flapAmplitude = 0.48) {
-    y -= 0.15; // Lower the drone another 0.1 units (0.15 total from original).
+    y -= 0.05; // Body sits 0.1 units higher than the previous lowered position.
     const firstVertex = positions.length;
     const firstWindowVertex = windowPositions.length;
     const batteryFactor = Math.max(0, Math.min(1, Number(battery) / 100));
@@ -1015,13 +1015,14 @@
     coreSpans.push({ first: coreStart, count: positions.length / 3 - coreStart });
     const body = { top: [0.38, 0.26, 0.15], front: [0.24, 0.15, 0.085], right: [0.27, 0.16, 0.09], back: [0.32, 0.22, 0.12], left: [0.26, 0.16, 0.09], bottom: [0.2, 0.12, 0.07] };
     const trim = { top: [0.52, 0.36, 0.2], front: [0.36, 0.23, 0.12], right: [0.37, 0.23, 0.12], back: [0.44, 0.3, 0.17], left: [0.36, 0.22, 0.12], bottom: [0.25, 0.15, 0.08] };
+    const capMaterial = { ...body, top: trim.top, bottom: trim.bottom };
     const wood = [0.38, 0.24, 0.13], woodLight = [0.58, 0.4, 0.23];
     const leaf = [0.35, 0.62, 0.37];
     // Tall, flat-topped walnut clock case; keep the side/back/bottom opaque.
     // Opaque walnut top and bottom; four vertical faces are translucent glass.
     const bx0 = x - 0.066, bx1 = x + 0.066, by0 = y - 0.13, by1 = y + 0.13, bz0 = z - 0.07, bz1 = z + 0.07;
-    addBox(positions, colors, bx0, by0, bz0, bx1, by0 + 0.008, bz1, body);
-    addBox(positions, colors, bx0, by1 - 0.008, bz0, bx1, by1, bz1, body);
+    addBox(positions, colors, bx0, by0, bz0, bx1, by0 + 0.008, bz1, capMaterial);
+    addBox(positions, colors, bx0, by1 - 0.008, bz0, bx1, by1, bz1, capMaterial);
     const glassColor = [0.48, 0.58, 0.56];
     const addGlassQuad = (a, b, c, d) => {
       const start = positions.length / 3;
@@ -1084,7 +1085,7 @@
     // its shoulder along Z, moving the outer edge through +Y/-Y like a bird's wing.
     const flap = flapFrequency === 0 ? flapAmplitude : Math.sin(wingPhase * Math.PI * 2 * flapFrequency) * flapAmplitude;
     const makeWing = (side) => {
-      const rootX = x + side * 0.15, rootY = y + 0.055, rootZ = z;
+      const rootX = x + side * 0.15, rootY = y + 0.105, rootZ = z; // Wings are 0.15 units above their previous position.
       const start = positions.length;
       const inner = rootX;
       const outer = rootX + side * 0.2;
