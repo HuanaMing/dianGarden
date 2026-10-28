@@ -41,7 +41,7 @@
         float lightDistance = length(toDroneLight);
         if (lightDistance < 3.2 && uDroneLightStrength[i] > 0.0) {
           vec3 lightDirection = normalize(toDroneLight);
-          float diffuse = max(dot(n, lightDirection), 0.0);
+          float diffuse = abs(dot(n, lightDirection));
           float attenuation = 1.0 - smoothstep(0.35, 3.2, lightDistance);
           lighting += vec3(1.0, 0.94, 0.78) * diffuse * attenuation * uDroneLightStrength[i];
         }
@@ -58,7 +58,7 @@
     varying vec3 vColor;
     varying float vOpacity;
     varying float vEmission;
-    void main() { gl_FragColor = vec4(vColor + vec3(1.0, 0.93, 0.73) * vEmission, vOpacity); }
+    void main() { vec3 surfaceColor = vColor + vec3(0.28, 0.10, -0.24) * (1.0 - vOpacity); gl_FragColor = vec4(surfaceColor + vec3(1.0, 0.93, 0.73) * vEmission, vOpacity); }
   `;
 
   function makeShader(type, source) {
