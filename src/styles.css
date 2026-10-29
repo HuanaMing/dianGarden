@@ -929,8 +929,12 @@ input, [contenteditable="true"]{
 
 .farm-management-panel.is-continuous-placement{width:min(330px,calc(100% - 24px))!important;max-height:none!important;padding:8px;gap:5px}
 .farm-management-panel.is-continuous-placement .farm-management-tabs,
-.farm-management-panel.is-continuous-placement .world-plots,
-.farm-management-panel.is-continuous-placement .land-purchase-actions{display:none!important}
+.farm-management-panel.is-continuous-placement .world-plots{display:none!important}
+.farm-management-panel.is-continuous-placement .continuous-plot-controls>label,
+.farm-management-panel.is-continuous-placement .continuous-plot-controls>select{display:none!important}
+.farm-management-panel.is-continuous-placement .land-purchase-actions{display:flex!important;gap:6px;margin:0}
+.farm-management-panel.is-continuous-placement .land-purchase-actions button{flex:1;min-height:32px;padding:6px 8px;font-size:11px}
+.continuous-plot-preview-cell.is-height-selection{border-color:#e0b45b;background:#f6d99188;box-shadow:0 0 0 2px #fff8d9a8,0 0 18px #f6d99166,inset 0 0 0 1px #fff8d9aa}
 .farm-management-panel.is-continuous-placement .farm-management-heading{margin:0;font-size:11px}
 .farm-management-panel.is-continuous-placement .continuous-plot-controls{margin:0;padding:7px;gap:5px}
 @media(max-width:700px){.farm-management-panel.is-continuous-placement{width:min(330px,calc(100% - 16px))!important;max-height:none!important}}

@@ -389,14 +389,31 @@
   continuousPreviewLayer.hidden = true;
   frame.append(continuousPreviewLayer);
   let continuousPlacement = { active: false, height: 0, manual: false };
+  let continuousHeightSelection = { active: false, height: 0, manual: false, x: 0, z: 0, pointerId: null, startY: 0, startHeight: 0, moved: false };
   let continuousDragPointerId = null;
   let continuousPlacementPath = [];
   function drawContinuousPlacementPreview() {
     continuousPreviewLayer.replaceChildren();
-    continuousPreviewLayer.hidden = !continuousPlacement.active || !continuousPlacementPath.length;
+    continuousPreviewLayer.hidden = !(continuousHeightSelection.active || (continuousPlacement.active && continuousPlacementPath.length));
     if (continuousPreviewLayer.hidden) return;
     const frameRect = frame.getBoundingClientRect();
     const canvasRect = canvas.getBoundingClientRect();
+    if (continuousHeightSelection.active) {
+      const cell = continuousHeightSelection;
+      const point = projectPoint([cell.x, cell.height + 0.09, cell.z]);
+      const across = projectPoint([cell.x + 0.5, cell.height + 0.09, cell.z]);
+      const along = projectPoint([cell.x, cell.height + 0.09, cell.z + 0.5]);
+      if (point && across && along) {
+        const marker = document.createElement('span');
+        marker.className = 'continuous-plot-preview-cell is-height-selection' + (cell.manual ? ' is-manual' : '');
+        marker.style.left = `${canvasRect.left - frameRect.left + point.x}px`;
+        marker.style.top = `${canvasRect.top - frameRect.top + point.y}px`;
+        marker.style.width = `${Math.max(24, Math.min(88, Math.hypot(across.x - point.x, across.y - point.y) * 1.7))}px`;
+        marker.style.height = `${Math.max(24, Math.min(88, Math.hypot(along.x - point.x, along.y - point.y) * 1.7))}px`;
+        continuousPreviewLayer.append(marker);
+      }
+      return;
+    }
     for (const cell of continuousPlacementPath) {
       const point = projectPoint([cell.x, continuousPlacement.height + 0.09, cell.z]);
       const across = projectPoint([cell.x + 0.5, continuousPlacement.height + 0.09, cell.z]);
@@ -2937,6 +2954,27 @@
         return;
       }
     }
+    if (continuousHeightSelection.active && !galleryMode) {
+      clearTimeout(emptyTouchRotateTimer);
+      clearTimeout(plotPressTimer);
+      clearTimeout(dockPressTimer);
+      rotateHoldGesture = false;
+      dragging = true;
+      pointerMoved = false;
+      const groundPoint = screenToGround(event.clientX, event.clientY, continuousHeightSelection.height + 0.08);
+      if (groundPoint) {
+        continuousHeightSelection.x = Math.round(groundPoint[0]);
+        continuousHeightSelection.z = Math.round(groundPoint[1]);
+      }
+      continuousHeightSelection.pointerId = event.pointerId;
+      continuousHeightSelection.startY = event.clientY;
+      continuousHeightSelection.startHeight = continuousHeightSelection.height;
+      continuousHeightSelection.moved = false;
+      canvas.setPointerCapture(event.pointerId);
+      drawContinuousPlacementPreview();
+      event.preventDefault();
+      return;
+    }
     if (continuousPlacement.active && !galleryMode) {
       clearTimeout(emptyTouchRotateTimer);
       clearTimeout(plotPressTimer);
@@ -3060,6 +3098,17 @@
       }
       if (suppressTouchTap) return;
     }
+    if (continuousHeightSelection.active && continuousHeightSelection.pointerId === event.pointerId) {
+      const deltaY = continuousHeightSelection.startY - event.clientY;
+      const nextHeight = Math.max(-8, Math.min(8, Math.round((continuousHeightSelection.startHeight + deltaY / 48) * 2) / 2));
+      continuousHeightSelection.height = nextHeight;
+      if (Math.abs(deltaY) >= 5) continuousHeightSelection.moved = true;
+      pointerMoved = continuousHeightSelection.moved;
+      drawContinuousPlacementPreview();
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+      return;
+    }
     if (!dragging) return;
     if (continuousDragPointerId === event.pointerId) {
       const groundPoint = screenToGround(event.clientX, event.clientY, continuousPlacement.height + 0.08);
@@ -3155,6 +3204,18 @@
     if (galleryMode && canvas.dataset.rotateHoldActive === 'true') {
       delete canvas.dataset.rotateHoldActive;
       rotateHoldGesture = false;
+    }
+    if (continuousHeightSelection.active && continuousHeightSelection.pointerId === event.pointerId) {
+      const moved = continuousHeightSelection.moved;
+      const height = continuousHeightSelection.height;
+      const manual = continuousHeightSelection.manual;
+      continuousHeightSelection.pointerId = null;
+      continuousHeightSelection.moved = false;
+      dragging = false;
+      if (!moved) window.onSkyContinuousHeightConfirmed?.(height, manual);
+      drawContinuousPlacementPreview();
+      if (event.pointerType === 'touch') touchPoints.delete(event.pointerId);
+      return;
     }
     if (suppressTouchTap) {
       clearTimeout(emptyTouchRotateTimer);
@@ -3265,6 +3326,12 @@
   });
   canvas.addEventListener('pointercancel', (event) => {
     cancelPointerFeedback(event);
+    if (continuousHeightSelection.pointerId === event.pointerId) {
+      continuousHeightSelection.pointerId = null;
+      continuousHeightSelection.moved = false;
+      dragging = false;
+      drawContinuousPlacementPreview();
+    }
     if (continuousDragPointerId === event.pointerId) {
       continuousDragPointerId = null;
       continuousPlacementPath = [];
@@ -3342,6 +3409,30 @@
     return true;
   }
   window.skyWorld = {
+    setContinuousPlotHeightSelection(options = {}) {
+      const active = options.active === true;
+      if (active) {
+        const height = Number.isFinite(options.height) && Math.abs(options.height * 2 - Math.round(options.height * 2)) < 1e-8
+          ? Math.max(-8, Math.min(8, options.height)) : 0;
+        const rect = canvas.getBoundingClientRect();
+        const point = screenToGround(rect.left + rect.width / 2, rect.top + rect.height / 2, height + 0.08);
+        continuousHeightSelection = {
+          active: true, height, manual: options.manual === true,
+          x: point ? Math.round(point[0]) : Math.round(targetX),
+          z: point ? Math.round(point[1]) : Math.round(targetZ),
+          pointerId: null, startY: 0, startHeight: height, moved: false,
+        };
+        continuousPlacementPath = [];
+        continuousDragPointerId = null;
+        dragging = false;
+      } else {
+        continuousHeightSelection.active = false;
+        continuousHeightSelection.pointerId = null;
+        continuousHeightSelection.moved = false;
+      }
+      drawContinuousPlacementPreview();
+      return { ...continuousHeightSelection };
+    },
     setContinuousPlotPlacement(options = {}) {
       continuousPlacement = {
         active: options.active === true,
