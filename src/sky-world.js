@@ -421,11 +421,17 @@
     const sx = x0 < next.x ? 1 : -1, sz = z0 < next.z ? 1 : -1;
     let error = dx - dz;
     while ((x0 !== next.x || z0 !== next.z) && continuousPlacementPath.length < 120) {
+      const previousX = x0, previousZ = z0;
       const twice = error * 2;
       if (twice > -dz) { error -= dz; x0 += sx; }
       if (twice < dx) { error += dx; z0 += sz; }
+      if (x0 !== previousX && z0 !== previousZ && continuousPlacementPath.length < 119) {
+        const tail = continuousPlacementPath[continuousPlacementPath.length - 1];
+        const bridge = { x: x0, z: previousZ };
+        if (!tail || tail.x !== bridge.x || tail.z !== bridge.z) continuousPlacementPath.push(bridge);
+      }
       const tail = continuousPlacementPath[continuousPlacementPath.length - 1];
-      if (!tail || tail.x !== x0 || tail.z !== z0) continuousPlacementPath.push({ x: x0, z: z0 });
+      if ((!tail || tail.x !== x0 || tail.z !== z0) && continuousPlacementPath.length < 120) continuousPlacementPath.push({ x: x0, z: z0 });
     }
   }
   function feedbackPoint(event) {
