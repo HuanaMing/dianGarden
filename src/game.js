@@ -1426,9 +1426,10 @@
       if (firstNonExpansion < 0) jobQueue.push(job);
       else jobQueue.splice(firstNonExpansion, 0, job);
     } else jobQueue.push(job);
-    if (job.kind === 'expand') save();
+    const savedImmediately = job.kind === 'expand' ? save() : true;
     renderJobQueue();
     processJobQueue();
+    return savedImmediately;
   }
   function plant(index, cropIndex, variantId = null) {
     const plot = game.plots[index], crop = crops[cropIndex];
@@ -1610,8 +1611,10 @@
     const reservedPlots = [...game.plots, ...pendingExpansionJobs().map((job) => ({ x: job.position.x, z: job.position.z }))];
     const position = getNextPlotPosition(reservedPlots, game.drones.map((drone) => drone.dockPosition));
     if (!position) return notify('找不到不與坪台重疊的相鄰位置，請先移動坪台。');
-    enqueueJob({ kind: 'expand', manual: true, position: { x: position[0], z: position[1], y: 0 } });
-    notify('手動地塊已加入無人機最高優先開墾佇列。');
+    const savedImmediately = enqueueJob({ kind: 'expand', manual: true, position: { x: position[0], z: position[1], y: 0 } });
+    notify(savedImmediately
+      ? '手動地塊已加入無人機最高優先開墾佇列並立即儲存。'
+      : '手動地塊已加入開墾佇列，但存檔失敗，重新整理可能會遺失未完成任務。');
   }
   function buyLand() {
     const cost = getLandCost();
@@ -1619,7 +1622,8 @@
     const reservedPlots = [...game.plots, ...pendingExpansionJobs().map((job) => ({ x: job.position.x, z: job.position.z }))];
     const position = getNextPlotPosition(reservedPlots, game.drones.map((drone) => drone.dockPosition));
     if (!position) return notify('找不到不與坪台重疊的相鄰位置，請先移動坪台。');
-    enqueueJob({ kind: 'expand', manual: false, position: { x: position[0], z: position[1], y: 0 } });
+    const savedImmediately = enqueueJob({ kind: 'expand', manual: false, position: { x: position[0], z: position[1], y: 0 } });
+    if (!savedImmediately) notify('自動地塊已加入開墾佇列，但存檔失敗，重新整理可能會遺失未完成任務。');
   }
   function buyDrone() {
     if (game.droneCount >= MAX_DRONES) return notify(`最多只能擁有 ${MAX_DRONES} 台無人機。`);
