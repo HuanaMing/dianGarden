@@ -789,6 +789,8 @@
     const expansionPending = [...activeJobs.values()].some((job) => job.kind === 'expand') || jobQueue.some((job) => job.kind === 'expand');
     expandButton?.setAttribute('aria-disabled', String(expansionPending));
     expandButton?.classList.toggle('is-blocked', expansionPending);
+    if (expandButton) expandButton.disabled = expansionPending;
+    if (manualLandButton) manualLandButton.disabled = expansionPending;
     expandButton.textContent = `自動地塊 · ${getLandCost()} 🪙`;
     expandButton?.setAttribute('aria-label', expansionPending ? '農地擴建中，請稍後' : `擴建空中土地，花費 ${getLandCost()} 枚金幣`);
     expandButton?.setAttribute('title', expansionPending ? '農地擴建中，請稍後' : '擴建空中土地');
