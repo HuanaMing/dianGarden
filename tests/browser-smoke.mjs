@@ -73,11 +73,11 @@ if (!skyWorldSource.includes("window.dianGardenCamera = Object.freeze({")
   || !gameSource.includes("window.setInterval(() => {\n    if (skipSaveOnExit || isResetting || !persistenceAvailable) return;")) {
   throw new Error('任務252相機姿態讀取／還原、自動存檔或節流保存邏輯缺失');
 }
-if (!indexHtml.includes('id="continuous-plot-mode"')
-  || !indexHtml.includes('id="continuous-plot-height"')
-  || !indexHtml.includes('id="continuous-plot-type"')
-  || !indexHtml.includes('id="continuous-return-3d"')
-  || !gameSource.includes("continuousReturn3dButton?.addEventListener('click'")
+if (indexHtml.includes('id="continuous-plot-mode"')
+  || indexHtml.includes('id="continuous-plot-height"')
+  || indexHtml.includes('id="continuous-plot-type"')
+  || indexHtml.includes('id="continuous-return-3d"')
+  || gameSource.includes("continuousPlotModeButton?.addEventListener('click'")
   || !gameSource.includes('function collectPendingExpansionJobs()')
   || !gameSource.includes('game.pendingPlotExpansions = collectPendingExpansionJobs();')
   || !gameSource.includes('const restored = game.pendingPlotExpansions.slice(0, 200)')
@@ -87,7 +87,12 @@ if (!indexHtml.includes('id="continuous-plot-mode"')
   || !gameSource.includes('window.onSkyContinuousPlotPath = (positions, height) =>')
   || !gameSource.includes("jobQueue.splice(firstNonExpansion, 0, ...accepted)")
   || !skyWorldSource.includes('setContinuousPlotHeightSelection(options = {})')
-  || !skyWorldSource.includes('continuous-plot-prism-face is-top')
+  || !skyWorldSource.includes('getContinuousPreviewCells()')
+  || !skyWorldSource.includes('preview: true, manual: cell.manual === true, plants: []')
+  || !skyWorldSource.includes('nextPreviewPlotSpans.push({ first: previewGeometryStart / 3, last: positions.length / 3 })')
+  || !skyWorldSource.includes('gl.vertexAttrib1f(locations.opacity, 0.48)')
+  || !skyWorldSource.includes("modeButton('水平','horizontal',String.fromCharCode(8596)); modeButton('鉛直','vertical',String.fromCharCode(8597))")
+  || !gameSource.includes("action === 'placement-cancel'")
   || !skyWorldSource.includes("onSkyContinuousPlotAction?.('anchor-confirm'")
   || !skyWorldSource.includes("onSkyContinuousPlotAction?.('path-confirm'")
   || !gameSource.includes('window.onSkyContinuousPlotPreviewChange =')
@@ -97,8 +102,10 @@ if (!indexHtml.includes('id="continuous-plot-mode"')
   || !skyWorldSource.includes('const bridge = { x: x0, z: previousZ };')
   || !gameSource.includes('window.onSkyContinuousPlotPath?.(data.positions, data.height)')
   || !skyWorldSource.includes('setMode: setCameraMode,')
-  || !gameSource.includes("classList.toggle('is-continuous-placement', continuousPlotModeActive)")
-  || !stylesSource.includes('.farm-management-panel.is-continuous-placement .world-plots')) {
+  || !gameSource.includes("expandButton?.addEventListener('click'")
+  || !gameSource.includes('beginContinuousHeightSelection(false)')
+  || !gameSource.includes('beginContinuousHeightSelection(true)')
+  || !stylesSource.includes('.farm-management-panel .land-purchase-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))')) {
   throw new Error('連續開墾的高度／類型控制、2D 拖曳路徑、合併佇列、最高優先派工或待辦存檔／還原契約缺失');
 }
 if (!skyWorldSource.includes("const renderingPauseReasons = new Set(galleryMode ? [] : ['startup']);")
@@ -1845,8 +1852,7 @@ try {
   if (await page.locator('#farm-dialog .plot-mode-switch').count() !== 0) throw new Error('自動地塊仍顯示地塊性質切換開關');
   await page.locator('[data-close-farm-dialog]').click();
   await page.locator('#world-buy-manual-plot').click();
-  if (!(await page.locator('#farm-dialog').innerText()).includes('143')) throw new Error('手動地塊購買對話框未顯示固定 75 金幣價格');
-  await page.locator('[data-dialog-cancel]').click();
+  if (await page.locator('#farm-dialog').isVisible()) throw new Error('手動地塊擴建應直接進入連續開墾起點選擇，不應開啟舊購買對話框');
   await page.locator('#farm-management-close').click();
   checks.push('農地管理整合購買入口、操作說明移入設定、自動地塊不提供性質切換');
 

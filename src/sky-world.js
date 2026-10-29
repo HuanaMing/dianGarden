@@ -288,6 +288,7 @@
   gl.bindBuffer(gl.ARRAY_BUFFER, glowUVBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, glowUVs, gl.STATIC_DRAW);
   let vertexCount = 0;
+  let previewPlotSpans = [];
   let droneVertexCount = 0;
   let droneGlassSpans = [];
   let effectVertexCount = 0;
@@ -392,7 +393,14 @@
   let continuousHeightSelection = { active: false, height: 0, manual: false, x: 0, z: 0, pointerId: null, startX: 0, startY: 0, startHeight: 0, startCellX: 0, startCellZ: 0, moved: false, adjusting: false };
   let continuousDragPointerId = null;
   let continuousPlacementPath = [];
+  let continuousDragMode = 'horizontal';
+  function getContinuousPreviewCells() {
+    if (continuousHeightSelection.active) return [{ x: continuousHeightSelection.x, z: continuousHeightSelection.z, y: continuousHeightSelection.height, manual: continuousHeightSelection.manual, anchor: true }];
+    if (continuousPlacement.active && continuousPlacementPath.length) return continuousPlacementPath.map((cell) => ({ ...cell, y: continuousPlacement.height, manual: continuousPlacement.manual }));
+    return [];
+  }
   function drawContinuousPlacementPreview() {
+    uploadWorld();
     continuousPreviewLayer.replaceChildren();
     const anchorMode = continuousHeightSelection.active;
     const pathMode = continuousPlacement.active && continuousPlacementPath.length > 0;
@@ -409,24 +417,22 @@
     svg.setAttribute('aria-hidden', 'true');
     svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none';
     const project = (x,y,z) => { const q=projectPoint([x,y,z]); return q ? [ox+q.x,oy+q.y] : null; };
-    const face = (pts, cls) => { if (pts.some(q=>!q)) return; const el=document.createElementNS('http://www.w3.org/2000/svg','polygon'); el.setAttribute('points',pts.map(q=>q[0]+','+q[1]).join(' ')); el.setAttribute('class',cls+(manual?' is-manual':'')); svg.append(el); };
     let anchor=null;
     cells.forEach((c,i)=>{
-      const yt=height+0.12, yb=height-0.38;
-      const nw=project(c.x-.5,yt,c.z-.5), ne=project(c.x+.5,yt,c.z-.5), se=project(c.x+.5,yt,c.z+.5), sw=project(c.x-.5,yt,c.z+.5);
-      const nwb=project(c.x-.5,yb,c.z-.5), neb=project(c.x+.5,yb,c.z-.5), seb=project(c.x+.5,yb,c.z+.5), swb=project(c.x-.5,yb,c.z+.5);
-      face([nw,sw,swb,nwb],'continuous-plot-prism-face is-left'); face([sw,se,seb,swb],'continuous-plot-prism-face is-front');
-      face([ne,se,seb,neb],'continuous-plot-prism-face is-right'); face([nw,ne,se,sw],'continuous-plot-prism-face is-top');
+      const yt=height+0.16;
       if(anchorMode||i===cells.length-1) anchor=project(c.x,yt,c.z);
     });
-    continuousPreviewLayer.append(svg);
-    if(anchor && (anchorMode || continuousPlacement.pathReady)) {
+    if(anchor && (anchorMode || continuousPlacement.active)) {
       const actions=document.createElement('div'); actions.className='continuous-plot-floating-actions';
       actions.style.left=Math.max(58,Math.min(frameRect.width-58,anchor[0]))+'px'; actions.style.top=Math.max(46,Math.min(frameRect.height-46,anchor[1]-36))+'px';
       const add=(label,cls,title,cb)=>{const b=document.createElement('button');b.type='button';b.className='continuous-plot-action '+cls;b.textContent=label;b.title=title;b.setAttribute('aria-label',title);b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();cb();});actions.append(b);};
+      const mode= document.createElement('div'); mode.className='continuous-plot-drag-modes';
+      const modeButton=(label,value,icon)=>{const b=document.createElement('button');b.type='button';b.className='continuous-plot-mode-chip'+(continuousDragMode===value?' is-active':'');b.textContent=icon+' '+label;b.setAttribute('aria-pressed',String(continuousDragMode===value));b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();continuousDragMode=value;drawContinuousPlacementPreview();});mode.append(b);};
+      modeButton('水平','horizontal',String.fromCharCode(8596)); modeButton('鉛直','vertical',String.fromCharCode(8597));
+      continuousPreviewLayer.append(mode);
       if(anchorMode){
         add('O','is-confirm','確認起點，進入滑動建立階段',()=>window.onSkyContinuousPlotAction?.('anchor-confirm',{x:continuousHeightSelection.x,z:continuousHeightSelection.z,height:continuousHeightSelection.height,manual:continuousHeightSelection.manual}));
-        add('X','is-cancel','起點不確定，拖曳調整起點預覽方塊',()=>{continuousHeightSelection.adjusting=true;window.onSkyContinuousPlotAction?.('anchor-adjust',{x:continuousHeightSelection.x,z:continuousHeightSelection.z,height:continuousHeightSelection.height,manual:continuousHeightSelection.manual});});
+        add('X','is-cancel','結束規劃並移除預覽',()=>window.onSkyContinuousPlotAction?.('placement-cancel',{}));
       } else {
         add('O','is-confirm','確認建立這次連續地塊',()=>window.onSkyContinuousPlotAction?.('path-confirm',{positions:continuousPlacementPath.map(q=>({...q})),height:continuousPlacement.height,manual:continuousPlacement.manual}));
         add('X','is-cancel','取消這次滑動，重新確認起點',()=>window.onSkyContinuousPlotAction?.('path-cancel',{positions:continuousPlacementPath.map(q=>({...q})),height:continuousPlacement.height,manual:continuousPlacement.manual}));
@@ -2182,6 +2188,15 @@
   function uploadWorld(time = performance.now()) {
     const positions = [];
     const colors = [];
+    const originalPlotPositions = plotPositions;
+    const originalPlotStates = plotStates;
+    const previewCells = getContinuousPreviewCells();
+    const nextPreviewPlotSpans = [];
+    const renderLandCount = landCount;
+    if (previewCells.length) {
+      plotPositions = [...plotPositions, ...previewCells.map((cell) => ({ x: cell.x, z: cell.z, y: cell.y }))];
+      plotStates = [...plotStates, ...previewCells.map((cell) => ({ preview: true, manual: cell.manual === true, plants: [] }))];
+    }
     const [dockX, dockZ] = getDockPosition(0);
     const dockHeight = 1.3 + getDockHeight(0);
     const dockBase = dockSelected
@@ -2229,7 +2244,8 @@
       addTriangle(positions, colors, [previewX, arrowY + 0.061, previewZ - 0.49], [previewX - 0.11, arrowY + 0.061, previewZ - 0.27], [previewX + 0.11, arrowY + 0.061, previewZ - 0.27], tip);
       addTriangle(positions, colors, [previewX, arrowY + 0.061, previewZ + 0.49], [previewX + 0.11, arrowY + 0.061, previewZ + 0.27], [previewX - 0.11, arrowY + 0.061, previewZ + 0.27], tip);
     }
-    for (let i = 0; i < landCount; i += 1) {
+    for (let i = 0; i < renderLandCount + previewCells.length; i += 1) {
+      const previewGeometryStart = positions.length;
       const [x, z] = getPlotPosition(i);
       const plotY = getPlotHeight(i);
       const half = TILE / 2;
@@ -2257,7 +2273,7 @@
         addSoilTexture(positions, colors, x, z, bed, soilBedCenterY, wetness > 0.5, surfaceHeightAt);
       }
       // 手動農地以插在草地邊緣的空白告示牌辨識，避免干擾花株與耕作區。
-      if (plot?.manual === true && !plot?.grassOnly) {
+      if (plot?.manual === true && !plot?.grassOnly && !plot?.preview) {
         const signX = x + half * 0.73;
         const signZ = z + half * 0.72;
         const groundY = plotY + 0.004;
@@ -2312,7 +2328,7 @@
         addBox(positions, colors, x - frameHalf, y, z - frameHalf + edge, x - frameHalf + edge, y + 0.018, z + frameHalf - edge, gold);
         addBox(positions, colors, x + frameHalf - edge, y, z - frameHalf + edge, x + frameHalf, y + 0.018, z + frameHalf - edge, gold);
       }
-      const plants = plot?.manual === true && Array.isArray(plot.plants)
+      const plants = plot?.preview ? [] : plot?.manual === true && Array.isArray(plot.plants)
         ? plot.plants
         : plot && Number.isInteger(plot.crop) && Number.isFinite(plot.plantedAt) ? [plot] : [];
       plants.forEach((plant, plantIndex) => {
@@ -2328,7 +2344,18 @@
           Number.isFinite(plant.rotation) ? plant.rotation : 0);
         for (let vertex = flowerVertexStart + 1; vertex < positions.length; vertex += 3) positions[vertex] += plantBaseY;
       });
+      if (plot?.preview) {
+        nextPreviewPlotSpans.push({ first: previewGeometryStart / 3, last: positions.length / 3 });
+        for (let colorIndex = previewGeometryStart; colorIndex < colors.length; colorIndex += 3) {
+          colors[colorIndex] = colors[colorIndex] * 0.42 + 0.48;
+          colors[colorIndex + 1] = colors[colorIndex + 1] * 0.42 + 0.5;
+          colors[colorIndex + 2] = colors[colorIndex + 2] * 0.42 + 0.48;
+        }
+      }
     }
+    plotPositions = originalPlotPositions;
+    plotStates = originalPlotStates;
+    previewPlotSpans = nextPreviewPlotSpans;
     if (heightEdit) {
       let arrowX, arrowZ, arrowBaseY;
       if (heightEdit.kind === 'plot' && Number.isInteger(heightEdit.index) && heightEdit.index < landCount) {
@@ -2831,7 +2858,22 @@
     gl.vertexAttribPointer(locations.color, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
     gl.vertexAttribPointer(locations.normal, 3, gl.FLOAT, false, 0, 0);
-    gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
+    let worldOpaqueCursor = 0;
+    for (const span of previewPlotSpans) {
+      if (span.first > worldOpaqueCursor) gl.drawArrays(gl.TRIANGLES, worldOpaqueCursor, span.first - worldOpaqueCursor);
+      worldOpaqueCursor = Math.max(worldOpaqueCursor, span.last);
+    }
+    if (worldOpaqueCursor < vertexCount) gl.drawArrays(gl.TRIANGLES, worldOpaqueCursor, vertexCount - worldOpaqueCursor);
+    if (previewPlotSpans.length) {
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+      gl.depthMask(false);
+      gl.vertexAttrib1f(locations.opacity, 0.48);
+      for (const span of previewPlotSpans) gl.drawArrays(gl.TRIANGLES, span.first, span.last - span.first);
+      gl.vertexAttrib1f(locations.opacity, 1);
+      gl.depthMask(true);
+      gl.disable(gl.BLEND);
+    }
     gl.bindBuffer(gl.ARRAY_BUFFER, effectPositionBuffer);
     gl.vertexAttribPointer(locations.position, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, effectColorBuffer);
@@ -2972,7 +3014,7 @@
       dragging = true;
       pointerMoved = false;
       const groundPoint = screenToGround(event.clientX, event.clientY, continuousHeightSelection.height + 0.08);
-      if (continuousHeightSelection.adjusting && groundPoint) {
+      if (continuousDragMode === 'horizontal' && groundPoint) {
         continuousHeightSelection.x = Math.round(groundPoint[0]);
         continuousHeightSelection.z = Math.round(groundPoint[1]);
       }
@@ -2999,7 +3041,9 @@
       continuousPlacement.pathReady = false;
       if (!continuousPlacementPath.length) continuousPlacementPath = [];
       const groundPoint = screenToGround(event.clientX, event.clientY, continuousPlacement.height + 0.08);
-      if (groundPoint) appendContinuousPlacementPoint(groundPoint[0], groundPoint[1]);
+      if (continuousDragMode === 'horizontal' && groundPoint) appendContinuousPlacementPoint(groundPoint[0], groundPoint[1]);
+      continuousPlacement.startY = event.clientY;
+      continuousPlacement.startHeight = continuousPlacement.height;
       drawContinuousPlacementPreview();
       canvas.setPointerCapture(event.pointerId);
       event.preventDefault();
@@ -3114,12 +3158,12 @@
     }
     if (continuousHeightSelection.active && continuousHeightSelection.pointerId === event.pointerId) {
       const deltaY = continuousHeightSelection.startY - event.clientY;
-      if (continuousHeightSelection.adjusting) {
+      if (continuousDragMode === 'horizontal') {
         const groundPoint = screenToGround(event.clientX, event.clientY, continuousHeightSelection.startHeight + 0.08);
         if (groundPoint) { continuousHeightSelection.x = Math.round(groundPoint[0]); continuousHeightSelection.z = Math.round(groundPoint[1]); }
+      } else {
+        continuousHeightSelection.height = Math.max(-8, Math.min(8, Math.round((continuousHeightSelection.startHeight + deltaY / 48) * 2) / 2));
       }
-      const nextHeight = Math.max(-8, Math.min(8, Math.round((continuousHeightSelection.startHeight + deltaY / 48) * 2) / 2));
-      continuousHeightSelection.height = nextHeight;
       if (Math.abs(deltaY) >= 5 || Math.abs(event.clientX - continuousHeightSelection.startX) >= 5) continuousHeightSelection.moved = true;
       pointerMoved = continuousHeightSelection.moved;
       drawContinuousPlacementPreview();
@@ -3129,13 +3173,19 @@
     }
     if (!dragging) return;
     if (continuousDragPointerId === event.pointerId) {
-      const groundPoint = screenToGround(event.clientX, event.clientY, continuousPlacement.height + 0.08);
-      if (groundPoint) {
-        const previousLength = continuousPlacementPath.length;
-        appendContinuousPlacementPoint(groundPoint[0], groundPoint[1]);
-        if (continuousPlacementPath.length !== previousLength) pointerMoved = true;
-        drawContinuousPlacementPreview();
+      if (continuousDragMode === 'vertical') {
+        const deltaY = continuousPlacement.startY - event.clientY;
+        continuousPlacement.height = Math.max(-8, Math.min(8, Math.round((continuousPlacement.startHeight + deltaY / 48) * 2) / 2));
+        pointerMoved = Math.abs(deltaY) >= 5;
+      } else {
+        const groundPoint = screenToGround(event.clientX, event.clientY, continuousPlacement.height + 0.08);
+        if (groundPoint) {
+          const previousLength = continuousPlacementPath.length;
+          appendContinuousPlacementPoint(groundPoint[0], groundPoint[1]);
+          if (continuousPlacementPath.length !== previousLength) pointerMoved = true;
+        }
       }
+      drawContinuousPlacementPreview();
       lastPointerX = event.clientX;
       lastPointerY = event.clientY;
       return;
@@ -3426,6 +3476,7 @@
     setContinuousPlotHeightSelection(options = {}) {
       const active = options.active === true;
       if (active) {
+        continuousDragMode = 'horizontal';
         const height = Number.isFinite(options.height) && Math.abs(options.height * 2 - Math.round(options.height * 2)) < 1e-8
           ? Math.max(-8, Math.min(8, options.height)) : 0;
         const rect = canvas.getBoundingClientRect();
@@ -3455,6 +3506,7 @@
         pathReady: options.pathReady === true,
       };
       if (continuousPlacement.active) {
+        continuousDragMode = 'horizontal';
         setCameraMode('2d');
         continuousPlacementPath = Array.isArray(options.start) && Number.isInteger(options.start.x) && Number.isInteger(options.start.z) ? [{ x: options.start.x, z: options.start.z }] : [];
       } else {

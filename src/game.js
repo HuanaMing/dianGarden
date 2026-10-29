@@ -343,11 +343,6 @@
   const jobQueueDisplay = document.querySelector('#job-queue');
   const expandButton = document.querySelector('#world-expand');
   const manualLandButton = document.querySelector('#world-buy-manual-plot');
-  const continuousPlotModeButton = document.querySelector('#continuous-plot-mode');
-  const continuousReturn3dButton = document.querySelector('#continuous-return-3d');
-  const continuousPlotHeightSelect = document.querySelector('#continuous-plot-height');
-  const continuousPlotTypeSelect = document.querySelector('#continuous-plot-type');
-  const continuousPlotHint = document.querySelector('#continuous-plot-hint');
   let continuousPlotModeActive = false;
   const autoModeButton = document.querySelector('#auto-mode');
   const buyDroneButton = document.querySelector('#buy-drone');
@@ -1645,34 +1640,19 @@
     continuousPlotPathReady = false;
     window.skyWorld?.setContinuousPlotHeightSelection?.({ active: false });
     window.skyWorld?.setContinuousPlotPlacement?.({ active: false });
-    continuousPlotModeButton?.setAttribute('aria-pressed', String(continuousPlotModeActive));
-    if (continuousPlotModeButton) continuousPlotModeButton.textContent = continuousPlotModeActive ? '連續開墾' : '連續開墾';
-    if (continuousReturn3dButton) {
-      continuousReturn3dButton.hidden = !continuousPlotModeActive;
-      continuousReturn3dButton.textContent = '返回 3D 視角';
-    }
-    document.querySelector('#farm-management-panel')?.classList.toggle('is-continuous-placement', continuousPlotModeActive);
-    if (continuousPlotModeActive) notify('連續開墾已開啟：點擊「自動地塊」或「手動地塊」，拖曳半透明地塊調整高度。');
     save();
   }
   function beginContinuousHeightSelection(manual) {
     if (!continuousPlotModeActive) return false;
     continuousPlotManual = manual === true;
-    continuousPlotHeight = Number(continuousPlotHeightSelect?.value ?? 0);
+    continuousPlotHeight = 0;
     const selection = window.skyWorld?.setContinuousPlotHeightSelection?.({
       active: true, height: continuousPlotHeight, manual: continuousPlotManual,
     });
     if (!selection) return false;
-    notify('拖曳半透明地塊上下調整高度；高度合適後，點一下地塊確認。');
+    notify('拖曳半透明起點方塊調整位置與高度，再按 O 確認或 X 重新調整。');
     return true;
   }
-  continuousPlotModeButton?.addEventListener('click', () => updateContinuousPlotMode(!continuousPlotModeActive));
-  continuousReturn3dButton?.addEventListener('click', () => {
-    const currentMode = window.dianGardenCamera?.getState?.()?.mode;
-    const nextMode = currentMode === '2d' ? '3d' : '2d';
-    window.dianGardenCamera?.setMode?.(nextMode);
-    continuousReturn3dButton.textContent = nextMode === '2d' ? '返回 3D 視角' : '返回 2D 視角';
-  });
   window.onSkyContinuousPlotPreviewChange = ({ positions = [], height = continuousPlotHeight, manual = continuousPlotManual, anchor = false } = {}) => {
     if (!continuousPlotModeActive) return '';
     if (anchor) return '起點預估 1 格 · ' + window.gardenEconomy.getLandCost(window.gardenEconomy.getAutomaticPlotCount(game.plots)).toLocaleString() + ' 金幣';
@@ -1687,6 +1667,11 @@
   };
   window.onSkyContinuousPlotAction = (action, data = {}) => {
     if (!continuousPlotModeActive) return false;
+    if (action === 'placement-cancel') {
+      updateContinuousPlotMode(false);
+      notify('已結束連續開墾規劃，預覽地塊已移除。');
+      return true;
+    }
     if (action === 'anchor-adjust') {
       notify('拖曳起點方塊調整水平位置；上下拖曳可調整高度。');
       return true;
@@ -1695,8 +1680,6 @@
       if (!Number.isInteger(data.x) || !Number.isInteger(data.z) || !isHalfUnitHeight(data.height)) return false;
       continuousPlotHeight = Math.max(-8, Math.min(8, data.height));
       continuousPlotManual = data.manual === true;
-      if (continuousPlotHeightSelect) continuousPlotHeightSelect.value = String(continuousPlotHeight);
-      if (continuousPlotTypeSelect) continuousPlotTypeSelect.value = continuousPlotManual ? 'manual' : 'auto';
       continuousPlotPathReady = true;
       window.skyWorld?.setContinuousPlotHeightSelection?.({ active: false });
       window.skyWorld?.setContinuousPlotPlacement?.({ active: true, height: continuousPlotHeight, manual: continuousPlotManual, start: { x: data.x, z: data.z } });
@@ -1717,7 +1700,7 @@
   window.onSkyContinuousPlotPath = (positions, height) => {
     if (!continuousPlotModeActive || !continuousPlotPathReady) return false;
     if (!Array.isArray(positions) || !positions.length || !isHalfUnitHeight(height) || height < -8 || height > 8) {
-      notify('沒有取得有效路徑，連續開墾模式已結束。');
+      notify('沒有取得有效路徑，請重新點擊地塊擴建按鈕再試一次。');
       updateContinuousPlotMode(false);
       return false;
     }
@@ -1769,7 +1752,7 @@
       if (skippedInvalid) reasons.push(`無效位置 ${skippedInvalid} 格`);
       if (skippedForFunds) reasons.push(`金幣不足 ${skippedForFunds} 格`);
       if (skippedForCapacity) reasons.push(`待辦佇列上限 200 格，略過 ${skippedForCapacity} 格`);
-      notify(`沒有加入開墾任務：${reasons.join('；') || '沒有可開墾的空格'}。連續開墾模式已結束。`);
+      notify(`沒有加入開墾任務：${reasons.join('；') || '沒有可開墾的空格'}。請重新點擊地塊擴建按鈕再試一次。`);
       updateContinuousPlotMode(false);
       return false;
     }
@@ -1785,7 +1768,7 @@
       skippedForFunds ? `金幣不足 ${skippedForFunds} 格` : '',
       skippedForCapacity ? `佇列上限略過 ${skippedForCapacity} 格` : '',
     ].filter(Boolean).join('；');
-    notify(`已加入連續開墾：${accepted.length} 格${skippedSummary ? `；${skippedSummary}` : ''}${savedImmediately ? '；任務已立即儲存。' : '；但存檔失敗，重新整理可能會遺失未完成任務。'}連續開墾模式已自動關閉。`);
+    notify(`已加入開墾任務：${accepted.length} 格${skippedSummary ? `；${skippedSummary}` : ''}${savedImmediately ? '；任務已立即儲存。' : '；但存檔失敗，重新整理可能會遺失未完成任務。'}`);
     updateContinuousPlotMode(false);
     return true;
   };
@@ -1803,14 +1786,14 @@
     document.querySelector('#farm-management-toggle')?.setAttribute('aria-expanded', 'false');
   });
   expandButton?.addEventListener('click', () => {
-    if (continuousPlotModeActive) return beginContinuousHeightSelection(false);
-    const expansionPending = [...activeJobs.values()].some((job) => job.kind === 'expand') || jobQueue.some((job) => job.kind === 'expand');
-    if (expansionPending) return notify('農地擴建中，請稍後');
-    openExpansionDialog();
+    if (continuousPlotModeActive) return notify('目前正在選擇開墾路徑，請先確認或取消這次操作。');
+    updateContinuousPlotMode(true);
+    if (!beginContinuousHeightSelection(false)) updateContinuousPlotMode(false);
   });
   manualLandButton?.addEventListener('click', () => {
-    if (continuousPlotModeActive) return beginContinuousHeightSelection(true);
-    dialogContext = { type: 'manual-expansion' }; dialog.showModal(); renderFarmDialog();
+    if (continuousPlotModeActive) return notify('目前正在選擇開墾路徑，請先確認或取消這次操作。');
+    updateContinuousPlotMode(true);
+    if (!beginContinuousHeightSelection(true)) updateContinuousPlotMode(false);
   });
   buyDroneButton?.addEventListener('click', buyDrone);
   dronePanelToggle?.addEventListener('click', () => {
