@@ -25,4 +25,11 @@
 
 ## 執行紀錄
 - 2026-10-29：讀取 `AGENTS.md`、`README.md`、專案狀態、任務 276、派工與 WebGL 動畫程式；確認現有採收完成回呼會在返航動畫期間釋放派工佇列，且返航動畫可被後續工作接續。
-- 2026-10-29：建立功能分支，避免未經批准的正式發布。
+- 2026-10-29：建立功能分支 `feature/drone-harvest-display-return`，避免未經批准的正式發布。
+- 2026-10-29：`src/game.js` 加入每台無人機獨立的採收返航鎖；成功提交採收結果時鎖定，返航完成回呼時解除。派工過濾只限制 `harvest`，其他任務仍可派發。
+- 2026-10-29：`src/sky-world.js` 在採收動畫開始時保存花種與變色資料，工作完成後於透明箱內繪製對應花頭，加入緩慢 Y 軸旋轉與輕微上下浮動；返航完成時清除展示。
+- 2026-10-29：`tests/browser-smoke.mjs` 加入派工鎖、花頭保留及返航清理的靜態回歸契約。
+- 2026-10-29：以 JavaScript 編譯檢查驗證 `src/game.js`、`src/sky-world.js` 語法通過；對 `tests/browser-smoke.mjs` 去除 ESM import 並替換 `import.meta.url` 後進行 parse-only 檢查通過。回歸契約字串檢查通過。
+- 2026-10-29：未執行完整 Playwright 瀏覽器驗收：本次 Remote Desktop Commander 裝置離線，且可用工具未提供觸發 GitHub Actions 的操作；因此視覺與真實動畫行為仍待驗收。
+- 2026-10-29：更新 `state/current-task.json` 與 `state/project.json` 的請求遭安全檢查阻擋，確認遠端內容未改變；依工作規範停止重試並保留現有狀態，需後續手動同步目前任務狀態。
+- 尚未合併至 `main`，未部署。
