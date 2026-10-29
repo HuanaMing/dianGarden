@@ -167,6 +167,20 @@ if (!gameSource.includes("job.status = 'queued';")
 }
 checks.push('任務258：任務物件具備 queued／assigned／running／succeeded／failed／cancelled 生命週期及結果一次性提交保護');
 
+if (!gameSource.includes("const harvestReturnRequired = new Set();")
+  || !gameSource.includes("job.kind === 'harvest' && harvestReturnRequired.has(droneIndex)")
+  || !gameSource.includes("if (job.kind === 'harvest' && job.resultCommitted) harvestReturnRequired.add(droneIndex);")
+  || !gameSource.includes("harvestReturnRequired.delete(droneIndex);")) {
+  throw new Error('任務277：花朵採收後必須返航才可再次採收的派工鎖定缺失');
+}
+if (!skyWorldSource.includes("function addHarvestFlowerHead(")
+  || !skyWorldSource.includes("state.harvestFlower = { ...animation.harvestFlower, startedAt: time };")
+  || !skyWorldSource.includes("const harvestFlower = Number.isInteger(plot?.crop) ? { cropIndex: plot.crop, color: plot.variantColor || null } : null;")
+  || !skyWorldSource.includes("state.harvestFlower = null;")) {
+  throw new Error('任務277：透明箱花頭模型、旋轉展示或返航清理契約缺失');
+}
+checks.push('任務277：採收後返航鎖定只限制再次採收，並保留所採花頭於透明箱內直到返航完成');
+
 
 const encyclopediaPage = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
 await encyclopediaPage.addInitScript(() => {

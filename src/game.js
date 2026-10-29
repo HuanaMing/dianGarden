@@ -383,6 +383,7 @@
   let isResetting = false;
   const activeJobs = new Map();
   const returningDrones = new Set();
+  const harvestReturnRequired = new Set();
   const lastCompletedPlotByDrone = new Map();
   let nextDroneIndex = 0;
   const jobQueue = [];
@@ -1226,6 +1227,7 @@
       if (game.drones[droneIndex]?.deployed === false || activeJobs.has(droneIndex)) continue;
       const isEligibleJob = (job) => {
         if (blockedJobsThisPass.has(job.id)) return false;
+        if (job.kind === 'harvest' && harvestReturnRequired.has(droneIndex)) return false;
         if (game.drones[droneIndex].battery < estimateJobBattery(job, droneIndex)) return false;
         if ([...activeJobs.values()].some((active) => active.kind === 'expand')) return false;
         if (job.kind === 'expand' && activeJobs.size) return false;
@@ -1257,6 +1259,7 @@
         job.committed = true;
         job.droneIndex = droneIndex;
         job.resultCommitted = completeJob(job) === true;
+        if (job.kind === 'harvest' && job.resultCommitted) harvestReturnRequired.add(droneIndex);
         job.status = job.resultCommitted ? 'result_committed' : 'failed';
         if (!job.resultCommitted) job.failureReason = 'result_validation_failed';
         job.resultCommittedAt = job.resultCommitted ? Date.now() : null;
@@ -1282,10 +1285,14 @@
         returningDrones.add(droneIndex);
         return true;
       };
-      const onReturnComplete = () => returningDrones.delete(droneIndex);
+      const onReturnComplete = () => {
+        returningDrones.delete(droneIndex);
+        harvestReturnRequired.delete(droneIndex);
+      };
       job.cancelAnimation = () => {
         const cancelled = world.cancelDroneAnimation?.(droneIndex, () => {
           returningDrones.delete(droneIndex);
+          harvestReturnRequired.delete(droneIndex);
           finish();
         }) === true;
         if (cancelled) returningDrones.add(droneIndex);
