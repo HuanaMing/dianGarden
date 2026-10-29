@@ -32,4 +32,6 @@
 - 2026-10-29：以 JavaScript 編譯檢查驗證 `src/game.js`、`src/sky-world.js` 語法通過；對 `tests/browser-smoke.mjs` 去除 ESM import 並替換 `import.meta.url` 後進行 parse-only 檢查通過。回歸契約字串檢查通過。
 - 2026-10-29：未執行完整 Playwright 瀏覽器驗收：本次 Remote Desktop Commander 裝置離線，且可用工具未提供觸發 GitHub Actions 的操作；因此視覺與真實動畫行為仍待驗收。
 - 2026-10-29：更新 `state/current-task.json` 與 `state/project.json` 的請求遭安全檢查阻擋，確認遠端內容未改變；依工作規範停止重試並保留現有狀態，需後續手動同步目前任務狀態。
+- 2026-10-29（重做）：依最新需求調整 `src/sky-world.js` 的採收花頭幾何：不再傳入獨立莖葉模型，並從 bloom 幾何中排除綠色主導的莖葉三角面；依花頭水平半徑與垂直半高計算縮放上限，保留旋轉與輕微浮動，同時為透明箱留出邊界空間。
+- 2026-10-29（重做）：`tests/browser-smoke.mjs` 新增靜態回歸契約，檢查莖葉排除及花頭尺寸限制。已將兩份修改寫入本功能分支；尚未執行本機完整測試或瀏覽器視覺驗收，Remote Desktop Commander 目前離線，故仍需實機確認所有花種的幾何篩選與箱內留白。
 - 尚未合併至 `main`，未部署。
