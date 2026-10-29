@@ -1639,6 +1639,7 @@
     continuousPlotModeButton?.setAttribute('aria-pressed', String(continuousPlotModeActive));
     if (continuousPlotModeButton) continuousPlotModeButton.textContent = continuousPlotModeActive ? '結束連續開墾' : '連續開墾：關';
     if (continuousReturn3dButton) continuousReturn3dButton.hidden = !continuousPlotModeActive;
+    document.querySelector('#farm-management-panel')?.classList.toggle('is-continuous-placement', continuousPlotModeActive);
     if (continuousPlotHint) continuousPlotHint.textContent = continuousPlotModeActive
       ? `連續開墾中：拖曳場景建立 ${manual ? '手動' : '自動'}地塊路徑（高度 ${height}）；無效格會自動略過。再次按鈕可結束。`
       : '選擇高度與地塊類型，再開啟連續開墾；拖曳路徑會由無人機逐格建造。';
