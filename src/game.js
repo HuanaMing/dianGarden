@@ -1685,17 +1685,19 @@
       if (job.manual !== true) projectedAutoCount += 1;
     }
     const accepted = [];
-    let skipped = 0;
+    let skippedInvalid = 0;
     let skippedForFunds = 0;
+    let skippedForCapacity = 0;
     const docks = game.drones.filter((drone) => drone.deployed !== false).map((drone) => drone.dockPosition);
     for (const cell of positions.slice(0, 120)) {
-      if (!Number.isInteger(cell.x) || !Number.isInteger(cell.z)) { skipped += 1; continue; }
+      if (!Number.isInteger(cell.x) || !Number.isInteger(cell.z)) { skippedInvalid += 1; continue; }
       const key = `${cell.x},${cell.z},${height}`;
-      if (occupied.has(key) || reserved.has(key)) { skipped += 1; continue; }
+      if (occupied.has(key) || reserved.has(key)) { skippedInvalid += 1; continue; }
       const candidate = { crop: null, plantedAt: null, manual, grassOnly: false, x: cell.x, z: cell.z, y: height };
-      if (!validStacking([...validationPlots, candidate], docks)) { skipped += 1; continue; }
+      if (!validStacking([...validationPlots, candidate], docks)) { skippedInvalid += 1; continue; }
+      if (pendingExpansions.length + accepted.length >= 200) { skippedForCapacity += 1; continue; }
       const cost = window.gardenEconomy.getLandCost(projectedAutoCount);
-      if (availableCoins < cost) { skipped += 1; skippedForFunds += 1; continue; }
+      if (availableCoins < cost) { skippedForFunds += 1; continue; }
       availableCoins -= cost;
       if (!manual) projectedAutoCount += 1;
       plannedPlots.push(candidate);
@@ -1708,7 +1710,11 @@
       });
     }
     if (!accepted.length) {
-      notify(skippedForFunds ? '金幣不足，這段路徑沒有加入開墾任務；無效位置也已自動略過。' : '這段路徑沒有可開墾的空格；已自動略過所有無效位置。');
+      const reasons = [];
+      if (skippedInvalid) reasons.push(`無效位置 ${skippedInvalid} 格`);
+      if (skippedForFunds) reasons.push(`金幣不足 ${skippedForFunds} 格`);
+      if (skippedForCapacity) reasons.push(`待辦佇列上限 200 格，略過 ${skippedForCapacity} 格`);
+      notify(`沒有加入開墾任務：${reasons.join('；') || '沒有可開墾的空格'}。`);
       return false;
     }
     accepted.forEach((job) => { job.id = `${Date.now()}-${Math.random().toString(36).slice(2)}`; });
@@ -1718,7 +1724,12 @@
     const savedImmediately = save();
     renderJobQueue();
     processJobQueue();
-    notify(`已加入連續開墾：${accepted.length} 格${skipped ? `，略過 ${skipped} 個無效位置` : ''}${savedImmediately ? '；任務已立即儲存。' : '；但存檔失敗，重新整理可能會遺失未完成任務。'}`);
+    const skippedSummary = [
+      skippedInvalid ? `無效位置 ${skippedInvalid} 格` : '',
+      skippedForFunds ? `金幣不足 ${skippedForFunds} 格` : '',
+      skippedForCapacity ? `佇列上限略過 ${skippedForCapacity} 格` : '',
+    ].filter(Boolean).join('；');
+    notify(`已加入連續開墾：${accepted.length} 格${skippedSummary ? `；${skippedSummary}` : ''}${savedImmediately ? '；任務已立即儲存。' : '；但存檔失敗，重新整理可能會遺失未完成任務。'}`);
     return true;
   };
   farmTabManual?.addEventListener('click', () => setFarmManagementTab('manual'));
