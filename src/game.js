@@ -1304,6 +1304,7 @@
       if (game.drones[droneIndex]?.deployed === false || activeJobs.has(droneIndex)) continue;
       const isEligibleJob = (job) => {
         if (blockedJobsThisPass.has(job.id)) return false;
+        if (job.kind !== 'expand' && jobQueue.some((queued) => queued.kind === 'expand')) return false;
         if (job.kind === 'harvest' && harvestReturnRequired.has(droneIndex)) return false;
         if (game.drones[droneIndex].battery < estimateJobBattery(job, droneIndex)) return false;
         if ([...activeJobs.values()].some((active) => active.kind === 'expand')) return false;
@@ -1600,7 +1601,8 @@
   function buyManualLand() {
     const cost = getLandCost();
     if (game.coins < cost) return notify(`金幣不足，購買下一塊手動地塊需要 ${cost} 枚金幣。`);
-    const position = getNextPlotPosition(game.plots, game.drones.map((drone) => drone.dockPosition));
+    const reservedPlots = [...game.plots, ...pendingExpansionJobs().map((job) => ({ x: job.position.x, z: job.position.z }))];
+    const position = getNextPlotPosition(reservedPlots, game.drones.map((drone) => drone.dockPosition));
     if (!position) return notify('找不到不與坪台重疊的相鄰位置，請先移動坪台。');
     enqueueJob({ kind: 'expand', manual: true, position: { x: position[0], z: position[1], y: 0 } });
     notify('手動地塊已加入無人機最高優先開墾佇列。');
@@ -1608,7 +1610,8 @@
   function buyLand() {
     const cost = getLandCost();
     if (game.coins < cost) return notify(`金幣不足，開墾下一塊地需要 ${cost} 枚金幣。`);
-    const position = getNextPlotPosition(game.plots, game.drones.map((drone) => drone.dockPosition));
+    const reservedPlots = [...game.plots, ...pendingExpansionJobs().map((job) => ({ x: job.position.x, z: job.position.z }))];
+    const position = getNextPlotPosition(reservedPlots, game.drones.map((drone) => drone.dockPosition));
     if (!position) return notify('找不到不與坪台重疊的相鄰位置，請先移動坪台。');
     enqueueJob({ kind: 'expand', manual: false, position: { x: position[0], z: position[1], y: 0 } });
   }
