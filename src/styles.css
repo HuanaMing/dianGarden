@@ -938,3 +938,18 @@ input, [contenteditable="true"]{
 .farm-management-panel.is-continuous-placement .farm-management-heading{margin:0;font-size:11px}
 .farm-management-panel.is-continuous-placement .continuous-plot-controls{margin:0;padding:7px;gap:5px}
 @media(max-width:700px){.farm-management-panel.is-continuous-placement{width:min(330px,calc(100% - 16px))!important;max-height:none!important}}
+
+/* Continuous placement: isometric prism preview, floating decisions and live price. */
+.continuous-plot-prism-layer{z-index:1}
+.continuous-plot-prism-face{stroke:#efffe9;stroke-width:1.5;stroke-linejoin:round;fill:#8bdc8caa;vector-effect:non-scaling-stroke}
+.continuous-plot-prism-face.is-top{fill:#b7f3a9dd;stroke:#f4fff0;stroke-width:2}
+.continuous-plot-prism-face.is-left{fill:#4e9b68cc}
+.continuous-plot-prism-face.is-right{fill:#32764dcc}
+.continuous-plot-prism-face.is-manual{stroke-dasharray:4 3}
+.continuous-plot-floating-actions{position:absolute;z-index:4;display:flex;gap:8px;transform:translate(-50%,-100%);pointer-events:auto}
+.continuous-plot-action{width:42px;height:42px;border:2px solid #fff;border-radius:50%;font:900 18px/1 system-ui,sans-serif;box-shadow:0 3px 12px #18332366;cursor:pointer;touch-action:manipulation}
+.continuous-plot-action.is-confirm{background:#2e9b59;color:white}
+.continuous-plot-action.is-cancel{background:#fff4e8;color:#a34d32;border-color:#f6d1b8}
+.continuous-plot-action:focus-visible{outline:3px solid #f4c65e;outline-offset:3px}
+.continuous-plot-price{position:absolute;z-index:4;left:50%;bottom:14px;transform:translateX(-50%);max-width:calc(100% - 24px);padding:9px 14px;border:1px solid #d7e8c9;border-radius:999px;background:#152b20ed;color:#f5ffe8;font:800 13px/1.2 system-ui,sans-serif;box-shadow:0 3px 14px #0c201866;white-space:nowrap;pointer-events:none}
+@media(max-width:420px){.continuous-plot-action{width:46px;height:46px}.continuous-plot-price{bottom:8px;font-size:12px;padding:8px 11px}}

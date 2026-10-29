@@ -1673,21 +1673,46 @@
     window.dianGardenCamera?.setMode?.(nextMode);
     continuousReturn3dButton.textContent = nextMode === '2d' ? '返回 3D 視角' : '返回 2D 視角';
   });
-  window.onSkyContinuousHeightConfirmed = (height, manual) => {
-    if (!continuousPlotModeActive || !Number.isFinite(height)) return false;
-    const normalizedHeight = Math.max(-8, Math.min(8, Math.round(height * 2) / 2));
-    if (!window.confirm(`確定要在高度 ${normalizedHeight} 擴建連續地塊？`)) return false;
-    continuousPlotHeight = normalizedHeight;
-    continuousPlotManual = manual === true;
-    if (continuousPlotHeightSelect) continuousPlotHeightSelect.value = String(normalizedHeight);
-    if (continuousPlotTypeSelect) continuousPlotTypeSelect.value = continuousPlotManual ? 'manual' : 'auto';
-    continuousPlotPathReady = true;
-    window.skyWorld?.setContinuousPlotHeightSelection?.({ active: false });
-    window.skyWorld?.setContinuousPlotPlacement?.({
-      active: true, height: continuousPlotHeight, manual: continuousPlotManual,
-    });
-    notify(`已確認高度 ${normalizedHeight}；拖曳場景規劃連續地塊，放開後會自動結束模式。`);
-    return true;
+  window.onSkyContinuousPlotPreviewChange = ({ positions = [], height = continuousPlotHeight, manual = continuousPlotManual, anchor = false } = {}) => {
+    if (!continuousPlotModeActive) return '';
+    if (anchor) return '起點預估 1 格 · ' + window.gardenEconomy.getLandCost(window.gardenEconomy.getAutomaticPlotCount(game.plots)).toLocaleString() + ' 金幣';
+    const unique = [...new Map(positions.map((cell) => [`${cell.x},${cell.z}`, cell])).values()];
+    let automaticCount = window.gardenEconomy.getAutomaticPlotCount(game.plots);
+    const price = unique.reduce((sum) => {
+      const cost = window.gardenEconomy.getLandCost(automaticCount);
+      if (!manual) automaticCount += 1;
+      return sum + cost;
+    }, 0);
+    return `預估 ${unique.length} 格 · ${price.toLocaleString()} 金幣`;
+  };
+  window.onSkyContinuousPlotAction = (action, data = {}) => {
+    if (!continuousPlotModeActive) return false;
+    if (action === 'anchor-adjust') {
+      notify('拖曳起點方塊調整水平位置；上下拖曳可調整高度。');
+      return true;
+    }
+    if (action === 'anchor-confirm') {
+      if (!Number.isInteger(data.x) || !Number.isInteger(data.z) || !isHalfUnitHeight(data.height)) return false;
+      continuousPlotHeight = Math.max(-8, Math.min(8, data.height));
+      continuousPlotManual = data.manual === true;
+      if (continuousPlotHeightSelect) continuousPlotHeightSelect.value = String(continuousPlotHeight);
+      if (continuousPlotTypeSelect) continuousPlotTypeSelect.value = continuousPlotManual ? 'manual' : 'auto';
+      continuousPlotPathReady = true;
+      window.skyWorld?.setContinuousPlotHeightSelection?.({ active: false });
+      window.skyWorld?.setContinuousPlotPlacement?.({ active: true, height: continuousPlotHeight, manual: continuousPlotManual, start: { x: data.x, z: data.z } });
+      notify('起點已確認；拖曳預覽地塊，放開後用 O 建立或 X 取消。');
+      return true;
+    }
+    if (action === 'path-cancel') {
+      const first = Array.isArray(data.positions) && data.positions.length ? data.positions[0] : { x: 0, z: 0 };
+      window.skyWorld?.setContinuousPlotPlacement?.({ active: false });
+      window.skyWorld?.setContinuousPlotHeightSelection?.({ active: true, x: first.x, z: first.z, height: continuousPlotHeight, manual: continuousPlotManual });
+      continuousPlotPathReady = false;
+      notify('這次滑動已取消；重新確認起點後即可再試一次。');
+      return true;
+    }
+    if (action === 'path-confirm') return window.onSkyContinuousPlotPath?.(data.positions, data.height);
+    return false;
   };
   window.onSkyContinuousPlotPath = (positions, height) => {
     if (!continuousPlotModeActive || !continuousPlotPathReady) return false;
