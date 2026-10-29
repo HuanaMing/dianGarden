@@ -384,6 +384,50 @@
   const touchFeedbackLayer = document.createElement('div');
   touchFeedbackLayer.className = 'touch-feedback-layer';
   frame.append(touchFeedbackLayer);
+  const continuousPreviewLayer = document.createElement('div');
+  continuousPreviewLayer.className = 'continuous-plot-preview-layer';
+  continuousPreviewLayer.hidden = true;
+  frame.append(continuousPreviewLayer);
+  let continuousPlacement = { active: false, height: 0, manual: false };
+  let continuousDragPointerId = null;
+  let continuousPlacementPath = [];
+  function drawContinuousPlacementPreview() {
+    continuousPreviewLayer.replaceChildren();
+    continuousPreviewLayer.hidden = !continuousPlacement.active || !continuousPlacementPath.length;
+    if (continuousPreviewLayer.hidden) return;
+    const frameRect = frame.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+    for (const cell of continuousPlacementPath) {
+      const point = projectPoint([cell.x, continuousPlacement.height + 0.09, cell.z]);
+      const across = projectPoint([cell.x + 0.5, continuousPlacement.height + 0.09, cell.z]);
+      const along = projectPoint([cell.x, continuousPlacement.height + 0.09, cell.z + 0.5]);
+      if (!point || !across || !along) continue;
+      const marker = document.createElement('span');
+      marker.className = 'continuous-plot-preview-cell' + (continuousPlacement.manual ? ' is-manual' : '');
+      marker.style.left = `${canvasRect.left - frameRect.left + point.x}px`;
+      marker.style.top = `${canvasRect.top - frameRect.top + point.y}px`;
+      marker.style.width = `${Math.max(14, Math.min(70, Math.hypot(across.x - point.x, across.y - point.y) * 1.55))}px`;
+      marker.style.height = `${Math.max(14, Math.min(70, Math.hypot(along.x - point.x, along.y - point.y) * 1.55))}px`;
+      continuousPreviewLayer.append(marker);
+    }
+  }
+  function appendContinuousPlacementPoint(x, z) {
+    const next = { x: Math.round(x), z: Math.round(z) };
+    const last = continuousPlacementPath[continuousPlacementPath.length - 1];
+    if (!last) { continuousPlacementPath.push(next); return; }
+    if (last.x === next.x && last.z === next.z) return;
+    let x0 = last.x, z0 = last.z;
+    const dx = Math.abs(next.x - x0), dz = Math.abs(next.z - z0);
+    const sx = x0 < next.x ? 1 : -1, sz = z0 < next.z ? 1 : -1;
+    let error = dx - dz;
+    while ((x0 !== next.x || z0 !== next.z) && continuousPlacementPath.length < 120) {
+      const twice = error * 2;
+      if (twice > -dz) { error -= dz; x0 += sx; }
+      if (twice < dx) { error += dx; z0 += sz; }
+      const tail = continuousPlacementPath[continuousPlacementPath.length - 1];
+      if (!tail || tail.x !== x0 || tail.z !== z0) continuousPlacementPath.push({ x: x0, z: z0 });
+    }
+  }
   function feedbackPoint(event) {
     const rect = frame.getBoundingClientRect();
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
@@ -491,21 +535,24 @@
   window.dianGardenCamera = Object.freeze({
     getState: getCameraPose,
     restore: restoreCameraPose,
+    setMode: setCameraMode,
   });
   const cameraModeButton = document.querySelector('#camera-mode');
-  cameraModeButton?.addEventListener('click', () => {
-    if (cameraMode === '3d') {
+  function setCameraMode(mode) {
+    if (mode === cameraMode) return;
+    if (mode === '2d') {
       savedCameraPose = { yaw, pitch, distance, targetX, targetZ };
       cameraMode = '2d';
-      cameraModeButton.textContent = '返回 3D';
-      cameraModeButton.setAttribute('aria-pressed', 'true');
+      cameraModeButton && (cameraModeButton.textContent = '返回 3D');
+      cameraModeButton?.setAttribute('aria-pressed', 'true');
     } else {
       cameraMode = '3d';
       if (savedCameraPose) ({ yaw, pitch, distance, targetX, targetZ } = savedCameraPose);
-      cameraModeButton.textContent = '2D 模式';
-      cameraModeButton.setAttribute('aria-pressed', 'false');
+      cameraModeButton && (cameraModeButton.textContent = '2D 模式');
+      cameraModeButton?.setAttribute('aria-pressed', 'false');
     }
-  });
+  }
+  cameraModeButton?.addEventListener('click', () => setCameraMode(cameraMode === '3d' ? '2d' : '3d'));
   let dragging = false;
   let pointerMoved = false;
   let pointerStartX = 0;
@@ -2884,6 +2931,22 @@
         return;
       }
     }
+    if (continuousPlacement.active && !galleryMode) {
+      clearTimeout(emptyTouchRotateTimer);
+      clearTimeout(plotPressTimer);
+      clearTimeout(dockPressTimer);
+      rotateHoldGesture = false;
+      dragging = true;
+      pointerMoved = false;
+      continuousDragPointerId = event.pointerId;
+      continuousPlacementPath = [];
+      const groundPoint = screenToGround(event.clientX, event.clientY, continuousPlacement.height + 0.08);
+      if (groundPoint) appendContinuousPlacementPoint(groundPoint[0], groundPoint[1]);
+      drawContinuousPlacementPreview();
+      canvas.setPointerCapture(event.pointerId);
+      event.preventDefault();
+      return;
+    }
     clearTimeout(plotPressTimer);
     clearTimeout(emptyTouchRotateTimer);
     rotateHoldGesture = false;
@@ -2992,6 +3055,18 @@
       if (suppressTouchTap) return;
     }
     if (!dragging) return;
+    if (continuousDragPointerId === event.pointerId) {
+      const groundPoint = screenToGround(event.clientX, event.clientY, continuousPlacement.height + 0.08);
+      if (groundPoint) {
+        const previousLength = continuousPlacementPath.length;
+        appendContinuousPlacementPoint(groundPoint[0], groundPoint[1]);
+        if (continuousPlacementPath.length !== previousLength) pointerMoved = true;
+        drawContinuousPlacementPreview();
+      }
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+      return;
+    }
     if (!pointerMoved && Math.hypot(event.clientX - pointerStartX, event.clientY - pointerStartY) < 5) return;
     pointerMoved = true;
     if (!rotateHoldGesture) clearTimeout(emptyTouchRotateTimer);
@@ -3097,6 +3172,17 @@
       uploadWorld();
       return;
     }
+    if (continuousDragPointerId === event.pointerId) {
+      const positions = continuousPlacementPath.map((cell) => ({ ...cell }));
+      const height = continuousPlacement.height;
+      continuousDragPointerId = null;
+      continuousPlacementPath = [];
+      dragging = false;
+      drawContinuousPlacementPreview();
+      if (positions.length) window.onSkyContinuousPlotPath?.(positions, height);
+      if (event.pointerType === 'touch') touchPoints.delete(event.pointerId);
+      return;
+    }
     dragging = false;
     clearTimeout(plotPressTimer);
     clearTimeout(dockPressTimer);
@@ -3168,7 +3254,17 @@
     rotateHoldGesture = false;
     uploadWorld();
   });
-  canvas.addEventListener('pointercancel', (event) => { cancelPointerFeedback(event); if (event.pointerType === 'touch') touchPoints.delete(event.pointerId); if (touchPoints.size === 0) { pinchActive = false; suppressTouchTap = false; } clearTimeout(emptyTouchRotateTimer); rotateHoldGesture = false; clearTimeout(plotPressTimer); clearTimeout(dockPressTimer); dragging = false; dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null; dockPreview = null; pointerPlotIndex = null; plotPressIndex = null; plotPressReady = false; dockPressReady = false; dockWasInMoveModeAtPointerDown = false; uploadWorld(); });
+  canvas.addEventListener('pointercancel', (event) => {
+    cancelPointerFeedback(event);
+    if (continuousDragPointerId === event.pointerId) {
+      continuousDragPointerId = null;
+      continuousPlacementPath = [];
+      drawContinuousPlacementPreview();
+    }
+    if (event.pointerType === 'touch') touchPoints.delete(event.pointerId);
+    if (touchPoints.size === 0) { pinchActive = false; suppressTouchTap = false; }
+    clearTimeout(emptyTouchRotateTimer); rotateHoldGesture = false; clearTimeout(plotPressTimer); clearTimeout(dockPressTimer); dragging = false; dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null; dockPreview = null; pointerPlotIndex = null; plotPressIndex = null; plotPressReady = false; dockPressReady = false; dockWasInMoveModeAtPointerDown = false; uploadWorld();
+  });
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     if (cameraMode === '2d') topDownHeight = Math.max(3, Math.min(50, topDownHeight + event.deltaY * 0.02));
@@ -3237,6 +3333,20 @@
     return true;
   }
   window.skyWorld = {
+    setContinuousPlotPlacement(options = {}) {
+      continuousPlacement = {
+        active: options.active === true,
+        height: Number.isFinite(options.height) && Math.abs(options.height * 2 - Math.round(options.height * 2)) < 1e-8 ? Math.max(-8, Math.min(8, options.height)) : 0,
+        manual: options.manual === true,
+      };
+      if (continuousPlacement.active) setCameraMode('2d');
+      else {
+        continuousDragPointerId = null;
+        continuousPlacementPath = [];
+      }
+      drawContinuousPlacementPreview();
+      return { ...continuousPlacement };
+    },
     getDroneHeading(droneIndex = 0) {
       return Number.isInteger(droneIndex) ? droneStates[droneIndex]?.heading ?? 0 : 0;
     },
