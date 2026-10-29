@@ -555,6 +555,7 @@
     location: index === 0 ? [dockPosition.x, dockPosition.z] : [0, 0],
     y: DRONE_IDLE_Y,
     heading: 0,
+    harvestFlower: null,
   }));
   const dronePhaseTransitions = {
     docked: ['idle', 'outbound', 'working'],
@@ -664,6 +665,62 @@
         petal % 2 ? headColor.map((channel) => Math.min(1, channel * 0.9)) : headColor);
     }
     addOctahedron(positions, colors, x, bloomY + 0.035, z, 0.05, 0.065, 0.05, headColor);
+  }
+
+  function addHarvestFlowerHead(positions, colors, opacitySpans, x, y, z, flower, time) {
+    const cropIndex = Number.isInteger(flower?.cropIndex) ? flower.cropIndex : 0;
+    const model = flowerModelRegistry.get(cropIndex);
+    if (typeof model?.bloom !== 'function') return;
+    const headPositions = [];
+    const headColors = [];
+    const headPalette = [
+      [0.98, 0.72, 0.12], [0.54, 0.39, 0.78], [0.93, 0.94, 0.84], [0.545, 0.063, 0.157],
+      [0.91, 0.36, 0.34], [0.88, 0.48, 0.58], [0.94, 0.7, 0.2], [0.44, 0.59, 0.88],
+      [0.57, 0.42, 0.75], [0.83, 0.38, 0.55], [0.85, 0.16, 0.28],
+    ];
+    const customColor = /^#[0-9a-f]{6}$/i.test(flower?.color || '')
+      ? [1, 3, 5].map((offset) => Number.parseInt(flower.color.slice(offset, offset + 2), 16) / 255)
+      : null;
+    const headColor = customColor || headPalette[cropIndex] || headPalette[0];
+    const height = window.flowerCatalog?.[cropIndex]?.height || 0.5;
+    model.bloom({
+      positions: headPositions,
+      colors: headColors,
+      x: 0,
+      z: 0,
+      height,
+      headColor,
+      environmentState,
+      stemModel: model.stem,
+      stage: 2,
+    });
+    if (!headPositions.length) return;
+    const min = [Infinity, Infinity, Infinity];
+    const max = [-Infinity, -Infinity, -Infinity];
+    for (let i = 0; i < headPositions.length; i += 3) {
+      for (let axis = 0; axis < 3; axis += 1) {
+        min[axis] = Math.min(min[axis], headPositions[i + axis]);
+        max[axis] = Math.max(max[axis], headPositions[i + axis]);
+      }
+    }
+    const center = min.map((value, axis) => (value + max[axis]) * 0.5);
+    const scale = 0.24;
+    const rotation = (time - (flower.startedAt || time)) * 0.00072;
+    const cosine = Math.cos(rotation), sine = Math.sin(rotation);
+    const bob = Math.sin(time * 0.0022) * 0.007;
+    const first = positions.length / 3;
+    for (let i = 0; i < headPositions.length; i += 3) {
+      const dx = (headPositions[i] - center[0]) * scale;
+      const dy = (headPositions[i + 1] - center[1]) * scale;
+      const dz = (headPositions[i + 2] - center[2]) * scale;
+      positions.push(
+        x + dx * cosine + dz * sine,
+        y - 0.05 + bob + dy,
+        z - dx * sine + dz * cosine,
+      );
+      colors.push(headColors[i], headColors[i + 1], headColors[i + 2]);
+    }
+    opacitySpans.push({ first, last: positions.length / 3, opacity: 1 });
   }
 
   function addBox(positions, colors, x1, y1, z1, x2, y2, z2, palette) {
@@ -1591,6 +1648,9 @@
         const offsetWing = -(0.2 * 0.6 / 2) * Math.sin(wingAngle) * 0.6;
         addDrone(positions, colors, windowPositions, windowUVs, droneOpacitySpans, droneEmissionSpans, droneCoreSpans, droneGlassSpansForFrame, candidate.x, candidate.y + offsetWing, candidate.z, individualWingPhase, state.heading, droneDocks[index]?.battery ?? 100, flapFrequency, flapAmplitude);
       }
+      if (state.harvestFlower) {
+        addHarvestFlowerHead(positions, colors, droneOpacitySpans, candidate.x, candidate.y, candidate.z, state.harvestFlower, time);
+      }
       if (animation && candidate.workProgress > 0) {
         if (!animation.workStarted) {
           animation.workStarted = true;
@@ -1623,6 +1683,9 @@
         }
       }
       if (animation && candidate.workComplete && !animation.workCompleted && state.animation === animation) {
+        if (animation.kind === 'harvest' && Number.isInteger(animation.harvestFlower?.cropIndex)) {
+          state.harvestFlower = { ...animation.harvestFlower, startedAt: time };
+        }
         animation.workCompleted = true;
         animation.returning = animation.shouldReturn?.() !== false;
         if (!animation.departed) { animation.departed = true; deferCallback(animation.onDeparture); }
@@ -1640,6 +1703,7 @@
       } else if (animation && candidate.completing && state.animation === animation) {
         state.animation = null;
         setDronePhase(index, droneDocks[index]?.deployed === false ? 'docked' : 'idle', 'return-complete');
+        state.harvestFlower = null;
         const onReturnComplete = animation.onReturnComplete;
         animation.onReturnComplete = null;
         deferCallback(onReturnComplete);
@@ -3205,7 +3269,8 @@
       const flowerHeight = window.flowerCatalog?.[plot?.crop]?.height || 0.5;
       const plantHeight = Number.isFinite(plot?.plantHeight) ? plot.plantHeight : 1;
       const harvestY = getPlotHeight(index) + flowerHeight * plantHeight + 0.12;
-      return startDroneAnimation(droneIndex, 'harvest', [targetX, targetZ], { hoverDuration: 500, targetPlotIndex: index, workY: harvestY, onDeparture, onComplete, shouldReturn, onReturnComplete });
+      const harvestFlower = Number.isInteger(plot?.crop) ? { cropIndex: plot.crop, color: plot.variantColor || null } : null;
+      return startDroneAnimation(droneIndex, 'harvest', [targetX, targetZ], { hoverDuration: 500, targetPlotIndex: index, workY: harvestY, harvestFlower, onDeparture, onComplete, shouldReturn, onReturnComplete });
     },
     animateWater(index, onDeparture, onComplete, shouldReturn, droneIndex = 0, onReturnComplete, onWorkStart) {
       if (!Number.isInteger(index) || index < 0 || index >= landCount) return false;
