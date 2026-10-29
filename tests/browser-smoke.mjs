@@ -90,7 +90,6 @@ if (!indexHtml.includes('id="continuous-plot-mode"')
   || !skyWorldSource.includes('setMode: setCameraMode,')) {
   throw new Error('連續開墾的高度／類型控制、2D 拖曳路徑、合併佇列、最高優先派工或待辦存檔／還原契約缺失');
 }
-checks.push('連續開墾：拖曳路徑、無效位置略過、手動地塊由無人機建造、合併佇列與重啟續作的靜態契約');
 if (!skyWorldSource.includes("const renderingPauseReasons = new Set(galleryMode ? [] : ['startup']);")
   || !skyWorldSource.includes("setRenderingPaused,")
   || !skyWorldSource.includes("if (isRenderingPaused()) {")
@@ -153,6 +152,7 @@ const browser = await chromium.launch({ headless: true });
 const errors = [];
 const checks = [];
 checks.push('任務225：只有停靠座標改變才重算返航路徑，電量更新不再重設飛行插值');
+checks.push('連續開墾：拖曳路徑、無效位置略過、手動地塊由無人機建造、合併佇列與重啟續作的靜態契約');
 if (!gameSource.includes('const priority = (candidate) => returningDrones.has(candidate.index) ? 0 : candidate.drone.battery === 100 ? 1 : 2;')) {
   throw new Error('任務255：返航無人機應優先接續原地後續工作，不可被滿電但遠離目標的無人機搶先');
 }
