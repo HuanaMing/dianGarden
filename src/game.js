@@ -1684,10 +1684,10 @@
     }
     accepted.forEach((job) => { job.id = `${Date.now()}-${Math.random().toString(36).slice(2)}`; });
     jobQueue.unshift(...accepted);
-    save();
+    const savedImmediately = save();
     renderJobQueue();
     processJobQueue();
-    notify(`已加入連續開墾：${accepted.length} 格${skipped ? `，略過 ${skipped} 個無效位置` : ''}；任務已立即儲存。`);
+    notify(`已加入連續開墾：${accepted.length} 格${skipped ? `，略過 ${skipped} 個無效位置` : ''}${savedImmediately ? '；任務已立即儲存。' : '；但存檔失敗，重新整理可能會遺失未完成任務。'}`);
     return true;
   };
   farmTabManual?.addEventListener('click', () => setFarmManagementTab('manual'));
