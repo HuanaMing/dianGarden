@@ -9,6 +9,7 @@ const indexHtml = await readSource('src/index.html');
 const cloudSaveSource = await readSource('src/cloud-save.js');
 const gameSource = await readSource('src/game.js');
 const skyWorldSource = await readSource('src/sky-world.js');
+const stylesSource = await readSource('src/styles.css');
 const versionCheckSource = await readSource('src/version-check.js');
 if (!indexHtml.includes('id="startup-garden-dialog"') || !indexHtml.includes('id="start-guest-garden"')
   || !indexHtml.includes('id="return-to-own-garden"')) throw new Error('登入入口／訪客花園控制項缺失');
@@ -86,8 +87,11 @@ if (!indexHtml.includes('id="continuous-plot-mode"')
   || !gameSource.includes("jobQueue.splice(firstNonExpansion, 0, ...accepted)")
   || !skyWorldSource.includes('setContinuousPlotPlacement(options = {})')
   || !skyWorldSource.includes('appendContinuousPlacementPoint(groundPoint[0], groundPoint[1])')
+  || !skyWorldSource.includes('const bridge = { x: x0, z: previousZ };')
   || !skyWorldSource.includes('window.onSkyContinuousPlotPath?.(positions, height)')
-  || !skyWorldSource.includes('setMode: setCameraMode,')) {
+  || !skyWorldSource.includes('setMode: setCameraMode,')
+  || !gameSource.includes("classList.toggle('is-continuous-placement', continuousPlotModeActive)")
+  || !stylesSource.includes('.farm-management-panel.is-continuous-placement .world-plots')) {
   throw new Error('連續開墾的高度／類型控制、2D 拖曳路徑、合併佇列、最高優先派工或待辦存檔／還原契約缺失');
 }
 if (!skyWorldSource.includes("const renderingPauseReasons = new Set(galleryMode ? [] : ['startup']);")
