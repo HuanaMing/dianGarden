@@ -789,8 +789,8 @@
     const expansionPending = [...activeJobs.values()].some((job) => job.kind === 'expand') || jobQueue.some((job) => job.kind === 'expand');
     expandButton?.setAttribute('aria-disabled', String(expansionPending));
     expandButton?.classList.toggle('is-blocked', expansionPending);
-    if (expandButton) expandButton.disabled = expansionPending;
-    if (manualLandButton) manualLandButton.disabled = expansionPending;
+    if (expandButton) expandButton.disabled = expansionPending && !continuousPlotModeActive;
+    if (manualLandButton) manualLandButton.disabled = expansionPending && !continuousPlotModeActive;
     expandButton.textContent = `自動地塊 · ${getLandCost()} 🪙`;
     expandButton?.setAttribute('aria-label', expansionPending ? '農地擴建中，請稍後' : `擴建空中土地，花費 ${getLandCost()} 枚金幣`);
     expandButton?.setAttribute('title', expansionPending ? '農地擴建中，請稍後' : '擴建空中土地');
@@ -1682,8 +1682,13 @@
     return true;
   };
   window.onSkyContinuousPlotPath = (positions, height) => {
-    if (!continuousPlotModeActive || !Array.isArray(positions) || !positions.length || !isHalfUnitHeight(height) || height < -8 || height > 8) return false;
-    const manual = continuousPlotTypeSelect?.value === 'manual';
+    if (!continuousPlotModeActive || !continuousPlotPathReady) return false;
+    if (!Array.isArray(positions) || !positions.length || !isHalfUnitHeight(height) || height < -8 || height > 8) {
+      notify('沒有取得有效路徑，連續開墾模式已結束。');
+      updateContinuousPlotMode(false);
+      return false;
+    }
+    const manual = continuousPlotManual;
     const batchId = `continuous-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const plannedPlots = game.plots.map((plot) => ({ ...plot }));
     const occupied = new Set(plannedPlots.map((plot) => `${plot.x},${plot.z},${plotY(plot)}`));
@@ -1731,7 +1736,8 @@
       if (skippedInvalid) reasons.push(`無效位置 ${skippedInvalid} 格`);
       if (skippedForFunds) reasons.push(`金幣不足 ${skippedForFunds} 格`);
       if (skippedForCapacity) reasons.push(`待辦佇列上限 200 格，略過 ${skippedForCapacity} 格`);
-      notify(`沒有加入開墾任務：${reasons.join('；') || '沒有可開墾的空格'}。`);
+      notify(`沒有加入開墾任務：${reasons.join('；') || '沒有可開墾的空格'}。連續開墾模式已結束。`);
+      updateContinuousPlotMode(false);
       return false;
     }
     accepted.forEach((job) => { job.id = `${Date.now()}-${Math.random().toString(36).slice(2)}`; });
@@ -1746,7 +1752,8 @@
       skippedForFunds ? `金幣不足 ${skippedForFunds} 格` : '',
       skippedForCapacity ? `佇列上限略過 ${skippedForCapacity} 格` : '',
     ].filter(Boolean).join('；');
-    notify(`已加入連續開墾：${accepted.length} 格${skippedSummary ? `；${skippedSummary}` : ''}${savedImmediately ? '；任務已立即儲存。' : '；但存檔失敗，重新整理可能會遺失未完成任務。'}`);
+    notify(`已加入連續開墾：${accepted.length} 格${skippedSummary ? `；${skippedSummary}` : ''}${savedImmediately ? '；任務已立即儲存。' : '；但存檔失敗，重新整理可能會遺失未完成任務。'}連續開墾模式已自動關閉。`);
+    updateContinuousPlotMode(false);
     return true;
   };
   farmTabManual?.addEventListener('click', () => setFarmManagementTab('manual'));
@@ -1763,11 +1770,15 @@
     document.querySelector('#farm-management-toggle')?.setAttribute('aria-expanded', 'false');
   });
   expandButton?.addEventListener('click', () => {
+    if (continuousPlotModeActive) return beginContinuousHeightSelection(false);
     const expansionPending = [...activeJobs.values()].some((job) => job.kind === 'expand') || jobQueue.some((job) => job.kind === 'expand');
     if (expansionPending) return notify('農地擴建中，請稍後');
     openExpansionDialog();
   });
-  manualLandButton?.addEventListener('click', () => { dialogContext = { type: 'manual-expansion' }; dialog.showModal(); renderFarmDialog(); });
+  manualLandButton?.addEventListener('click', () => {
+    if (continuousPlotModeActive) return beginContinuousHeightSelection(true);
+    dialogContext = { type: 'manual-expansion' }; dialog.showModal(); renderFarmDialog();
+  });
   buyDroneButton?.addEventListener('click', buyDrone);
   dronePanelToggle?.addEventListener('click', () => {
     setDronePanelOpen(!droneJobsPanel?.classList.contains('is-open'));
