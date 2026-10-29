@@ -1419,8 +1419,11 @@
     job.id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     job.status = 'queued';
     job.createdAt = Date.now();
-    if (job.kind === 'expand') jobQueue.unshift(job);
-    else jobQueue.push(job);
+    if (job.kind === 'expand') {
+      const firstNonExpansion = jobQueue.findIndex((queued) => queued.kind !== 'expand');
+      if (firstNonExpansion < 0) jobQueue.push(job);
+      else jobQueue.splice(firstNonExpansion, 0, job);
+    } else jobQueue.push(job);
     if (job.kind === 'expand') save();
     renderJobQueue();
     processJobQueue();
@@ -1660,9 +1663,19 @@
     const batchId = `continuous-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const plannedPlots = game.plots.map((plot) => ({ ...plot }));
     const occupied = new Set(plannedPlots.map((plot) => `${plot.x},${plot.z},${plotY(plot)}`));
-    const reserved = new Set(pendingExpansionJobs().map((job) => `${job.position.x},${job.position.z},${isHalfUnitHeight(job.position.y) ? job.position.y : 0}`));
+    const pendingExpansions = pendingExpansionJobs().filter((job) => job.resultCommitted !== true
+      && !game.plots.some((plot) => plot.x === job.position.x && plot.z === job.position.z && plotY(plot) === (isHalfUnitHeight(job.position.y) ? job.position.y : 0)));
+    const reserved = new Set(pendingExpansions.map((job) => `${job.position.x},${job.position.z},${isHalfUnitHeight(job.position.y) ? job.position.y : 0}`));
+    const reservedPlantCoins = [...activeJobs.values(), ...jobQueue].reduce((sum, job) => sum + (job.kind === 'plant' ? (crops[job.cropIndex]?.seedCost || 0) : 0), 0);
+    let projectedAutoCount = window.gardenEconomy.getAutomaticPlotCount(plannedPlots);
+    let availableCoins = game.coins - reservedPlantCoins;
+    for (const job of pendingExpansions) {
+      availableCoins -= window.gardenEconomy.getLandCost(projectedAutoCount);
+      if (job.manual !== true) projectedAutoCount += 1;
+    }
     const accepted = [];
     let skipped = 0;
+    let skippedForFunds = 0;
     const docks = game.drones.filter((drone) => drone.deployed !== false).map((drone) => drone.dockPosition);
     for (const cell of positions.slice(0, 120)) {
       if (!Number.isInteger(cell.x) || !Number.isInteger(cell.z)) { skipped += 1; continue; }
@@ -1670,6 +1683,10 @@
       if (occupied.has(key) || reserved.has(key)) { skipped += 1; continue; }
       const candidate = { crop: null, plantedAt: null, manual, grassOnly: false, x: cell.x, z: cell.z, y: height };
       if (!validStacking([...plannedPlots, candidate], docks)) { skipped += 1; continue; }
+      const cost = window.gardenEconomy.getLandCost(projectedAutoCount);
+      if (availableCoins < cost) { skipped += 1; skippedForFunds += 1; continue; }
+      availableCoins -= cost;
+      if (!manual) projectedAutoCount += 1;
       plannedPlots.push(candidate);
       occupied.add(key);
       reserved.add(key);
@@ -1679,11 +1696,13 @@
       });
     }
     if (!accepted.length) {
-      notify('這段路徑沒有可開墾的空格；已自動略過所有無效位置。');
+      notify(skippedForFunds ? '金幣不足，這段路徑沒有加入開墾任務；無效位置也已自動略過。' : '這段路徑沒有可開墾的空格；已自動略過所有無效位置。');
       return false;
     }
     accepted.forEach((job) => { job.id = `${Date.now()}-${Math.random().toString(36).slice(2)}`; });
-    jobQueue.unshift(...accepted);
+    const firstNonExpansion = jobQueue.findIndex((queued) => queued.kind !== 'expand');
+    if (firstNonExpansion < 0) jobQueue.push(...accepted);
+    else jobQueue.splice(firstNonExpansion, 0, ...accepted);
     const savedImmediately = save();
     renderJobQueue();
     processJobQueue();
