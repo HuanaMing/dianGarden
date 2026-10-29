@@ -1637,33 +1637,50 @@
     render();
     notify('新無人機與專屬停靠坪台已加入花園。');
   }
+  let continuousPlotPathReady = false;
+  let continuousPlotManual = false;
+  let continuousPlotHeight = 0;
   function updateContinuousPlotMode(active) {
     continuousPlotModeActive = Boolean(active);
-    const height = Number(continuousPlotHeightSelect?.value ?? 0);
-    const manual = continuousPlotTypeSelect?.value === 'manual';
-    window.skyWorld?.setContinuousPlotPlacement?.({ active: continuousPlotModeActive, height, manual });
+    continuousPlotPathReady = false;
+    window.skyWorld?.setContinuousPlotHeightSelection?.({ active: false });
+    window.skyWorld?.setContinuousPlotPlacement?.({ active: false });
     continuousPlotModeButton?.setAttribute('aria-pressed', String(continuousPlotModeActive));
-    if (continuousPlotModeButton) continuousPlotModeButton.textContent = continuousPlotModeActive ? '結束連續開墾' : '連續開墾：關';
-    if (continuousReturn3dButton) continuousReturn3dButton.hidden = !continuousPlotModeActive;
+    if (continuousPlotModeButton) continuousPlotModeButton.textContent = continuousPlotModeActive ? '連續開墾' : '連續開墾';
+    if (continuousReturn3dButton) continuousReturn3dButton.hidden = true;
     document.querySelector('#farm-management-panel')?.classList.toggle('is-continuous-placement', continuousPlotModeActive);
-    if (continuousPlotHint) continuousPlotHint.textContent = continuousPlotModeActive
-      ? `連續開墾中：拖曳場景建立 ${manual ? '手動' : '自動'}地塊路徑（高度 ${height}）；無效格會自動略過。再次按鈕可結束。`
-      : '選擇高度與地塊類型，再開啟連續開墾；拖曳路徑會由無人機逐格建造。';
-    if (continuousPlotModeActive) notify('已切換至 2D 連續開墾模式；拖曳即可規劃路徑。');
+    if (continuousPlotModeActive) notify('連續開墾已開啟：點擊「自動地塊」或「手動地塊」，拖曳半透明地塊調整高度。');
     save();
   }
+  function beginContinuousHeightSelection(manual) {
+    if (!continuousPlotModeActive) return false;
+    continuousPlotManual = manual === true;
+    continuousPlotHeight = Number(continuousPlotHeightSelect?.value ?? 0);
+    const selection = window.skyWorld?.setContinuousPlotHeightSelection?.({
+      active: true, height: continuousPlotHeight, manual: continuousPlotManual,
+    });
+    if (!selection) return false;
+    notify('拖曳半透明地塊上下調整高度；高度合適後，點一下地塊確認。');
+    return true;
+  }
   continuousPlotModeButton?.addEventListener('click', () => updateContinuousPlotMode(!continuousPlotModeActive));
-  continuousReturn3dButton?.addEventListener('click', () => {
-    window.dianGardenCamera?.setMode?.('3d');
-    save();
-    notify('已返回 3D 視角；連續開墾模式仍開啟，可繼續拖曳建地。');
-  });
-  continuousPlotHeightSelect?.addEventListener('change', () => {
-    if (continuousPlotModeActive) updateContinuousPlotMode(true);
-  });
-  continuousPlotTypeSelect?.addEventListener('change', () => {
-    if (continuousPlotModeActive) updateContinuousPlotMode(true);
-  });
+  continuousReturn3dButton?.addEventListener('click', () => {});
+  window.onSkyContinuousHeightConfirmed = (height, manual) => {
+    if (!continuousPlotModeActive || !Number.isFinite(height)) return false;
+    const normalizedHeight = Math.max(-8, Math.min(8, Math.round(height * 2) / 2));
+    if (!window.confirm(`確定要在高度 ${normalizedHeight} 擴建連續地塊？`)) return false;
+    continuousPlotHeight = normalizedHeight;
+    continuousPlotManual = manual === true;
+    if (continuousPlotHeightSelect) continuousPlotHeightSelect.value = String(normalizedHeight);
+    if (continuousPlotTypeSelect) continuousPlotTypeSelect.value = continuousPlotManual ? 'manual' : 'auto';
+    continuousPlotPathReady = true;
+    window.skyWorld?.setContinuousPlotHeightSelection?.({ active: false });
+    window.skyWorld?.setContinuousPlotPlacement?.({
+      active: true, height: continuousPlotHeight, manual: continuousPlotManual,
+    });
+    notify(`已確認高度 ${normalizedHeight}；拖曳場景規劃連續地塊，放開後會自動結束模式。`);
+    return true;
+  };
   window.onSkyContinuousPlotPath = (positions, height) => {
     if (!continuousPlotModeActive || !Array.isArray(positions) || !positions.length || !isHalfUnitHeight(height) || height < -8 || height > 8) return false;
     const manual = continuousPlotTypeSelect?.value === 'manual';
