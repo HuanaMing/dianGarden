@@ -1983,3 +1983,6 @@
 - 限制：Remote Desktop Commander 裝置離線，尚未執行 `LOCAL-DEPENDENCIES.md` 指定環境下的完整驗收與 Playwright 瀏覽器視覺／重啟續作測試；任務保留 active，未宣稱驗收完成。
 - 檔案：`src/index.html`、`src/styles.css`、`src/game.js`、`src/sky-world.js`、`tests/browser-smoke.mjs`、`README.md`、`docs/architecture.md`、`docs/desicions.md`、`tasks/active/278-continuous-plot-expansion.md`。
 - 未合併至 `main`，未部署。
+
+- 後續防護：對角線路徑插入共邊橋接格；已排隊擴建也納入碰撞／堆疊驗證；批次按 FIFO 插在既有擴建後、一般作物工作前，並按預估可用金幣略過負擔不起的格數。
+- 介面修正：連續模式啟用時收斂農地面板，保留直接返回 3D 的按鈕；存檔提示會依實際儲存結果顯示。
