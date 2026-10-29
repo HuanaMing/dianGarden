@@ -344,6 +344,7 @@
   const expandButton = document.querySelector('#world-expand');
   const manualLandButton = document.querySelector('#world-buy-manual-plot');
   const continuousPlotModeButton = document.querySelector('#continuous-plot-mode');
+  const continuousReturn3dButton = document.querySelector('#continuous-return-3d');
   const continuousPlotHeightSelect = document.querySelector('#continuous-plot-height');
   const continuousPlotTypeSelect = document.querySelector('#continuous-plot-type');
   const continuousPlotHint = document.querySelector('#continuous-plot-hint');
@@ -1634,6 +1635,7 @@
     window.skyWorld?.setContinuousPlotPlacement?.({ active: continuousPlotModeActive, height, manual });
     continuousPlotModeButton?.setAttribute('aria-pressed', String(continuousPlotModeActive));
     if (continuousPlotModeButton) continuousPlotModeButton.textContent = continuousPlotModeActive ? '結束連續開墾' : '連續開墾：關';
+    if (continuousReturn3dButton) continuousReturn3dButton.hidden = !continuousPlotModeActive;
     if (continuousPlotHint) continuousPlotHint.textContent = continuousPlotModeActive
       ? `連續開墾中：拖曳場景建立 ${manual ? '手動' : '自動'}地塊路徑（高度 ${height}）；無效格會自動略過。再次按鈕可結束。`
       : '選擇高度與地塊類型，再開啟連續開墾；拖曳路徑會由無人機逐格建造。';
@@ -1641,6 +1643,11 @@
     save();
   }
   continuousPlotModeButton?.addEventListener('click', () => updateContinuousPlotMode(!continuousPlotModeActive));
+  continuousReturn3dButton?.addEventListener('click', () => {
+    window.dianGardenCamera?.setMode?.('3d');
+    save();
+    notify('已返回 3D 視角；連續開墾模式仍開啟，可繼續拖曳建地。');
+  });
   continuousPlotHeightSelect?.addEventListener('change', () => {
     if (continuousPlotModeActive) updateContinuousPlotMode(true);
   });
