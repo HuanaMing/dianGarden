@@ -1302,7 +1302,8 @@
       if (game.drones[droneIndex]?.deployed === false || activeJobs.has(droneIndex)) continue;
       const isEligibleJob = (job) => {
         if (blockedJobsThisPass.has(job.id)) return false;
-        if (job.kind !== 'expand' && jobQueue.some((queued) => queued.kind === 'expand')) return false;
+        // 擴建只在下方的優先選取階段優先；若擴建因無安全路徑／電量不足而無法執行，
+        // 不可讓佇列中仍存在的擴建任務永久封鎖其他可執行任務。
         if (job.kind === 'harvest' && harvestReturnRequired.has(droneIndex)) return false;
         if (game.drones[droneIndex].battery < estimateJobBattery(job, droneIndex)) return false;
         if ([...activeJobs.values()].some((active) => active.kind === 'expand')) return false;
