@@ -180,6 +180,13 @@ if (!skyWorldSource.includes("function addHarvestFlowerHead(")
   throw new Error('任務277：透明箱花頭模型、旋轉展示或返航清理契約缺失');
 }
 checks.push('任務277：採收後返航鎖定只限制再次採收，並保留所採花頭於透明箱內直到返航完成');
+if (!skyWorldSource.includes("stemModel: null")
+  || !skyWorldSource.includes("green > red * 1.12 && green > blue * 1.08")
+  || !skyWorldSource.includes("0.032 / Math.max(0.0001, maxRadius)")
+  || !skyWorldSource.includes("0.036 / halfHeight")) {
+  throw new Error('任務277重做：採收展示必須排除莖葉，並限制花頭尺寸以避免穿出透明箱');
+}
+checks.push('任務277重做：透明箱只保留非綠色花頭幾何，且花頭半徑／高度受箱內安全尺寸限制');
 
 
 const encyclopediaPage = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
