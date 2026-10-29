@@ -1665,6 +1665,10 @@
     const occupied = new Set(plannedPlots.map((plot) => `${plot.x},${plot.z},${plotY(plot)}`));
     const pendingExpansions = pendingExpansionJobs().filter((job) => job.resultCommitted !== true
       && !game.plots.some((plot) => plot.x === job.position.x && plot.z === job.position.z && plotY(plot) === (isHalfUnitHeight(job.position.y) ? job.position.y : 0)));
+    const validationPlots = [...plannedPlots, ...pendingExpansions.map((job) => ({
+      crop: null, plantedAt: null, manual: job.manual === true, grassOnly: false,
+      x: job.position.x, z: job.position.z, y: isHalfUnitHeight(job.position.y) ? job.position.y : 0,
+    }))];
     const reserved = new Set(pendingExpansions.map((job) => `${job.position.x},${job.position.z},${isHalfUnitHeight(job.position.y) ? job.position.y : 0}`));
     const reservedPlantCoins = [...activeJobs.values(), ...jobQueue].reduce((sum, job) => sum + (job.kind === 'plant' ? (crops[job.cropIndex]?.seedCost || 0) : 0), 0);
     let projectedAutoCount = window.gardenEconomy.getAutomaticPlotCount(plannedPlots);
@@ -1682,12 +1686,13 @@
       const key = `${cell.x},${cell.z},${height}`;
       if (occupied.has(key) || reserved.has(key)) { skipped += 1; continue; }
       const candidate = { crop: null, plantedAt: null, manual, grassOnly: false, x: cell.x, z: cell.z, y: height };
-      if (!validStacking([...plannedPlots, candidate], docks)) { skipped += 1; continue; }
+      if (!validStacking([...validationPlots, candidate], docks)) { skipped += 1; continue; }
       const cost = window.gardenEconomy.getLandCost(projectedAutoCount);
       if (availableCoins < cost) { skipped += 1; skippedForFunds += 1; continue; }
       availableCoins -= cost;
       if (!manual) projectedAutoCount += 1;
       plannedPlots.push(candidate);
+      validationPlots.push(candidate);
       occupied.add(key);
       reserved.add(key);
       accepted.push({
