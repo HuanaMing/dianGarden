@@ -1670,7 +1670,7 @@
       x: job.position.x, z: job.position.z, y: isHalfUnitHeight(job.position.y) ? job.position.y : 0,
     }))];
     const reserved = new Set(pendingExpansions.map((job) => `${job.position.x},${job.position.z},${isHalfUnitHeight(job.position.y) ? job.position.y : 0}`));
-    const reservedPlantCoins = [...activeJobs.values(), ...jobQueue].reduce((sum, job) => sum + (job.kind === 'plant' ? (crops[job.cropIndex]?.seedCost || 0) : 0), 0);
+    const reservedPlantCoins = [...activeJobs.values(), ...jobQueue].reduce((sum, job) => sum + (job.resultCommitted !== true && job.kind === 'plant' ? (crops[job.cropIndex]?.seedCost || 0) : 0), 0);
     let projectedAutoCount = window.gardenEconomy.getAutomaticPlotCount(plannedPlots);
     let availableCoins = game.coins - reservedPlantCoins;
     for (const job of pendingExpansions) {
