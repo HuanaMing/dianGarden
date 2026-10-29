@@ -1647,7 +1647,10 @@
     window.skyWorld?.setContinuousPlotPlacement?.({ active: false });
     continuousPlotModeButton?.setAttribute('aria-pressed', String(continuousPlotModeActive));
     if (continuousPlotModeButton) continuousPlotModeButton.textContent = continuousPlotModeActive ? '連續開墾' : '連續開墾';
-    if (continuousReturn3dButton) continuousReturn3dButton.hidden = true;
+    if (continuousReturn3dButton) {
+      continuousReturn3dButton.hidden = !continuousPlotModeActive;
+      continuousReturn3dButton.textContent = '返回 3D 視角';
+    }
     document.querySelector('#farm-management-panel')?.classList.toggle('is-continuous-placement', continuousPlotModeActive);
     if (continuousPlotModeActive) notify('連續開墾已開啟：點擊「自動地塊」或「手動地塊」，拖曳半透明地塊調整高度。');
     save();
@@ -1664,7 +1667,12 @@
     return true;
   }
   continuousPlotModeButton?.addEventListener('click', () => updateContinuousPlotMode(!continuousPlotModeActive));
-  continuousReturn3dButton?.addEventListener('click', () => {});
+  continuousReturn3dButton?.addEventListener('click', () => {
+    const currentMode = window.dianGardenCamera?.getState?.()?.mode;
+    const nextMode = currentMode === '2d' ? '3d' : '2d';
+    window.dianGardenCamera?.setMode?.(nextMode);
+    continuousReturn3dButton.textContent = nextMode === '2d' ? '返回 3D 視角' : '返回 2D 視角';
+  });
   window.onSkyContinuousHeightConfirmed = (height, manual) => {
     if (!continuousPlotModeActive || !Number.isFinite(height)) return false;
     const normalizedHeight = Math.max(-8, Math.min(8, Math.round(height * 2) / 2));
