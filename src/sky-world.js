@@ -3422,7 +3422,7 @@
       const fallback = getPlotPosition(landCount, landCount + 1);
       const targetX = Number.isInteger(position?.x) ? position.x : fallback[0];
       const targetZ = Number.isInteger(position?.z) ? position.z : fallback[1];
-      return startDroneAnimation(droneIndex, 'expand', [targetX, targetZ], { hoverDuration: 700, onDeparture, onComplete, shouldReturn, onReturnComplete });
+      return startDroneAnimation(droneIndex, 'expand', [targetX, targetZ], { hoverDuration: 700, workY: (Number.isFinite(position?.y) ? position.y : 0) + DRONE_WORK_Y, onDeparture, onComplete, shouldReturn, onReturnComplete });
     },
     setPlotPositions(positions) {
       if (!Array.isArray(positions) || !positions.length || positions.some((position) => !Number.isInteger(position.x) || !Number.isInteger(position.z) || (position.y !== undefined && (!Number.isFinite(position.y) || Math.abs(position.y * 2 - Math.round(position.y * 2)) > 1e-8)))) return;
