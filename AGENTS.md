@@ -220,29 +220,10 @@ GitHub API 回報寫入成功，只代表該操作已被接受，不代表程式
 
 如尚未修改 GitHub，應清楚標示為草案或提案；不得將計畫中的工作描述成已完成。
 
-#### 6.3 小步提交與 10 秒目標
+#### 6.3 整組修改完成後一次提交
 
-- 執行可拆分的工作時，採用「小步修改、立即提交」：每完成一個可獨立檢查的小修改或一份任務文件，就立即寫入 GitHub，不把多項無關變更累積到最後。
-- 以每約 10 秒完成一次小步提交為工作節奏目標；這是盡力遵循的節奏，不是對工具延遲的保證。若單次工具操作超過 10 秒，操作完成後應立即確認結果並繼續，不為了追求頻率而重複提交或拆出不安全的半成品。
-- 每次寫入後確認工具回報成功；若結果不明或逾時，先重新讀取目標檔案確認是否已寫入，再決定下一步，避免重複提交。
-- 每次提交應聚焦單一目的，保持差異小且可理解。小步提交不會取代測試、風險評估、批准要求或安全檢查。
-
-## Local testing and repository synchronization (2026-10-28)
-
-- After finishing a coherent set of local code changes, run `scripts/run-acceptance.ps1 -Trigger AfterChange` before reporting completion. This performs the local validation suite, preserves screenshots and logs, and reports PASS/FAIL to the configured Discord webhook when available. Do not run it after every individual file write mid-task.
-- Manual acceptance is available through `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-acceptance.ps1`; no periodic schedule is configured.
-- Configure `DIANGARDEN_DISCORD_WEBHOOK_URL` in the Windows user environment. Never place the webhook URL in tracked files, source code, logs, task records, or chat output. The notification script only accepts Discord webhook hosts and never prints the URL.
-- Failed Discord notifications are queued under the ignored `test-results/discord-outbox/` directory and retried on the next manual or post-change acceptance run, with at most three attempts per run. Pending notifications are retained until delivered.
-- Keep generated dependencies and temporary test artifacts out of commits (`node_modules/`, `.local-test-workspace/`, `test-results/`, and local logs). Generated run artifacts older than 3 days are removed on acceptance runs; pending outbox items are exempt until delivered.
-- The local preview origin `http://127.0.0.1:4173` is permitted for development CORS testing only; retain the production origin and do not use a wildcard origin.
-- Local test success does not mean GitHub Pages or the Cloudflare Worker has been deployed. Deployment requires explicit user authorization.
-- When syncing local work to GitHub, compare against the remote branch first and preserve newer remote files rather than replacing them wholesale.
-- Cloudflare production is connected to this GitHub repository: changes under `cloudflare/` may be automatically synced/deployed and directly affect the live service. Before editing or pushing anything under `cloudflare/`, check the repository's actual deployment/sync workflow and its latest status; treat such changes as production-impacting, test them first, and do not assume a separate manual upload is required.
-- Cloudflare deployment credentials/secrets are managed in the GitHub project/repository settings, not in tracked files. Never request or write API tokens into source files, AGENTS.md, logs, commits, or chat. If deployment is blocked, inspect the actual GitHub/Cloudflare workflow and configuration before concluding credentials are missing; a failed workflow may indicate the workflow's secret names or deployment route do not match the existing GitHub-to-Cloudflare integration. Prefer the configured automatic sync/deployment path and verify the resulting live deployment before claiming success.
-
-
-## Tool-output contamination prevention
-
-- Never copy tool-wrapper text, execution-device suffixes, or interface metadata into project files. Only write the actual intended file content.
-- After modifying scripts or source files, run `scripts/check-tool-output-contamination.ps1` and inspect `git diff` before reporting completion.
-- `scripts/run-local-tests.ps1` runs the contamination guard as part of local validation. Treat any match as a failed check and remove only the accidental text, preserving unrelated edits.
+- 同一個明確任務中的相關程式、測試與文件修改，應先累積完成，再統一建立一個 Git commit；不得每改一小段或每更新一個檔案就各自提交。
+- 提交前先檢查整組差異，確認變更彼此一致、沒有混入無關修改，並執行當前環境可用的適當檢查。
+- 一個 commit 應聚焦於一個完整、可理解的目的。若任務尚未完成或必要修改被阻擋，不要把不完整的中間狀態當作完成版提交；應如實記錄阻塞原因。
+- 若工具操作結果不明或逾時，先重新讀取目標分支及相關檔案，確認是否已成功寫入，避免重複提交。
+- 不得為了符合「一次提交」而跳過必要檢查、把無關工作混在一起，或規避安全檢查。若安全檢查再次阻擋必要寫入，停止該操作並回報，不得宣稱提交成功。
