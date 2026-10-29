@@ -3154,6 +3154,9 @@
       clearTimeout(emptyTouchRotateTimer);
       rotateHoldGesture = false;
       pinchActive = false;
+      continuousDragPointerId = null;
+      continuousPlacementPath = [];
+      drawContinuousPlacementPreview();
       dragging = false;
       clearTimeout(plotPressTimer);
       clearTimeout(dockPressTimer);
@@ -3343,6 +3346,7 @@
       else {
         continuousDragPointerId = null;
         continuousPlacementPath = [];
+        dragging = false;
       }
       drawContinuousPlacementPreview();
       return { ...continuousPlacement };
