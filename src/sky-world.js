@@ -384,6 +384,56 @@
   const touchFeedbackLayer = document.createElement('div');
   touchFeedbackLayer.className = 'touch-feedback-layer';
   frame.append(touchFeedbackLayer);
+  const continuousPreviewLayer = document.createElement('div');
+  continuousPreviewLayer.className = 'continuous-plot-preview-layer';
+  continuousPreviewLayer.hidden = true;
+  frame.append(continuousPreviewLayer);
+  let continuousPlacement = { active: false, height: 0, manual: false };
+  let continuousDragPointerId = null;
+  let continuousPlacementPath = [];
+  function drawContinuousPlacementPreview() {
+    continuousPreviewLayer.replaceChildren();
+    continuousPreviewLayer.hidden = !continuousPlacement.active || !continuousPlacementPath.length;
+    if (continuousPreviewLayer.hidden) return;
+    const frameRect = frame.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+    for (const cell of continuousPlacementPath) {
+      const point = projectPoint([cell.x, continuousPlacement.height + 0.09, cell.z]);
+      const across = projectPoint([cell.x + 0.5, continuousPlacement.height + 0.09, cell.z]);
+      const along = projectPoint([cell.x, continuousPlacement.height + 0.09, cell.z + 0.5]);
+      if (!point || !across || !along) continue;
+      const marker = document.createElement('span');
+      marker.className = 'continuous-plot-preview-cell' + (continuousPlacement.manual ? ' is-manual' : '');
+      marker.style.left = `${canvasRect.left - frameRect.left + point.x}px`;
+      marker.style.top = `${canvasRect.top - frameRect.top + point.y}px`;
+      marker.style.width = `${Math.max(14, Math.min(70, Math.hypot(across.x - point.x, across.y - point.y) * 1.55))}px`;
+      marker.style.height = `${Math.max(14, Math.min(70, Math.hypot(along.x - point.x, along.y - point.y) * 1.55))}px`;
+      continuousPreviewLayer.append(marker);
+    }
+  }
+  function appendContinuousPlacementPoint(x, z) {
+    const next = { x: Math.round(x), z: Math.round(z) };
+    const last = continuousPlacementPath[continuousPlacementPath.length - 1];
+    if (!last) { continuousPlacementPath.push(next); return; }
+    if (last.x === next.x && last.z === next.z) return;
+    let x0 = last.x, z0 = last.z;
+    const dx = Math.abs(next.x - x0), dz = Math.abs(next.z - z0);
+    const sx = x0 < next.x ? 1 : -1, sz = z0 < next.z ? 1 : -1;
+    let error = dx - dz;
+    while ((x0 !== next.x || z0 !== next.z) && continuousPlacementPath.length < 120) {
+      const previousX = x0, previousZ = z0;
+      const twice = error * 2;
+      if (twice > -dz) { error -= dz; x0 += sx; }
+      if (twice < dx) { error += dx; z0 += sz; }
+      if (x0 !== previousX && z0 !== previousZ && continuousPlacementPath.length < 119) {
+        const tail = continuousPlacementPath[continuousPlacementPath.length - 1];
+        const bridge = { x: x0, z: previousZ };
+        if (!tail || tail.x !== bridge.x || tail.z !== bridge.z) continuousPlacementPath.push(bridge);
+      }
+      const tail = continuousPlacementPath[continuousPlacementPath.length - 1];
+      if ((!tail || tail.x !== x0 || tail.z !== z0) && continuousPlacementPath.length < 120) continuousPlacementPath.push({ x: x0, z: z0 });
+    }
+  }
   function feedbackPoint(event) {
     const rect = frame.getBoundingClientRect();
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
@@ -491,21 +541,24 @@
   window.dianGardenCamera = Object.freeze({
     getState: getCameraPose,
     restore: restoreCameraPose,
+    setMode: setCameraMode,
   });
   const cameraModeButton = document.querySelector('#camera-mode');
-  cameraModeButton?.addEventListener('click', () => {
-    if (cameraMode === '3d') {
+  function setCameraMode(mode) {
+    if (mode === cameraMode) return;
+    if (mode === '2d') {
       savedCameraPose = { yaw, pitch, distance, targetX, targetZ };
       cameraMode = '2d';
-      cameraModeButton.textContent = '返回 3D';
-      cameraModeButton.setAttribute('aria-pressed', 'true');
+      cameraModeButton && (cameraModeButton.textContent = '返回 3D');
+      cameraModeButton?.setAttribute('aria-pressed', 'true');
     } else {
       cameraMode = '3d';
       if (savedCameraPose) ({ yaw, pitch, distance, targetX, targetZ } = savedCameraPose);
-      cameraModeButton.textContent = '2D 模式';
-      cameraModeButton.setAttribute('aria-pressed', 'false');
+      cameraModeButton && (cameraModeButton.textContent = '2D 模式');
+      cameraModeButton?.setAttribute('aria-pressed', 'false');
     }
-  });
+  }
+  cameraModeButton?.addEventListener('click', () => setCameraMode(cameraMode === '3d' ? '2d' : '3d'));
   let dragging = false;
   let pointerMoved = false;
   let pointerStartX = 0;
@@ -671,8 +724,8 @@
     const cropIndex = Number.isInteger(flower?.cropIndex) ? flower.cropIndex : 0;
     const model = flowerModelRegistry.get(cropIndex);
     if (typeof model?.bloom !== 'function') return;
-    const headPositions = [];
-    const headColors = [];
+    const sourcePositions = [];
+    const sourceColors = [];
     const headPalette = [
       [0.98, 0.72, 0.12], [0.54, 0.39, 0.78], [0.93, 0.94, 0.84], [0.545, 0.063, 0.157],
       [0.91, 0.36, 0.34], [0.88, 0.48, 0.58], [0.94, 0.7, 0.2], [0.44, 0.59, 0.88],
@@ -684,17 +737,41 @@
     const headColor = customColor || headPalette[cropIndex] || headPalette[0];
     const height = window.flowerCatalog?.[cropIndex]?.height || 0.5;
     model.bloom({
-      positions: headPositions,
-      colors: headColors,
+      positions: sourcePositions,
+      colors: sourceColors,
       x: 0,
       z: 0,
       height,
       headColor,
       environmentState,
-      stemModel: model.stem,
+      // Do not ask the model to add its separate stem/leaf geometry.
+      stemModel: null,
       stage: 2,
     });
-    if (!headPositions.length) return;
+    if (sourcePositions.length < 9 || sourceColors.length !== sourcePositions.length) return;
+
+    // Bloom models may include stalks or leaves in their bloom geometry (notably lavender).
+    // Keep flower-colored triangles and discard green-dominant foliage triangles.
+    const headPositions = [];
+    const headColors = [];
+    for (let i = 0; i + 8 < sourcePositions.length; i += 9) {
+      let red = 0, green = 0, blue = 0;
+      for (let vertex = 0; vertex < 3; vertex += 1) {
+        red += sourceColors[i + vertex * 3];
+        green += sourceColors[i + vertex * 3 + 1];
+        blue += sourceColors[i + vertex * 3 + 2];
+      }
+      red /= 3;
+      green /= 3;
+      blue /= 3;
+      if (green > red * 1.12 && green > blue * 1.08) continue;
+      for (let component = 0; component < 9; component += 1) {
+        headPositions.push(sourcePositions[i + component]);
+        headColors.push(sourceColors[i + component]);
+      }
+    }
+    if (headPositions.length < 9) return;
+
     const min = [Infinity, Infinity, Infinity];
     const max = [-Infinity, -Infinity, -Infinity];
     for (let i = 0; i < headPositions.length; i += 3) {
@@ -704,10 +781,18 @@
       }
     }
     const center = min.map((value, axis) => (value + max[axis]) * 0.5);
-    const scale = 0.24;
+    let maxRadius = 0;
+    for (let i = 0; i < headPositions.length; i += 3) {
+      const dx = headPositions[i] - center[0];
+      const dz = headPositions[i + 2] - center[2];
+      maxRadius = Math.max(maxRadius, Math.hypot(dx, dz));
+    }
+    const halfHeight = Math.max(0.0001, (max[1] - min[1]) * 0.5);
+    // Fit the complete head within the transparent case with a margin for rotation and bobbing.
+    const scale = Math.min(0.24, 0.032 / Math.max(0.0001, maxRadius), 0.036 / halfHeight);
     const rotation = (time - (flower.startedAt || time)) * 0.00072;
     const cosine = Math.cos(rotation), sine = Math.sin(rotation);
-    const bob = Math.sin(time * 0.0022) * 0.007;
+    const bob = Math.sin(time * 0.0022) * 0.004;
     const first = positions.length / 3;
     for (let i = 0; i < headPositions.length; i += 3) {
       const dx = (headPositions[i] - center[0]) * scale;
@@ -722,7 +807,6 @@
     }
     opacitySpans.push({ first, last: positions.length / 3, opacity: 1 });
   }
-
   function addBox(positions, colors, x1, y1, z1, x2, y2, z2, palette) {
     const a = [x1, y1, z1], b = [x2, y1, z1], c = [x2, y1, z2], d = [x1, y1, z2];
     const e = [x1, y2, z1], f = [x2, y2, z1], g = [x2, y2, z2], h = [x1, y2, z2];
@@ -2853,6 +2937,22 @@
         return;
       }
     }
+    if (continuousPlacement.active && !galleryMode) {
+      clearTimeout(emptyTouchRotateTimer);
+      clearTimeout(plotPressTimer);
+      clearTimeout(dockPressTimer);
+      rotateHoldGesture = false;
+      dragging = true;
+      pointerMoved = false;
+      continuousDragPointerId = event.pointerId;
+      continuousPlacementPath = [];
+      const groundPoint = screenToGround(event.clientX, event.clientY, continuousPlacement.height + 0.08);
+      if (groundPoint) appendContinuousPlacementPoint(groundPoint[0], groundPoint[1]);
+      drawContinuousPlacementPreview();
+      canvas.setPointerCapture(event.pointerId);
+      event.preventDefault();
+      return;
+    }
     clearTimeout(plotPressTimer);
     clearTimeout(emptyTouchRotateTimer);
     rotateHoldGesture = false;
@@ -2961,6 +3061,18 @@
       if (suppressTouchTap) return;
     }
     if (!dragging) return;
+    if (continuousDragPointerId === event.pointerId) {
+      const groundPoint = screenToGround(event.clientX, event.clientY, continuousPlacement.height + 0.08);
+      if (groundPoint) {
+        const previousLength = continuousPlacementPath.length;
+        appendContinuousPlacementPoint(groundPoint[0], groundPoint[1]);
+        if (continuousPlacementPath.length !== previousLength) pointerMoved = true;
+        drawContinuousPlacementPreview();
+      }
+      lastPointerX = event.clientX;
+      lastPointerY = event.clientY;
+      return;
+    }
     if (!pointerMoved && Math.hypot(event.clientX - pointerStartX, event.clientY - pointerStartY) < 5) return;
     pointerMoved = true;
     if (!rotateHoldGesture) clearTimeout(emptyTouchRotateTimer);
@@ -3048,6 +3160,9 @@
       clearTimeout(emptyTouchRotateTimer);
       rotateHoldGesture = false;
       pinchActive = false;
+      continuousDragPointerId = null;
+      continuousPlacementPath = [];
+      drawContinuousPlacementPreview();
       dragging = false;
       clearTimeout(plotPressTimer);
       clearTimeout(dockPressTimer);
@@ -3064,6 +3179,17 @@
       heightDrag = null;
       if (touchPoints.size === 0) suppressTouchTap = false;
       uploadWorld();
+      return;
+    }
+    if (continuousDragPointerId === event.pointerId) {
+      const positions = continuousPlacementPath.map((cell) => ({ ...cell }));
+      const height = continuousPlacement.height;
+      continuousDragPointerId = null;
+      continuousPlacementPath = [];
+      dragging = false;
+      drawContinuousPlacementPreview();
+      if (positions.length) window.onSkyContinuousPlotPath?.(positions, height);
+      if (event.pointerType === 'touch') touchPoints.delete(event.pointerId);
       return;
     }
     dragging = false;
@@ -3137,7 +3263,17 @@
     rotateHoldGesture = false;
     uploadWorld();
   });
-  canvas.addEventListener('pointercancel', (event) => { cancelPointerFeedback(event); if (event.pointerType === 'touch') touchPoints.delete(event.pointerId); if (touchPoints.size === 0) { pinchActive = false; suppressTouchTap = false; } clearTimeout(emptyTouchRotateTimer); rotateHoldGesture = false; clearTimeout(plotPressTimer); clearTimeout(dockPressTimer); dragging = false; dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null; dockPreview = null; pointerPlotIndex = null; plotPressIndex = null; plotPressReady = false; dockPressReady = false; dockWasInMoveModeAtPointerDown = false; uploadWorld(); });
+  canvas.addEventListener('pointercancel', (event) => {
+    cancelPointerFeedback(event);
+    if (continuousDragPointerId === event.pointerId) {
+      continuousDragPointerId = null;
+      continuousPlacementPath = [];
+      drawContinuousPlacementPreview();
+    }
+    if (event.pointerType === 'touch') touchPoints.delete(event.pointerId);
+    if (touchPoints.size === 0) { pinchActive = false; suppressTouchTap = false; }
+    clearTimeout(emptyTouchRotateTimer); rotateHoldGesture = false; clearTimeout(plotPressTimer); clearTimeout(dockPressTimer); dragging = false; dragPlotIndex = null; dragPreview = null; dragDock = false; dockHitAtPointer = null; dockPreview = null; pointerPlotIndex = null; plotPressIndex = null; plotPressReady = false; dockPressReady = false; dockWasInMoveModeAtPointerDown = false; uploadWorld();
+  });
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     if (cameraMode === '2d') topDownHeight = Math.max(3, Math.min(50, topDownHeight + event.deltaY * 0.02));
@@ -3206,6 +3342,21 @@
     return true;
   }
   window.skyWorld = {
+    setContinuousPlotPlacement(options = {}) {
+      continuousPlacement = {
+        active: options.active === true,
+        height: Number.isFinite(options.height) && Math.abs(options.height * 2 - Math.round(options.height * 2)) < 1e-8 ? Math.max(-8, Math.min(8, options.height)) : 0,
+        manual: options.manual === true,
+      };
+      if (continuousPlacement.active) setCameraMode('2d');
+      else {
+        continuousDragPointerId = null;
+        continuousPlacementPath = [];
+        dragging = false;
+      }
+      drawContinuousPlacementPreview();
+      return { ...continuousPlacement };
+    },
     getDroneHeading(droneIndex = 0) {
       return Number.isInteger(droneIndex) ? droneStates[droneIndex]?.heading ?? 0 : 0;
     },
@@ -3281,7 +3432,7 @@
       const fallback = getPlotPosition(landCount, landCount + 1);
       const targetX = Number.isInteger(position?.x) ? position.x : fallback[0];
       const targetZ = Number.isInteger(position?.z) ? position.z : fallback[1];
-      return startDroneAnimation(droneIndex, 'expand', [targetX, targetZ], { hoverDuration: 700, onDeparture, onComplete, shouldReturn, onReturnComplete });
+      return startDroneAnimation(droneIndex, 'expand', [targetX, targetZ], { hoverDuration: 700, workY: (Number.isFinite(position?.y) ? position.y : 0) + DRONE_WORK_Y, onDeparture, onComplete, shouldReturn, onReturnComplete });
     },
     setPlotPositions(positions) {
       if (!Array.isArray(positions) || !positions.length || positions.some((position) => !Number.isInteger(position.x) || !Number.isInteger(position.z) || (position.y !== undefined && (!Number.isFinite(position.y) || Math.abs(position.y * 2 - Math.round(position.y * 2)) > 1e-8)))) return;

@@ -9,6 +9,7 @@ const indexHtml = await readSource('src/index.html');
 const cloudSaveSource = await readSource('src/cloud-save.js');
 const gameSource = await readSource('src/game.js');
 const skyWorldSource = await readSource('src/sky-world.js');
+const stylesSource = await readSource('src/styles.css');
 const versionCheckSource = await readSource('src/version-check.js');
 if (!indexHtml.includes('id="startup-garden-dialog"') || !indexHtml.includes('id="start-guest-garden"')
   || !indexHtml.includes('id="return-to-own-garden"')) throw new Error('登入入口／訪客花園控制項缺失');
@@ -72,6 +73,28 @@ if (!skyWorldSource.includes("window.dianGardenCamera = Object.freeze({")
   || !gameSource.includes("window.setInterval(() => {\n    if (skipSaveOnExit || isResetting || !persistenceAvailable) return;")) {
   throw new Error('任務252相機姿態讀取／還原、自動存檔或節流保存邏輯缺失');
 }
+if (!indexHtml.includes('id="continuous-plot-mode"')
+  || !indexHtml.includes('id="continuous-plot-height"')
+  || !indexHtml.includes('id="continuous-plot-type"')
+  || !indexHtml.includes('id="continuous-return-3d"')
+  || !gameSource.includes("continuousReturn3dButton?.addEventListener('click'")
+  || !gameSource.includes('function collectPendingExpansionJobs()')
+  || !gameSource.includes('game.pendingPlotExpansions = collectPendingExpansionJobs();')
+  || !gameSource.includes('const restored = game.pendingPlotExpansions.slice(0, 200)')
+  || !gameSource.includes('pendingExpansions.length + accepted.length >= 200')
+  || !gameSource.includes("jobQueue.findIndex((job) => job.kind === 'expand' && isEligibleJob(job))")
+  || !gameSource.includes('連續開墾 · ${entry.jobs.length} 格')
+  || !gameSource.includes('window.onSkyContinuousPlotPath = (positions, height) =>')
+  || !gameSource.includes("jobQueue.splice(firstNonExpansion, 0, ...accepted)")
+  || !skyWorldSource.includes('setContinuousPlotPlacement(options = {})')
+  || !skyWorldSource.includes('appendContinuousPlacementPoint(groundPoint[0], groundPoint[1])')
+  || !skyWorldSource.includes('const bridge = { x: x0, z: previousZ };')
+  || !skyWorldSource.includes('window.onSkyContinuousPlotPath?.(positions, height)')
+  || !skyWorldSource.includes('setMode: setCameraMode,')
+  || !gameSource.includes("classList.toggle('is-continuous-placement', continuousPlotModeActive)")
+  || !stylesSource.includes('.farm-management-panel.is-continuous-placement .world-plots')) {
+  throw new Error('連續開墾的高度／類型控制、2D 拖曳路徑、合併佇列、最高優先派工或待辦存檔／還原契約缺失');
+}
 if (!skyWorldSource.includes("const renderingPauseReasons = new Set(galleryMode ? [] : ['startup']);")
   || !skyWorldSource.includes("setRenderingPaused,")
   || !skyWorldSource.includes("if (isRenderingPaused()) {")
@@ -134,6 +157,7 @@ const browser = await chromium.launch({ headless: true });
 const errors = [];
 const checks = [];
 checks.push('任務225：只有停靠座標改變才重算返航路徑，電量更新不再重設飛行插值');
+checks.push('連續開墾：拖曳路徑、無效位置略過、手動地塊由無人機建造、合併佇列與重啟續作的靜態契約');
 if (!gameSource.includes('const priority = (candidate) => returningDrones.has(candidate.index) ? 0 : candidate.drone.battery === 100 ? 1 : 2;')) {
   throw new Error('任務255：返航無人機應優先接續原地後續工作，不可被滿電但遠離目標的無人機搶先');
 }
@@ -180,6 +204,13 @@ if (!skyWorldSource.includes("function addHarvestFlowerHead(")
   throw new Error('任務277：透明箱花頭模型、旋轉展示或返航清理契約缺失');
 }
 checks.push('任務277：採收後返航鎖定只限制再次採收，並保留所採花頭於透明箱內直到返航完成');
+if (!skyWorldSource.includes("stemModel: null")
+  || !skyWorldSource.includes("green > red * 1.12 && green > blue * 1.08")
+  || !skyWorldSource.includes("0.032 / Math.max(0.0001, maxRadius)")
+  || !skyWorldSource.includes("0.036 / halfHeight")) {
+  throw new Error('任務277重做：採收展示必須排除莖葉，並限制花頭尺寸以避免穿出透明箱');
+}
+checks.push('任務277重做：透明箱只保留非綠色花頭幾何，且花頭半徑／高度受箱內安全尺寸限制');
 
 
 const encyclopediaPage = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });

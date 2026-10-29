@@ -1972,3 +1972,18 @@
 - 新增污染掃描器並接入本機驗收，更新 AGENTS.md 防護規則。
 - 污染檢查、Worker API smoke、25 個 JS/MJS 語法檢查、Playwright browser smoke 與 Discord PASS 通知均通過。
 - 未 commit、未 push、未部署。
+
+## 2026-10-29 — 任務278：連續開墾與擴建佇列持久化
+
+- 新增高度與地塊類型選擇、2D 拖曳網格路徑、路徑預覽與快速返回 3D；無效格依確認設計自動略過。
+- 自動地塊與手動地塊都改由無人機擴建；所有擴建工作在下一次派工時優先，既有執行中的工作不會被中斷。
+- 同一拖曳路徑以批次合併顯示，內部每格仍為獨立工作；加入批次取消剩餘工作。
+- 將未完成擴建工作寫入既有存檔的可選欄位 `pendingPlotExpansions`，建立請求時立即嘗試儲存，重啟時還原；舊存檔欄位缺省時保持相容。
+- 驗證：`src/game.js`、`src/sky-world.js` 的 V8 parse-only 檢查通過；`tests/browser-smoke.mjs` 在移除 import 並包裝 async 函式後的 parse-only 檢查通過；新增的連續開墾靜態契約檢查全部通過。
+- 限制：Remote Desktop Commander 裝置離線，尚未執行 `LOCAL-DEPENDENCIES.md` 指定環境下的完整驗收與 Playwright 瀏覽器視覺／重啟續作測試；任務保留 active，未宣稱驗收完成。
+- 檔案：`src/index.html`、`src/styles.css`、`src/game.js`、`src/sky-world.js`、`tests/browser-smoke.mjs`、`README.md`、`docs/architecture.md`、`docs/desicions.md`、`tasks/active/278-continuous-plot-expansion.md`。
+- 未合併至 `main`，未部署。
+
+- 後續防護：對角線路徑插入共邊橋接格；已排隊擴建也納入碰撞／堆疊驗證；批次按 FIFO 插在既有擴建後、一般作物工作前，並按預估可用金幣略過負擔不起的格數。
+- 介面修正：連續模式啟用時收斂農地面板，保留直接返回 3D 的按鈕；存檔提示會依實際儲存結果顯示。
+- 後續防護：持久化待辦限制為 200 格；路徑建立時預留既有擴建費用與播種成本，無效位置、金幣不足與佇列上限會分別回報，避免載入時截斷工作或新增無法付款的任務。

@@ -343,6 +343,12 @@
   const jobQueueDisplay = document.querySelector('#job-queue');
   const expandButton = document.querySelector('#world-expand');
   const manualLandButton = document.querySelector('#world-buy-manual-plot');
+  const continuousPlotModeButton = document.querySelector('#continuous-plot-mode');
+  const continuousReturn3dButton = document.querySelector('#continuous-return-3d');
+  const continuousPlotHeightSelect = document.querySelector('#continuous-plot-height');
+  const continuousPlotTypeSelect = document.querySelector('#continuous-plot-type');
+  const continuousPlotHint = document.querySelector('#continuous-plot-hint');
+  let continuousPlotModeActive = false;
   const autoModeButton = document.querySelector('#auto-mode');
   const buyDroneButton = document.querySelector('#buy-drone');
   const droneFleetDisplay = document.querySelector('#drone-fleet');
@@ -387,6 +393,43 @@
   const lastCompletedPlotByDrone = new Map();
   let nextDroneIndex = 0;
   const jobQueue = [];
+  function collectPendingExpansionJobs() {
+    const seen = new Set();
+    return [...activeJobs.values(), ...jobQueue]
+      .filter((job) => job.kind === 'expand' && job.position && job.resultCommitted !== true)
+      .filter((job) => {
+        const position = job.position;
+        const y = isHalfUnitHeight(position.y) ? position.y : 0;
+        if (game.plots.some((plot) => plot.x === position.x && plot.z === position.z && plotY(plot) === y)) return false;
+        const key = `${position.x},${position.z},${y}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map((job) => ({
+        id: String(job.id || `${Date.now()}-${Math.random().toString(36).slice(2)}`),
+        position: { x: job.position.x, z: job.position.z, y: isHalfUnitHeight(job.position.y) ? job.position.y : 0 },
+        manual: job.manual === true,
+        batchId: typeof job.batchId === 'string' ? job.batchId : null,
+        createdAt: Number.isFinite(job.createdAt) ? job.createdAt : Date.now(),
+      }));
+  }
+  if (Array.isArray(game.pendingPlotExpansions)) {
+    const restored = game.pendingPlotExpansions.slice(0, 200).filter((entry) =>
+      entry && entry.position && Number.isInteger(entry.position.x) && Number.isInteger(entry.position.z)
+      && (!('y' in entry.position) || (isHalfUnitHeight(entry.position.y) && entry.position.y >= -8 && entry.position.y <= 8))
+      && (entry.manual === undefined || typeof entry.manual === 'boolean')
+      && (entry.batchId === undefined || entry.batchId === null || (typeof entry.batchId === 'string' && entry.batchId.length <= 100)));
+    restored.forEach((entry) => {
+      const position = { x: entry.position.x, z: entry.position.z, y: isHalfUnitHeight(entry.position.y) ? entry.position.y : 0 };
+      if (game.plots.some((plot) => plot.x === position.x && plot.z === position.z && plotY(plot) === position.y)) return;
+      jobQueue.push({
+        kind: 'expand', id: typeof entry.id === 'string' && entry.id.length <= 120 ? entry.id : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        position, manual: entry.manual === true, batchId: typeof entry.batchId === 'string' ? entry.batchId : null,
+        status: 'queued', createdAt: Number.isFinite(entry.createdAt) ? entry.createdAt : Date.now(),
+      });
+    });
+  }
   let lastBatterySaveAt = Date.now();
   function updateBatteries(now = Date.now()) {
     game.drones.forEach((drone, index) => {
@@ -429,6 +472,7 @@
       game.savedAt = game.lastOnlineAt;
       const cameraPose = window.dianGardenCamera?.getState?.();
       if (cameraPose) game.cameraPose = cameraPose;
+      game.pendingPlotExpansions = collectPendingExpansionJobs();
       const { flowerVariants, ...saveData } = game;
       localStorage.setItem(FLOWER_VARIANTS_KEY, JSON.stringify(flowerVariants));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
@@ -738,13 +782,15 @@
     if (job.kind === 'plant') return `播種 ${crops[job.cropIndex]?.name || '花卉'} · 農地 ${job.index + 1}`;
     if (job.kind === 'harvest') return `收成 · 農地 ${job.index + 1}`;
     if (job.kind === 'water') return `澆水 · 農地 ${job.index + 1}`;
-    return '擴建空中土地';
+    return job.manual ? '開墾手動地塊' : '擴建空中土地';
   }
   function renderJobQueue() {
     if (!jobStatus || !jobQueueDisplay) return;
     const expansionPending = [...activeJobs.values()].some((job) => job.kind === 'expand') || jobQueue.some((job) => job.kind === 'expand');
     expandButton?.setAttribute('aria-disabled', String(expansionPending));
     expandButton?.classList.toggle('is-blocked', expansionPending);
+    if (expandButton) expandButton.disabled = expansionPending;
+    if (manualLandButton) manualLandButton.disabled = expansionPending;
     expandButton.textContent = `自動地塊 · ${getLandCost()} 🪙`;
     expandButton?.setAttribute('aria-label', expansionPending ? '農地擴建中，請稍後' : `擴建空中土地，花費 ${getLandCost()} 枚金幣`);
     expandButton?.setAttribute('title', expansionPending ? '農地擴建中，請稍後' : '擴建空中土地');
@@ -759,14 +805,42 @@
       emptyItem.textContent = activeJobs.size ? '目前工作已由無人機執行，沒有等待中的工作。' : '目前沒有等待中的工作。';
       jobQueueDisplay.append(emptyItem);
     }
-    jobQueue.forEach((job, index) => {
+    const displayEntries = [];
+    const batches = new Map();
+    jobQueue.forEach((job) => {
+      if (job.kind === 'expand' && job.batchId) {
+        let entry = batches.get(job.batchId);
+        if (!entry) {
+          entry = { batchId: job.batchId, jobs: [], firstIndex: displayEntries.length };
+          batches.set(job.batchId, entry);
+          displayEntries.push(entry);
+        }
+        entry.jobs.push(job);
+      } else displayEntries.push({ job });
+    });
+    displayEntries.forEach((entry, index) => {
       const item = document.createElement('li');
-      item.innerHTML = `<span>${index + 1}. ${jobLabel(job)}</span><button type="button" data-cancel-job="${job.id}" aria-label="取消${jobLabel(job)}">取消</button>`;
+      if (entry.batchId) {
+        const first = entry.jobs[0];
+        const typeLabel = first.manual ? '手動地塊' : '自動地塊';
+        item.innerHTML = `<span>${index + 1}. 連續開墾 · ${entry.jobs.length} 格（${typeLabel}，高度 ${first.position.y || 0}）</span><button type="button" data-cancel-batch="${entry.batchId}" aria-label="取消這組連續開墾的剩餘 ${entry.jobs.length} 格">取消</button>`;
+      } else {
+        const job = entry.job;
+        item.innerHTML = `<span>${index + 1}. ${jobLabel(job)}</span><button type="button" data-cancel-job="${job.id}" aria-label="取消${jobLabel(job)}">取消</button>`;
+      }
       jobQueueDisplay.append(item);
     });
     jobQueueDisplay.querySelectorAll('[data-cancel-job]').forEach((button) => button.addEventListener('click', () => {
       const index = jobQueue.findIndex((job) => job.id === button.dataset.cancelJob);
-      if (index >= 0) { const [removed] = jobQueue.splice(index, 1); removed.cancelled = true; removed.status = 'cancelled'; removed.finishedAt = Date.now(); renderJobQueue(); notify(`已取消等待中的${jobLabel(removed)}。`); }
+      if (index >= 0) { const [removed] = jobQueue.splice(index, 1); removed.cancelled = true; removed.status = 'cancelled'; removed.finishedAt = Date.now(); save(); renderJobQueue(); notify(`已取消等待中的${jobLabel(removed)}。`); }
+    }));
+    jobQueueDisplay.querySelectorAll('[data-cancel-batch]').forEach((button) => button.addEventListener('click', () => {
+      const batchId = button.dataset.cancelBatch;
+      const removed = jobQueue.filter((job) => job.batchId === batchId);
+      for (let index = jobQueue.length - 1; index >= 0; index -= 1) if (jobQueue[index].batchId === batchId) {
+        const [job] = jobQueue.splice(index, 1); job.cancelled = true; job.status = 'cancelled'; job.finishedAt = Date.now();
+      }
+      if (removed.length) { save(); renderJobQueue(); notify(`已取消這組連續開墾剩餘的 ${removed.length} 格。`); }
     }));
   }
   function renderDroneFleet() {
@@ -1181,22 +1255,28 @@
       plot.watered = true; plot.waterSource = 'drone'; plot.waterWetnessStart = 1; plot.waterStartedAt = Date.now(); plot.waterUntil = plot.waterStartedAt + WATER_DURATION; save(); render(); if (!job.automatic) notify('澆水完成！這株花接下來 30 秒會以 1.2 倍速度生長。');
       return true;
     }
-    const expansionCost = getLandCost();
-    if (game.coins < expansionCost) {
-      notify('擴建任務執行時金幣不足，已略過。');
-      return false;
-    }
     const position = job.position || (() => {
       const candidate = getNextPlotPosition(game.plots, game.drones.map((drone) => drone.dockPosition));
-      return candidate ? { x: candidate[0], z: candidate[1] } : null;
+      return candidate ? { x: candidate[0], z: candidate[1], y: 0 } : null;
     })();
-    if (!position || game.plots.some((plot) => plot.x === position.x && plot.z === position.z)
-      || game.drones.some((drone) => dockOverlapsPlot(drone.dockPosition, position))) {
-      notify('擴建位置已被占用，請移動坪台或農地後再試。');
+    const y = isHalfUnitHeight(position?.y) ? position.y : 0;
+    const candidatePlot = position && { crop: null, plantedAt: null, manual: job.manual === true, grassOnly: false, x: position.x, z: position.z, y };
+    const deployedDocks = game.drones.filter((drone) => drone.deployed !== false).map((drone) => drone.dockPosition);
+    if (!position || !Number.isInteger(position.x) || !Number.isInteger(position.z)
+      || game.plots.some((plot) => plot.x === position.x && plot.z === position.z && plotY(plot) === y)
+      || !validStacking([...game.plots, candidatePlot], deployedDocks)) {
+      notify('擴建位置已被占用或與其他地塊／坪台衝突，這格已略過。');
       return false;
     }
-    const { x, z } = position;
-    game.coins -= expansionCost; game.plots.push({ crop: null, plantedAt: null, manual: false, grassOnly: false, x, z, y: 0 }); save(); render(); notify('新島開墾完成！這片天空也是你的了 ☁️');
+    const expansionCost = getLandCost();
+    if (game.coins < expansionCost) {
+      notify('擴建任務執行時金幣不足，這格已略過。');
+      return false;
+    }
+    game.coins -= expansionCost;
+    game.plots.push(candidatePlot);
+    save(); render();
+    notify(job.manual ? '手動地塊開墾完成！這片天空也是你的了 ☁️' : '新島開墾完成！這片天空也是你的了 ☁️');
     return true;
   }
   function processJobQueue() {
@@ -1227,6 +1307,7 @@
       if (game.drones[droneIndex]?.deployed === false || activeJobs.has(droneIndex)) continue;
       const isEligibleJob = (job) => {
         if (blockedJobsThisPass.has(job.id)) return false;
+        if (job.kind !== 'expand' && jobQueue.some((queued) => queued.kind === 'expand')) return false;
         if (job.kind === 'harvest' && harvestReturnRequired.has(droneIndex)) return false;
         if (game.drones[droneIndex].battery < estimateJobBattery(job, droneIndex)) return false;
         if ([...activeJobs.values()].some((active) => active.kind === 'expand')) return false;
@@ -1235,7 +1316,8 @@
         return true;
       };
       const previousPlotIndex = lastCompletedPlotByDrone.get(droneIndex);
-      let queueIndex = previousPlotIndex === undefined ? -1 : jobQueue.findIndex((job) => job.kind !== 'expand' && job.index === previousPlotIndex && isEligibleJob(job));
+      let queueIndex = jobQueue.findIndex((job) => job.kind === 'expand' && isEligibleJob(job));
+      if (queueIndex < 0 && previousPlotIndex !== undefined) queueIndex = jobQueue.findIndex((job) => job.kind !== 'expand' && job.index === previousPlotIndex && isEligibleJob(job));
       if (queueIndex < 0) queueIndex = jobQueue.findIndex(isEligibleJob);
       if (queueIndex < 0) continue;
       const [job] = jobQueue.splice(queueIndex, 1);
@@ -1278,6 +1360,7 @@
         activeJobs.delete(droneIndex);
         if (job.kind !== 'expand') lastCompletedPlotByDrone.set(droneIndex, job.index);
         else lastCompletedPlotByDrone.delete(droneIndex);
+        save();
         renderJobQueue();
         processJobQueue();
       };
@@ -1338,7 +1421,15 @@
     job.id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     job.status = 'queued';
     job.createdAt = Date.now();
-    jobQueue.push(job); renderJobQueue(); processJobQueue();
+    if (job.kind === 'expand') {
+      const firstNonExpansion = jobQueue.findIndex((queued) => queued.kind !== 'expand');
+      if (firstNonExpansion < 0) jobQueue.push(job);
+      else jobQueue.splice(firstNonExpansion, 0, job);
+    } else jobQueue.push(job);
+    const savedImmediately = job.kind === 'expand' ? save() : true;
+    renderJobQueue();
+    processJobQueue();
+    return savedImmediately;
   }
   function plant(index, cropIndex, variantId = null) {
     const plot = game.plots[index], crop = crops[cropIndex];
@@ -1517,19 +1608,22 @@
   function buyManualLand() {
     const cost = getLandCost();
     if (game.coins < cost) return notify(`金幣不足，購買下一塊手動地塊需要 ${cost} 枚金幣。`);
-    const position = getNextPlotPosition(game.plots, game.drones.map((drone) => drone.dockPosition));
+    const reservedPlots = [...game.plots, ...pendingExpansionJobs().map((job) => ({ x: job.position.x, z: job.position.z }))];
+    const position = getNextPlotPosition(reservedPlots, game.drones.map((drone) => drone.dockPosition));
     if (!position) return notify('找不到不與坪台重疊的相鄰位置，請先移動坪台。');
-    const [x, z] = position;
-    game.coins -= cost;
-    game.plots.push({ crop: null, plantedAt: null, manual: true, grassOnly: false, x, z, y: 0 });
-    save(); render(); notify(`已購買手動地塊，扣除 ${cost} 金幣。`);
+    const savedImmediately = enqueueJob({ kind: 'expand', manual: true, position: { x: position[0], z: position[1], y: 0 } });
+    notify(savedImmediately
+      ? '手動地塊已加入無人機最高優先開墾佇列並立即儲存。'
+      : '手動地塊已加入開墾佇列，但存檔失敗，重新整理可能會遺失未完成任務。');
   }
   function buyLand() {
     const cost = getLandCost();
     if (game.coins < cost) return notify(`金幣不足，開墾下一塊地需要 ${cost} 枚金幣。`);
-    const position = getNextPlotPosition(game.plots, game.drones.map((drone) => drone.dockPosition));
+    const reservedPlots = [...game.plots, ...pendingExpansionJobs().map((job) => ({ x: job.position.x, z: job.position.z }))];
+    const position = getNextPlotPosition(reservedPlots, game.drones.map((drone) => drone.dockPosition));
     if (!position) return notify('找不到不與坪台重疊的相鄰位置，請先移動坪台。');
-    enqueueJob({ kind: 'expand', position: { x: position[0], z: position[1] } });
+    const savedImmediately = enqueueJob({ kind: 'expand', manual: false, position: { x: position[0], z: position[1], y: 0 } });
+    if (!savedImmediately) notify('自動地塊已加入開墾佇列，但存檔失敗，重新整理可能會遺失未完成任務。');
   }
   function buyDrone() {
     if (game.droneCount >= MAX_DRONES) return notify(`最多只能擁有 ${MAX_DRONES} 台無人機。`);
@@ -1543,6 +1637,101 @@
     render();
     notify('新無人機與專屬停靠坪台已加入花園。');
   }
+  function updateContinuousPlotMode(active) {
+    continuousPlotModeActive = Boolean(active);
+    const height = Number(continuousPlotHeightSelect?.value ?? 0);
+    const manual = continuousPlotTypeSelect?.value === 'manual';
+    window.skyWorld?.setContinuousPlotPlacement?.({ active: continuousPlotModeActive, height, manual });
+    continuousPlotModeButton?.setAttribute('aria-pressed', String(continuousPlotModeActive));
+    if (continuousPlotModeButton) continuousPlotModeButton.textContent = continuousPlotModeActive ? '結束連續開墾' : '連續開墾：關';
+    if (continuousReturn3dButton) continuousReturn3dButton.hidden = !continuousPlotModeActive;
+    document.querySelector('#farm-management-panel')?.classList.toggle('is-continuous-placement', continuousPlotModeActive);
+    if (continuousPlotHint) continuousPlotHint.textContent = continuousPlotModeActive
+      ? `連續開墾中：拖曳場景建立 ${manual ? '手動' : '自動'}地塊路徑（高度 ${height}）；無效格會自動略過。再次按鈕可結束。`
+      : '選擇高度與地塊類型，再開啟連續開墾；拖曳路徑會由無人機逐格建造。';
+    if (continuousPlotModeActive) notify('已切換至 2D 連續開墾模式；拖曳即可規劃路徑。');
+    save();
+  }
+  continuousPlotModeButton?.addEventListener('click', () => updateContinuousPlotMode(!continuousPlotModeActive));
+  continuousReturn3dButton?.addEventListener('click', () => {
+    window.dianGardenCamera?.setMode?.('3d');
+    save();
+    notify('已返回 3D 視角；連續開墾模式仍開啟，可繼續拖曳建地。');
+  });
+  continuousPlotHeightSelect?.addEventListener('change', () => {
+    if (continuousPlotModeActive) updateContinuousPlotMode(true);
+  });
+  continuousPlotTypeSelect?.addEventListener('change', () => {
+    if (continuousPlotModeActive) updateContinuousPlotMode(true);
+  });
+  window.onSkyContinuousPlotPath = (positions, height) => {
+    if (!continuousPlotModeActive || !Array.isArray(positions) || !positions.length || !isHalfUnitHeight(height) || height < -8 || height > 8) return false;
+    const manual = continuousPlotTypeSelect?.value === 'manual';
+    const batchId = `continuous-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const plannedPlots = game.plots.map((plot) => ({ ...plot }));
+    const occupied = new Set(plannedPlots.map((plot) => `${plot.x},${plot.z},${plotY(plot)}`));
+    const pendingExpansions = pendingExpansionJobs().filter((job) => job.resultCommitted !== true
+      && !game.plots.some((plot) => plot.x === job.position.x && plot.z === job.position.z && plotY(plot) === (isHalfUnitHeight(job.position.y) ? job.position.y : 0)));
+    const validationPlots = [...plannedPlots, ...pendingExpansions.map((job) => ({
+      crop: null, plantedAt: null, manual: job.manual === true, grassOnly: false,
+      x: job.position.x, z: job.position.z, y: isHalfUnitHeight(job.position.y) ? job.position.y : 0,
+    }))];
+    const reserved = new Set(pendingExpansions.map((job) => `${job.position.x},${job.position.z},${isHalfUnitHeight(job.position.y) ? job.position.y : 0}`));
+    const reservedPlantCoins = [...activeJobs.values(), ...jobQueue].reduce((sum, job) => sum + (job.resultCommitted !== true && job.kind === 'plant' ? (crops[job.cropIndex]?.seedCost || 0) : 0), 0);
+    let projectedAutoCount = window.gardenEconomy.getAutomaticPlotCount(plannedPlots);
+    let availableCoins = game.coins - reservedPlantCoins;
+    for (const job of pendingExpansions) {
+      availableCoins -= window.gardenEconomy.getLandCost(projectedAutoCount);
+      if (job.manual !== true) projectedAutoCount += 1;
+    }
+    const accepted = [];
+    let skippedInvalid = 0;
+    let skippedForFunds = 0;
+    let skippedForCapacity = 0;
+    const docks = game.drones.filter((drone) => drone.deployed !== false).map((drone) => drone.dockPosition);
+    for (const cell of positions.slice(0, 120)) {
+      if (!Number.isInteger(cell.x) || !Number.isInteger(cell.z)) { skippedInvalid += 1; continue; }
+      const key = `${cell.x},${cell.z},${height}`;
+      if (occupied.has(key) || reserved.has(key)) { skippedInvalid += 1; continue; }
+      const candidate = { crop: null, plantedAt: null, manual, grassOnly: false, x: cell.x, z: cell.z, y: height };
+      if (!validStacking([...validationPlots, candidate], docks)) { skippedInvalid += 1; continue; }
+      if (pendingExpansions.length + accepted.length >= 200) { skippedForCapacity += 1; continue; }
+      const cost = window.gardenEconomy.getLandCost(projectedAutoCount);
+      if (availableCoins < cost) { skippedForFunds += 1; continue; }
+      availableCoins -= cost;
+      if (!manual) projectedAutoCount += 1;
+      plannedPlots.push(candidate);
+      validationPlots.push(candidate);
+      occupied.add(key);
+      reserved.add(key);
+      accepted.push({
+        kind: 'expand', manual, position: { x: cell.x, z: cell.z, y: height },
+        batchId, createdAt: Date.now(), status: 'queued',
+      });
+    }
+    if (!accepted.length) {
+      const reasons = [];
+      if (skippedInvalid) reasons.push(`無效位置 ${skippedInvalid} 格`);
+      if (skippedForFunds) reasons.push(`金幣不足 ${skippedForFunds} 格`);
+      if (skippedForCapacity) reasons.push(`待辦佇列上限 200 格，略過 ${skippedForCapacity} 格`);
+      notify(`沒有加入開墾任務：${reasons.join('；') || '沒有可開墾的空格'}。`);
+      return false;
+    }
+    accepted.forEach((job) => { job.id = `${Date.now()}-${Math.random().toString(36).slice(2)}`; });
+    const firstNonExpansion = jobQueue.findIndex((queued) => queued.kind !== 'expand');
+    if (firstNonExpansion < 0) jobQueue.push(...accepted);
+    else jobQueue.splice(firstNonExpansion, 0, ...accepted);
+    const savedImmediately = save();
+    renderJobQueue();
+    processJobQueue();
+    const skippedSummary = [
+      skippedInvalid ? `無效位置 ${skippedInvalid} 格` : '',
+      skippedForFunds ? `金幣不足 ${skippedForFunds} 格` : '',
+      skippedForCapacity ? `佇列上限略過 ${skippedForCapacity} 格` : '',
+    ].filter(Boolean).join('；');
+    notify(`已加入連續開墾：${accepted.length} 格${skippedSummary ? `；${skippedSummary}` : ''}${savedImmediately ? '；任務已立即儲存。' : '；但存檔失敗，重新整理可能會遺失未完成任務。'}`);
+    return true;
+  };
   farmTabManual?.addEventListener('click', () => setFarmManagementTab('manual'));
   farmTabAuto?.addEventListener('click', () => setFarmManagementTab('auto'));
   syncFarmManagementTabs();
