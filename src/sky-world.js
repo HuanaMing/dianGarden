@@ -388,45 +388,55 @@
   continuousPreviewLayer.className = 'continuous-plot-preview-layer';
   continuousPreviewLayer.hidden = true;
   frame.append(continuousPreviewLayer);
-  let continuousPlacement = { active: false, height: 0, manual: false };
-  let continuousHeightSelection = { active: false, height: 0, manual: false, x: 0, z: 0, pointerId: null, startY: 0, startHeight: 0, moved: false };
+  let continuousPlacement = { active: false, height: 0, manual: false, pathReady: false };
+  let continuousHeightSelection = { active: false, height: 0, manual: false, x: 0, z: 0, pointerId: null, startX: 0, startY: 0, startHeight: 0, startCellX: 0, startCellZ: 0, moved: false, adjusting: false };
   let continuousDragPointerId = null;
   let continuousPlacementPath = [];
   function drawContinuousPlacementPreview() {
     continuousPreviewLayer.replaceChildren();
-    continuousPreviewLayer.hidden = !(continuousHeightSelection.active || (continuousPlacement.active && continuousPlacementPath.length));
+    const anchorMode = continuousHeightSelection.active;
+    const pathMode = continuousPlacement.active && continuousPlacementPath.length > 0;
+    continuousPreviewLayer.hidden = !(anchorMode || pathMode);
     if (continuousPreviewLayer.hidden) return;
     const frameRect = frame.getBoundingClientRect();
     const canvasRect = canvas.getBoundingClientRect();
-    if (continuousHeightSelection.active) {
-      const cell = continuousHeightSelection;
-      const point = projectPoint([cell.x, cell.height + 0.09, cell.z]);
-      const across = projectPoint([cell.x + 0.5, cell.height + 0.09, cell.z]);
-      const along = projectPoint([cell.x, cell.height + 0.09, cell.z + 0.5]);
-      if (point && across && along) {
-        const marker = document.createElement('span');
-        marker.className = 'continuous-plot-preview-cell is-height-selection' + (cell.manual ? ' is-manual' : '');
-        marker.style.left = `${canvasRect.left - frameRect.left + point.x}px`;
-        marker.style.top = `${canvasRect.top - frameRect.top + point.y}px`;
-        marker.style.width = `${Math.max(24, Math.min(88, Math.hypot(across.x - point.x, across.y - point.y) * 1.7))}px`;
-        marker.style.height = `${Math.max(24, Math.min(88, Math.hypot(along.x - point.x, along.y - point.y) * 1.7))}px`;
-        continuousPreviewLayer.append(marker);
+    const ox = canvasRect.left - frameRect.left, oy = canvasRect.top - frameRect.top;
+    const cells = anchorMode ? [{x: continuousHeightSelection.x, z: continuousHeightSelection.z}] : continuousPlacementPath;
+    const height = anchorMode ? continuousHeightSelection.height : continuousPlacement.height;
+    const manual = anchorMode ? continuousHeightSelection.manual : continuousPlacement.manual;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'continuous-plot-prism-layer');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none';
+    const project = (x,y,z) => { const q=projectPoint([x,y,z]); return q ? [ox+q.x,oy+q.y] : null; };
+    const face = (pts, cls) => { if (pts.some(q=>!q)) return; const el=document.createElementNS('http://www.w3.org/2000/svg','polygon'); el.setAttribute('points',pts.map(q=>q[0]+','+q[1]).join(' ')); el.setAttribute('class',cls+(manual?' is-manual':'')); svg.append(el); };
+    let anchor=null;
+    cells.forEach((c,i)=>{
+      const yt=height+0.12, yb=height-0.38;
+      const nw=project(c.x-.5,yt,c.z-.5), ne=project(c.x+.5,yt,c.z-.5), se=project(c.x+.5,yt,c.z+.5), sw=project(c.x-.5,yt,c.z+.5);
+      const nwb=project(c.x-.5,yb,c.z-.5), neb=project(c.x+.5,yb,c.z-.5), seb=project(c.x+.5,yb,c.z+.5), swb=project(c.x-.5,yb,c.z+.5);
+      face([nw,sw,swb,nwb],'continuous-plot-prism-face is-left'); face([sw,se,seb,swb],'continuous-plot-prism-face is-front');
+      face([ne,se,seb,neb],'continuous-plot-prism-face is-right'); face([nw,ne,se,sw],'continuous-plot-prism-face is-top');
+      if(anchorMode||i===cells.length-1) anchor=project(c.x,yt,c.z);
+    });
+    continuousPreviewLayer.append(svg);
+    if(anchor && (anchorMode || continuousPlacement.pathReady)) {
+      const actions=document.createElement('div'); actions.className='continuous-plot-floating-actions';
+      actions.style.left=Math.max(58,Math.min(frameRect.width-58,anchor[0]))+'px'; actions.style.top=Math.max(46,Math.min(frameRect.height-46,anchor[1]-36))+'px';
+      const add=(label,cls,title,cb)=>{const b=document.createElement('button');b.type='button';b.className='continuous-plot-action '+cls;b.textContent=label;b.title=title;b.setAttribute('aria-label',title);b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();cb();});actions.append(b);};
+      if(anchorMode){
+        add('O','is-confirm','確認起點，進入滑動建立階段',()=>window.onSkyContinuousPlotAction?.('anchor-confirm',{x:continuousHeightSelection.x,z:continuousHeightSelection.z,height:continuousHeightSelection.height,manual:continuousHeightSelection.manual}));
+        add('X','is-cancel','起點不確定，拖曳調整起點預覽方塊',()=>{continuousHeightSelection.adjusting=true;window.onSkyContinuousPlotAction?.('anchor-adjust',{x:continuousHeightSelection.x,z:continuousHeightSelection.z,height:continuousHeightSelection.height,manual:continuousHeightSelection.manual});});
+      } else {
+        add('O','is-confirm','確認建立這次連續地塊',()=>window.onSkyContinuousPlotAction?.('path-confirm',{positions:continuousPlacementPath.map(q=>({...q})),height:continuousPlacement.height,manual:continuousPlacement.manual}));
+        add('X','is-cancel','取消這次滑動，重新確認起點',()=>window.onSkyContinuousPlotAction?.('path-cancel',{positions:continuousPlacementPath.map(q=>({...q})),height:continuousPlacement.height,manual:continuousPlacement.manual}));
       }
-      return;
+      continuousPreviewLayer.append(actions);
     }
-    for (const cell of continuousPlacementPath) {
-      const point = projectPoint([cell.x, continuousPlacement.height + 0.09, cell.z]);
-      const across = projectPoint([cell.x + 0.5, continuousPlacement.height + 0.09, cell.z]);
-      const along = projectPoint([cell.x, continuousPlacement.height + 0.09, cell.z + 0.5]);
-      if (!point || !across || !along) continue;
-      const marker = document.createElement('span');
-      marker.className = 'continuous-plot-preview-cell' + (continuousPlacement.manual ? ' is-manual' : '');
-      marker.style.left = `${canvasRect.left - frameRect.left + point.x}px`;
-      marker.style.top = `${canvasRect.top - frameRect.top + point.y}px`;
-      marker.style.width = `${Math.max(14, Math.min(70, Math.hypot(across.x - point.x, across.y - point.y) * 1.55))}px`;
-      marker.style.height = `${Math.max(14, Math.min(70, Math.hypot(along.x - point.x, along.y - point.y) * 1.55))}px`;
-      continuousPreviewLayer.append(marker);
-    }
+    const price=document.createElement('div'); price.className='continuous-plot-price';
+    const priceText = window.onSkyContinuousPlotPreviewChange?.({ positions: cells, height: height, manual: manual, anchor: anchorMode });
+    price.textContent = typeof priceText === 'string' && priceText ? priceText : (anchorMode ? '確認連續開墾起點' : ('本次預覽 ' + cells.length + ' 格'));
+    continuousPreviewLayer.append(price);
   }
   function appendContinuousPlacementPoint(x, z) {
     const next = { x: Math.round(x), z: Math.round(z) };
@@ -2962,13 +2972,16 @@
       dragging = true;
       pointerMoved = false;
       const groundPoint = screenToGround(event.clientX, event.clientY, continuousHeightSelection.height + 0.08);
-      if (groundPoint) {
+      if (continuousHeightSelection.adjusting && groundPoint) {
         continuousHeightSelection.x = Math.round(groundPoint[0]);
         continuousHeightSelection.z = Math.round(groundPoint[1]);
       }
       continuousHeightSelection.pointerId = event.pointerId;
+      continuousHeightSelection.startX = event.clientX;
       continuousHeightSelection.startY = event.clientY;
       continuousHeightSelection.startHeight = continuousHeightSelection.height;
+      continuousHeightSelection.startCellX = continuousHeightSelection.x;
+      continuousHeightSelection.startCellZ = continuousHeightSelection.z;
       continuousHeightSelection.moved = false;
       canvas.setPointerCapture(event.pointerId);
       drawContinuousPlacementPreview();
@@ -2983,7 +2996,8 @@
       dragging = true;
       pointerMoved = false;
       continuousDragPointerId = event.pointerId;
-      continuousPlacementPath = [];
+      continuousPlacement.pathReady = false;
+      if (!continuousPlacementPath.length) continuousPlacementPath = [];
       const groundPoint = screenToGround(event.clientX, event.clientY, continuousPlacement.height + 0.08);
       if (groundPoint) appendContinuousPlacementPoint(groundPoint[0], groundPoint[1]);
       drawContinuousPlacementPreview();
@@ -3100,9 +3114,13 @@
     }
     if (continuousHeightSelection.active && continuousHeightSelection.pointerId === event.pointerId) {
       const deltaY = continuousHeightSelection.startY - event.clientY;
+      if (continuousHeightSelection.adjusting) {
+        const groundPoint = screenToGround(event.clientX, event.clientY, continuousHeightSelection.startHeight + 0.08);
+        if (groundPoint) { continuousHeightSelection.x = Math.round(groundPoint[0]); continuousHeightSelection.z = Math.round(groundPoint[1]); }
+      }
       const nextHeight = Math.max(-8, Math.min(8, Math.round((continuousHeightSelection.startHeight + deltaY / 48) * 2) / 2));
       continuousHeightSelection.height = nextHeight;
-      if (Math.abs(deltaY) >= 5) continuousHeightSelection.moved = true;
+      if (Math.abs(deltaY) >= 5 || Math.abs(event.clientX - continuousHeightSelection.startX) >= 5) continuousHeightSelection.moved = true;
       pointerMoved = continuousHeightSelection.moved;
       drawContinuousPlacementPreview();
       lastPointerX = event.clientX;
@@ -3212,7 +3230,6 @@
       continuousHeightSelection.pointerId = null;
       continuousHeightSelection.moved = false;
       dragging = false;
-      if (!moved) window.onSkyContinuousHeightConfirmed?.(height, manual);
       drawContinuousPlacementPreview();
       if (event.pointerType === 'touch') touchPoints.delete(event.pointerId);
       return;
@@ -3243,13 +3260,10 @@
       return;
     }
     if (continuousDragPointerId === event.pointerId) {
-      const positions = continuousPlacementPath.map((cell) => ({ ...cell }));
-      const height = continuousPlacement.height;
       continuousDragPointerId = null;
-      continuousPlacementPath = [];
+      continuousPlacement.pathReady = continuousPlacementPath.length > 0;
       dragging = false;
       drawContinuousPlacementPreview();
-      if (positions.length) window.onSkyContinuousPlotPath?.(positions, height);
       if (event.pointerType === 'touch') touchPoints.delete(event.pointerId);
       return;
     }
@@ -3418,9 +3432,9 @@
         const point = screenToGround(rect.left + rect.width / 2, rect.top + rect.height / 2, height + 0.08);
         continuousHeightSelection = {
           active: true, height, manual: options.manual === true,
-          x: point ? Math.round(point[0]) : Math.round(targetX),
-          z: point ? Math.round(point[1]) : Math.round(targetZ),
-          pointerId: null, startY: 0, startHeight: height, moved: false,
+          x: Number.isInteger(options.x) ? options.x : (point ? Math.round(point[0]) : Math.round(targetX)),
+          z: Number.isInteger(options.z) ? options.z : (point ? Math.round(point[1]) : Math.round(targetZ)),
+          pointerId: null, startX: 0, startY: 0, startHeight: height, startCellX: 0, startCellZ: 0, moved: false, adjusting: false,
         };
         continuousPlacementPath = [];
         continuousDragPointerId = null;
@@ -3438,9 +3452,12 @@
         active: options.active === true,
         height: Number.isFinite(options.height) && Math.abs(options.height * 2 - Math.round(options.height * 2)) < 1e-8 ? Math.max(-8, Math.min(8, options.height)) : 0,
         manual: options.manual === true,
+        pathReady: options.pathReady === true,
       };
-      if (continuousPlacement.active) setCameraMode('2d');
-      else {
+      if (continuousPlacement.active) {
+        setCameraMode('2d');
+        continuousPlacementPath = Array.isArray(options.start) && Number.isInteger(options.start.x) && Number.isInteger(options.start.z) ? [{ x: options.start.x, z: options.start.z }] : [];
+      } else {
         continuousDragPointerId = null;
         continuousPlacementPath = [];
         dragging = false;
