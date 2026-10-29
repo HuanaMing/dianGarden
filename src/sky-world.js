@@ -671,8 +671,8 @@
     const cropIndex = Number.isInteger(flower?.cropIndex) ? flower.cropIndex : 0;
     const model = flowerModelRegistry.get(cropIndex);
     if (typeof model?.bloom !== 'function') return;
-    const headPositions = [];
-    const headColors = [];
+    const sourcePositions = [];
+    const sourceColors = [];
     const headPalette = [
       [0.98, 0.72, 0.12], [0.54, 0.39, 0.78], [0.93, 0.94, 0.84], [0.545, 0.063, 0.157],
       [0.91, 0.36, 0.34], [0.88, 0.48, 0.58], [0.94, 0.7, 0.2], [0.44, 0.59, 0.88],
@@ -684,17 +684,41 @@
     const headColor = customColor || headPalette[cropIndex] || headPalette[0];
     const height = window.flowerCatalog?.[cropIndex]?.height || 0.5;
     model.bloom({
-      positions: headPositions,
-      colors: headColors,
+      positions: sourcePositions,
+      colors: sourceColors,
       x: 0,
       z: 0,
       height,
       headColor,
       environmentState,
-      stemModel: model.stem,
+      // Do not ask the model to add its separate stem/leaf geometry.
+      stemModel: null,
       stage: 2,
     });
-    if (!headPositions.length) return;
+    if (sourcePositions.length < 9 || sourceColors.length !== sourcePositions.length) return;
+
+    // Bloom models may include stalks or leaves in their bloom geometry (notably lavender).
+    // Keep flower-colored triangles and discard green-dominant foliage triangles.
+    const headPositions = [];
+    const headColors = [];
+    for (let i = 0; i + 8 < sourcePositions.length; i += 9) {
+      let red = 0, green = 0, blue = 0;
+      for (let vertex = 0; vertex < 3; vertex += 1) {
+        red += sourceColors[i + vertex * 3];
+        green += sourceColors[i + vertex * 3 + 1];
+        blue += sourceColors[i + vertex * 3 + 2];
+      }
+      red /= 3;
+      green /= 3;
+      blue /= 3;
+      if (green > red * 1.12 && green > blue * 1.08) continue;
+      for (let component = 0; component < 9; component += 1) {
+        headPositions.push(sourcePositions[i + component]);
+        headColors.push(sourceColors[i + component]);
+      }
+    }
+    if (headPositions.length < 9) return;
+
     const min = [Infinity, Infinity, Infinity];
     const max = [-Infinity, -Infinity, -Infinity];
     for (let i = 0; i < headPositions.length; i += 3) {
@@ -704,10 +728,18 @@
       }
     }
     const center = min.map((value, axis) => (value + max[axis]) * 0.5);
-    const scale = 0.24;
+    let maxRadius = 0;
+    for (let i = 0; i < headPositions.length; i += 3) {
+      const dx = headPositions[i] - center[0];
+      const dz = headPositions[i + 2] - center[2];
+      maxRadius = Math.max(maxRadius, Math.hypot(dx, dz));
+    }
+    const halfHeight = Math.max(0.0001, (max[1] - min[1]) * 0.5);
+    // Fit the complete head within the transparent case with a margin for rotation and bobbing.
+    const scale = Math.min(0.24, 0.032 / Math.max(0.0001, maxRadius), 0.036 / halfHeight);
     const rotation = (time - (flower.startedAt || time)) * 0.00072;
     const cosine = Math.cos(rotation), sine = Math.sin(rotation);
-    const bob = Math.sin(time * 0.0022) * 0.007;
+    const bob = Math.sin(time * 0.0022) * 0.004;
     const first = positions.length / 3;
     for (let i = 0; i < headPositions.length; i += 3) {
       const dx = (headPositions[i] - center[0]) * scale;
@@ -722,7 +754,6 @@
     }
     opacitySpans.push({ first, last: positions.length / 3, opacity: 1 });
   }
-
   function addBox(positions, colors, x1, y1, z1, x2, y2, z2, palette) {
     const a = [x1, y1, z1], b = [x2, y1, z1], c = [x2, y1, z2], d = [x1, y1, z2];
     const e = [x1, y2, z1], f = [x2, y2, z1], g = [x2, y2, z2], h = [x1, y2, z2];
