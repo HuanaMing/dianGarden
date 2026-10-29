@@ -925,3 +925,12 @@ input, [contenteditable="true"]{
 .continuous-plot-preview-cell.is-invalid{border-color:#c28b5c;background:#f5d3a866}
 .continuous-plot-preview-cell.is-manual{border-style:dashed}
 @media(max-width:420px){.continuous-plot-controls{grid-template-columns:auto minmax(58px,1fr) auto minmax(78px,1fr);gap:5px;padding:7px;font-size:9px}.continuous-plot-controls select{padding:7px 4px}.continuous-plot-preview-cell{width:23px;height:23px}}
+
+
+.farm-management-panel.is-continuous-placement{width:min(330px,calc(100% - 24px))!important;max-height:none!important;padding:8px;gap:5px}
+.farm-management-panel.is-continuous-placement .farm-management-tabs,
+.farm-management-panel.is-continuous-placement .world-plots,
+.farm-management-panel.is-continuous-placement .land-purchase-actions{display:none!important}
+.farm-management-panel.is-continuous-placement .farm-management-heading{margin:0;font-size:11px}
+.farm-management-panel.is-continuous-placement .continuous-plot-controls{margin:0;padding:7px;gap:5px}
+@media(max-width:700px){.farm-management-panel.is-continuous-placement{width:min(330px,calc(100% - 16px))!important;max-height:none!important}}
