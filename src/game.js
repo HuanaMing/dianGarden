@@ -781,14 +781,15 @@
   }
   function renderJobQueue() {
     if (!jobStatus || !jobQueueDisplay) return;
-    const expansionPending = [...activeJobs.values()].some((job) => job.kind === 'expand') || jobQueue.some((job) => job.kind === 'expand');
-    expandButton?.setAttribute('aria-disabled', String(expansionPending));
-    expandButton?.classList.toggle('is-blocked', expansionPending);
-    if (expandButton) expandButton.disabled = expansionPending && !continuousPlotModeActive;
-    if (manualLandButton) manualLandButton.disabled = expansionPending && !continuousPlotModeActive;
+    // 擴建任務允許排隊；已有擴建任務時，也不能鎖住兩種購買入口。
+    // 位置、金額與容量會在派工／連續建置流程中再次驗證。
+    expandButton?.setAttribute('aria-disabled', 'false');
+    expandButton?.classList.remove('is-blocked');
+    if (expandButton) expandButton.disabled = false;
+    if (manualLandButton) manualLandButton.disabled = false;
     expandButton.textContent = `自動地塊 · ${getLandCost()} 🪙`;
-    expandButton?.setAttribute('aria-label', expansionPending ? '農地擴建中，請稍後' : `擴建空中土地，花費 ${getLandCost()} 枚金幣`);
-    expandButton?.setAttribute('title', expansionPending ? '農地擴建中，請稍後' : '擴建空中土地');
+    expandButton?.setAttribute('aria-label', `購買自動地塊，花費 ${getLandCost()} 枚金幣`);
+    expandButton?.setAttribute('title', '購買自動地塊');
     const waitingForCharge = jobQueue.length > 0 && game.drones.every((drone, index) => drone.deployed === false || activeJobs.has(index) || drone.battery < estimateJobBattery(jobQueue[0], index));
     jobStatus.textContent = activeJobs.size ? `工作中` : waitingForCharge ? '電量不足，工作排隊等待充電' : '無人機待命';
     renderDroneFleet();
@@ -1638,6 +1639,7 @@
   let continuousPlotHeight = 0;
   function updateContinuousPlotMode(active) {
     continuousPlotModeActive = Boolean(active);
+    document.querySelector('#farm-management-panel')?.classList.toggle('is-continuous-placement', continuousPlotModeActive);
     continuousPlotPathReady = false;
     window.skyWorld?.setContinuousPlotHeightSelection?.({ active: false });
     window.skyWorld?.setContinuousPlotPlacement?.({ active: false });
