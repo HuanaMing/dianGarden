@@ -539,6 +539,9 @@
     updateEnvironmentDisplay(environment);
     window.skyWorld?.setPlotPositions(game.plots.map(({ x, z, y }) => ({ x, z, y })));
     window.skyWorld?.setLandCount(game.plots.length);
+    window.skyWorld?.setPendingPlotPreviews(jobQueue
+      .filter((job) => job.kind === 'expand' && job.position)
+      .map((job) => ({ ...job.position, manual: job.manual === true })));
     window.skyWorld?.setDockPosition(game.dockPosition);
     window.skyWorld?.setDroneCount(game.droneCount);
     window.skyWorld?.setDroneDocks(game.drones.map((drone) => ({ ...drone.dockPosition, deployed: drone.deployed, deploymentOrder: drone.deploymentOrder, battery: drone.battery })));
@@ -781,6 +784,10 @@
   }
   function renderJobQueue() {
     if (!jobStatus || !jobQueueDisplay) return;
+    // Keep the translucent world preview synchronized with expansion jobs still waiting in the queue.
+    window.skyWorld?.setPendingPlotPreviews(jobQueue
+      .filter((job) => job.kind === 'expand' && job.position)
+      .map((job) => ({ ...job.position, manual: job.manual === true })));
     // 擴建任務允許排隊；已有擴建任務時，也不能鎖住兩種購買入口。
     // 位置、金額與容量會在派工／連續建置流程中再次驗證。
     expandButton?.setAttribute('aria-disabled', 'false');
@@ -1639,7 +1646,12 @@
   let continuousPlotHeight = 0;
   function updateContinuousPlotMode(active) {
     continuousPlotModeActive = Boolean(active);
-    document.querySelector('#farm-management-panel')?.classList.toggle('is-continuous-placement', continuousPlotModeActive);
+    const farmPanel = document.querySelector('#farm-management-panel');
+    farmPanel?.classList.toggle('is-continuous-placement', continuousPlotModeActive);
+    if (continuousPlotModeActive && farmPanel) {
+      farmPanel.hidden = true;
+      document.querySelector('#farm-management-toggle')?.setAttribute('aria-expanded', 'false');
+    }
     continuousPlotPathReady = false;
     window.skyWorld?.setContinuousPlotHeightSelection?.({ active: false });
     window.skyWorld?.setContinuousPlotPlacement?.({ active: false });

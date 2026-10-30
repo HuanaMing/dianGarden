@@ -920,7 +920,7 @@ input, [contenteditable="true"]{
 .continuous-plot-controls button[aria-pressed="true"]{border-color:#729f78;background:#d7edcf;box-shadow:inset 0 0 0 1px #a7cda1}
 .continuous-plot-controls p{grid-column:1/-1;margin:0;color:#819588;font-size:10px;font-weight:600;line-height:1.5}
 .continuous-plot-controls button:focus-visible,.continuous-plot-controls select:focus-visible{outline:2px solid #6b9b73;outline-offset:2px}
-.continuous-plot-preview-layer{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.continuous-plot-preview-layer{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;touch-action:none}.continuous-plot-prism-layer{pointer-events:none}.continuous-plot-drag-modes,.continuous-plot-floating-actions{pointer-events:auto;touch-action:manipulation}
 .continuous-plot-preview-cell{position:absolute;width:28px;height:28px;transform:translate(-50%,-50%);border:2px solid #4b9d62;border-radius:5px;background:#b8e8a966;box-shadow:0 0 0 1px #f5fff2a8,inset 0 0 0 1px #ffffff66}
 .continuous-plot-preview-cell.is-invalid{border-color:#c28b5c;background:#f5d3a866}
 .continuous-plot-preview-cell.is-manual{border-style:dashed}

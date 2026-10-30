@@ -393,6 +393,7 @@
   let continuousHeightSelection = { active: false, height: 0, manual: false, x: 0, z: 0, pointerId: null, startX: 0, startY: 0, startHeight: 0, startCellX: 0, startCellZ: 0, moved: false, adjusting: false };
   let continuousDragPointerId = null;
   let continuousPlacementPath = [];
+  let pendingPlotPreviews = [];
   let continuousDragMode = 'horizontal';
   function getContinuousPreviewCells() {
     if (continuousHeightSelection.active) return [{ x: continuousHeightSelection.x, z: continuousHeightSelection.z, y: continuousHeightSelection.height, manual: continuousHeightSelection.manual, anchor: true }];
@@ -427,7 +428,7 @@
       actions.style.left=Math.max(58,Math.min(frameRect.width-58,anchor[0]))+'px'; actions.style.top=Math.max(46,Math.min(frameRect.height-46,anchor[1]-36))+'px';
       const add=(label,cls,title,cb)=>{const b=document.createElement('button');b.type='button';b.className='continuous-plot-action '+cls;b.textContent=label;b.title=title;b.setAttribute('aria-label',title);b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();cb();});actions.append(b);};
       const mode= document.createElement('div'); mode.className='continuous-plot-drag-modes';
-      const modeButton=(label,value,icon)=>{const b=document.createElement('button');b.type='button';b.className='continuous-plot-mode-chip'+(continuousDragMode===value?' is-active':'');b.textContent=icon+' '+label;b.setAttribute('aria-pressed',String(continuousDragMode===value));b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();continuousDragMode=value;drawContinuousPlacementPreview();});mode.append(b);};
+      const modeButton=(label,value,icon)=>{const b=document.createElement('button');b.type='button';b.className='continuous-plot-mode-chip'+(continuousDragMode===value?' is-active':'');b.textContent=icon+' '+label;b.setAttribute('aria-pressed',String(continuousDragMode===value));b.setAttribute('aria-label',value==='horizontal'?'水平移動 ↔':'上下調整 ↕');b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();continuousDragMode=value;drawContinuousPlacementPreview();});mode.append(b);};
       modeButton('水平','horizontal',String.fromCharCode(8596)); modeButton('鉛直','vertical',String.fromCharCode(8597));
       continuousPreviewLayer.append(mode);
       if(anchorMode){
@@ -2190,7 +2191,11 @@
     const colors = [];
     const originalPlotPositions = plotPositions;
     const originalPlotStates = plotStates;
-    const previewCells = getContinuousPreviewCells();
+    const placementPreviewActive = continuousHeightSelection.active || continuousPlacement.active;
+    const previewCells = [
+      ...(placementPreviewActive ? pendingPlotPreviews : []),
+      ...getContinuousPreviewCells(),
+    ];
     const nextPreviewPlotSpans = [];
     const renderLandCount = landCount;
     if (previewCells.length) {
@@ -2224,7 +2229,7 @@
       addBox(positions, colors, x - 0.035, platformY + 0.056, z - 0.12, x + 0.035, platformY + 0.066, z + 0.12, dockMark);
       addBox(positions, colors, x - 0.12, platformY + 0.056, z - 0.035, x + 0.12, platformY + 0.066, z + 0.035, dockMark);
     }
-    if (dockPreview) {
+    if (dockPreview && !continuousHeightSelection.active && !continuousPlacement.active) {
       const [previewX, previewZ] = getDockPosition(dockPreview.index);
       const half = TILE * 0.5;
       const edge = 0.045;
@@ -3477,6 +3482,9 @@
       const active = options.active === true;
       if (active) {
         continuousDragMode = 'horizontal';
+        // Clear any stale dock-move highlight so placement preview only shows plot guides.
+        dockPreview = null;
+        dockSelected = false;
         const height = Number.isFinite(options.height) && Math.abs(options.height * 2 - Math.round(options.height * 2)) < 1e-8
           ? Math.max(-8, Math.min(8, options.height)) : 0;
         const rect = canvas.getBoundingClientRect();
@@ -3620,6 +3628,14 @@
         landCount = count;
         uploadWorld();
       }
+    },
+    setPendingPlotPreviews(plots) {
+      pendingPlotPreviews = Array.isArray(plots)
+        ? plots.filter((plot) => Number.isFinite(plot?.x) && Number.isFinite(plot?.z)).map((plot) => ({
+          x: plot.x, z: plot.z, y: Number.isFinite(plot.y) ? plot.y : 0, manual: plot.manual === true,
+        }))
+        : [];
+      uploadWorld();
     },
     setPlots(plots) {
       if (!Array.isArray(plots)) return;
