@@ -430,6 +430,23 @@
       const mode= document.createElement('div'); mode.className='continuous-plot-drag-modes';
       const modeButton=(label,value,icon)=>{const b=document.createElement('button');b.type='button';b.className='continuous-plot-mode-chip'+(continuousDragMode===value?' is-active':'');b.textContent=icon+' '+label;b.setAttribute('aria-pressed',String(continuousDragMode===value));b.setAttribute('aria-label',value==='horizontal'?'水平移動 ↔':'上下調整 ↕');b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();continuousDragMode=value;drawContinuousPlacementPreview();});mode.append(b);};
       modeButton('水平','horizontal',String.fromCharCode(8596)); modeButton('鉛直','vertical',String.fromCharCode(8597));
+      if (anchorMode) {
+        const adjustHeight = (label, delta, title) => {
+          const b = document.createElement('button');
+          b.type = 'button'; b.className = 'continuous-plot-mode-chip continuous-plot-height-step';
+          b.textContent = label; b.title = title; b.setAttribute('aria-label', title);
+          b.addEventListener('pointerdown', e => e.stopPropagation());
+          b.addEventListener('click', e => {
+            e.preventDefault(); e.stopPropagation();
+            continuousHeightSelection.height = Math.max(-8, Math.min(8, Math.round((continuousHeightSelection.height + delta) * 2) / 2));
+            continuousHeightSelection.startHeight = continuousHeightSelection.height;
+            drawContinuousPlacementPreview();
+          });
+          mode.append(b);
+        };
+        adjustHeight('↑', 0.5, '起點升高半格');
+        adjustHeight('↓', -0.5, '起點降低半格');
+      }
       continuousPreviewLayer.append(mode);
       if(anchorMode){
         add('O','is-confirm','確認起點，進入滑動建立階段',()=>window.onSkyContinuousPlotAction?.('anchor-confirm',{x:continuousHeightSelection.x,z:continuousHeightSelection.z,height:continuousHeightSelection.height,manual:continuousHeightSelection.manual}));
@@ -2893,7 +2910,7 @@
     gl.depthMask(true);
     gl.disableVertexAttribArray(locations.opacity);
     gl.vertexAttrib1f(locations.opacity, 1);
-    drawDroneGlows();
+    // Disabled: additive billboard was producing a sky-tinted square around the drone.
     gl.useProgram(program);
     gl.uniformMatrix4fv(locations.projection, false, currentProjection);
     gl.uniformMatrix4fv(locations.view, false, currentView);
