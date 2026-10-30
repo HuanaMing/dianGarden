@@ -946,7 +946,7 @@ input, [contenteditable="true"]{
 .continuous-plot-prism-face.is-left{fill:#4e9b68cc}
 .continuous-plot-prism-face.is-right{fill:#32764dcc}
 .continuous-plot-prism-face.is-manual{stroke-dasharray:4 3}
-.continuous-plot-floating-actions{position:absolute;z-index:4;display:flex;gap:8px;transform:translate(-50%,-100%);pointer-events:auto}
+.continuous-plot-floating-actions{position:absolute;z-index:4;display:flex;flex-direction:column;align-items:center;gap:7px;transform:translate(-50%,-50%);pointer-events:auto}
 .continuous-plot-action{width:42px;height:42px;border:2px solid #fff;border-radius:50%;font:900 18px/1 system-ui,sans-serif;box-shadow:0 3px 12px #18332366;cursor:pointer;touch-action:manipulation}
 .continuous-plot-action.is-confirm{background:#2e9b59;color:white}
 .continuous-plot-action.is-cancel{background:#fff4e8;color:#a34d32;border-color:#f6d1b8}
@@ -960,7 +960,10 @@ input, [contenteditable="true"]{
 @media(max-width:420px){.farm-management-panel .land-purchase-actions{gap:5px}.farm-management-panel .land-purchase-actions button{padding:7px 3px;font-size:10px}}
 
 /* Continuous placement mode indicators. */
-.continuous-plot-drag-modes{position:absolute;z-index:5;left:10px;top:10px;display:flex;gap:6px;pointer-events:auto}
+.continuous-plot-drag-modes{position:static;z-index:5;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;pointer-events:auto}
 .continuous-plot-mode-chip{border:1px solid #d4e6c8;border-radius:999px;background:#f8fff0ed;color:#48694d;padding:6px 10px;font:800 12px/1.2 system-ui,sans-serif;box-shadow:0 2px 8px #24432b22;cursor:pointer}
 .continuous-plot-mode-chip.is-active{background:#315f43;color:#fff;border-color:#244c34}
 .continuous-plot-mode-chip:focus-visible{outline:2px solid #e5b94f;outline-offset:2px}
+
+.continuous-plot-mode-status{display:inline-flex;align-items:center;min-height:30px;padding:6px 10px;border:1px solid #b9d4b4;border-radius:999px;background:#183d2eee;color:#fff;font:900 12px/1.2 system-ui,sans-serif;box-shadow:0 2px 8px #18332355}
+.continuous-plot-height-step{min-width:42px;min-height:34px;font-size:16px!important;font-weight:1000!important}

@@ -1292,7 +1292,6 @@
     const world = window.skyWorld;
     if (!world || !jobQueue.length) { renderJobQueue(); return; }
     const startIndex = nextDroneIndex;
-    const blockedJobsThisPass = new Set();
     const candidateOrder = game.drones.map((drone, index) => ({ drone, index, rotation: (index - startIndex + game.drones.length) % game.drones.length }))
       .filter(({ drone, index }) => drone.deployed !== false && !activeJobs.has(index))
       .sort((a, b) => {
@@ -1309,7 +1308,8 @@
       
       if (game.drones[droneIndex]?.deployed === false || activeJobs.has(droneIndex)) continue;
       const isEligibleJob = (job) => {
-        if (blockedJobsThisPass.has(job.id)) return false;
+        if (Array.isArray(job.failedDroneIndices) && job.failedDroneIndices.includes(droneIndex)) return false;
+        if (Number.isFinite(job.retryAfter) && job.retryAfter > Date.now()) return false;
         // 擴建只在下方的優先選取階段優先；若擴建因無安全路徑／電量不足而無法執行，
         // 不可讓佇列中仍存在的擴建任務永久封鎖其他可執行任務。
         if (job.kind === 'harvest' && harvestReturnRequired.has(droneIndex)) return false;
@@ -1408,12 +1408,20 @@
         job.attempts = (job.attempts || 0) + 1;
         job.lastError = 'no_safe_route';
         job.lastAttemptAt = Date.now();
+        job.failedDroneIndices = Array.isArray(job.failedDroneIndices) ? job.failedDroneIndices : [];
+        if (!job.failedDroneIndices.includes(droneIndex)) job.failedDroneIndices.push(droneIndex);
+        const deployedDroneIndices = game.drones.map((candidate, candidateIndex) => candidate.deployed === false ? -1 : candidateIndex).filter((candidateIndex) => candidateIndex >= 0);
+        if (deployedDroneIndices.length && deployedDroneIndices.every((candidateIndex) => job.failedDroneIndices.includes(candidateIndex))) {
+          job.failedDroneIndices = [];
+          job.retryAfter = Date.now() + 5000;
+        }
         jobQueue.unshift(job);
-        blockedJobsThisPass.add(job.id);
         if (started === 'waiting_path_returning') returningDrones.add(droneIndex);
         continue;
       }
       if (started === true && job.status === 'assigned') {
+        job.failedDroneIndices = [];
+        job.retryAfter = null;
         job.status = 'running';
         job.startedAt = Date.now();
       }
@@ -1655,6 +1663,7 @@
     continuousPlotPathReady = false;
     window.skyWorld?.setContinuousPlotHeightSelection?.({ active: false });
     window.skyWorld?.setContinuousPlotPlacement?.({ active: false });
+    if (!continuousPlotModeActive) window.skyWorld?.endContinuousPlotMode?.();
     save();
   }
   function beginContinuousHeightSelection(manual) {

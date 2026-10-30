@@ -376,6 +376,7 @@
   let targetZ = 0;
   let cameraMode = '3d';
   let savedCameraPose = null;
+  let continuousPlotCameraPose = null;
   const touchPoints = new Map();
   const activePointerFeedback = new Map();
   let pinchActive = false;
@@ -423,11 +424,16 @@
       const yt=height+0.16;
       if(anchorMode||i===cells.length-1) anchor=project(c.x,yt,c.z);
     });
+    if (anchorMode && !anchor) anchor = [frameRect.width / 2, frameRect.height / 2];
     if(anchor && (anchorMode || continuousPlacement.active)) {
       const actions=document.createElement('div'); actions.className='continuous-plot-floating-actions';
-      actions.style.left=Math.max(58,Math.min(frameRect.width-58,anchor[0]))+'px'; actions.style.top=Math.max(46,Math.min(frameRect.height-46,anchor[1]-36))+'px';
+      actions.style.left=Math.max(58,Math.min(frameRect.width-58,anchor[0]))+'px'; actions.style.top=Math.max(90,Math.min(frameRect.height-90,anchor[1]))+'px';
       const add=(label,cls,title,cb)=>{const b=document.createElement('button');b.type='button';b.className='continuous-plot-action '+cls;b.textContent=label;b.title=title;b.setAttribute('aria-label',title);b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();cb();});actions.append(b);};
       const mode= document.createElement('div'); mode.className='continuous-plot-drag-modes';
+      const modeStatus = document.createElement('span');
+      modeStatus.className = 'continuous-plot-mode-status';
+      modeStatus.textContent = anchorMode ? (continuousDragMode === 'vertical' ? String.fromCharCode(8597) + ' VERTICAL' : String.fromCharCode(8596) + ' HORIZONTAL') : String.fromCharCode(8596) + ' HORIZONTAL';
+      mode.append(modeStatus);
       const modeButton=(label,value,icon)=>{const b=document.createElement('button');b.type='button';b.className='continuous-plot-mode-chip'+(continuousDragMode===value?' is-active':'');b.textContent=icon+' '+label;b.setAttribute('aria-pressed',String(continuousDragMode===value));b.setAttribute('aria-label',value==='horizontal'?'水平移動 ↔':'上下調整 ↕');b.addEventListener('pointerdown',e=>e.stopPropagation());b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();continuousDragMode=value;drawContinuousPlacementPreview();});mode.append(b);};
       modeButton('水平','horizontal',String.fromCharCode(8596)); modeButton('鉛直','vertical',String.fromCharCode(8597));
       if (anchorMode) {
@@ -447,7 +453,7 @@
         adjustHeight('↑', 0.5, '起點升高半格');
         adjustHeight('↓', -0.5, '起點降低半格');
       }
-      continuousPreviewLayer.append(mode);
+      actions.append(mode);
       if(anchorMode){
         add('O','is-confirm','確認起點，進入滑動建立階段',()=>window.onSkyContinuousPlotAction?.('anchor-confirm',{x:continuousHeightSelection.x,z:continuousHeightSelection.z,height:continuousHeightSelection.height,manual:continuousHeightSelection.manual}));
         add('X','is-cancel','結束規劃並移除預覽',()=>window.onSkyContinuousPlotAction?.('placement-cancel',{}));
@@ -3498,6 +3504,7 @@
     setContinuousPlotHeightSelection(options = {}) {
       const active = options.active === true;
       if (active) {
+        if (!continuousPlotCameraPose) continuousPlotCameraPose = getCameraPose();
         continuousDragMode = 'horizontal';
         // Clear any stale dock-move highlight so placement preview only shows plot guides.
         dockPreview = null;
@@ -3522,6 +3529,11 @@
       }
       drawContinuousPlacementPreview();
       return { ...continuousHeightSelection };
+    },
+    endContinuousPlotMode() {
+      if (continuousPlotCameraPose) restoreCameraPose(continuousPlotCameraPose);
+      continuousPlotCameraPose = null;
+      return true;
     },
     setContinuousPlotPlacement(options = {}) {
       continuousPlacement = {
